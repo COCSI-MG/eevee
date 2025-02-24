@@ -1,0 +1,10 @@
+export enum Route {
+  Assignment = "assignment",
+  Login = "login",
+  Workspace = "workspace",
+  Admin = "admin",
+  AdminAssignments = "admin/assignments",
+  AdminUsers = "admin/users",
+  AdminClasses = "admin/classes",
+  AdminAssignmentCreate = "admin/assignments/create",
+}

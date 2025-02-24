@@ -1,0 +1,10 @@
+postgresql:
+  cpu: 1000m
+  memory: 1Gi
+  persistence:
+    enabled: true
+    existingClaim: postgres-pvc
+  volumePermissions:
+    enabled: true
+  replication:
+    enabled: false

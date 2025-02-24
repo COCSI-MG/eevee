@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": [
+      "@types/babel__core",
+      "jest",
+      "node"
+    ],
+  },
+  "include": [
+    "./*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.js",
+  ],
+}

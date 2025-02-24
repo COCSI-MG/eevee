@@ -1,0 +1,16 @@
+apiVersion: v2
+name: cefet-codelab-db
+description: A Short description
+
+type: application
+
+version: 0.1.3
+
+appVersion: 1.16.2
+
+dependencies:
+  - name: postgresql
+    version: 12.1.9
+    repository: "https://charts.bitnami.com/bitnami"
+    tags:
+      - database
