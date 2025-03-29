@@ -15,7 +15,7 @@ export class UserService {
   async createOrReplace(createUserDto: CreateOrUpdateUserDto) {
     const user: Partial<User> = {
       ...createUserDto,
-      passwordHash: await HashUtils.hashPassword(createUserDto.password),
+      passwordHash: HashUtils.hashPassword(createUserDto.password),
     };
 
     const result = await this.userRepository.upsert(user, {
