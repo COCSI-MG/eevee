@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { HashUtils } from 'src/utils/hash.utils';
 import { JwtPayload } from './jwt.interface';
 import { LoginResponseDto } from './dto/response/login-response.dto';
+import { RegisterRequestDto } from './dto/request/register-request.dto';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +21,7 @@ export class AuthService {
     const user = await this.userService.findByEmail(email);
     if (
       user &&
-      (await HashUtils.comparePassword(password, user.passwordHash))
+      (HashUtils.comparePassword(password, user.passwordHash))
     ) {
       const payload: JwtPayload = {
         email: user.email,
@@ -30,6 +31,29 @@ export class AuthService {
       return {
         token: this.jwtService.sign(payload),
         isAdmin: user.isAdmin,
+      };
+    }
+  }
+
+  async registerUser(
+    registerData: RegisterRequestDto,
+  ): Promise<LoginResponseDto | undefined> {
+    const { email } = registerData;
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      const createdUser = await this.userService.createOrReplace({
+        ...registerData,
+        email,
+        isAdmin: false,
+      });
+      const payload: JwtPayload = {
+        email: createdUser.email,
+        userId: createdUser.id,
+        isAdmin: false,
+      };
+      return {
+        token: this.jwtService.sign(payload),
+        isAdmin: false,
       };
     }
   }
