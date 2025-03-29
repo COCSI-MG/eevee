@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "migration:generate": "npm run build && npx typeorm migration:generate -d ./dist/data-source.js -p",
     "migration:run": "npm run build && npx typeorm migration:run -d ./dist/data-source.js",
-    "script:add-resource": "nest g resource"
+    "script:add-resource": "nest g resource",
+    "script:generate-jwt-key": "node -e \"console.log(require('crypto').randomBytes(60).toString('base64'))\""
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
