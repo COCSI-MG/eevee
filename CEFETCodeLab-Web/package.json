@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@codemirror/lang-javascript": "github:codemirror/lang-javascript",
     "@monaco-editor/react": "^4.7.0",
     "@tanstack/react-query": "^5.66.0",
+    "@uiw/codemirror-theme-vscode": "^4.23.10",
+    "@uiw/react-codemirror": "^4.23.10",
     "axios": "^1.7.9",
     "formik": "^2.4.6",
     "next": "15.1.7",
