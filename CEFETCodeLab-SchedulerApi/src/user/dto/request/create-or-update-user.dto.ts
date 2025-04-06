@@ -21,15 +21,18 @@ export class CreateOrUpdateUserDto
   @IsBoolean()
   @IsNotEmpty()
   isAdmin: boolean;
+  
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
   email: string;
+
   @ApiProperty()
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
   name: string;
+
   @ApiProperty()
   @ApiPropertyOptional()
   @IsString()

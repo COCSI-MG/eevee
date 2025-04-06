@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
+import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
 
 export class RegisterRequestDto {
   @ApiProperty()
@@ -15,6 +17,7 @@ export class RegisterRequestDto {
 
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsNotBlank()
+  @NoSpecialCharacters()
   name: string;
 }
