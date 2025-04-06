@@ -13,9 +13,13 @@ export class UserClass {
   @Column()
   classId: number;
 
-  @ManyToOne(() => User, (user) => user.userClasses)
+  @ManyToOne(() => User, (user) => user.userClasses, {
+    onDelete: 'CASCADE',
+  })
   user?: User;
 
-  @ManyToOne(() => Class, (classEntity) => classEntity.userClasses)
+  @ManyToOne(() => Class, (classEntity) => classEntity.userClasses, {
+    onDelete: 'CASCADE',
+  })
   class?: Class;
 }
