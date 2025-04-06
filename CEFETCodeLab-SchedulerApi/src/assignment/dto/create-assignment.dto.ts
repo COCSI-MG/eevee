@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
+import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 export class CreateAssignmentDto {
@@ -7,25 +9,32 @@ export class CreateAssignmentDto {
   @IsNumber()
   @IsNotEmpty()
   classId: number;
+
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsNotBlank()
+  @NoSpecialCharacters()
   title: string;
+
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsNotBlank()
   description: string;
+
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsNotBlank()
   validationScript: string;
+
   @ApiProperty()
   @IsString()
-  @IsNotEmpty()
+  @IsNotBlank()
   template: string;
+
   @ApiProperty()
   @IsNumber()
   maxAttempts: number;
+
   @ApiProperty()
   @IsEnum(WorkerType)
   workerType: WorkerType;

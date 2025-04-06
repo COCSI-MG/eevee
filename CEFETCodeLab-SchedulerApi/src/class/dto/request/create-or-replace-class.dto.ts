@@ -2,11 +2,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
-  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
+import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
+import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
 
 export class CreateOrReplaceClassDto {
   @ApiProperty()
@@ -19,13 +20,15 @@ export class CreateOrReplaceClassDto {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  @IsNotEmpty()
+  @IsNotBlank()
+  @NoSpecialCharacters()
   name: string;
 
   @ApiProperty()
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
+  @IsNotBlank()
   description: string;
 
   @ApiProperty()
