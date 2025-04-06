@@ -13,6 +13,7 @@ import { CreateOrUpdateUserDto } from './dto/request/create-or-update-user.dto';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserResponseDto } from './dto/response/user-response.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { instanceToPlain } from 'class-transformer';
 
 @Controller('user')
 @UseGuards(AdminGuard)
@@ -29,12 +30,12 @@ export class UserController {
   @Get()
   @ApiOkResponse({ type: [UserResponseDto] })
   findAll() {
-    return this.userService.findAll();
+    return instanceToPlain(this.userService.findAll());
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+    return instanceToPlain(this.userService.findOne(+id));
   }
 
   @Delete(':id')

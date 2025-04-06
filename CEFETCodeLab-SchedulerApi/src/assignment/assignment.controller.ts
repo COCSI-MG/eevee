@@ -13,6 +13,7 @@ import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { instanceToPlain } from 'class-transformer';
 
 @Controller('assignment')
 @UseGuards(JwtAuthGuard)
@@ -20,6 +21,7 @@ export class AssignmentController {
   constructor(private readonly assignmentService: AssignmentService) {}
 
   @Post()
+  @UseGuards(AdminGuard)
   create(@Body() createAssignmentDto: CreateAssignmentDto) {
     return this.assignmentService.create(createAssignmentDto);
   }
@@ -32,7 +34,7 @@ export class AssignmentController {
 
   @Get('me')
   findAllMyAssignments() {
-    return this.assignmentService.findAllUserAssignments();
+    return instanceToPlain(this.assignmentService.findAllUserAssignments());
   }
 
   @Get(':id')
@@ -41,6 +43,7 @@ export class AssignmentController {
   }
 
   @Put(':id')
+  @UseGuards(AdminGuard)
   update(
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
@@ -49,6 +52,7 @@ export class AssignmentController {
   }
 
   @Delete(':id')
+  @UseGuards(AdminGuard)
   remove(@Param('id') id: string) {
     return this.assignmentService.remove(+id);
   }

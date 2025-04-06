@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
@@ -16,6 +17,7 @@ export class User {
   @Column()
   isAdmin: boolean;
 
+  @Exclude()
   @Column()
   passwordHash: string;
 
