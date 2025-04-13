@@ -32,6 +32,11 @@ export class AssignmentController {
     return this.assignmentService.findAll();
   }
 
+  @Get('class/:classId')
+  findAssignmentsByClass(@Param('classId') classId: string) {
+    return this.assignmentService.findAssignmentsByClass(+classId);
+  }
+
   @Get('me')
   findAllMyAssignments() {
     return instanceToPlain(this.assignmentService.findAllUserAssignments());
