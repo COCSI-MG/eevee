@@ -7,12 +7,15 @@ import { DeepPartial, Repository } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
+import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
 
 @Injectable()
 export class AssignmentService {
   constructor(
     @InjectRepository(Assignment)
     private readonly assignmentRepository: Repository<Assignment>,
+    @InjectRepository(AssignmentTemplate)
+    private readonly assignmentTemplateRepository: Repository<AssignmentTemplate>,
     @InjectRepository(UserClass)
     private readonly userClassRepository: Repository<UserClass>,
     private readonly classservice: ClassService,
@@ -24,8 +27,19 @@ export class AssignmentService {
     if (!classExists) {
       throw new NotFoundException(`Class with id ${createAssignmentDto.classId} not found`);
     }
+    // assignmentTemplates
+    const newAssignment = await this.assignmentRepository.save(createAssignmentDto);
 
-    return this.assignmentRepository.save(createAssignmentDto);
+    if (createAssignmentDto.templates && createAssignmentDto.templates.length > 0) {
+      const assignmentTemplateEntities = createAssignmentDto.templates.map((templateId) => ({
+        assignmentId: newAssignment.id,
+        templateId,
+      }));
+  
+      await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
+    }
+  
+    return newAssignment;
   }
 
   findAllUserAssignments() {
