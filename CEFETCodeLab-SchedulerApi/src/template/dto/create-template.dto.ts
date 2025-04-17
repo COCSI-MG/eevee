@@ -13,5 +13,5 @@ export class CreateTemplateDto {
 
   @IsNotBlank()
   @IsString()
-  filePath: string;
-}
+  templateContent: string;
+} 
