@@ -19,6 +19,6 @@ export class Template {
     @OneToMany(() => AssignmentTemplate, (assignmentTemplate) => assignmentTemplate.template)
     assignmentTemplates?: AssignmentTemplate[];
 
-    @OneToMany(() => TemplateParam, (assignmentTemplate) => assignmentTemplate.template)
+    @OneToMany(() => TemplateParam, (assignmentTemplate) => assignmentTemplate.template, { eager: true })
     templateParams: TemplateParam[];
 }

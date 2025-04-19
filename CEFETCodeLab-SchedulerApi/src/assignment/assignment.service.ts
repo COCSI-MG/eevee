@@ -8,6 +8,7 @@ import { RequestContextService } from 'src/request-context/request-context.servi
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
 import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
+import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
 
 @Injectable()
 export class AssignmentService {
@@ -16,6 +17,8 @@ export class AssignmentService {
     private readonly assignmentRepository: Repository<Assignment>,
     @InjectRepository(AssignmentTemplate)
     private readonly assignmentTemplateRepository: Repository<AssignmentTemplate>,
+    @InjectRepository(AssignmentParam)
+    private readonly assignmentParamsRepository: Repository<AssignmentParam>,
     @InjectRepository(UserClass)
     private readonly userClassRepository: Repository<UserClass>,
     private readonly classservice: ClassService,
@@ -27,16 +30,27 @@ export class AssignmentService {
     if (!classExists) {
       throw new NotFoundException(`Class with id ${createAssignmentDto.classId} not found`);
     }
+
     // assignmentTemplates
     const newAssignment = await this.assignmentRepository.save(createAssignmentDto);
 
     if (createAssignmentDto.templates && createAssignmentDto.templates.length > 0) {
-      const assignmentTemplateEntities = createAssignmentDto.templates.map((templateId) => ({
+      const assignmentTemplateEntities = createAssignmentDto.templates.map((template) => ({
         assignmentId: newAssignment.id,
-        templateId,
+        templateId: template.templateId,
       }));
-  
+
+      const assignmentParamsEntities = createAssignmentDto.templates.flatMap((template) =>
+        template.params.map((param) => ({
+          assignmentId: newAssignment.id,
+          templateParamsId: param.templateParamId,
+          value: param.value,
+        })),
+      );
+      
+      console.log('assignmentParamsEntities: ', assignmentParamsEntities)
       await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
+      await this.assignmentParamsRepository.save(assignmentParamsEntities);
     }
   
     return newAssignment;
@@ -108,7 +122,6 @@ export class AssignmentService {
       where,
     });
 
-    console.log(response);
     return response;
   }
 
