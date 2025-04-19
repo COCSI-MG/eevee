@@ -6,15 +6,18 @@ import { Template } from './entities/template.entity';
 import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
+import { TemplateParam } from 'src/template_params/entities/template_param.entity';
 
 @Injectable()
 export class TemplateService {
   constructor(
     @InjectRepository(Template)
     private readonly templateRepository: Repository<Template>,
+    @InjectRepository(TemplateParam)
+    private readonly templateParamsRepository: Repository<TemplateParam>,
   ) {}
 
-  create(createTemplateDto: CreateTemplateDto) {
+  async create(createTemplateDto: CreateTemplateDto) {
     const { title, templateContent }  = createTemplateDto;
     const templatesDir = path.join(process.cwd(), 'templates-upload');
 
@@ -23,22 +26,34 @@ export class TemplateService {
     const fullPath = path.join(templatesDir, filename);
     fs.writeFileSync(fullPath, templateContent, 'utf-8');
 
-    return this.templateRepository.save({ ...createTemplateDto, filePath: filename});
+    const newTemplate = await this.templateRepository.save({ ...createTemplateDto, filePath: filename});
+
+    const templateParamsEntity = createTemplateDto.params.map(param => ({
+      name: param,
+      templateId: newTemplate.id
+    }))
+
+    await this.templateParamsRepository.save(templateParamsEntity);
+
   }
 
   findAll() {
-    return `This action returns all template`;
+    return this.templateRepository.find();
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} template`;
+    return this.templateRepository.findOne({
+      where: { id },
+    });
   }
 
+  // Acredito que o arquivo deverá ser substituido
   update(id: number, updateTemplateDto: UpdateTemplateDto) {
-    return `This action updates a #${id} template`;
+    return this.templateRepository.update(id, updateTemplateDto);
   }
 
+  // Implementar regra de não deixar excluir se estiver sendo usado em uma tarefa
   remove(id: number) {
-    return `This action removes a #${id} template`;
+    return this.templateRepository.delete({ id });
   }
 }
