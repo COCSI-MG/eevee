@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "noImplicitAny": true,
+    "moduleResolution": "bundler",
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist/",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@/core/*": [
+        "./src/core/*"
+      ]
+    },
+    "lib": [
+      "DOM",
+      "ESNext"
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
