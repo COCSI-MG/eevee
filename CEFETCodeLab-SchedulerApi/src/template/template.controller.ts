@@ -34,7 +34,7 @@ export class TemplateController {
 
   @Delete(':id')
   @UseGuards(AdminGuard)
-  remove(@Param('id') id: string) {
-    return this.templateService.remove(+id);
+  async remove(@Param('id') id: string) {
+    return await this.templateService.remove(+id);
   }
 }

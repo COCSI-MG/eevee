@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   Put,
+  Patch,
 } from '@nestjs/common';
 import { AssignmentService } from './assignment.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
@@ -47,13 +48,13 @@ export class AssignmentController {
     return this.assignmentService.findOne(+id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   @UseGuards(AdminGuard)
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateAssignmentDto: UpdateAssignmentDto,
   ) {
-    return this.assignmentService.update(+id, updateAssignmentDto);
+    return await this.assignmentService.update(+id, updateAssignmentDto);
   }
 
   @Delete(':id')
