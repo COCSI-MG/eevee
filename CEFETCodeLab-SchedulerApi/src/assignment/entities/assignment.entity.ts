@@ -25,10 +25,14 @@ export class Assignment {
   @OneToMany(() => Attempt, (assignmentAttempt) => assignmentAttempt.assignment)
   assignmentAttempts: Attempt[];
 
-  @OneToMany(() => AssignmentTemplate, (assignmentTemplate) => assignmentTemplate.template)
+  @OneToMany(() => AssignmentTemplate, (assignmentTemplate) => assignmentTemplate.template, {
+    onDelete: 'CASCADE',
+  })
   assignmentTemplates: AssignmentTemplate[];
 
-  @OneToMany(() => AssignmentParam, (assignmentParams) => assignmentParams.assignment)
+  @OneToMany(() => AssignmentParam, (assignmentParams) => assignmentParams.assignment, {
+    onDelete: 'CASCADE',
+  })
   assignmentParams: AssignmentTemplate[];
 
   @Column()

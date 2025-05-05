@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { TemplateParam } from 'src/template_params/entities/template_param.entity';
+import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
 
 @Injectable()
 export class TemplateService {
@@ -15,6 +16,8 @@ export class TemplateService {
     private readonly templateRepository: Repository<Template>,
     @InjectRepository(TemplateParam)
     private readonly templateParamsRepository: Repository<TemplateParam>,
+    @InjectRepository(AssignmentTemplate)
+    private readonly assignmentTemplateRepository: Repository<AssignmentTemplate>,
   ) {}
 
   async create(createTemplateDto: CreateTemplateDto) {
@@ -47,13 +50,57 @@ export class TemplateService {
     });
   }
 
-  // Acredito que o arquivo deverá ser substituido
-  update(id: number, updateTemplateDto: UpdateTemplateDto) {
-    return this.templateRepository.update(id, updateTemplateDto);
+  async update(id: number, updateTemplateDto: UpdateTemplateDto) {
+    const { templateContent, params, ...dataToUpdate } = updateTemplateDto;
+    const template = await this.templateRepository.findOne({ where: { id } });
+
+    if (!template) {
+      throw new NotFoundException('Template não encontrado.');
+    }
+
+    const templatesDir = path.join(process.cwd(), 'templates-upload');
+    let newFilePath = template.filePath;
+
+    if (updateTemplateDto.templateContent) {
+      const oldFullPath = path.join(templatesDir, template.filePath);
+      if (fs.existsSync(oldFullPath)) {
+        fs.unlinkSync(oldFullPath);
+      }
+
+      const titleForFilename = updateTemplateDto.title || template.title;
+      const safeName = titleForFilename.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const newFilename = `${safeName}_${Date.now()}.tpl.txt`;
+
+      const newFullPath = path.join(templatesDir, newFilename);
+      fs.writeFileSync(newFullPath, templateContent, 'utf-8');
+
+      newFilePath = newFilename;
+    }
+  
+    await this.templateRepository.update(id, {
+      ...dataToUpdate,
+      filePath: newFilePath
+    });
+
+    if (params) {
+      await this.templateParamsRepository.delete({ templateId: id });
+
+      const newParams = params.map((param) => ({
+        name: param,
+        templateId: id,
+      }));
+
+      await this.templateParamsRepository.save(newParams);
+    }
   }
 
-  // Implementar regra de não deixar excluir se estiver sendo usado em uma tarefa
-  remove(id: number) {
+  async remove(id: number) {
+    const isTemplateAssociatedToAssignment = await this.assignmentTemplateRepository.findOne({where: { templateId: id } })
+
+    if (isTemplateAssociatedToAssignment) {
+      throw new ConflictException('O template está associado a um assignment e não pode ser excluído.');
+    }
+
     return this.templateRepository.delete({ id });
   }
 }

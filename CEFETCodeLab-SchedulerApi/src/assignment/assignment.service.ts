@@ -125,8 +125,39 @@ export class AssignmentService {
     return response;
   }
 
-  update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
-    return this.assignmentRepository.update(id, updateAssignmentDto);
+  async update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
+    const { templates, ...dataToUpdate } = updateAssignmentDto;
+
+    const assignment = await this.assignmentRepository.findOne({ where: { id } });
+
+    if (!assignment) {
+      throw new NotFoundException('Tarefa não encontrada');
+    }
+
+    await this.assignmentRepository.update(id, dataToUpdate);
+
+    if (updateAssignmentDto.templates && updateAssignmentDto.templates.length > 0) {
+      await this.assignmentTemplateRepository.delete({ assignmentId: id });
+      await this.assignmentParamsRepository.delete({ assignmentId: id });
+  
+      const assignmentTemplateEntities = updateAssignmentDto.templates.map((template) => ({
+        assignmentId: id,
+        templateId: template.templateId,
+      }));
+  
+      const assignmentParamsEntities = updateAssignmentDto.templates.flatMap((template) =>
+        template.params.map((param) => ({
+          assignmentId: id,
+          templateParamsId: param.templateParamId,
+          value: param.value,
+        })),
+      );
+  
+      await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
+      await this.assignmentParamsRepository.save(assignmentParamsEntities);
+    }
+  
+    return this.assignmentRepository.findOne({ where: { id } });
   }
 
   remove(id: number) {
