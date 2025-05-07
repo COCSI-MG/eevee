@@ -6,16 +6,26 @@ import {
 
 describe('FileStash', () => {
   let db: FileStash<PublicFileSchema>;
+  const mockData = {
+    name: "index.js",
+    data: 'console.log("Hello, world")',
+    size: new String('console.log("Hello, world")').length,
+    createdAt: new Date().toISOString(),
+    updateAt: new Date().toISOString(),
+  }
+  const mockKey = 'mock-key';
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     db = new FileStash<PublicFileSchema>('TestDB', {
-      version: 1,
       indexedDB: fakeIndexedDB
-    }, trans => trans.createStore("files"));
-    await db.open();
+    });
+    await db.makeStores(
+      trans => trans.createStore("files"),
+      trans => trans.createStore("filesTwo")
+    ).open();
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     if (db) {
       await db.destructor();
       fakeIndexedDB.deleteDatabase("TestDB");
@@ -23,30 +33,35 @@ describe('FileStash', () => {
   });
 
   test('FileStash can store data', async () => {
-    // Arrange
-    const testFile = {
-      name: 'test.txt',
-      data: 'Hello World',
-      size: 11,
-      createdAt: new Date().toISOString(),
-      updateAt: new Date().toISOString(),
-    };
+    const { files } = db.transactionWrite(["files"]).stores;
+    const key = await files.upsert(mockData, mockKey);
+    expect(key).toBeDefined();
+  });
 
-    // Act
-    const { files } = db.transactionWrite(['files']).stores;
-    const key = await files.save(testFile);
+  test('File stash can retrieve data', async () => {
+    const files = db.transactionRead(["files"]).files;
+    const result = await files.get(mockKey);
+    expect(result).toMatchObject({
+      name: mockData.name,
+      data: mockData.data,
+      size: mockData.size,
+      createdAt: mockData.createdAt,
+      updateAt: mockData.updateAt,
+    });
+  })
 
-    // Read back the data
-    const trans = db.transactionRead(['files']);
-    const storedFile = await trans.files.get(key as string);
+  test('File stash can delete data', async () => {
+    const { files } = db.transactionWrite(["files"]).stores;
+    await files.destroy(mockKey);
 
-    // Assert
-    expect(storedFile).toEqual(
-      expect.objectContaining({
-        name: 'test.txt',
-        data: 'Hello World',
-        size: 11,
-      })
-    );
+    const readFiles = db.transactionRead(["files"]).files;
+    const result = await readFiles.get(mockKey);
+    expect(result).toBeUndefined();
+  });
+
+  test('File stash can clear data', async () => {
+    const { files } = db.transactionWrite(["files"]).stores;
+    await files.clear();
+    expect(files.count()).resolves.toBe(0); 
   });
 });

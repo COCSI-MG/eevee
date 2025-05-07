@@ -1,6 +1,6 @@
 export type FileStrucutre = {
   name: string;
-  data: Blob | ArrayBuffer | string | File;
+  data: Blob | string | File;
   size: number;
   createdAt: string | Date;
   updateAt: string | Date;

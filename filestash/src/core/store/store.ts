@@ -1,6 +1,8 @@
 import { StoreStashSchema } from './store-file-schema';
 import { stashResponse } from '../response/index';
 import { isStorageUsageHigherThan90Percent } from '@/helpers/storage-quota.helper';
+import { isFileSizeLowerThanMaxSizeAllowed } from '@/helpers/validate-data-size.helper';
+import { StoreError } from '@/filestash-errors';
 
 export class Store<Schema extends StoreStashSchema> {
   constructor(private readonly store: IDBObjectStore) {}
@@ -13,26 +15,26 @@ export class Store<Schema extends StoreStashSchema> {
     return this.store.deleteIndex(name);
   }
 
-  async save(fileData: Schema['Schema'], key?: Schema['Key']) {
+  async upsert(fileData: Schema['Schema'], key?: Schema['Key']) {
     if (this.store.transaction.mode !== 'readwrite') {
-      throw new Error(
+      throw new StoreError(
         `Transaction is not set to readwrite - transaction mode ${this.store.transaction.mode}`
       );
     }
-    const storageQuotaIsHigh = await isStorageUsageHigherThan90Percent();
-    if (storageQuotaIsHigh) {
-      throw new Error('Storage not avaliable to add file');
+    const [ result, err ] = await isStorageUsageHigherThan90Percent();
+    if (result && err) {
+      throw new StoreError(err);
     }
-    //TODO: check file size
-    if (typeof fileData.data !== 'string') {
+    if (!isFileSizeLowerThanMaxSizeAllowed(fileData.data)) {
+      throw new StoreError('File Size is higher than 5MB');
     }
-    const request = this.store.add(fileData, key);
+    const request = this.store.put(fileData, key);
     return stashResponse<Schema['Key']>(request);
   }
 
   async get(key: Schema['Key']) {
     if (this.store.transaction.mode !== "readonly") {
-      throw new Error(
+      throw new StoreError(
         `Transaction is not set to readonly mode - transaction mode ${this.store.transaction.mode}`
       )
     }
@@ -42,10 +44,15 @@ export class Store<Schema extends StoreStashSchema> {
 
   async destroy(key: Schema['Key']) {
     const request = this.store.delete(key);
-    return stashResponse(request);
+    return stashResponse<void>(request);
   }
 
   async clear() {
     return stashResponse(this.store.clear());
+  }
+
+  async count() {
+    const request = this.store.count();
+    return stashResponse<number>(request);
   }
 }

@@ -1,31 +1,26 @@
 import { Store } from '@/core/store/store';
 import { Transaction } from './transaction/transaction';
 import { FileStashSchema, StoreStashSchema } from './store/store-file-schema';
-import {
-  FileStashError,
-} from '@/filestash-errors';
+import { FileStashConnectionNotOpenError, FileStashError } from '@/filestash-errors';
 
 interface FileStashOptions {
-  version: number;
   indexedDB?: { open: Function };
 }
 
 export class FileStash<Schema extends FileStashSchema> {
-  private options: FileStashOptions;
   private dependencies: {
     indexedDB: IDBFactory;
   };
+  private stores: ((transaction: Transaction<Schema>) => void)[];
 
   idxdb: IDBDatabase;
   storeNames: {
     [name: string]: Store<StoreStashSchema>;
   };
-  private _stores: ((transaction: Transaction<Schema>) => void)[];
 
   constructor(
     readonly name: string,
-    options: FileStashOptions,
-    ..._stores: ((transaction: Transaction<Schema>) => void)[]
+    readonly options?: FileStashOptions
   ) {
     this.name = name;
     this.options = {
@@ -35,10 +30,16 @@ export class FileStash<Schema extends FileStashSchema> {
       indexedDB: options.indexedDB as IDBFactory,
     };
     this.idxdb = null;
-    this._stores = _stores;
   }
 
-  async open() {
+  makeStores(...stores: ((transaction: Transaction<Schema>) => void)[]) {
+    this.stores = stores;
+    return {
+      open: this.open.bind(this),
+    };
+  }
+
+  async open(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
       const { indexedDB } = this.dependencies;
       if (!indexedDB) {
@@ -62,7 +63,7 @@ export class FileStash<Schema extends FileStashSchema> {
       };
       request.onupgradeneeded = (ev) => {
         const transaction = new Transaction<Schema>(request.transaction!);
-        for (const store of this._stores) {
+        for (const store of this.stores) {
           store(transaction);
         }
         this.idxdb = request.result;
@@ -70,13 +71,13 @@ export class FileStash<Schema extends FileStashSchema> {
       request.onsuccess = (ev) => {
         this.idxdb = request.result;
         resolve(this.idxdb);
-      }
+      };
     });
   }
 
   destructor(): Promise<void> {
     if (!this.idxdb) {
-      return;
+      return Promise.resolve();
     }
     return new Promise((resolve, reject) => {
       try {
@@ -91,10 +92,13 @@ export class FileStash<Schema extends FileStashSchema> {
   }
 
   transactionRead<K extends Exclude<keyof Schema, symbol | number>>(
-    names: K[],
+    names: K[]
   ) {
+    if (!this.idxdb) {
+      throw new FileStashConnectionNotOpenError();
+    }
     return new Transaction(
-      this.idxdb.transaction(names, "readonly", {
+      this.idxdb.transaction(names, 'readonly', {
         durability: 'relaxed',
       })
     ).stores as {
@@ -103,8 +107,11 @@ export class FileStash<Schema extends FileStashSchema> {
   }
 
   transactionWrite<K extends Exclude<keyof Schema, symbol | number>>(
-    names: K[]
+    names: K[],
   ) {
+    if (!this.idxdb) {
+      throw new FileStashConnectionNotOpenError();
+    }
     return new Transaction(
       this.idxdb.transaction(names, 'readwrite', { durability: 'relaxed' })
     );

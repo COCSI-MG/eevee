@@ -27,3 +27,11 @@ export class FileStashConnectionNotOpenError extends FileStashError {
         super("Connection with database is not open", StashError.NOT_OPEN);
     }
 }
+
+export class StoreError extends FileStashError {
+    constructor(
+        message: string
+    ) {
+        super(message, "STORE_ERROR")
+    }
+}
