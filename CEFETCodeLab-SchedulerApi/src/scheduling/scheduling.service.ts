@@ -6,6 +6,7 @@ import { AssignmentService } from 'src/assignment/assignment.service';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { readFileAsString } from 'src/utils/template.utils';
 
 @Injectable()
 export class SchedulingService {
@@ -65,7 +66,7 @@ export class SchedulingService {
 
     const createWorkerAndWait = this.workerMap.get(assignment?.workerType)!;
 
-    createSchedulingDto.testFileContent = assignment.validationScript;
+    createSchedulingDto.testFileContent = await readFileAsString(assignment.assignmentTemplates[0].template.filePath);
 
     const workerResult = await createWorkerAndWait(createSchedulingDto);
 

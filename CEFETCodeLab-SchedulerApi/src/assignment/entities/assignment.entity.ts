@@ -25,7 +25,7 @@ export class Assignment {
   @OneToMany(() => Attempt, (assignmentAttempt) => assignmentAttempt.assignment)
   assignmentAttempts: Attempt[];
 
-  @OneToMany(() => AssignmentTemplate, (assignmentTemplate) => assignmentTemplate.template, {
+  @OneToMany(() => AssignmentTemplate, (assignmentTemplate) => assignmentTemplate.assignment, {
     onDelete: 'CASCADE',
   })
   assignmentTemplates: AssignmentTemplate[];
