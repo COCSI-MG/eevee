@@ -2,8 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, Plus, Trash, Pencil } from 'lucide-react';
+import {
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash,
+  Pencil,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -26,81 +33,94 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { useQuery } from '@tanstack/react-query';
+import { ClassesService } from '@/app/integration/scheduler-api/classes';
 
-export default function AssignmentsAdminPage() {
-  const { data, isSuccess, isPending } = useQuery({
-    queryKey: ['adminAssignments'],
+export default function ClassesPage() {
+  const { data, isPending, isSuccess } = useQuery({
+    queryKey: ['classes'],
     retryOnMount: true,
     initialData: [],
-    queryFn: AssignmentService.GetAssignmentsAdmin,
-  });
-
+    queryFn: ClassesService.listClasses
+  })
+  const [searchTerm, setSearchTerm] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+//   const [classToDelete, setClassToDelete] = useState<string | null>(null);
+
+//   // Handle delete
+//   const handleDelete = () => {
+//     if (classToDelete) {
+//       setClasses(classes.filter((cls) => cls.id !== classToDelete));
+//       setClassToDelete(null);
+//       setDeleteDialogOpen(false);
+//     }
+//   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Assignments</h1>
-
-        <Link href="/admin/assignments/new">
+        <h1 className="text-3xl font-bold tracking-tight">Classes</h1>
+        <Link href="/admin/classes/new">
           <Button variant={'outline'}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Assignment
+            Add Class
           </Button>
         </Link>
       </div>
 
-      {/* <div className="flex items-center">
+      <div className="flex items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search assignments..."
+            placeholder="Search classes..."
             className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-      </div> */}
+      </div>
 
       <div className="border rounded-md">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="cursor-pointer">
-                <div className="flex items-center">Title</div>
-              </TableHead>
-              <TableHead className="cursor-pointer">
-                <div className="flex items-center">Class</div>
-              </TableHead>
-              <TableHead className="cursor-pointer">
-                <div className="flex items-center">Description</div>
-              </TableHead>
-              <TableHead className="cursor-pointer">
-                <div className="flex items-center">Worker Type</div>
+              <TableHead
+                className="cursor-pointer"
+              >
+                <div className="flex items-center">
+                  Class Name
+                </div>
               </TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
+            {!isPending && isSuccess && (data ?? []).length === 0 && (
+              <TableRow>
+                <TableCell colSpan={2} className="text-center">
+                  No classes found.
+                </TableCell>
+              </TableRow>
+            )}
             {!isPending &&
               isSuccess &&
-              (data ?? []).map((assignment) => {
+              (data ?? []).map((cls) => {
                 return (
-                  <TableRow key={assignment.id}>
-                    <TableCell>{assignment.title}</TableCell>
-                    <TableCell>{assignment.class.name}</TableCell>
-                    <TableCell>{assignment.description}</TableCell>
-                    <TableCell>{assignment.workerType}</TableCell>
+                  <TableRow key={cls.id}>
+                    <TableCell className="font-medium">
+                      {cls.name}
+                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
                             <MoreHorizontal className="h-4 w-4" />
+                            <span className="sr-only">Open menu</span>
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <Link href={`/admin/assignments/${assignment.id}`}>
+                          <Link href={`/admin/classes/${cls.id}`}>
                             <DropdownMenuItem>
                               Edit
                               <Pencil className="ml-auto h-4 w-4" />
@@ -129,11 +149,11 @@ export default function AssignmentsAdminPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              Are you sure you want to delete this assignment?
+              Are you sure you want to delete this class?
             </DialogTitle>
             <DialogDescription>
               This action cannot be undone. This will permanently delete the
-              assignment.
+              class and all associated data.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -143,12 +163,9 @@ export default function AssignmentsAdminPage() {
             >
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
+            <Button variant="destructive" onClick={() => {
                 setDeleteDialogOpen(false);
-              }}
-            >
+            }}>
               Delete
             </Button>
           </DialogFooter>
