@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   env: {
     NEXT_PUBLIC_API_URL: 'http://localhost:3010/v1',
+    APP_ENV: 'development',
   }
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthContext } from "@/app/context/auth-context";
-import { Route } from "@/app/routes";
+// import { Route } from "@/app/routes";
 import axios from "axios";
 
 export const axiosClient = axios.create({
