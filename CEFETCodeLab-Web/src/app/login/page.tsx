@@ -1,19 +1,40 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { LoginService } from "../integration/scheduler-api/login-service";
-import { AuthContext } from "../context/auth-context";
-import { Route } from "../routes";
+import type React from 'react';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Eye, EyeOff, Code } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { toast } from '@/hooks/use-toast';
+import { useMutation } from '@tanstack/react-query';
+import { LoginService } from '../integration/scheduler-api/login-service';
+import { AuthContext } from '../context/auth-context';
+import { Route } from '../routes';
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
-
   const { push } = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState({
+    email: '',
+    password: '',
+  });
 
   const {
     mutate: login,
@@ -22,88 +43,160 @@ export default function Login() {
     error,
     data,
   } = useMutation({
-    mutationFn: () => LoginService.login(email, password),
+    mutationFn: () => LoginService.login(formData.email, formData.password),
   });
 
   useEffect(() => {
+    console.log('Login effect', { isError, error, data, isSuccess });
     if (isError) {
-      console.error("Error logging in:", error);
+      toast({
+        title: 'Login error',
+        description: 'Invalid email or password. Please try again.',
+        variant: 'destructive',
+      });
+      setIsLoading(false);
     }
 
     if (data && isSuccess) {
       AuthContext.setAccessToken(data.token);
       AuthContext.setIsAdmin(data.isAdmin);
-
       if (data.isAdmin) {
-        push(Route.Admin);
+        push('/admin');
         return;
       }
       push(Route.Assignment);
     }
   }, [isError, error, data, isSuccess, push]);
 
-  const handleLogin = (event: React.FormEvent) => {
-    event.preventDefault();
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
 
-    setEmailError(!email);
-    setPasswordError(!password);
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = { email: '', password: '' };
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+      valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+      valid = false;
+    }
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+      valid = false;
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+      valid = false;
+    }
+    setErrors(newErrors);
+    return valid;
+  };
 
-    if (!email || !password) return;
-
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+    setIsLoading(true);
     login();
   };
 
   return (
-    <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-      <div>
-        <h1 className="text-4xl font-bold text-center">Welcome to Code Lab</h1>
-        <p className="text-center text-[#666] dark:text-[#999]">
-          Get started by authenticating with your email and password
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="flex justify-center">
+            <div className="relative w-16 h-16 rounded-full bg-primary flex items-center justify-center">
+              <Code className="h-8 w-8 text-primary-foreground" />
+            </div>
+          </div>
+          <h1 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
+            EEVEE CEFET Code Lab
+          </h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Sign in to your account to access your dashboard
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Sign In</CardTitle>
+            <CardDescription>
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="your.email@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={errors.email ? 'border-destructive' : ''}
+                  disabled={isLoading}
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs text-primary hover:text-primary/90 underline underline-offset-4"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={
+                      errors.password ? 'border-destructive pr-10' : 'pr-10'
+                    }
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
       </div>
-
-      <form className="flex flex-col gap-8 w-full" onClick={handleLogin}>
-        <div className="flex flex-col gap-4 w-full">
-          <label htmlFor="email" className="text-sm font-medium">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="
-            Enter your email"
-            className={`input rounded-lg pl-2 h-8 text-black ${
-              emailError ? "border-2 border-red-500" : ""
-            }`}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col gap-4 w-full">
-          <label htmlFor="password" className="text-sm font-medium">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            placeholder="Enter your password"
-            className={`input rounded-lg pl-2 h-8 text-black ${
-              passwordError ? "border-2 border-red-500" : ""
-            }`}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <input
-            type="submit"
-            className="rounded-full cursor-pointer border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            value="Login"
-          />
-        </div>
-      </form>
-    </main>
+    </div>
   );
 }

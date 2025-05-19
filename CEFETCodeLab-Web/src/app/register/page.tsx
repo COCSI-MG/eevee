@@ -7,8 +7,21 @@ import { AuthContext } from '../context/auth-context';
 import { Route } from '../routes';
 import { RegisterService } from '../integration/scheduler-api/register-service';
 import { RegisterRequest } from '../interface/scheduler-api/auth';
-import { ErrorMessage, Field, Form, Formik, FormikHelpers } from 'formik';
+import { ErrorMessage, Form, Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
+import AuthContainer from '@/components/auth/container';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { EyeOff, Eye } from 'lucide-react';
+import Link from 'next/link';
 
 const registerSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('Email is required'),
@@ -27,6 +40,8 @@ export default function Register() {
     name: '',
     password: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { push } = useRouter();
 
@@ -44,90 +59,124 @@ export default function Register() {
     if (isError) {
       console.error('Error register in:', error);
     }
-
     if (data && isSuccess) {
       AuthContext.setAccessToken(data.token);
       AuthContext.setIsAdmin(data.isAdmin);
-
       if (data.isAdmin) {
+        setIsLoading(false);
         push(Route.Admin);
         return;
       }
+      setIsLoading(false);
       push(Route.Assignment);
     }
   }, [isError, error, data, isSuccess, push]);
 
   return (
-    <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-      <div>
-        <h1 className="text-4xl font-bold text-center">Welcome to Code Lab</h1>
-        <p className="text-center text-[#666] dark:text-[#999]">
-          Create your account and start coding with us!
-        </p>
-      </div>
-
-      <Formik
-        initialValues={{
-          email: '',
-          password: '',
-          name: '',
-        }}
-        onSubmit={(
-          values: RegisterRequest,
-          { setSubmitting }: FormikHelpers<RegisterRequest>
-        ) => {
-          setRegisterData(values);
-          register();
-          setSubmitting(false);
-        }}
-        validationSchema={registerSchema}
-      >
-        <Form className="flex flex-col gap-8 w-full">
-          <div className="flex flex-col gap-4 w-full">
-            <label htmlFor="name" className="text-sm font-medium">
-              Name
-            </label>
-            <Field
-              name="name"
-              type="text"
-              placeholder="Enter your name"
-              className="input rounded-lg pl-2 h-8 text-black"
-            />
-            <ErrorMessage name="name" />
-          </div>
-          <div className="flex flex-col gap-4 w-full">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <Field
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              className="input rounded-lg pl-2 h-8 text-black"
-            />
-            <ErrorMessage name="email" />
-          </div>
-          <div className="flex flex-col gap-4 w-full">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <Field
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              className="input rounded-lg pl-2 h-8 text-black"
-            />
-            <ErrorMessage name="password" />
-          </div>
-          <div className="flex gap-4 items-center flex-col sm:flex-row">
-            <input
-              type="submit"
-              className="rounded-full cursor-pointer border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-              value="Register"
-            />
-          </div>
-        </Form>
-      </Formik>
-    </main>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+      <AuthContainer context="register">
+        <Card>
+          <CardHeader>
+            <CardTitle>Sing up</CardTitle>
+          </CardHeader>
+          <Formik
+            initialValues={{
+              email: '',
+              password: '',
+              name: '',
+            }}
+            onSubmit={(
+              values: RegisterRequest,
+              { setSubmitting }: FormikHelpers<RegisterRequest>
+            ) => {
+              setIsLoading(true);
+              setRegisterData(values);
+              register();
+              setSubmitting(false);
+            }}
+            validationSchema={registerSchema}
+          >
+            {({ values, errors, handleChange }) => (
+              <Form>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      type="text"
+                      name="name"
+                      placeholder="Your name"
+                      onChange={handleChange}
+                      value={values.name}
+                      disabled={isLoading}
+                    />
+                    {errors.name && <ErrorMessage name="name" />}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      type="email"
+                      name="email"
+                      placeholder="your-email@example.com"
+                      onChange={handleChange}
+                      value={values.email}
+                      disabled={isLoading}
+                    />
+                    {errors.email && <ErrorMessage name="email" />}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="passowrd">Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={values.password}
+                        onChange={handleChange}
+                        className={
+                          errors.password ? 'border-destructive pr-10' : 'pr-10'
+                        }
+                        disabled={isLoading}
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
+                        ) : (
+                          <Eye className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.password && <ErrorMessage name="password" />}
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <div className="flex-1">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Signing in...' : 'Sign in'}
+                    </Button>
+                  </div>
+                  <div className="flex-1 flex justify-end">
+                    <Link
+                      href={Route.Login}
+                      className="text-sm text-blue-500 hover:text-blue-700 ml-4"
+                    >
+                      Already have an account?
+                    </Link>
+                  </div>
+                </CardFooter>
+              </Form>
+            )}
+          </Formik>
+        </Card>
+      </AuthContainer>
+    </div>
   );
 }

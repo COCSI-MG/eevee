@@ -6,6 +6,9 @@ import { Route } from "../routes";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "../context/auth-context";
 import { useEffect, useState } from "react";
+import { Button } from '@/components/ui/button';
+import { Code } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function Assignment() {
   const [authContext, setAuthContext] = useState<string | null>(null);
@@ -20,7 +23,7 @@ export default function Assignment() {
   }, [authContext, push]);
 
   const { data, isSuccess, isPending } = useQuery({
-    queryKey: ["assignments-admin"],
+    queryKey: ['assignments-admin'],
     refetchOnWindowFocus: true,
     initialData: [],
     queryFn: AssignmentService.GetMyAssignments,
@@ -31,81 +34,51 @@ export default function Assignment() {
   };
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-start justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col w-full gap-8 row-start-2 items-center sm:items-start">
-        <div>
-          <h1 className="text-4xl font-bold text-center">Your assignments</h1>
-        </div>
-        <div className="overflow-x-auto w-full">
-          <table className="min-w-full bg-white dark:bg-gray-800">
-            <thead>
-              <tr>
-                <th className="py-2 px-4 text-start bg-gray-100 dark:bg-gray-700">
-                  Title
-                </th>
-                <th className="py-2 px-4 text-start bg-gray-100 dark:bg-gray-700">
-                  Class
-                </th>
-                <th className="py-2 px-4 text-start bg-gray-100 dark:bg-gray-700">
-                  Description
-                </th>
-                <th className="py-2 px-4 text-start bg-gray-100 dark:bg-gray-700">
-                  Max attempts
-                </th>
-                <th className="py-2 px-4 text-start bg-gray-100 dark:bg-gray-700">
-                  Current Attempt
-                </th>
-                <th className="py-2 px-4 text-start bg-gray-100 dark:bg-gray-700">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {!isPending &&
-                isSuccess &&
-                (data ?? []).map((assignment) => (
-                  <tr key={assignment.id}>
-                    <td className="py-2 px-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <h1 className="text-3xl font-bold tracking-tight">My assignments</h1>
+        <p className="text-muted-foreground mt-1">
+          Here you can find all your assignments.
+        </p>
+      </div>
+
+      {!isPending && isSuccess && data.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {data.map((assignment) => (
+            <Card
+              key={assignment.id}
+              className="overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <CardContent className="p-0">
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-semibold text-lg">
                       {assignment.title}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200 dark:border-gray-700">
-                      {assignment.class.name}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200 dark:border-gray-700">
-                      {assignment.description}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200 dark:border-gray-700">
-                      {assignment.maxAttempts}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200 dark:border-gray-700">
-                      {assignment.assignmentAttempts.length}
-                    </td>
-                    <td className="py-2 px-4 border-b border-gray-200 dark:border-gray-700">
-                      <div
-                        onClick={() => {
-                          handleTry(assignment.id);
-                        }}
-                        className="cursor-pointer h-full flex items-center justify-center"
-                      >
-                        Try
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="30"
-                          height="30"
-                          fill="currentColor"
-                          viewBox="0 0 16 16"
-                          className="ml-2"
-                        >
-                          <path d="M10.478 1.647a.5.5 0 1 0-.956-.294l-4 13a.5.5 0 0 0 .956.294zM4.854 4.146a.5.5 0 0 1 0 .708L1.707 8l3.147 3.146a.5.5 0 0 1-.708.708l-3.5-3.5a.5.5 0 0 1 0-.708l3.5-3.5a.5.5 0 0 1 .708 0m6.292 0a.5.5 0 0 0 0 .708L14.293 8l-3.147 3.146a.5.5 0 0 0 .708.708l3.5-3.5a.5.5 0 0 0 0-.708l-3.5-3.5a.5.5 0 0 0-.708 0" />
-                        </svg>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+                    </h3>
+                  </div>
+                  <p className="text-sm line-clamp-2 mb-4">
+                    {assignment.description}
+                  </p>
+                  <Button
+                    className="w-full"
+                    onClick={() => handleTry(assignment.id)}
+                  >
+                    <Code className="h-4 w-4 mr-2" />
+                    Open in Workspace
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </main>
+      ) : (
+        <div className="flex flex-col items-center justify-center h-full">
+          <h2 className="text-2xl font-bold">No assignments found</h2>
+          <p className="text-muted-foreground mt-1">
+            You don&apos;t have any assignments yet.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
