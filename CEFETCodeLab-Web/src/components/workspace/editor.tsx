@@ -1,11 +1,17 @@
 import React from 'react';
 import Editor from '@monaco-editor/react';
+import { Button } from '../ui/button';
+import { Play, Save } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface WorkspaceEditorProps {
   activeFile: string;
   activeFileContent: string;
   getFileIcon: (filename: string) => React.ReactNode;
   handleEditorChange: (value: string | undefined) => void;
+  handleRun: () => void;
+  isPending: boolean;
+  handleSave: () => void;
 }
 
 const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
@@ -13,6 +19,9 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   activeFileContent,
   getFileIcon,
   handleEditorChange,
+  handleRun,
+  isPending,
+  handleSave,
 }) => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -24,13 +33,40 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
               <span className="text-sm font-medium">{activeFile}</span>
             </div>
           </div>
+          <div className="flex items-center gap-3 px-4 py-2">
+            <Button
+              size={'sm'}
+              className={cn(
+                'bg-green-600 hover:bg-green-700 h-9 px-4',
+                isPending && 'cursor-not-allowed'
+              )}
+              onClick={handleRun}
+              disabled={isPending}
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Run
+            </Button>
+            <Button
+              variant={'outline'}
+              size={'sm'}
+              className="h-9 px-4"
+              onClick={handleSave}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              <span className="text-sm font-medium">Save</span>
+            </Button>
+          </div>
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
         <Editor
           height="100%"
           defaultLanguage="typescript"
-          value={activeFileContent === '' ? 'console.log("Hello, World")' : activeFileContent}
+          value={
+            activeFileContent === ''
+              ? 'console.log("Hello, World")'
+              : activeFileContent
+          }
           onChange={handleEditorChange}
           theme="vs-dark"
           options={{

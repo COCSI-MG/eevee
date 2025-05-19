@@ -36,7 +36,7 @@ export default function AssignmentWorkspace() {
   const [consoleOutput, setConsoleOutput] = useState<string[]>([
     'Saída do programa aparecerá aqui',
   ]);
-  const [activeFile, setActiveFile] = useState('main.js');
+  const [activeFile, setActiveFile] = useState('index.js');
   const [activeFileContent, setActiveFileContent] = useState<string>('');
   const [explorerWidth, setExplorerWidth] = useState(224); // 56 * 4 = 224px
   const [exercisePanelWidth, setExercisePanelWidth] = useState(288); // 72 * 4 = 288px
@@ -82,7 +82,11 @@ export default function AssignmentWorkspace() {
     },
   });
 
-  const { isPending, data: workerResult } = useMutation({
+  const {
+    mutate: submitAssignment,
+    isPending,
+    data: workerResult,
+  } = useMutation({
     mutationKey: ['submit-assignment'],
     mutationFn: () => {
       return SchedulingService.createScheduling({
@@ -246,6 +250,7 @@ export default function AssignmentWorkspace() {
         }
       }
       setFileStructure(updatedStructure);
+      setActiveFileContent(value);
     }
   };
 
@@ -446,6 +451,19 @@ export default function AssignmentWorkspace() {
       .filter(Boolean);
   };
 
+  const handleRun = () => {
+    if (activeFileContent === '') {
+      toast({
+        title: 'Erro',
+        description: 'O arquivo está vazio.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setConsoleOutput(['Enviando para teste...']);
+    submitAssignment();
+  };
+
   if (isLoading || !data) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -484,6 +502,11 @@ export default function AssignmentWorkspace() {
                 activeFileContent={activeFileContent}
                 getFileIcon={getFileIcon}
                 handleEditorChange={handleEditorChange}
+                handleRun={handleRun}
+                isPending={isPending}
+                handleSave={() => {
+                  //TODO: Implement save functionality
+                }}
               />
               <WorkspaceConsole
                 consoleHeight={consoleHeight}
