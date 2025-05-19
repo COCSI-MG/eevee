@@ -66,7 +66,11 @@ export class SchedulingService {
 
     const createWorkerAndWait = this.workerMap.get(assignment?.workerType)!;
 
-    createSchedulingDto.testFileContent = await readFileAsString(assignment.assignmentTemplates[0].template.filePath);
+    createSchedulingDto.testFilesContent = await Promise.all(
+      assignment.assignmentTemplates.map(templateRelation =>
+        readFileAsString(templateRelation.template.filePath),
+      )
+    );
 
     const workerResult = await createWorkerAndWait(createSchedulingDto);
 

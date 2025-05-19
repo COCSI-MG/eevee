@@ -1,4 +1,4 @@
 export class CreateWorkerDto {
-  testFileContent: string;
+  testFilesContent: string[];
   applicationFileContent: string;
 }
