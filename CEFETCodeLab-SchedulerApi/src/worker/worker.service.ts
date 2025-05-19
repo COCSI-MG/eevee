@@ -14,18 +14,25 @@ export class WorkerService {
   constructor(private readonly kubernetesService: KubernetesService) {}
   private buildCreateFilesDefaultAndStartCommand(
     applicationFileContent: string,
-    testFileContent: string,
+    testFilesContent: string[],
   ): string[] {
-    return [
-      '/bin/sh',
-      '-c',
-      `echo "${testFileContent}" > /app/validation.test.ts && echo "${applicationFileContent}" > /app/app.ts && npm start`,
+    const commands: string[] = [
+    `echo "${applicationFileContent}" > /app/app.ts`,
     ];
+    
+    testFilesContent.forEach((testContent, index) => {
+      const fileName = `/app/validation${index}.test.ts`;
+      commands.push(`echo "${testContent}" > ${fileName}`);
+    });
+
+    commands.push(`npm start`);
+
+    return ['/bin/sh', '-c', commands.join(' && ')];
   }
 
   private buildCreateFilesNestJsAndStartCommand(
     applicationFileContent: string,
-    testFileContent: string,
+    testFileContent: string[],
   ): string[] {
     return [
       '/bin/sh',
@@ -105,7 +112,7 @@ export class WorkerService {
         WORKER_IMAGE_NAMES.NODE_DEFAULT,
         this.buildCreateFilesDefaultAndStartCommand(
           createWorkerData.applicationFileContent,
-          createWorkerData.testFileContent,
+          createWorkerData.testFilesContent,
         ),
       );
 
@@ -131,7 +138,7 @@ export class WorkerService {
         WORKER_IMAGE_NAMES.NODE_NESTJS,
         this.buildCreateFilesNestJsAndStartCommand(
           createWorkerData.applicationFileContent,
-          createWorkerData.testFileContent,
+          createWorkerData.testFilesContent,
         ),
       );
 

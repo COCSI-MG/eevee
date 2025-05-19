@@ -1,3 +1,5 @@
+import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
+import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
@@ -22,6 +24,16 @@ export class Assignment {
 
   @OneToMany(() => Attempt, (assignmentAttempt) => assignmentAttempt.assignment)
   assignmentAttempts: Attempt[];
+
+  @OneToMany(() => AssignmentTemplate, (assignmentTemplate) => assignmentTemplate.assignment, {
+    onDelete: 'CASCADE',
+  })
+  assignmentTemplates: AssignmentTemplate[];
+
+  @OneToMany(() => AssignmentParam, (assignmentParams) => assignmentParams.assignment, {
+    onDelete: 'CASCADE',
+  })
+  assignmentParams: AssignmentTemplate[];
 
   @Column()
   title: string;

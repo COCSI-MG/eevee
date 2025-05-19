@@ -16,6 +16,10 @@ import { AuthModule } from './auth/auth.module';
 import { RequestContextModule } from './request-context/request-context.module';
 import { ClsModule } from 'nestjs-cls';
 import { RequestContextMiddleware } from './request-context/request-context.middleware';
+import { TemplateModule } from './template/template.module';
+import { AssignmentTemplateModule } from './assignment_template/assignment_template.module';
+import { TemplateParamsModule } from './template_params/template_params.module';
+import { AssignmentParamsModule } from './assignment_params/assignment_params.module';
 
 @Module({
   imports: [
@@ -48,6 +52,10 @@ import { RequestContextMiddleware } from './request-context/request-context.midd
     AssignmentModule,
     PassportModule,
     AuthModule,
+    TemplateModule,
+    AssignmentTemplateModule,
+    TemplateParamsModule,
+    AssignmentParamsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
