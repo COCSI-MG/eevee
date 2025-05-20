@@ -18,10 +18,7 @@ export type PublicFileSchema = {
 
 export type StoreStashSchema = {
   Key: IDBValidKey;
-  Schema: Required<{
-    data: FileStrucutre['data'];
-  }> &
-    Record<string, unknown>;
+  Schema: FileStrucutre & Record<string, unknown>;
   Indexes: Record<string, IDBValidKey[]>;
 };
 

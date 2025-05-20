@@ -12,6 +12,7 @@ export class FileStash<Schema extends FileStashSchema> {
     indexedDB: IDBFactory;
   };
   private stores: ((transaction: Transaction<Schema>) => void)[];
+  private options: FileStashOptions;
 
   idxdb: IDBDatabase;
   storeNames: {
@@ -20,14 +21,15 @@ export class FileStash<Schema extends FileStashSchema> {
 
   constructor(
     readonly name: string,
-    readonly options?: FileStashOptions
+    options?: FileStashOptions
   ) {
     this.name = name;
-    this.options = {
+    this.options = options = {
+      indexedDB: options?.indexedDB || window.indexedDB,
       ...options,
     };
     this.dependencies = {
-      indexedDB: options.indexedDB as IDBFactory,
+      indexedDB: this.options.indexedDB as IDBFactory,
     };
     this.idxdb = null;
   }
@@ -101,9 +103,7 @@ export class FileStash<Schema extends FileStashSchema> {
       this.idxdb.transaction(names, 'readonly', {
         durability: 'relaxed',
       })
-    ).stores as {
-      [StoreName in K]: Store<Schema[StoreName]>;
-    };
+    ).stores; 
   }
 
   transactionWrite<K extends Exclude<keyof Schema, symbol | number>>(
