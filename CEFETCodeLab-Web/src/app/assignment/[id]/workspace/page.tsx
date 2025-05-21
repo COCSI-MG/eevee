@@ -29,6 +29,7 @@ import WorkspaceExplorer from '@/components/workspace/explorer';
 import WorkspaceEditor from '@/components/workspace/editor';
 import WorkspaceConsole from '@/components/workspace/console';
 import { FileType, NewItem } from '@/types/shared';
+import { initStash, upsertFileInStash } from '@/app/integration/filestash';
 
 export default function AssignmentWorkspace() {
   const { id } = useParams();
@@ -38,6 +39,8 @@ export default function AssignmentWorkspace() {
   ]);
   const [activeFile, setActiveFile] = useState('index.js');
   const [activeFileContent, setActiveFileContent] = useState<string>('');
+  const [activeFileStructure, setActiveFileStructure] =
+    useState<FileType | null>(null);
   const [explorerWidth, setExplorerWidth] = useState(224); // 56 * 4 = 224px
   const [exercisePanelWidth, setExercisePanelWidth] = useState(288); // 72 * 4 = 288px
   const [consoleHeight, setConsoleHeight] = useState(128); // 32 * 4 = 128px
@@ -57,7 +60,7 @@ export default function AssignmentWorkspace() {
       isOpen: true,
       children: [
         {
-          id: '2',
+          id: `2-${Date.now()}`,
           name: 'index.js',
           type: 'file',
           lastModified: new Date(),
@@ -91,8 +94,35 @@ export default function AssignmentWorkspace() {
     mutationFn: () => {
       return SchedulingService.createScheduling({
         assignmentId: Number(id),
-        applicationFileContent: getFileContent(activeFile),
+        applicationFileContent: activeFileContent,
       });
+    },
+  });
+
+  const {
+    mutate: saveFileInStash,
+    isPending: isSaving,
+    isError: isSavingError,
+    data: savedFile,
+  } = useMutation({
+    mutationKey: ['save-file'],
+    mutationFn: (activeFileStructure: FileType) => {
+      const fileContentAsBlob = new Blob(
+        [activeFileStructure.content ?? 'console.log("hello, world")'],
+        {
+          type: 'text/plain',
+        }
+      );
+      return upsertFileInStash(
+        {
+          name: activeFile,
+          data: fileContentAsBlob,
+          size: fileContentAsBlob.size,
+          createdAt: new Date().toISOString(),
+          updateAt: new Date().toISOString(),
+        },
+        activeFileStructure.id
+      );
     },
   });
 
@@ -199,6 +229,47 @@ export default function AssignmentWorkspace() {
     }
   }, [newItem.isCreating]);
 
+  useEffect(() => {
+    const localStorageFileStructure = localStorage.getItem('fileStructure');
+    if (localStorageFileStructure) {
+      const parsedFileStructure = JSON.parse(localStorageFileStructure);
+      setFileStructure(parsedFileStructure);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('fileStructure', JSON.stringify(fileStructure));
+  }, [fileStructure]);
+
+  useEffect(() => {
+    if (isSavingError) {
+      console.error('Error saving file:', savedFile);
+      toast({
+        title: 'Erro ao salvar o arquivo',
+        description: 'Ocorreu um erro ao salvar o arquivo.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!isSaving && savedFile) {
+      toast({
+        title: 'Arquivo salvo com sucesso',
+        variant: 'default',
+      });
+    }
+  }, [savedFile, isSaving, isSavingError]);
+
+  useEffect(() => {
+    const initializeStashFn = async () => {
+      try {
+        await initStash();
+      } catch (err) {
+        console.error('Error initializing Filestash:', err);
+      }
+    };
+    initializeStashFn();
+  }, []);
+
   const startResize = (
     element: 'explorer' | 'exercise' | 'console',
     e: React.MouseEvent
@@ -228,11 +299,16 @@ export default function AssignmentWorkspace() {
     setShowExercisePanel(!showExercisePanel);
   };
 
-  const openFile = (filename: string, content?: string) => {
-    setActiveFile(filename);
-    if (content) {
-      setActiveFileContent(content);
-    }
+  useEffect(() => {
+    console.debug(activeFileStructure);
+  }, [activeFileStructure]);
+
+  const openFile = (fileStructure: FileType) => {
+    setActiveFileStructure(fileStructure);
+    setActiveFile(fileStructure.name);
+    setActiveFileContent(
+      fileStructure.content ?? "console.log('Hello, World!')"
+    );
   };
 
   const handleEditorChange = (value: string | undefined) => {
@@ -264,14 +340,14 @@ export default function AssignmentWorkspace() {
     return <FileText className="h-4 w-4" />;
   };
 
-  const getFileContent = (filename: string): string => {
-    for (const folder of fileStructure) {
-      const file = folder.children?.find((f: FileType) => f.name === filename);
+  const getFileStruct = (filename: string): FileType | null => {
+    for (const item of fileStructure) {
+      const file = item.children?.find((f: FileType) => f.name === filename);
       if (file && file.type === 'file' && file.content) {
-        return file.content;
+        return file;
       }
     }
-    return '';
+    return null;
   };
 
   const toggleFolder = (folderId: string) => {
@@ -310,7 +386,7 @@ export default function AssignmentWorkspace() {
                   style={{ paddingLeft: `${level * 12 + 4}px` }}
                   onClick={() => {
                     if (item.type === 'file') {
-                      openFile(item.name, item.content);
+                      openFile(item);
                     } else if (item.type === 'folder') {
                       if (newItem.isCreating) {
                         setNewItem({
@@ -464,6 +540,15 @@ export default function AssignmentWorkspace() {
     submitAssignment();
   };
 
+  const handleFileLocalSave = () => {
+    const struct = getFileStruct(activeFile);
+    if (!struct) {
+      console.error('Error getting struct');
+      return;
+    }
+    saveFileInStash(struct);
+  };
+
   if (isLoading || !data) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -504,9 +589,8 @@ export default function AssignmentWorkspace() {
                 handleEditorChange={handleEditorChange}
                 handleRun={handleRun}
                 isPending={isPending}
-                handleSave={() => {
-                  //TODO: Implement save functionality
-                }}
+                handleSave={() => {}}
+                handleLocalSave={handleFileLocalSave}
               />
               <WorkspaceConsole
                 consoleHeight={consoleHeight}

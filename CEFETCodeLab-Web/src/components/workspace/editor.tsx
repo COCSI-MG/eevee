@@ -12,6 +12,7 @@ export interface WorkspaceEditorProps {
   handleRun: () => void;
   isPending: boolean;
   handleSave: () => void;
+  handleLocalSave: () => void;
 }
 
 const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
@@ -22,6 +23,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   handleRun,
   isPending,
   handleSave,
+  handleLocalSave,
 }) => {
   const editorRef = React.useRef<
     import('monaco-editor').editor.IStandaloneCodeEditor | null
@@ -66,11 +68,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
         <Editor
           height="100%"
           defaultLanguage="typescript"
-          value={
-            activeFileContent === ''
-              ? 'console.log("Hello, World")'
-              : activeFileContent
-          }
+          value={activeFileContent}
           onChange={handleEditorChange}
           theme="vs-dark"
           options={{
@@ -93,14 +91,13 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             container?.addEventListener('keydown', (e) => {
               if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
-                handleSave();
+                handleLocalSave();
               }
             });
-
             editor.addCommand(
               monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
               () => {
-                handleSave();
+                handleLocalSave();
               }
             );
           }}
