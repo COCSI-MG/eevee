@@ -36,14 +36,20 @@ export class FileStash<Schema extends FileStashSchema> {
     this.versionNumber = 0;
   }
 
-  makeStores(...stores: ((transaction: Transaction<Schema>) => void)[]) {
+  makeStores(...stores: ((transaction: Transaction<Schema>) => void)[]): {
+    version: (versionNumber: number) => {
+      open: () => Promise<IDBDatabase>;
+    }
+  } {
     this.stores = stores;
     return {
       version: this.version.bind(this),
     };
   }
 
-  version(versionNumber: number) {
+  version(versionNumber: number): {
+    open: () => Promise<IDBDatabase>;
+  } {
     if (isNaN(versionNumber) || versionNumber < 0) {
       throw new TypeError(
         `Invalid version number: ${versionNumber}. Version must be a positive integer.`
