@@ -23,6 +23,10 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   isPending,
   handleSave,
 }) => {
+  const editorRef = React.useRef<
+    import('monaco-editor').editor.IStandaloneCodeEditor | null
+  >(null);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="border-b border-slate-700 bg-slate-800">
@@ -74,7 +78,6 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             scrollBeyondLastLine: false,
             fontSize: 14,
             wordWrap: 'on',
-            theme: 'vs-dark',
             hover: { delay: 300, sticky: false },
             parameterHints: { enabled: false },
             suggest: {
@@ -83,6 +86,23 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             },
             inlayHints: { enabled: 'off' },
             quickSuggestions: false,
+          }}
+          onMount={(editor, monaco) => {
+            editorRef.current = editor;
+            const container = editor.getDomNode();
+            container?.addEventListener('keydown', (e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                handleSave();
+              }
+            });
+
+            editor.addCommand(
+              monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+              () => {
+                handleSave();
+              }
+            );
           }}
         />
       </div>
