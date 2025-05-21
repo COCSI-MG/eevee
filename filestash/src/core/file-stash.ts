@@ -13,6 +13,7 @@ export class FileStash<Schema extends FileStashSchema> {
   };
   private stores: ((transaction: Transaction<Schema>) => void)[];
   private options: FileStashOptions;
+  private versionNumber: number;
 
   idxdb: IDBDatabase;
   storeNames: {
@@ -32,10 +33,24 @@ export class FileStash<Schema extends FileStashSchema> {
       indexedDB: this.options.indexedDB as IDBFactory,
     };
     this.idxdb = null;
+    this.versionNumber = 0;
   }
 
   makeStores(...stores: ((transaction: Transaction<Schema>) => void)[]) {
     this.stores = stores;
+    return {
+      version: this.version.bind(this),
+    };
+  }
+
+  version(versionNumber: number) {
+    if (isNaN(versionNumber) || versionNumber < 0) {
+      throw new TypeError(
+        `Invalid version number: ${versionNumber}. Version must be a positive integer.`
+      );
+    }
+    versionNumber = Math.round(versionNumber);
+    this.versionNumber = versionNumber;
     return {
       open: this.open.bind(this),
     };
@@ -49,7 +64,7 @@ export class FileStash<Schema extends FileStashSchema> {
           new FileStashError('IndexedDB API is missing', 'IDXDB_API_MISSING')
         );
       }
-      const request = indexedDB.open(this.name);
+      const request = indexedDB.open(this.name, this.versionNumber);
       request.onerror = (event: Event) => {
         event.preventDefault();
         const error =
