@@ -33,7 +33,7 @@ export class Assignment {
   @OneToMany(() => AssignmentParam, (assignmentParams) => assignmentParams.assignment, {
     onDelete: 'CASCADE',
   })
-  assignmentParams: AssignmentTemplate[];
+  assignmentParams: AssignmentParam[];
 
   @Column()
   title: string;

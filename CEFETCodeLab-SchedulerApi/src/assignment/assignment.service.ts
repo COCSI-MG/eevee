@@ -118,7 +118,7 @@ export class AssignmentService {
     }
 
     const response = await this.assignmentRepository.findOne({
-      relations: ['assignmentAttempts', 'class', 'class.userClasses', 'assignmentTemplates', 'assignmentTemplates.template', 'assignmentTemplates.template.templateParams'],
+      relations: ['assignmentAttempts', 'class', 'class.userClasses', 'assignmentParams', 'assignmentTemplates', 'assignmentTemplates.template', 'assignmentTemplates.template.templateParams'],
       where,
     });
 
