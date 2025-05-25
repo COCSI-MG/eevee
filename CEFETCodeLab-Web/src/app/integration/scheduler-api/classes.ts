@@ -21,7 +21,7 @@ export class ClassesService {
   }
 
   static async update(classData: UpsertClass): Promise<Class> {
-    const request = await axiosClientWithAuth.put(`/class/${classData.id}`, classData);
+    const request = await axiosClientWithAuth.post(`/class/${classData.id}`, classData);
     return request.data;
   }
 }
