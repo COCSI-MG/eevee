@@ -42,9 +42,6 @@ export class Assignment {
   description: string;
 
   @Column({ length: 30000 })
-  validationScript: string;
-
-  @Column({ length: 30000 })
   template: string;
 
   @Column()
