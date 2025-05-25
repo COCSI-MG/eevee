@@ -44,12 +44,7 @@ export class CreateAssignmentDto {
   @IsString()
   @IsNotBlank()
   description: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsNotBlank()
-  validationScript: string;
-
+  
   @ApiProperty()
   @IsString()
   @IsNotBlank()
