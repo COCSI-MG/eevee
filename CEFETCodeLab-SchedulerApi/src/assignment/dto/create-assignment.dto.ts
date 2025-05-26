@@ -46,11 +46,6 @@ export class CreateAssignmentDto {
   description: string;
   
   @ApiProperty()
-  @IsString()
-  @IsNotBlank()
-  template: string;
-
-  @ApiProperty()
   @IsNumber()
   maxAttempts: number;
 
