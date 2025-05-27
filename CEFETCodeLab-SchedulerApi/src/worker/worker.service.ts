@@ -43,15 +43,24 @@ export class WorkerService {
 
   private processLogResult(log: string): WorkerResponse {
     const logLines = log.split('\n');
-    const successLines = logLines
-      .filter((line) => line.includes(WORKER_IDENTIFYING_CHARS.SUCCESS))
-      .map((line) => line.trim());
-    const failureLines = logLines
-      .filter((line) => line.includes(WORKER_IDENTIFYING_CHARS.FAILURE))
-      .map((line) => line.trim());
+
+      const testSummaryLine = logLines.find((line) =>
+        line.includes('Tests:')
+      );
+
+      let passedCount = 0;
+      let totalCount = 0;
+
+      if (testSummaryLine) {
+        const passedMatch = testSummaryLine.match(/(\d+)\s+passed/);
+        const totalMatch = testSummaryLine.match(/(\d+)\s+total/);
+
+        if (passedMatch) passedCount = parseInt(passedMatch[1], 10);
+        if (totalMatch) totalCount = parseInt(totalMatch[1], 10);
+      }
     return {
-      failures: failureLines,
-      passes: successLines,
+      failures: totalCount - passedCount,
+      passes: passedCount,
       completeTrace: log,
     };
   }
