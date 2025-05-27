@@ -1,5 +1,5 @@
 export interface WorkerResponse {
-  passes: string[];
-  failures: string[];
+  passes: number;
+  failures: number;
   completeTrace: string;
 }
