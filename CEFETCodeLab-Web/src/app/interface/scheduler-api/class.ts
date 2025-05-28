@@ -5,6 +5,9 @@ export interface Class {
   name: string;
   description: string;
   userClasses: UserClass[];
+  users: {
+    userId: number;
+  }[];
 }
 
 export interface UpsertClass {
