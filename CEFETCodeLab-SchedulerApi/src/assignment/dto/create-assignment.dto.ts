@@ -44,7 +44,17 @@ export class CreateAssignmentDto {
   @IsString()
   @IsNotBlank()
   description: string;
-  
+
+  @ApiProperty()
+  @IsString()
+  @IsNotBlank()
+  validationScript: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotBlank()
+  template: string;
+
   @ApiProperty()
   @IsNumber()
   maxAttempts: number;
