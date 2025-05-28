@@ -20,6 +20,8 @@ import { TemplateModule } from './template/template.module';
 import { AssignmentTemplateModule } from './assignment_template/assignment_template.module';
 import { TemplateParamsModule } from './template_params/template_params.module';
 import { AssignmentParamsModule } from './assignment_params/assignment_params.module';
+import { FileSaverModule } from './file-saver/file-saver.module';
+import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -41,6 +43,7 @@ import { AssignmentParamsModule } from './assignment_params/assignment_params.mo
       synchronize: true,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
     }),
+    NestScheduleModule.forRoot(),
     RequestContextModule,
     SchedulingModule,
     WorkerModule,
@@ -56,6 +59,7 @@ import { AssignmentParamsModule } from './assignment_params/assignment_params.mo
     AssignmentTemplateModule,
     TemplateParamsModule,
     AssignmentParamsModule,
+    FileSaverModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -22,7 +22,7 @@ describe('FileStash', () => {
     await db.makeStores(
       trans => trans.createStore("files"),
       trans => trans.createStore("filesTwo")
-    ).open();
+    ).version(1).open();
   });
 
   afterAll(async () => {
