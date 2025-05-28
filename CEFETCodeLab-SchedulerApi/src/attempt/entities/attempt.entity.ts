@@ -25,7 +25,7 @@ export class Attempt {
   @Column()
   isAcceptable: boolean;
 
- @Column('float', { nullable: false })
+  @Column('float', { nullable: false })
   score: number;
 
   @Column()
