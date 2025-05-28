@@ -1,5 +1,7 @@
 "use client";
 
+import { AuthContext } from "@/app/context/auth-context";
+import { Route } from "@/app/routes";
 // import { Route } from "@/app/routes";
 import axios from "axios";
 
@@ -26,6 +28,10 @@ axiosClientWithAuth.interceptors.request.use(
     return config;
   },
   (error) => {
+    if (error.response.status === 401) {
+      AuthContext.clear();
+      window.location.href = `/${Route.Login}`;
+    }
     return Promise.reject(error);
   },
 );
