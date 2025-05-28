@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   Code,
+  CodeSquareIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -68,6 +69,12 @@ export default function AdminDashboardLayout({
         label: 'Assignments',
         icon: FileText,
         active: pathname.startsWith('/admin/assignments'),
+      },
+      {
+        href: '/admin/templates',
+        label: 'Templates',
+        icon: CodeSquareIcon,
+        active: pathname.startsWith('/admin/templates'),
       },
     ],
     [pathname]
