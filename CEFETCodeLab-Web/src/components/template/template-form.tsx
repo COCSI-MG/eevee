@@ -44,8 +44,8 @@ export default function TemplateForm() {
       setFormData({
         title: templateData.title,
         description: templateData.description,
-        templateContent: '',
-        params: [],
+        templateContent: templateData.templateContent,
+        params: templateData.templateParams.map((param) => param.name) || [],
       });
     }
   }, [templateData, isTemplateLoading, isTemplateError]);
@@ -86,7 +86,7 @@ export default function TemplateForm() {
         variant: 'destructive',
       });
     }
-    if (isSuccess && data) {
+    if (isSuccess) {
       toast({
         title: 'Template salvo com sucesso',
         description: 'O template foi salvo com sucesso.',
