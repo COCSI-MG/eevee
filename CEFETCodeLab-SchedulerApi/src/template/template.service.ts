@@ -44,11 +44,29 @@ export class TemplateService {
     return this.templateRepository.find();
   }
 
-  findOne(id: number) {
-    return this.templateRepository.findOne({
+  async findOne(id: number) {
+    const template = await this.templateRepository.findOne({
       where: { id },
     });
-  }
+
+    if (!template) {
+      throw new NotFoundException('Template não encontrado');
+    }
+
+    const filePath = path.join(process.cwd(), 'templates-upload', template.filePath);
+
+    try {
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+
+      return {
+        ...template,
+        templateContent: content,
+      };
+    } catch (error) {
+      console.error('Erro ao ler o arquivo do template:', error);
+      throw new Error('Erro ao carregar o conteúdo do template');
+    }
+}
 
   async update(id: number, updateTemplateDto: UpdateTemplateDto) {
     const { templateContent, params, ...dataToUpdate } = updateTemplateDto;
