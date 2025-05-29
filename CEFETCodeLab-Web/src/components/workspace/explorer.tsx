@@ -1,14 +1,37 @@
 import React from 'react';
-import { FileType } from '@/types/shared';
+import { FileType, NewItem } from '@/types/shared';
+import { FileTree } from './file-tree';
 
-export interface WorkspaceExplorerProps {
+interface WorkspaceExplorerProps {
   explorerWidth: number;
   fileStructure: FileType[];
-  renderTree: (items: FileType[], level?: number) => React.ReactNode;
-  startResize: (element: 'explorer', e: React.MouseEvent) => void;
+  activeFile: string;
+  newItem: NewItem;
+  openFile: (file: FileType) => void;
+  toggleFolder: (folderId: string) => void;
+  setNewItem: React.Dispatch<React.SetStateAction<NewItem>>;
+  setFileStructure: React.Dispatch<React.SetStateAction<FileType[]>>;
+  getFileIcon: (filename: string) => React.ReactNode;
+  onActiveFileDeleted?: () => void;
+  startResize: (
+    element: 'explorer' | 'exercise' | 'console',
+    e: React.MouseEvent
+  ) => void;
 }
 
-const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ explorerWidth, fileStructure, renderTree, startResize }) => {
+const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({
+  explorerWidth,
+  fileStructure,
+  activeFile,
+  newItem,
+  openFile,
+  toggleFolder,
+  setNewItem,
+  setFileStructure,
+  getFileIcon,
+  onActiveFileDeleted,
+  startResize,
+}) => {
   return (
     <>
       <div
@@ -21,13 +44,23 @@ const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({ explorerWidth, fi
           </div>
         </div>
         <div className="flex-1">
-          {renderTree(fileStructure)}
+          <FileTree
+            fileStructure={fileStructure}
+            activeFile={activeFile}
+            newItem={newItem}
+            openFile={openFile}
+            toggleFolder={toggleFolder}
+            setNewItem={setNewItem}
+            setFileStructure={setFileStructure}
+            getFileIcon={getFileIcon}
+            onActiveFileDeleted={onActiveFileDeleted}
+          />
         </div>
       </div>
       <div
-        className="w-1 bg-slate-700 hover:bg-blue-500 cursor-ew-resize"
+        className="absolute top-0 right-0 w-1 h-full cursor-ew-resize hover:bg-blue-500"
         onMouseDown={(e) => startResize('explorer', e)}
-      ></div>
+      />
     </>
   );
 };

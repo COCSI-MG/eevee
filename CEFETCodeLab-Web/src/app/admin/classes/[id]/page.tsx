@@ -97,15 +97,23 @@ export default function ClassEditPage() {
 
   useEffect(() => {
     if (isSuccess) {
+      toast({
+        title: isNewClass ? 'Class created' : 'Class updated',
+        description: `Successfully ${
+          isNewClass ? 'created' : 'updated'
+        } class ${formData.name}`,
+      });
       router.push('/admin/classes');
     }
-  }, [upsertedClass, isSuccess, router]);
+  }, [upsertedClass, isSuccess, router, isNewClass, formData.name]);
 
   useEffect(() => {
     if (!isNewClass && classQuery.isSuccess && classQuery.data) {
       setFormData({
         ...classQuery.data,
-        students: classQuery.data.userClasses.map((userClass) => userClass.userId),
+        students: classQuery.data.userClasses.map(
+          (userClass) => userClass.userId
+        ),
       });
       setSelectedStudents(
         classQuery.data.userClasses.map((userClass) => ({
@@ -140,13 +148,6 @@ export default function ClassEditPage() {
       id: isNewClass ? undefined : Number(id),
       ...formData,
     });
-    toast({
-      title: isNewClass ? 'Class created' : 'Class updated',
-      description: `Successfully ${isNewClass ? 'created' : 'updated'} class ${
-        formData.name
-      }`,
-    });
-    router.push('/admin/classes');
   };
 
   const handleStudentSelect = (studentId: number) => {
