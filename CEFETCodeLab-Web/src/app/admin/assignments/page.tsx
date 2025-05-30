@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, Plus, Trash, Pencil } from 'lucide-react';
+import { MoreHorizontal, Plus, Trash, Pencil, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { useQuery } from '@tanstack/react-query';
+import { Route } from '@/app/routes';
 
 export default function AssignmentsAdminPage() {
   const { data, isSuccess, isPending } = useQuery({
@@ -100,6 +101,14 @@ export default function AssignmentsAdminPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <Link
+                            href={`/${Route.Assignment}/${assignment.id}/${Route.Workspace}`}
+                          >
+                            <DropdownMenuItem>
+                              Workspace
+                              <Code className="ml-auto h-4 w-4" />
+                            </DropdownMenuItem>
+                          </Link>
                           <Link href={`/admin/assignments/${assignment.id}`}>
                             <DropdownMenuItem>
                               Edit
