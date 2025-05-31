@@ -24,7 +24,9 @@ export default function AssignmentWorkspace() {
   const [consoleOutput, setConsoleOutput] = useState<string[]>([
     'Saída do programa aparecerá aqui',
   ]);
-  const [activeFile, setActiveFile] = useState('src/index.js');
+  const [activeFile, setActiveFile] = useState('index.js');
+  const [activeLocalFilePath, setActiveLocalFilePath] =
+    useState<string>('src/index.js');
   const [activeFileContent, setActiveFileContent] = useState<string>('');
   const [explorerWidth, setExplorerWidth] = useState(224); // 56 * 4 = 224px
   const [exercisePanelWidth, setExercisePanelWidth] = useState(288); // 72 * 4 = 288px
@@ -115,8 +117,10 @@ export default function AssignmentWorkspace() {
   });
 
   useEffect(() => {
-    if (data && data.template && activeFileContent === '') {
-      setActiveFileContent(data.template);
+    if (data && !activeFileContent) {
+      setActiveFileContent(
+        'export function main() {\n  // YOUR CODE HERE\n  console.log("Hello, world!");\n}'
+      );
     }
   }, [data, activeFileContent]);
 
@@ -224,16 +228,21 @@ export default function AssignmentWorkspace() {
   }, [newItem.isCreating]);
 
   useEffect(() => {
-    const localStorageFileStructure = localStorage.getItem('fileStructure');
+    const localStorageFileStructure = localStorage.getItem(
+      `file-Structure-assignment-${id}`
+    );
     if (localStorageFileStructure) {
       const parsedFileStructure = JSON.parse(localStorageFileStructure);
       setFileStructure(parsedFileStructure);
     }
-  }, []);
+  }, [id]);
 
   useEffect(() => {
-    localStorage.setItem('fileStructure', JSON.stringify(fileStructure));
-  }, [fileStructure]);
+    localStorage.setItem(
+      `file-Structure-assignment-${id}`,
+      JSON.stringify(fileStructure)
+    );
+  }, [fileStructure, id]);
 
   useEffect(() => {
     if (isSavingError) {
@@ -295,8 +304,9 @@ export default function AssignmentWorkspace() {
 
   const openFile = (file: FileType) => {
     const filePath = getFilePath(file, fileStructure);
-    setActiveFile(filePath);
-    const content = file.content || data?.template || '';
+    setActiveFile(filePath.split('/').pop() || '');
+    setActiveLocalFilePath(filePath);
+    const content = file.content || '';
     setActiveFileContent(content);
   };
 
@@ -391,7 +401,7 @@ export default function AssignmentWorkspace() {
   };
 
   const handleFileLocalSave = () => {
-    const struct = getFileStruct(activeFile);
+    const struct = getFileStruct(activeLocalFilePath);
     if (!struct) {
       console.error('Error getting struct');
       return;
