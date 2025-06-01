@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { TemplatesService } from '@/app/integration/scheduler-api/templates';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Code, Edit, Eye, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
+import { Code, Edit, Eye, MoreHorizontal, Plus } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -27,18 +27,29 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import DeleteAlertDialog from '@/components/table/delete-alert-dialog';
 
 export default function TemplatePage() {
   const {
     data: templates,
     isPending,
     isSuccess,
+    refetch: refetchTemplates,
   } = useQuery({
     queryKey: ['templates'],
     retryOnMount: true,
     initialData: [],
     queryFn: TemplatesService.listTemplates,
   });
+
+  const handleDeleteTemplate = async (templateId: number) => {
+    try {
+      await TemplatesService.deleteTemplate(templateId);
+      refetchTemplates();
+    } catch (error) {
+      console.error('Error deleting template:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -133,10 +144,17 @@ export default function TemplatePage() {
                             Editar
                           </DropdownMenuItem>
                         </Link>
-                        {/* <DropdownMenuItem className="text-red-400 hover:text-red-300 hover:bg-slate-600">
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Deletar
-                        </DropdownMenuItem> */}
+                        <DropdownMenuItem
+                          className="text-red-400 hover:text-red-300 hover:bg-slate-600"
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          <DeleteAlertDialog
+                            resourceName="template"
+                            onDelete={() =>
+                              handleDeleteTemplate(Number(template.id))
+                            }
+                          />
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
