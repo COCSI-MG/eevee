@@ -15,7 +15,11 @@ import WorkspaceExplorer from '@/components/workspace/explorer';
 import WorkspaceEditor from '@/components/workspace/editor';
 import WorkspaceConsole from '@/components/workspace/console';
 import { FileType, NewItem } from '@/types/shared';
-import { initStash, upsertFileInStash } from '@/app/integration/filestash';
+import {
+  getFileFromStash,
+  initStash,
+  upsertFileInStash,
+} from '@/app/integration/filestash';
 import { getFilePath } from '@/lib/file-path-utils';
 
 export default function AssignmentWorkspace() {
@@ -53,7 +57,6 @@ export default function AssignmentWorkspace() {
           lastModified: new Date(),
           isOpen: true,
           parentId: '1',
-          content: "console.log('Hello, World!')",
         },
       ],
     },
@@ -85,6 +88,13 @@ export default function AssignmentWorkspace() {
         applicationFileContent: activeFileContent,
       });
     },
+    onError: (error) => {
+      console.error('Error submitting assignment:', error);
+      setConsoleOutput((prev) => [
+        ...prev,
+        'Error: Ocorreu um erro ao submeter a tarefa.',
+      ]);
+    },
   });
 
   const {
@@ -95,43 +105,35 @@ export default function AssignmentWorkspace() {
   } = useMutation({
     mutationKey: ['save-file'],
     mutationFn: (activeFileStructure: FileType) => {
-      const fileContentAsBlob = new Blob(
-        [activeFileStructure.content ?? 'console.log("hello, world")'],
-        {
-          type: 'text/plain',
-        }
-      );
-      // Use the full path for the file name
+      if (!data) {
+        console.error('No assignment data available');
+        return Promise.reject('No assignment data available');
+      }
+
       const filePath = getFilePath(activeFileStructure, fileStructure);
+      const key = `${data.id}/${activeFileStructure.id}/${filePath}`;
+      console.log('activeFileContent:', activeFileContent);
       return upsertFileInStash(
         {
           name: filePath,
-          data: fileContentAsBlob,
-          size: fileContentAsBlob.size,
+          data: activeFileContent,
+          size: activeFileContent.length,
           createdAt: new Date().toISOString(),
           updateAt: new Date().toISOString(),
         },
-        activeFileStructure.id
+        key
       );
     },
   });
-
-  useEffect(() => {
-    if (data && !activeFileContent) {
-      setActiveFileContent(
-        'export function main() {\n  // YOUR CODE HERE\n  console.log("Hello, world!");\n}'
-      );
-    }
-  }, [data, activeFileContent]);
 
   useEffect(() => {
     if (!isPending && workerResult) {
       console.log('Worker result:', workerResult);
       setConsoleOutput((prev) => [
         ...prev,
-        `Score: ${workerResult.score}`,
-        `Passes: ${workerResult.passes}`,
-        `Fails: ${workerResult.fails}`,
+        `> Score: ${workerResult.score}`,
+        `> Passes: ${workerResult.passes}`,
+        `> Fails: ${workerResult.fails}`,
         `Report: ${workerResult.report.replace(/\\n/g, '\n')}`,
       ]);
     }
@@ -306,8 +308,6 @@ export default function AssignmentWorkspace() {
     const filePath = getFilePath(file, fileStructure);
     setActiveFile(filePath.split('/').pop() || '');
     setActiveLocalFilePath(filePath);
-    const content = file.content || '';
-    setActiveFileContent(content);
   };
 
   const handleEditorChange = (value: string | undefined) => {
@@ -321,7 +321,6 @@ export default function AssignmentWorkspace() {
             item.type === 'file' &&
             getFilePath(item, fileStructure) === activeFile
           ) {
-            item.content = value;
             item.lastModified = new Date();
             return true;
           }
@@ -350,6 +349,7 @@ export default function AssignmentWorkspace() {
     return <FileText className="h-4 w-4" />;
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const getFileStruct = (filePath: string): FileType | null => {
     const findFileByPath = (items: FileType[]): FileType | null => {
       for (const item of items) {
@@ -368,6 +368,34 @@ export default function AssignmentWorkspace() {
     };
     return findFileByPath(fileStructure);
   };
+
+  useEffect(() => {
+    const getFileContentFromStash = async (key: string) => {
+      try {
+        const fileData = await getFileFromStash(key);
+        if (fileData && fileData.data && typeof fileData.data === 'string') {
+          setActiveFileContent(fileData.data);
+        } else {
+          console.warn('File not found in stash:', key);
+        }
+      } catch (error) {
+        console.error('Error fetching file from stash:', error);
+      }
+    };
+
+    if (activeLocalFilePath && data && activeFileContent === '') {
+      const fileStruct = getFileStruct(activeLocalFilePath);
+      if (!fileStruct) {
+        console.error(
+          'File structure not found for path:',
+          activeLocalFilePath
+        );
+        return;
+      }
+      const fileKey = `${data.id}/${fileStruct.id}/${activeLocalFilePath}`;
+      getFileContentFromStash(fileKey);
+    }
+  }, [activeFileContent, activeLocalFilePath, data, getFileStruct]);
 
   const toggleFolder = (folderId: string) => {
     const updatedStructure = [...fileStructure];
