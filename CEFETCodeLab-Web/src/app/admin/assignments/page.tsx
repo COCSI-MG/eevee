@@ -95,14 +95,14 @@ export default function AssignmentsAdminPage() {
                             href={`/${Route.Assignment}/${assignment.id}/${Route.Workspace}`}
                           >
                             <DropdownMenuItem>
+                              <Code className="h-4 w-4" />
                               Workspace
-                              <Code className="ml-auto h-4 w-4" />
                             </DropdownMenuItem>
                           </Link>
                           <Link href={`/admin/assignments/${assignment.id}`}>
                             <DropdownMenuItem>
+                              <Pencil className="h-4 w-4" />
                               Edit
-                              <Pencil className="ml-auto h-4 w-4" />
                             </DropdownMenuItem>
                           </Link>
                           <DropdownMenuItem
