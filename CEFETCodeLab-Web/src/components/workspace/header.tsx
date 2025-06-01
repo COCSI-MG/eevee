@@ -48,9 +48,6 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
           Assigments
         </Button>
         <Button variant="ghost" size="sm">
-          Turmas
-        </Button>
-        <Button variant="ghost" size="sm">
           Ajuda
         </Button>
       </div>
