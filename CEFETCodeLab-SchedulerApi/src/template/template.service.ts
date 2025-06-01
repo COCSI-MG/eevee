@@ -119,6 +119,21 @@ export class TemplateService {
       throw new ConflictException('O template está associado a um assignment e não pode ser excluído.');
     }
 
-    return this.templateRepository.delete({ id });
+     const template = await this.templateRepository.findOne({
+      where: { id },
+    });
+
+    if (!template) {
+      throw new NotFoundException('Template não encontrado');
+    }
+    
+    const filePath = path.join(process.cwd(), 'templates-upload', template.filePath);
+    
+    try {
+      await fs.promises.unlink(filePath); 
+      return await this.templateRepository.delete({ id });
+    } catch (error) {
+      console.error('Erro ao excluir o arquivo do template:', error);
+    }
   }
 }
