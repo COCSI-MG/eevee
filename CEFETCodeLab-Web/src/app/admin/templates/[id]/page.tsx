@@ -11,9 +11,8 @@ export default function TemplateCreateEditPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center">
-        <Button variant="ghost" onClick={() => back()} className='mr-4'>
+        <Button variant="ghost" onClick={() => back()} className="mr-4">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
