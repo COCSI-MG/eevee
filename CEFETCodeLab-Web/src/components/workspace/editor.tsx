@@ -1,8 +1,11 @@
 import React from 'react';
-import Editor from '@monaco-editor/react';
+import dynamic from 'next/dynamic';
 import { Button } from '../ui/button';
 import { Loader2Icon, Play, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+const Editor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+});
 
 export interface WorkspaceEditorProps {
   activeFile: string;
