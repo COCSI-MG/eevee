@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, Plus, Trash, Pencil } from 'lucide-react';
+import { MoreHorizontal, Plus, Pencil, Code } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -18,26 +17,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { useQuery } from '@tanstack/react-query';
+import { Route } from '@/app/routes';
+import DeleteAlertDialog from '@/components/table/delete-alert-dialog';
 
 export default function AssignmentsAdminPage() {
-  const { data, isSuccess, isPending } = useQuery({
+  const { data, isSuccess, isPending, refetch } = useQuery({
     queryKey: ['adminAssignments'],
     retryOnMount: true,
     initialData: [],
     queryFn: AssignmentService.GetAssignmentsAdmin,
   });
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -100,20 +91,33 @@ export default function AssignmentsAdminPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <Link
+                            href={`/${Route.Assignment}/${assignment.id}/${Route.Workspace}`}
+                          >
+                            <DropdownMenuItem>
+                              <Code className="h-4 w-4" />
+                              Workspace
+                            </DropdownMenuItem>
+                          </Link>
                           <Link href={`/admin/assignments/${assignment.id}`}>
                             <DropdownMenuItem>
+                              <Pencil className="h-4 w-4" />
                               Edit
-                              <Pencil className="ml-auto h-4 w-4" />
                             </DropdownMenuItem>
                           </Link>
                           <DropdownMenuItem
                             className="text-destructive"
-                            onClick={() => {
-                              setDeleteDialogOpen(true);
-                            }}
+                            onSelect={(e) => e.preventDefault()}
                           >
-                            Delete
-                            <Trash className="ml-auto h-4 w-4" />
+                            <DeleteAlertDialog
+                              resourceName="assignment"
+                              onDelete={() => {
+                                AssignmentService.DeleteAssignment(
+                                  assignment.id
+                                );
+                                refetch();
+                              }}
+                            />
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -124,36 +128,6 @@ export default function AssignmentsAdminPage() {
           </TableBody>
         </Table>
       </div>
-
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Are you sure you want to delete this assignment?
-            </DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. This will permanently delete the
-              assignment.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                setDeleteDialogOpen(false);
-              }}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

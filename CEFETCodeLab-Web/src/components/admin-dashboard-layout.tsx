@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   Code,
+  CodeSquareIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -20,6 +21,7 @@ import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthUser } from '@/hooks/use-auth-user';
 import { toast } from '@/hooks/use-toast';
+import { Route } from '@/app/routes';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -64,10 +66,16 @@ export default function AdminDashboardLayout({
         active: pathname.startsWith('/admin/classes'),
       },
       {
-        href: '/admin/assignments',
+        href: Route.AdminAssignments,
         label: 'Assignments',
         icon: FileText,
-        active: pathname.startsWith('/admin/assignments'),
+        active: pathname.startsWith(Route.AdminAssignments),
+      },
+      {
+        href: Route.AdminTemplate,
+        label: 'Templates',
+        icon: CodeSquareIcon,
+        active: pathname.startsWith(Route.AdminTemplate),
       },
     ],
     [pathname]

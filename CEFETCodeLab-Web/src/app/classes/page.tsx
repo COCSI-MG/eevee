@@ -36,11 +36,6 @@ export default function ClassPage() {
   useEffect(() => {
     if (isSuccess && !isPending && classes.length > 0 && user) {
       const userClasses = classes.filter((classItem) => {
-        console.debug({
-          classItem,
-          userId: user.id,
-          students: classItem.users,
-        })
         return classItem.users.some((student) => student.userId === user.id);
       });
       setFilteredClasses(userClasses);

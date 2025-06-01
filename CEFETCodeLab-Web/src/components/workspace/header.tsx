@@ -13,7 +13,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   showExercisePanel,
   toggleExercisePanel,
 }) => {
-  const { push } = useRouter();
+  const { back } = useRouter();
 
   return (
     <header className="flex items-center justify-between p-3 border-b border-slate-700">
@@ -44,11 +44,8 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => push('/assignment')}>
+        <Button variant="ghost" size="sm" onClick={() => back()}>
           Assigments
-        </Button>
-        <Button variant="ghost" size="sm">
-          Turmas
         </Button>
         <Button variant="ghost" size="sm">
           Ajuda

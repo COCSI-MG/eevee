@@ -1,5 +1,0 @@
-describe('main', () => {
-  it('should add two positive numbers', () => {
-    expect(main(2, 3)).toBe(5);
-  });
-});
