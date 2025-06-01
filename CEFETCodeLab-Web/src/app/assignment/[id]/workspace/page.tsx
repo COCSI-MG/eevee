@@ -21,6 +21,7 @@ import {
   upsertFileInStash,
 } from '@/app/integration/filestash';
 import { getFilePath } from '@/lib/file-path-utils';
+import { DEFAULT_ASSIGNMENT_TEMPLATE } from '@/app/admin/assignments/constants';
 
 export default function AssignmentWorkspace() {
   const { id } = useParams();
@@ -396,6 +397,12 @@ export default function AssignmentWorkspace() {
       getFileContentFromStash(fileKey);
     }
   }, [activeFileContent, activeLocalFilePath, data, getFileStruct]);
+
+  useEffect(() => {
+    if (activeFileContent === '') {
+      setActiveFileContent(DEFAULT_ASSIGNMENT_TEMPLATE);
+    }
+  }, [activeFileContent]);
 
   const toggleFolder = (folderId: string) => {
     const updatedStructure = [...fileStructure];
