@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Save } from 'lucide-react';
+import { Loader2Icon, Save } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CreateTemplateRequest } from '@/app/interface/scheduler-api/template';
 import { TemplatesService } from '@/app/integration/scheduler-api/templates';
@@ -56,6 +56,7 @@ export default function TemplateForm() {
     isSuccess,
     isError,
     error,
+    status: mutationStatus,
   } = useMutation({
     mutationKey: ['upsertTemplate', id],
     mutationFn: (data: CreateTemplateRequest) => {
@@ -103,7 +104,12 @@ export default function TemplateForm() {
   };
 
   const handleSave = () => {
-    if (!formData.title || !formData.description || !formData.templateContent) {
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.templateContent ||
+      formData.params.length === 0
+    ) {
       toast({
         title: 'Erro ao salvar',
         description: 'Todos os campos são obrigatórios.',
@@ -165,24 +171,22 @@ export default function TemplateForm() {
                   handleInputChange('templateContent', value || '')
                 }
                 className="bg-slate-700 border-slate-600 text-white"
-                options={
-                  {
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    wordWrap: 'on',
-                    wrappingIndent: 'indent',
-                    fontSize: 14,
-                    lineNumbers: 'on',
-                  }
-                }
+                options={{
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  wordWrap: 'on',
+                  wrappingIndent: 'indent',
+                  fontSize: 14,
+                  lineNumbers: 'on',
+                }}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="params" className="text-slate-200">
-                Parâmetros (opcional) <br/>
-                Use vírgula para separar os parâmetros
-                Exemplo: param1, param2, param3
+                Parâmetros <br />
+                Use vírgula para separar os parâmetros Exemplo: param1, param2,
+                param3
               </Label>
               <Input
                 id="params"
@@ -215,8 +219,13 @@ export default function TemplateForm() {
                 onClick={handleSave}
                 className="flex-1 hover:bg-slate-700"
                 variant={'outline'}
+                disabled={mutationStatus === 'pending'}
               >
-                <Save className="w-4 h-4 mr-2" />
+                {mutationStatus === 'pending' ? (
+                  <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
                 Salvar Template
               </Button>
             </div>
