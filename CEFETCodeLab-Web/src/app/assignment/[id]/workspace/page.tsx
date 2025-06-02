@@ -15,8 +15,13 @@ import WorkspaceExplorer from '@/components/workspace/explorer';
 import WorkspaceEditor from '@/components/workspace/editor';
 import WorkspaceConsole from '@/components/workspace/console';
 import { FileType, NewItem } from '@/types/shared';
-import { initStash, upsertFileInStash } from '@/app/integration/filestash';
+import {
+  getFileFromStash,
+  initStash,
+  upsertFileInStash,
+} from '@/app/integration/filestash';
 import { getFilePath } from '@/lib/file-path-utils';
+import { DEFAULT_ASSIGNMENT_TEMPLATE } from '@/app/admin/assignments/constants';
 
 export default function AssignmentWorkspace() {
   const { id } = useParams();
@@ -24,7 +29,9 @@ export default function AssignmentWorkspace() {
   const [consoleOutput, setConsoleOutput] = useState<string[]>([
     'Saída do programa aparecerá aqui',
   ]);
-  const [activeFile, setActiveFile] = useState('src/index.js');
+  const [activeFile, setActiveFile] = useState('index.js');
+  const [activeLocalFilePath, setActiveLocalFilePath] =
+    useState<string>('src/index.js');
   const [activeFileContent, setActiveFileContent] = useState<string>('');
   const [explorerWidth, setExplorerWidth] = useState(224); // 56 * 4 = 224px
   const [exercisePanelWidth, setExercisePanelWidth] = useState(288); // 72 * 4 = 288px
@@ -51,7 +58,6 @@ export default function AssignmentWorkspace() {
           lastModified: new Date(),
           isOpen: true,
           parentId: '1',
-          content: "console.log('Hello, World!')",
         },
       ],
     },
@@ -83,6 +89,13 @@ export default function AssignmentWorkspace() {
         applicationFileContent: activeFileContent,
       });
     },
+    onError: (error) => {
+      console.error('Error submitting assignment:', error);
+      setConsoleOutput((prev) => [
+        ...prev,
+        'Error: Ocorreu um erro ao submeter a tarefa.',
+      ]);
+    },
   });
 
   const {
@@ -93,41 +106,35 @@ export default function AssignmentWorkspace() {
   } = useMutation({
     mutationKey: ['save-file'],
     mutationFn: (activeFileStructure: FileType) => {
-      const fileContentAsBlob = new Blob(
-        [activeFileStructure.content ?? 'console.log("hello, world")'],
-        {
-          type: 'text/plain',
-        }
-      );
-      // Use the full path for the file name
+      if (!data) {
+        console.error('No assignment data available');
+        return Promise.reject('No assignment data available');
+      }
+
       const filePath = getFilePath(activeFileStructure, fileStructure);
+      const key = `${data.id}/${activeFileStructure.id}/${filePath}`;
+      console.log('activeFileContent:', activeFileContent);
       return upsertFileInStash(
         {
           name: filePath,
-          data: fileContentAsBlob,
-          size: fileContentAsBlob.size,
+          data: activeFileContent,
+          size: activeFileContent.length,
           createdAt: new Date().toISOString(),
           updateAt: new Date().toISOString(),
         },
-        activeFileStructure.id
+        key
       );
     },
   });
-
-  useEffect(() => {
-    if (data && data.template && activeFileContent === '') {
-      setActiveFileContent(data.template);
-    }
-  }, [data, activeFileContent]);
 
   useEffect(() => {
     if (!isPending && workerResult) {
       console.log('Worker result:', workerResult);
       setConsoleOutput((prev) => [
         ...prev,
-        `Score: ${workerResult.score}`,
-        `Passes: ${workerResult.passes}`,
-        `Fails: ${workerResult.fails}`,
+        `> Score: ${workerResult.score}`,
+        `> Passes: ${workerResult.passes}`,
+        `> Fails: ${workerResult.fails}`,
         `Report: ${workerResult.report.replace(/\\n/g, '\n')}`,
       ]);
     }
@@ -224,16 +231,21 @@ export default function AssignmentWorkspace() {
   }, [newItem.isCreating]);
 
   useEffect(() => {
-    const localStorageFileStructure = localStorage.getItem('fileStructure');
+    const localStorageFileStructure = localStorage.getItem(
+      `file-Structure-assignment-${id}`
+    );
     if (localStorageFileStructure) {
       const parsedFileStructure = JSON.parse(localStorageFileStructure);
       setFileStructure(parsedFileStructure);
     }
-  }, []);
+  }, [id]);
 
   useEffect(() => {
-    localStorage.setItem('fileStructure', JSON.stringify(fileStructure));
-  }, [fileStructure]);
+    localStorage.setItem(
+      `file-Structure-assignment-${id}`,
+      JSON.stringify(fileStructure)
+    );
+  }, [fileStructure, id]);
 
   useEffect(() => {
     if (isSavingError) {
@@ -295,9 +307,8 @@ export default function AssignmentWorkspace() {
 
   const openFile = (file: FileType) => {
     const filePath = getFilePath(file, fileStructure);
-    setActiveFile(filePath);
-    const content = file.content || data?.template || '';
-    setActiveFileContent(content);
+    setActiveFile(filePath.split('/').pop() || '');
+    setActiveLocalFilePath(filePath);
   };
 
   const handleEditorChange = (value: string | undefined) => {
@@ -311,7 +322,6 @@ export default function AssignmentWorkspace() {
             item.type === 'file' &&
             getFilePath(item, fileStructure) === activeFile
           ) {
-            item.content = value;
             item.lastModified = new Date();
             return true;
           }
@@ -340,6 +350,7 @@ export default function AssignmentWorkspace() {
     return <FileText className="h-4 w-4" />;
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const getFileStruct = (filePath: string): FileType | null => {
     const findFileByPath = (items: FileType[]): FileType | null => {
       for (const item of items) {
@@ -358,6 +369,40 @@ export default function AssignmentWorkspace() {
     };
     return findFileByPath(fileStructure);
   };
+
+  useEffect(() => {
+    const getFileContentFromStash = async (key: string) => {
+      try {
+        const fileData = await getFileFromStash(key);
+        if (fileData && fileData.data && typeof fileData.data === 'string') {
+          setActiveFileContent(fileData.data);
+        } else {
+          console.warn('File not found in stash:', key);
+        }
+      } catch (error) {
+        console.error('Error fetching file from stash:', error);
+      }
+    };
+
+    if (activeLocalFilePath && data && activeFileContent === '') {
+      const fileStruct = getFileStruct(activeLocalFilePath);
+      if (!fileStruct) {
+        console.error(
+          'File structure not found for path:',
+          activeLocalFilePath
+        );
+        return;
+      }
+      const fileKey = `${data.id}/${fileStruct.id}/${activeLocalFilePath}`;
+      getFileContentFromStash(fileKey);
+    }
+  }, [activeFileContent, activeLocalFilePath, data, getFileStruct]);
+
+  useEffect(() => {
+    if (activeFileContent === '') {
+      setActiveFileContent(DEFAULT_ASSIGNMENT_TEMPLATE);
+    }
+  }, [activeFileContent]);
 
   const toggleFolder = (folderId: string) => {
     const updatedStructure = [...fileStructure];
@@ -391,7 +436,7 @@ export default function AssignmentWorkspace() {
   };
 
   const handleFileLocalSave = () => {
-    const struct = getFileStruct(activeFile);
+    const struct = getFileStruct(activeLocalFilePath);
     if (!struct) {
       console.error('Error getting struct');
       return;

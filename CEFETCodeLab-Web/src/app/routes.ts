@@ -3,8 +3,9 @@ export enum Route {
   Login = "login",
   Workspace = "workspace",
   Admin = "admin",
-  AdminAssignments = "admin/assignments",
+  AdminAssignments = "/admin/assignments",
   AdminUsers = "admin/users",
   AdminClasses = "admin/classes",
   AdminAssignmentCreate = "admin/assignments/create",
+  AdminTemplate = "/admin/templates",
 }

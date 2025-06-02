@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils';
 import React from 'react';
 
 export interface WorkspaceConsoleProps {
@@ -6,7 +7,11 @@ export interface WorkspaceConsoleProps {
   consoleOutput: string[];
 }
 
-const WorkspaceConsole: React.FC<WorkspaceConsoleProps> = ({ consoleHeight, startResize, consoleOutput }) => {
+const WorkspaceConsole: React.FC<WorkspaceConsoleProps> = ({
+  consoleHeight,
+  startResize,
+  consoleOutput,
+}) => {
   return (
     <>
       <div
@@ -24,11 +29,12 @@ const WorkspaceConsole: React.FC<WorkspaceConsoleProps> = ({ consoleHeight, star
           {consoleOutput.map((line, index) => (
             <div
               key={index}
-              className={
-                line.startsWith('>')
-                  ? 'text-green-400'
-                  : 'text-slate-300'
-              }
+              className={cn(
+                (line.startsWith('>') && 'text-green-400') ||
+                  (line.startsWith('Error:') && 'text-red-400') ||
+                  (line.startsWith('Report:') && 'text-yellow-400'),
+                'whitespace-pre-wrap'
+              )}
             >
               {line}
             </div>

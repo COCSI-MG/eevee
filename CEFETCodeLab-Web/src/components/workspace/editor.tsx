@@ -1,8 +1,11 @@
 import React from 'react';
-import Editor from '@monaco-editor/react';
+import dynamic from 'next/dynamic';
 import { Button } from '../ui/button';
-import { Play, Save } from 'lucide-react';
+import { Loader2Icon, Play, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+const Editor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+});
 
 export interface WorkspaceEditorProps {
   activeFile: string;
@@ -49,7 +52,11 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
               onClick={handleRun}
               disabled={isPending}
             >
-              <Play className="h-4 w-4 mr-2" />
+              {isPending ? (
+                <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4 mr-2" />
+              )}
               Run
             </Button>
             <Button

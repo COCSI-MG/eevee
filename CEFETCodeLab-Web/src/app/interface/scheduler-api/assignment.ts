@@ -1,5 +1,6 @@
 import { AssignmentAttempt } from "./assignment-attempt";
 import { Class } from "./class";
+import { Template } from "./template";
 
 export interface Assignment {
   id: number;
@@ -7,11 +8,11 @@ export interface Assignment {
   title: string;
   description: string;
   validationScript: string;
-  template: string;
   maxAttempts: number;
   workerType: string;
   assignmentAttempts: AssignmentAttempt[];
   class: Class;
+  assignmentTemplates: Template[];
 }
 
 export interface CreateAssignmentRequest {
@@ -19,7 +20,13 @@ export interface CreateAssignmentRequest {
   title: string;
   description: string;
   validationScript: string;
-  template: string;
+  templates: {
+    templateId: number;
+    params: {
+      templateParamId: number;
+      value: string;
+    }[];
+  }[];
   maxAttempts: number;
   workerType: string;
 }
