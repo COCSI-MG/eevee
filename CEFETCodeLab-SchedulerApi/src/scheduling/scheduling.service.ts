@@ -31,8 +31,8 @@ export class SchedulingService {
 
   private calculateScore(result: WorkerResponse) {
     return (
-      result.passes.length /
-      (result.passes.length + result.failures.length || 1)
+      result.passes /
+      (result.passes + result.failures || 1)
     );
   }
 
@@ -104,8 +104,8 @@ export class SchedulingService {
       isAcceptable,
       score,
       report: workerResult.completeTrace,
-      fails: workerResult.failures?.length,
-      passes: workerResult.passes?.length,
+      fails: workerResult.failures,
+      passes: workerResult.passes,
     });
 
     return result;

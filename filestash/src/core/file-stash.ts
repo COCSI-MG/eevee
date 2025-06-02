@@ -12,6 +12,8 @@ export class FileStash<Schema extends FileStashSchema> {
     indexedDB: IDBFactory;
   };
   private stores: ((transaction: Transaction<Schema>) => void)[];
+  private options: FileStashOptions;
+  private versionNumber: number;
 
   idxdb: IDBDatabase;
   storeNames: {
@@ -20,20 +22,41 @@ export class FileStash<Schema extends FileStashSchema> {
 
   constructor(
     readonly name: string,
-    readonly options?: FileStashOptions
+    options?: FileStashOptions
   ) {
     this.name = name;
-    this.options = {
+    this.options = options = {
+      indexedDB: options?.indexedDB || window.indexedDB,
       ...options,
     };
     this.dependencies = {
-      indexedDB: options.indexedDB as IDBFactory,
+      indexedDB: this.options.indexedDB as IDBFactory,
     };
     this.idxdb = null;
+    this.versionNumber = 0;
   }
 
-  makeStores(...stores: ((transaction: Transaction<Schema>) => void)[]) {
+  makeStores(...stores: ((transaction: Transaction<Schema>) => void)[]): {
+    version: (versionNumber: number) => {
+      open: () => Promise<IDBDatabase>;
+    }
+  } {
     this.stores = stores;
+    return {
+      version: this.version.bind(this),
+    };
+  }
+
+  version(versionNumber: number): {
+    open: () => Promise<IDBDatabase>;
+  } {
+    if (isNaN(versionNumber) || versionNumber < 0) {
+      throw new TypeError(
+        `Invalid version number: ${versionNumber}. Version must be a positive integer.`
+      );
+    }
+    versionNumber = Math.round(versionNumber);
+    this.versionNumber = versionNumber;
     return {
       open: this.open.bind(this),
     };
@@ -47,7 +70,7 @@ export class FileStash<Schema extends FileStashSchema> {
           new FileStashError('IndexedDB API is missing', 'IDXDB_API_MISSING')
         );
       }
-      const request = indexedDB.open(this.name);
+      const request = indexedDB.open(this.name, this.versionNumber);
       request.onerror = (event: Event) => {
         event.preventDefault();
         const error =
@@ -101,9 +124,7 @@ export class FileStash<Schema extends FileStashSchema> {
       this.idxdb.transaction(names, 'readonly', {
         durability: 'relaxed',
       })
-    ).stores as {
-      [StoreName in K]: Store<Schema[StoreName]>;
-    };
+    ).stores; 
   }
 
   transactionWrite<K extends Exclude<keyof Schema, symbol | number>>(

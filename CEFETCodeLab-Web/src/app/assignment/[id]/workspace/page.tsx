@@ -3,25 +3,11 @@
 import type React from 'react';
 
 import { useEffect, useRef, useState } from 'react';
-import {
-  FileText,
-  FolderIcon,
-  ChevronRight,
-  ChevronDown,
-  FolderOpen,
-  FileCode,
-} from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { useParams } from 'next/navigation';
 import { SchedulingService } from '@/app/integration/scheduler-api/scheduling';
-import {
-  ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
-} from '@/components/ui/context-menu';
-import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import WorkspaceHeader from '@/components/workspace/header';
 import WorkspaceExercisePanel from '@/components/workspace/exercise-panel';
@@ -29,6 +15,13 @@ import WorkspaceExplorer from '@/components/workspace/explorer';
 import WorkspaceEditor from '@/components/workspace/editor';
 import WorkspaceConsole from '@/components/workspace/console';
 import { FileType, NewItem } from '@/types/shared';
+import {
+  getFileFromStash,
+  initStash,
+  upsertFileInStash,
+} from '@/app/integration/filestash';
+import { getFilePath } from '@/lib/file-path-utils';
+import { DEFAULT_ASSIGNMENT_TEMPLATE } from '@/app/admin/assignments/constants';
 
 export default function AssignmentWorkspace() {
   const { id } = useParams();
@@ -37,6 +30,8 @@ export default function AssignmentWorkspace() {
     'Saída do programa aparecerá aqui',
   ]);
   const [activeFile, setActiveFile] = useState('index.js');
+  const [activeLocalFilePath, setActiveLocalFilePath] =
+    useState<string>('src/index.js');
   const [activeFileContent, setActiveFileContent] = useState<string>('');
   const [explorerWidth, setExplorerWidth] = useState(224); // 56 * 4 = 224px
   const [exercisePanelWidth, setExercisePanelWidth] = useState(288); // 72 * 4 = 288px
@@ -57,7 +52,7 @@ export default function AssignmentWorkspace() {
       isOpen: true,
       children: [
         {
-          id: '2',
+          id: `2-${Date.now()}`,
           name: 'index.js',
           type: 'file',
           lastModified: new Date(),
@@ -91,8 +86,44 @@ export default function AssignmentWorkspace() {
     mutationFn: () => {
       return SchedulingService.createScheduling({
         assignmentId: Number(id),
-        applicationFileContent: getFileContent(activeFile),
+        applicationFileContent: activeFileContent,
       });
+    },
+    onError: (error) => {
+      console.error('Error submitting assignment:', error);
+      setConsoleOutput((prev) => [
+        ...prev,
+        'Error: Ocorreu um erro ao submeter a tarefa.',
+      ]);
+    },
+  });
+
+  const {
+    mutate: saveFileInStash,
+    isPending: isSaving,
+    isError: isSavingError,
+    data: savedFile,
+  } = useMutation({
+    mutationKey: ['save-file'],
+    mutationFn: (activeFileStructure: FileType) => {
+      if (!data) {
+        console.error('No assignment data available');
+        return Promise.reject('No assignment data available');
+      }
+
+      const filePath = getFilePath(activeFileStructure, fileStructure);
+      const key = `${data.id}/${activeFileStructure.id}/${filePath}`;
+      console.log('activeFileContent:', activeFileContent);
+      return upsertFileInStash(
+        {
+          name: filePath,
+          data: activeFileContent,
+          size: activeFileContent.length,
+          createdAt: new Date().toISOString(),
+          updateAt: new Date().toISOString(),
+        },
+        key
+      );
     },
   });
 
@@ -101,9 +132,9 @@ export default function AssignmentWorkspace() {
       console.log('Worker result:', workerResult);
       setConsoleOutput((prev) => [
         ...prev,
-        `Score: ${workerResult.score}`,
-        `Passes: ${workerResult.passes}`,
-        `Fails: ${workerResult.fails}`,
+        `> Score: ${workerResult.score}`,
+        `> Passes: ${workerResult.passes}`,
+        `> Fails: ${workerResult.fails}`,
         `Report: ${workerResult.report.replace(/\\n/g, '\n')}`,
       ]);
     }
@@ -199,6 +230,52 @@ export default function AssignmentWorkspace() {
     }
   }, [newItem.isCreating]);
 
+  useEffect(() => {
+    const localStorageFileStructure = localStorage.getItem(
+      `file-Structure-assignment-${id}`
+    );
+    if (localStorageFileStructure) {
+      const parsedFileStructure = JSON.parse(localStorageFileStructure);
+      setFileStructure(parsedFileStructure);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      `file-Structure-assignment-${id}`,
+      JSON.stringify(fileStructure)
+    );
+  }, [fileStructure, id]);
+
+  useEffect(() => {
+    if (isSavingError) {
+      console.error('Error saving file:', savedFile);
+      toast({
+        title: 'Erro ao salvar o arquivo',
+        description: 'Ocorreu um erro ao salvar o arquivo.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (!isSaving && savedFile) {
+      toast({
+        title: 'Arquivo salvo com sucesso',
+        variant: 'default',
+      });
+    }
+  }, [savedFile, isSaving, isSavingError]);
+
+  useEffect(() => {
+    const initializeStashFn = async () => {
+      try {
+        await initStash();
+      } catch (err) {
+        console.error('Error initializing Filestash:', err);
+      }
+    };
+    initializeStashFn();
+  }, []);
+
   const startResize = (
     element: 'explorer' | 'exercise' | 'console',
     e: React.MouseEvent
@@ -228,27 +305,36 @@ export default function AssignmentWorkspace() {
     setShowExercisePanel(!showExercisePanel);
   };
 
-  const openFile = (filename: string, content?: string) => {
-    setActiveFile(filename);
-    if (content) {
-      setActiveFileContent(content);
-    }
+  const openFile = (file: FileType) => {
+    const filePath = getFilePath(file, fileStructure);
+    setActiveFile(filePath.split('/').pop() || '');
+    setActiveLocalFilePath(filePath);
   };
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
       const updatedStructure = [...fileStructure];
-      // Find and update the file content
-      for (const folder of updatedStructure) {
-        const file = folder.children?.find(
-          (f: FileType) => f.name === activeFile
-        );
-        if (file && file.type === 'file') {
-          file.content = value;
-          file.lastModified = new Date();
-          break;
+      // Find and update the file content by path
+      const updateFileContent = (items: FileType[]): boolean => {
+        for (const item of items) {
+          // Check if this is the active file by comparing paths
+          if (
+            item.type === 'file' &&
+            getFilePath(item, fileStructure) === activeFile
+          ) {
+            item.lastModified = new Date();
+            return true;
+          }
+
+          // Recursively search children
+          if (item.children && updateFileContent(item.children)) {
+            return true;
+          }
         }
-      }
+        return false;
+      };
+
+      updateFileContent(updatedStructure);
       setFileStructure(updatedStructure);
       setActiveFileContent(value);
     }
@@ -257,22 +343,66 @@ export default function AssignmentWorkspace() {
   const getFileIcon = (filename: string) => {
     if (filename.endsWith('.html'))
       return <FileText className="h-4 w-4 text-orange-400" />;
-    if (filename.endsWith('.css'))
+    if (filename.endsWith('.css') || filename.endsWith('.ts'))
       return <FileText className="h-4 w-4 text-blue-400" />;
     if (filename.endsWith('.js'))
       return <FileText className="h-4 w-4 text-yellow-400" />;
     return <FileText className="h-4 w-4" />;
   };
 
-  const getFileContent = (filename: string): string => {
-    for (const folder of fileStructure) {
-      const file = folder.children?.find((f: FileType) => f.name === filename);
-      if (file && file.type === 'file' && file.content) {
-        return file.content;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getFileStruct = (filePath: string): FileType | null => {
+    const findFileByPath = (items: FileType[]): FileType | null => {
+      for (const item of items) {
+        if (
+          item.type === 'file' &&
+          getFilePath(item, fileStructure) === filePath
+        ) {
+          return item;
+        }
+        if (item.children) {
+          const found = findFileByPath(item.children);
+          if (found) return found;
+        }
       }
-    }
-    return '';
+      return null;
+    };
+    return findFileByPath(fileStructure);
   };
+
+  useEffect(() => {
+    const getFileContentFromStash = async (key: string) => {
+      try {
+        const fileData = await getFileFromStash(key);
+        if (fileData && fileData.data && typeof fileData.data === 'string') {
+          setActiveFileContent(fileData.data);
+        } else {
+          console.warn('File not found in stash:', key);
+        }
+      } catch (error) {
+        console.error('Error fetching file from stash:', error);
+      }
+    };
+
+    if (activeLocalFilePath && data && activeFileContent === '') {
+      const fileStruct = getFileStruct(activeLocalFilePath);
+      if (!fileStruct) {
+        console.error(
+          'File structure not found for path:',
+          activeLocalFilePath
+        );
+        return;
+      }
+      const fileKey = `${data.id}/${fileStruct.id}/${activeLocalFilePath}`;
+      getFileContentFromStash(fileKey);
+    }
+  }, [activeFileContent, activeLocalFilePath, data, getFileStruct]);
+
+  useEffect(() => {
+    if (activeFileContent === '') {
+      setActiveFileContent(DEFAULT_ASSIGNMENT_TEMPLATE);
+    }
+  }, [activeFileContent]);
 
   const toggleFolder = (folderId: string) => {
     const updatedStructure = [...fileStructure];
@@ -292,165 +422,6 @@ export default function AssignmentWorkspace() {
     setFileStructure(updatedStructure);
   };
 
-  const renderTree = (items: FileType[], level = 0) => {
-    return items
-      .map((item) => {
-        return (
-          <div key={item.id} className="relative">
-            <ContextMenu>
-              <ContextMenuTrigger
-                disabled={item.type === 'file' || !item.isOpen}
-              >
-                <div
-                  className={`flex items-center gap-1 text-sm py-1 px-1 rounded cursor-pointer group ${
-                    item.type === 'file' && item.name === activeFile
-                      ? 'bg-slate-700'
-                      : 'hover:bg-slate-800'
-                  }`}
-                  style={{ paddingLeft: `${level * 12 + 4}px` }}
-                  onClick={() => {
-                    if (item.type === 'file') {
-                      openFile(item.name, item.content);
-                    } else if (item.type === 'folder') {
-                      if (newItem.isCreating) {
-                        setNewItem({
-                          ...newItem,
-                          isCreating: false,
-                          name: '',
-                        });
-                      }
-                      toggleFolder(item.id);
-                    }
-                  }}
-                >
-                  {item.type === 'folder' && (
-                    <div className="flex-shrink-0">
-                      {item.isOpen ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </div>
-                  )}
-
-                  {item.type === 'folder' ? (
-                    item.isOpen ? (
-                      <FolderOpen className="h-4 w-4 flex-shrink-0 text-blue-300" />
-                    ) : (
-                      <FolderIcon className="h-4 w-4 flex-shrink-0 text-blue-300" />
-                    )
-                  ) : (
-                    getFileIcon(item.name)
-                  )}
-
-                  <span className="truncate flex-grow">{item.name}</span>
-                </div>
-
-                {newItem.isCreating &&
-                  newItem.parentId === item.id &&
-                  item.type === 'folder' && (
-                    <div className="ml-2">
-                      <div
-                        className="flex items-center gap-1 pl-2 mt-1"
-                        style={{ paddingLeft: `${(level + 1) * 12}px` }}
-                      >
-                        {newItem.type === 'folder' ? (
-                          <FolderIcon className="h-4 w-4 flex-shrink-0 text-blue-300" />
-                        ) : (
-                          <FileText className="h-4 w-4 flex-shrink-0 text-blue-300" />
-                        )}
-                        <div className="flex items-center flex-grow">
-                          <Input
-                            ref={newItemRef}
-                            value={newItem.name}
-                            onChange={(e) => {
-                              if (
-                                item.children
-                                  ?.map((child: FileType) => child.name)
-                                  .includes(e.target.value)
-                              ) {
-                                toast({
-                                  title: 'Nome do arquivo já existe',
-                                  description: 'Escolha um nome diferente.',
-                                  variant: 'destructive',
-                                });
-                                return;
-                              }
-
-                              setNewItem({
-                                ...newItem,
-                                name: e.target.value,
-                              });
-                            }}
-                            className="h-6 py-0 text-sm bg-slate-800 border-slate-600"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                const updatedStructure = [...fileStructure];
-                                const newId = `new-${Date.now()}`;
-                                const newItemData: FileType = {
-                                  id: newId,
-                                  name: newItem.name,
-                                  type: newItem.type,
-                                  lastModified: new Date(),
-                                  parentId:
-                                    typeof item.id === 'undefined'
-                                      ? undefined
-                                      : item.id,
-                                  isOpen: false,
-                                  children: [],
-                                };
-                                item.children?.push(newItemData);
-                                setFileStructure(updatedStructure);
-                                setNewItem({
-                                  ...newItem,
-                                  isCreating: false,
-                                  name: '',
-                                });
-                              } else {
-                                if (e.key === 'Escape') {
-                                  setNewItem({
-                                    ...newItem,
-                                    isCreating: false,
-                                    name: '',
-                                  });
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                {item.type === 'folder' && item.children && item.isOpen && (
-                  <div className="ml-2">
-                    {renderTree(item.children, level + 1)}
-                  </div>
-                )}
-              </ContextMenuTrigger>
-              <ContextMenuContent className="w-64">
-                <ContextMenuItem
-                  onClick={() => {
-                    setNewItem({
-                      name: '',
-                      parentId: item.id,
-                      type: 'file',
-                      isCreating: true,
-                    });
-                  }}
-                >
-                  <FileCode className="h-4 w-4 mr-2" />
-                  <span>Criar arquivo</span>
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
-          </div>
-        );
-      })
-      .filter(Boolean);
-  };
-
   const handleRun = () => {
     if (activeFileContent === '') {
       toast({
@@ -462,6 +433,41 @@ export default function AssignmentWorkspace() {
     }
     setConsoleOutput(['Enviando para teste...']);
     submitAssignment();
+  };
+
+  const handleFileLocalSave = () => {
+    const struct = getFileStruct(activeLocalFilePath);
+    if (!struct) {
+      console.error('Error getting struct');
+      return;
+    }
+    saveFileInStash(struct);
+  };
+
+  const handleActiveFileDeleted = () => {
+    const findFirstFile = (items: FileType[]): FileType | null => {
+      for (const item of items) {
+        if (item.type === 'file') {
+          return item;
+        }
+        if (item.children) {
+          const foundFile = findFirstFile(item.children);
+          if (foundFile) {
+            return foundFile;
+          }
+        }
+      }
+      return null;
+    };
+
+    const firstAvailableFile = findFirstFile(fileStructure);
+
+    if (firstAvailableFile) {
+      openFile(firstAvailableFile);
+    } else {
+      setActiveFile('');
+      setActiveFileContent('');
+    }
   };
 
   if (isLoading || !data) {
@@ -493,8 +499,15 @@ export default function AssignmentWorkspace() {
             <WorkspaceExplorer
               explorerWidth={explorerWidth}
               fileStructure={fileStructure}
-              renderTree={renderTree}
               startResize={startResize}
+              activeFile={activeFile}
+              newItem={newItem}
+              onActiveFileDeleted={handleActiveFileDeleted}
+              openFile={openFile}
+              toggleFolder={toggleFolder}
+              setNewItem={setNewItem}
+              setFileStructure={setFileStructure}
+              getFileIcon={getFileIcon}
             />
             <div className="flex-1 flex flex-col overflow-hidden">
               <WorkspaceEditor
@@ -504,9 +517,8 @@ export default function AssignmentWorkspace() {
                 handleEditorChange={handleEditorChange}
                 handleRun={handleRun}
                 isPending={isPending}
-                handleSave={() => {
-                  //TODO: Implement save functionality
-                }}
+                handleSave={() => {}}
+                handleLocalSave={handleFileLocalSave}
               />
               <WorkspaceConsole
                 consoleHeight={consoleHeight}

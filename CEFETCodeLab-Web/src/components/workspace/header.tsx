@@ -2,13 +2,19 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Code, PanelLeft } from 'lucide-react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { useRouter } from 'next/navigation';
 
 export interface WorkspaceHeaderProps {
   showExercisePanel: boolean;
   toggleExercisePanel: () => void;
 }
 
-const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({ showExercisePanel, toggleExercisePanel }) => {
+const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
+  showExercisePanel,
+  toggleExercisePanel,
+}) => {
+  const { back } = useRouter();
+
   return (
     <header className="flex items-center justify-between p-3 border-b border-slate-700">
       <div className="flex items-center gap-2">
@@ -28,16 +34,22 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({ showExercisePanel, to
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <p>{showExercisePanel ? 'Ocultar' : 'Mostrar'} painel de exercícios</p>
+                <p>
+                  {showExercisePanel ? 'Ocultar' : 'Mostrar'} painel de
+                  exercícios
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm">Assigments</Button>
-        <Button variant="ghost" size="sm">Turmas</Button>
-        <Button variant="ghost" size="sm">Ajuda</Button>
+        <Button variant="ghost" size="sm" onClick={() => back()}>
+          Assigments
+        </Button>
+        <Button variant="ghost" size="sm">
+          Ajuda
+        </Button>
       </div>
     </header>
   );

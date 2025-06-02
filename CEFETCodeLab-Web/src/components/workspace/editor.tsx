@@ -1,8 +1,11 @@
 import React from 'react';
-import Editor from '@monaco-editor/react';
+import dynamic from 'next/dynamic';
 import { Button } from '../ui/button';
-import { Play, Save } from 'lucide-react';
+import { Loader2Icon, Play, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+const Editor = dynamic(() => import('@monaco-editor/react'), {
+  ssr: false,
+});
 
 export interface WorkspaceEditorProps {
   activeFile: string;
@@ -12,6 +15,7 @@ export interface WorkspaceEditorProps {
   handleRun: () => void;
   isPending: boolean;
   handleSave: () => void;
+  handleLocalSave: () => void;
 }
 
 const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
@@ -22,7 +26,12 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   handleRun,
   isPending,
   handleSave,
+  handleLocalSave,
 }) => {
+  const editorRef = React.useRef<
+    import('monaco-editor').editor.IStandaloneCodeEditor | null
+  >(null);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="border-b border-slate-700 bg-slate-800">
@@ -43,7 +52,11 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
               onClick={handleRun}
               disabled={isPending}
             >
-              <Play className="h-4 w-4 mr-2" />
+              {isPending ? (
+                <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4 mr-2" />
+              )}
               Run
             </Button>
             <Button
@@ -62,11 +75,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
         <Editor
           height="100%"
           defaultLanguage="typescript"
-          value={
-            activeFileContent === ''
-              ? 'console.log("Hello, World")'
-              : activeFileContent
-          }
+          value={activeFileContent}
           onChange={handleEditorChange}
           theme="vs-dark"
           options={{
@@ -74,7 +83,6 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             scrollBeyondLastLine: false,
             fontSize: 14,
             wordWrap: 'on',
-            theme: 'vs-dark',
             hover: { delay: 300, sticky: false },
             parameterHints: { enabled: false },
             suggest: {
@@ -83,6 +91,22 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
             },
             inlayHints: { enabled: 'off' },
             quickSuggestions: false,
+          }}
+          onMount={(editor, monaco) => {
+            editorRef.current = editor;
+            const container = editor.getDomNode();
+            container?.addEventListener('keydown', (e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                handleLocalSave();
+              }
+            });
+            editor.addCommand(
+              monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
+              () => {
+                handleLocalSave();
+              }
+            );
           }}
         />
       </div>

@@ -40,15 +40,44 @@ export class TemplateService {
 
   }
 
-  findAll() {
-    return this.templateRepository.find();
+  async findAll() {
+    const templates = await this.templateRepository.find();
+    return templates.map(template => {
+      const filePath = path.join(process.cwd(), 'templates-upload', template.filePath);
+      try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        return {
+          ...template,
+          templateContent: content,
+        }
+      } catch (error) {
+        console.error('Erro ao ler o arquivo do template:', error);
+      }
+    })
   }
 
-  findOne(id: number) {
-    return this.templateRepository.findOne({
+  async findOne(id: number) {
+    const template = await this.templateRepository.findOne({
       where: { id },
     });
-  }
+
+    if (!template) {
+      throw new NotFoundException('Template não encontrado');
+    }
+
+    const filePath = path.join(process.cwd(), 'templates-upload', template.filePath);
+
+    try {
+      const content = await fs.promises.readFile(filePath, 'utf-8');
+      return {
+        ...template,
+        templateContent: content,
+      };
+    } catch (error) {
+      console.error('Erro ao ler o arquivo do template:', error);
+      throw new Error('Erro ao carregar o conteúdo do template');
+    }
+}
 
   async update(id: number, updateTemplateDto: UpdateTemplateDto) {
     const { templateContent, params, ...dataToUpdate } = updateTemplateDto;

@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthContext } from "@/app/context/auth-context";
+import { Route } from "@/app/routes";
 // import { Route } from "@/app/routes";
 import axios from "axios";
 
@@ -15,9 +16,25 @@ export const axiosClientWithAuth = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${AuthContext.getAccessToken()}`,
   },
 });
+
+axiosClientWithAuth.interceptors.request.use(
+  (config) => {
+    const accessToken = localStorage.getItem("access_token");
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return config;
+  },
+  (error) => {
+    if (error.response.status === 401) {
+      AuthContext.clear();
+      window.location.href = `/${Route.Login}`;
+    }
+    return Promise.reject(error);
+  },
+);
 
 // axiosClientWithAuth.interceptors.response.use(
 //   (response) => {

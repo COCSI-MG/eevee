@@ -12,15 +12,16 @@ import {
   LogOut,
   Menu,
   Code,
+  CodeSquareIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useEffect, useMemo } from 'react';
-import { AuthContext } from '@/app/context/auth-context';
 import { useRouter } from 'next/navigation';
 import { useAuthUser } from '@/hooks/use-auth-user';
 import { toast } from '@/hooks/use-toast';
+import { Route } from '@/app/routes';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -29,7 +30,7 @@ interface DashboardLayoutProps {
 export default function AdminDashboardLayout({
   children,
 }: DashboardLayoutProps) {
-  const { user } = useAuthUser();
+  const { user, logout } = useAuthUser();
   const pathname = usePathname();
   const { push } = useRouter();
 
@@ -39,7 +40,7 @@ export default function AdminDashboardLayout({
         title: 'Access Denied',
         description: 'You do not have permission to access this page.',
         variant: 'destructive',
-      })
+      });
       push('/classes');
     }
   }, [push, user]);
@@ -65,10 +66,16 @@ export default function AdminDashboardLayout({
         active: pathname.startsWith('/admin/classes'),
       },
       {
-        href: '/admin/assignments',
+        href: Route.AdminAssignments,
         label: 'Assignments',
         icon: FileText,
-        active: pathname.startsWith('/admin/assignments'),
+        active: pathname.startsWith(Route.AdminAssignments),
+      },
+      {
+        href: Route.AdminTemplate,
+        label: 'Templates',
+        icon: CodeSquareIcon,
+        active: pathname.startsWith(Route.AdminTemplate),
       },
     ],
     [pathname]
@@ -113,6 +120,7 @@ export default function AdminDashboardLayout({
               variant="outline"
               className="w-full justify-start text-zinc-400 hover:text-white"
               size="sm"
+              onClick={logout}
             >
               <LogOut className="h-4 w-4 mr-2" />
               Logout
@@ -172,10 +180,7 @@ export default function AdminDashboardLayout({
                     variant="outline"
                     className="w-full justify-start text-zinc-400 hover:text-white"
                     size="sm"
-                    onClick={() => {
-                      AuthContext.clear();
-                      push('/login');
-                    }}
+                    onClick={logout}
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Logout

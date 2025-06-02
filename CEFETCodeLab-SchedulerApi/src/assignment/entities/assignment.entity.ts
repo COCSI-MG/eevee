@@ -41,9 +41,6 @@ export class Assignment {
   @Column()
   description: string;
 
-  @Column({ length: 30000 })
-  template: string;
-
   @Column()
   maxAttempts: number;
 

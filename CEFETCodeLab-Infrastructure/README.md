@@ -84,3 +84,28 @@ docker run --name code-lab-db -e POSTGRES_PASSWORD=code-lab -d -p 5432:5432 post
 Assim você não precisa se preocupar com os dilemas de acessar um banco em uma rede interna como teria que lidar utilizando o minikube.
 
 Se conecte utilizando o usuário e senha padrão `postgres` e `code-lab` respectivamente.
+
+### Atualizando imagem no minikube
+
+Para atualizar a imagem do minikube, é necessário executar os seguintes comandos:
+
+```bash
+# 1. Construir a imagem atualizada
+docker build . -t worker-node-default-img:latest
+
+# 2. Remover a imagem antiga do minikube (opcional, mas recomendado)
+minikube image rm worker-node-default-img:latest
+
+# 3. Carregar a nova imagem no minikube
+minikube image load worker-node-default-img:latest
+
+# 4. Deletar os jobs existentes para forçar o uso da nova imagem
+kubectl delete jobs -l app=worker-node-default
+
+Verificar se as imagens estão disponíveis
+
+```
+
+Verificar se as imagens estão disponíveis no minikube:
+```bash
+minikube ssh "docker images | grep worker-node"

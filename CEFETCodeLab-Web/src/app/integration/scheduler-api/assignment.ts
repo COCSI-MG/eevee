@@ -37,4 +37,9 @@ export class AssignmentService {
 
     return <Assignment>response.data;
   }
+
+  static async DeleteAssignment(id: number) {
+    const response = await axiosClientWithAuth.delete(`/assignment/${id}`);
+    return <Assignment>response.data;
+  }
 }
