@@ -66,11 +66,21 @@ export class SchedulingService {
 
     const createWorkerAndWait = this.workerMap.get(assignment?.workerType)!;
 
-    createSchedulingDto.testFilesContent = await Promise.all(
-      assignment.assignmentTemplates.map(templateRelation =>
-        readFileAsString(templateRelation.template.filePath),
-      )
+    const filledTemplates = await Promise.all(
+      assignment.assignmentTemplates.map(async (templateRelation) => {
+        let content = await readFileAsString(templateRelation.template.filePath);
+        
+        for (const param of templateRelation.template.templateParams) {
+          const paramValue = assignment.assignmentParams.find(
+            (p) => p.templateParamsId === param.id
+          )?.value ?? '';
+          
+          content = content.replace(new RegExp(`\\$${param.name}\\$`, 'g'), paramValue);
+        }
+        return content;
+      })
     );
+    createSchedulingDto.testFilesContent = filledTemplates;
 
     const workerResult = await createWorkerAndWait(createSchedulingDto);
 
