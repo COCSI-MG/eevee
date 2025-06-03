@@ -147,12 +147,12 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white border rounded-2xl border-slate-600">
-      <div className="flex items-center justify-between p-4">
+    <div>
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant={'ghost'}
-            onClick={() => push(`${Route.AdminAssignments}`)}
+            onClick={() => push(`/${Route.AdminAssignments}`)}
           >
             Voltar
           </Button>
