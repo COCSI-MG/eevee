@@ -152,7 +152,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
         <div className="flex items-center gap-4">
           <Button
             variant={'ghost'}
-            onClick={() => push(`/${Route.AdminAssignments}`)}
+            onClick={() => push(`${Route.AdminAssignments}`)}
           >
             Voltar
           </Button>
@@ -325,7 +325,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                           <Button
                             size={'sm'}
                             variant={'outline'}
-                            onClick={() => push(`/${Route.AdminTemplate}/new`)}
+                            onClick={() => push(`${Route.AdminTemplate}/new`)}
                             className="hover:bg-slate-600"
                           >
                             <Plus className="h-4 w-4 mr-2" />
