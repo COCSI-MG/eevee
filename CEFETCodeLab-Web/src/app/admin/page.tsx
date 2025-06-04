@@ -3,29 +3,8 @@ import { Button } from '@/components/ui/button';
 import { FileText, GraduationCap, Users } from 'lucide-react';
 import Link from 'next/link';
 import { MetricsCard } from '@/components/metrics-card';
-import { QueryClient } from '@tanstack/react-query';
-import { UsersService } from '../integration/scheduler-api/user';
-import { AssignmentService } from '../integration/scheduler-api/assignment';
-import { ClassesService } from '../integration/scheduler-api/classes';
 
 export default async function Admin() {
-  const queryClient = new QueryClient();
-
-  await queryClient.prefetchQuery({
-    queryKey: ['users'],
-    queryFn: () => UsersService.getAllUsers(),
-  });
-
-  await queryClient.prefetchQuery({
-    queryKey: ['adminAssignments'],
-    queryFn: () => AssignmentService.GetAssignmentsAdmin(),
-  });
-
-  await queryClient.prefetchQuery({
-    queryKey: ['classes'],
-    queryFn: () => ClassesService.listClasses,
-  });
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
