@@ -1,4 +1,4 @@
-'use-client';
+'use client';
 
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { AssignmentFormProps } from './interface';
