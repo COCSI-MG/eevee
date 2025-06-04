@@ -4,7 +4,7 @@ import React from 'react';
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, X, User, Check, Plus } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,22 +19,8 @@ import { toast } from '@/hooks/use-toast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ClassesService } from '@/app/integration/scheduler-api/classes';
 import { UpsertClass } from '@/app/interface/scheduler-api/class';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import { UsersService } from '@/app/integration/scheduler-api/user';
 import { Textarea } from '@/components/ui/textarea';
+import StudentsCardContent from '@/components/classes/students-card-content';
 
 export default function ClassEditPage() {
   const router = useRouter();
@@ -52,17 +38,7 @@ export default function ClassEditPage() {
     description: '',
     students: [],
   });
-
-  const [open, setOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<
-    {
-      id: number;
-      name: string;
-      email: string;
-    }[]
-  >([]);
-  const [filteredUsers, setFilteredUsers] = useState<
     {
       id: number;
       name: string;
@@ -74,11 +50,6 @@ export default function ClassEditPage() {
     queryKey: ['class', id],
     queryFn: ({ queryKey }) => ClassesService.getOne(Number(queryKey[1])),
     enabled: !isNewClass,
-  });
-
-  const usersQuery = useQuery({
-    queryKey: ['users'],
-    queryFn: UsersService.getAllUsers,
   });
 
   const {
@@ -125,18 +96,6 @@ export default function ClassEditPage() {
     }
   }, [isNewClass, classQuery.isSuccess, classQuery.data]);
 
-  useEffect(() => {
-    if (usersQuery.isSuccess) {
-      const filteredUsers = usersQuery.data.filter(
-        (user) =>
-          !user.isAdmin &&
-          (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredUsers(filteredUsers);
-    }
-  }, [searchTerm, usersQuery.data, usersQuery.isSuccess]);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -150,29 +109,9 @@ export default function ClassEditPage() {
     });
   };
 
-  const handleStudentSelect = (studentId: number) => {
-    if (usersQuery.isSuccess) {
-      const selectedStudent = usersQuery.data.find(
-        (user) => user.id === studentId
-      );
-      if (selectedStudent) {
-        setSelectedStudents((prev) => [...prev, selectedStudent]);
-        setFormData((prev) => ({
-          ...prev,
-          students: [...prev.students, studentId],
-        }));
-        setOpen(false);
-      }
-    }
-  };
-
-  const handleRemoveStudent = (id: number) => {
-    setSelectedStudents((prev) => prev.filter((student) => student.id !== id));
-    setFormData((prev) => ({
-      ...prev,
-      students: prev.students.filter((studentId) => studentId !== id),
-    }));
-  };
+  if (!isNewClass && classQuery.isPending) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -237,125 +176,12 @@ export default function ClassEditPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Students
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="p-0 w-[300px]"
-                  align="start"
-                  side="bottom"
-                  sideOffset={8}
-                >
-                  <Command>
-                    <CommandInput
-                      placeholder="Search students..."
-                      value={searchTerm}
-                      onValueChange={setSearchTerm}
-                    />
-                    <CommandList>
-                      <CommandEmpty>No students found.</CommandEmpty>
-                      <CommandGroup>
-                        {!usersQuery.isPending &&
-                          usersQuery.isSuccess &&
-                          filteredUsers.map((user) => (
-                            <CommandItem
-                              key={user.id}
-                              onSelect={() => handleStudentSelect(user.id)}
-                              className="flex items-center gap-2 p-2"
-                            >
-                              <div
-                                className={
-                                  formData.students.includes(user.id)
-                                    ? 'opacity-100'
-                                    : 'opacity-0'
-                                }
-                              >
-                                <Check className="h-4 w-4" />
-                              </div>
-                              <div className="ml-2">
-                                <p className="text-sm font-medium leading-none">
-                                  {user.name}
-                                </p>
-                                <p className="text-sm text-muted-foreground">
-                                  {user.email}
-                                </p>
-                              </div>
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-
-              <div className="border rounded-md">
-                <div className="p-3 border-b">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium">
-                      Selected Students ({selectedStudents.length})
-                    </h3>
-                    {selectedStudents.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedStudents([]);
-                          setFormData((prev) => ({ ...prev, students: [] }));
-                        }}
-                        className="h-8 px-2 text-xs"
-                      >
-                        Clear All
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <ScrollArea className="h-[250px]">
-                  {selectedStudents.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-[200px] text-center p-4">
-                      <User className="h-10 w-10 text-muted-foreground mb-2 opacity-20" />
-                      <p className="text-sm text-muted-foreground">
-                        No students selected
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Use the Add Students button to enroll students in this
-                        class
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-2">
-                      {selectedStudents.map((student) => (
-                        <div
-                          key={student.id}
-                          className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md"
-                        >
-                          <div className="flex items-center">
-                            <div className="ml-2">
-                              <p className="text-sm font-medium">
-                                {student.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {student.email}
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleRemoveStudent(student.id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </ScrollArea>
-              </div>
+              <StudentsCardContent
+                selectedStudents={selectedStudents}
+                setSelectedStudents={setSelectedStudents}
+                formData={formData}
+                setFormData={setFormData}
+              />
             </CardContent>
           </Card>
         </div>
