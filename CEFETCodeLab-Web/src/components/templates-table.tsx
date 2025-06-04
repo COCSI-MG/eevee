@@ -13,7 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from './ui/dropdown-menu';
-import { Eye, Code, MoreHorizontal, Link, Edit } from 'lucide-react';
+import { Eye, Code, MoreHorizontal, Edit } from 'lucide-react';
 import DeleteAlertDialog from './table/delete-alert-dialog';
 import { Button } from './ui/button';
 import {
@@ -28,6 +28,7 @@ import { TemplatesService } from '@/app/integration/scheduler-api/templates';
 import { useQuery } from '@tanstack/react-query';
 import { Route } from '@/app/routes';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
 });
