@@ -1,5 +1,4 @@
-"use client";
-import { AssignmentForm } from "../assignment-form";
+import { AssignmentForm } from '../assignment-form';
 
 export default function CreateAssignmentPage() {
   return <AssignmentForm />;
