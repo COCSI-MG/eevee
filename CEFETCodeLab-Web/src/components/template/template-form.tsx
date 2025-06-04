@@ -122,115 +122,128 @@ export default function TemplateForm() {
 
   return (
     <div className="p-6">
-      <div className="max-w-2xl mx-auto">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">
-              Informações do Template
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-slate-200">
-                Título *
-              </Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => handleInputChange('title', e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white"
-                placeholder="Ex: Algoritmo de Ordenação"
-              />
-            </div>
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Grid - Form Inputs */}
+          <div className="space-y-6">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white">
+                  Informações do Template
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-slate-200">
+                    Título *
+                  </Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="Ex: Algoritmo de Ordenação"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-slate-200">
-                Descrição *
-              </Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) =>
-                  handleInputChange('description', e.target.value)
-                }
-                className="bg-slate-700 border-slate-600 text-white max-h-[100px]"
-                placeholder="Descreva o propósito e funcionamento deste template..."
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-slate-200">
+                    Descrição *
+                  </Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) =>
+                      handleInputChange('description', e.target.value)
+                    }
+                    className="bg-slate-700 border-slate-600 text-white max-h-[120px]"
+                    placeholder="Descreva o propósito e funcionamento deste template..."
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="templateContent" className="text-slate-200">
-                Código do Template *
-              </Label>
-              <Editor
-                height="500px"
-                defaultLanguage="typescript"
-                value={formData.templateContent}
-                theme="vs-dark"
-                onChange={(value) =>
-                  handleInputChange('templateContent', value || '')
-                }
-                className="bg-slate-700 border-slate-600 text-white"
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  wordWrap: 'on',
-                  wrappingIndent: 'indent',
-                  fontSize: 14,
-                  lineNumbers: 'on',
-                }}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="params" className="text-slate-200">
+                    Parâmetros <br />
+                    Use vírgula para separar os parâmetros Exemplo: param1,
+                    param2, param3
+                  </Label>
+                  <Input
+                    id="params"
+                    value={formData.params.join(',')}
+                    onChange={(e) => {
+                      const params = e.target.value.split(',');
+                      handleInputChange('params', params);
+                    }}
+                    className="bg-slate-700 border-slate-600 text-white"
+                    placeholder="Ex: param1, param2, param3"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="params" className="text-slate-200">
-                Parâmetros <br />
-                Use vírgula para separar os parâmetros Exemplo: param1, param2,
-                param3
-              </Label>
-              <Input
-                id="params"
-                value={formData.params.join(',')}
-                onChange={(e) => {
-                  const params = e.target.value.split(',');
-                  handleInputChange('params', params);
-                }}
-                className="bg-slate-700 border-slate-600 text-white"
-                placeholder="Ex: param1, param2, param3"
-              />
-            </div>
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    variant="outline"
+                    className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                    onClick={() => {
+                      setFormData({
+                        title: '',
+                        description: '',
+                        templateContent: '',
+                        params: [],
+                      });
+                    }}
+                  >
+                    Limpar
+                  </Button>
+                  <Button
+                    onClick={handleSave}
+                    className="flex-1 hover:bg-slate-700"
+                    variant={'outline'}
+                    disabled={mutationStatus === 'pending'}
+                  >
+                    {mutationStatus === 'pending' ? (
+                      <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4 mr-2" />
+                    )}
+                    Salvar Template
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-            <div className="flex gap-2 pt-4">
-              <Button
-                variant="outline"
-                className="border-slate-600 text-slate-200 hover:bg-slate-700"
-                onClick={() => {
-                  setFormData({
-                    title: '',
-                    description: '',
-                    templateContent: '',
-                    params: [],
-                  });
-                }}
-              >
-                Limpar
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="flex-1 hover:bg-slate-700"
-                variant={'outline'}
-                disabled={mutationStatus === 'pending'}
-              >
-                {mutationStatus === 'pending' ? (
-                  <Loader2Icon className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="w-4 h-4 mr-2" />
-                )}
-                Salvar Template
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="space-y-6">
+            <Card className="bg-slate-800 border-slate-700">
+              <CardHeader>
+                <CardTitle className="text-white">
+                  Código do Template *
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pb-6">
+                <div style={{ height: '600px' }}>
+                  <Editor
+                    height="600px"
+                    defaultLanguage="typescript"
+                    value={formData.templateContent}
+                    theme="vs-dark"
+                    onChange={(value) =>
+                      handleInputChange('templateContent', value || '')
+                    }
+                    className="bg-slate-700 border-slate-600 text-white"
+                    options={{
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      wordWrap: 'on',
+                      wrappingIndent: 'indent',
+                      fontSize: 14,
+                      lineNumbers: 'on',
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
