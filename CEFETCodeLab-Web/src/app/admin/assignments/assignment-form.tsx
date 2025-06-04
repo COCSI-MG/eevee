@@ -116,8 +116,10 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
       });
 
       push(`${Route.AdminAssignments}`);
-    } else if (isSuccess && workerResult) {
-      console.error('Worker result:', workerResult);
+    } else {
+      if (workerResult) {
+        console.error('Worker result:', workerResult);
+      }
       toast({
         title: 'Ocorreu um erro ao salvar o assignment',
         description: 'Tente novamente mais tarde.',
