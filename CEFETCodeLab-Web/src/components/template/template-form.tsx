@@ -20,6 +20,7 @@ export default function TemplateForm() {
   const { id } = useParams<{
     id: string;
   }>();
+  const isNewTemplate = id === 'new';
   const [formData, setFormData] = useState<CreateTemplateRequest>({
     title: '',
     description: '',
@@ -119,6 +120,10 @@ export default function TemplateForm() {
     }
     upsertTemplate(formData);
   };
+
+  if (!isNewTemplate && isTemplateLoading) {
+    return <div className="p-6">Loading...</div>;
+  }
 
   return (
     <div className="p-6">
