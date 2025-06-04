@@ -1,93 +1,10 @@
-'use client';
 import { Route } from '../routes';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { useQuery } from '@tanstack/react-query';
-import {
-  FileText,
-  GraduationCap,
-  LucideProps,
-  User,
-  Users,
-} from 'lucide-react';
+import { FileText, GraduationCap, Users } from 'lucide-react';
 import Link from 'next/link';
-import { UsersService } from '../integration/scheduler-api/user';
-import { ClassesService } from '../integration/scheduler-api/classes';
-import {
-  ForwardRefExoticComponent,
-  RefAttributes,
-  useEffect,
-  useState,
-} from 'react';
-import { AssignmentService } from '../integration/scheduler-api/assignment';
+import { MetricsCard } from '@/components/metrics-card';
 
-interface Metrics {
-  title: string;
-  value: string;
-  description: string;
-  icon: ForwardRefExoticComponent<
-    Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>
-  >;
-  href: string;
-}
-
-export default function Admin() {
-  const [metrics, setMetrics] = useState<Metrics[]>([]);
-
-  const usersQuery = useQuery({
-    queryKey: ['users'],
-    initialData: [],
-    queryFn: UsersService.getAllUsers,
-  });
-  const classQuery = useQuery({
-    queryKey: ['classes'],
-    initialData: [],
-    queryFn: ClassesService.listClasses,
-  });
-  const assignmentQuery = useQuery({
-    queryKey: ['adminAssignments'],
-    queryFn: AssignmentService.GetAssignmentsAdmin,
-  });
-
-  useEffect(() => {
-    if (
-      usersQuery.isSuccess &&
-      classQuery.isSuccess &&
-      assignmentQuery.isSuccess
-    ) {
-      setMetrics([
-        {
-          title: 'Total Users',
-          value: usersQuery.data.length.toString(),
-          description: 'Total numbers of users coding with EEVEE',
-          icon: User,
-          href: Route.AdminUsers,
-        },
-        {
-          title: 'Total Classes',
-          value: classQuery.data.length.toString(),
-          description: 'Total number of classes created',
-          icon: GraduationCap,
-          href: Route.AdminClasses,
-        },
-        {
-          title: 'Total Assignments',
-          value: assignmentQuery.data.length.toString(),
-          description: 'Total number of assignments created',
-          icon: FileText,
-          href: Route.AdminAssignments,
-        },
-      ]);
-    }
-  }, [
-    usersQuery.isSuccess,
-    classQuery.isSuccess,
-    assignmentQuery.isSuccess,
-    usersQuery.data,
-    classQuery.data,
-    assignmentQuery.data,
-  ]);
-
+export default async function Admin() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -95,30 +12,7 @@ export default function Admin() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        {(metrics ?? []).map((metric) => (
-          <Card
-            key={metric.title}
-            className="hover:shadow-md transition-shadow"
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {metric.title}
-              </CardTitle>
-              <metric.icon className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{metric.value}</div>
-              <p className="text-xs text-muted-foreground">
-                {metric.description}
-              </p>
-              <Link href={metric.href} className="block mt-4">
-                <Button variant="outline" size="sm" className="w-full">
-                  View Details
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
+        <MetricsCard />
       </div>
 
       <div className="space-y-4">

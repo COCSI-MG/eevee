@@ -1,6 +1,8 @@
+'use client';
+
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { AssignmentFormProps } from './interface';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import dynamic from 'next/dynamic';
@@ -11,31 +13,16 @@ import {
   WorkerExibitionMap,
 } from './constants';
 import { WorkerType } from '@/app/interface/scheduler-api/worker';
-import { ClassesService } from '@/app/integration/scheduler-api/classes';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Route } from '@/app/routes';
-import { TemplatesService } from '@/app/integration/scheduler-api/templates';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Check, Code, Eye, FileText, Plus } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { FileText } from 'lucide-react';
+import { useClasses } from '@/hooks/use-classes';
+import { toast } from '@/hooks/use-toast';
+import TemplateCard from '@/components/assignment/template-card';
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 const validationSchema = Yup.object({
@@ -69,21 +56,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     refetchOnMount: true,
   });
 
-  console.log('existingAssignment', existingAssignment);
-
-  const { data: classes } = useQuery({
-    queryKey: ['getClasses'],
-    queryFn: ClassesService.listClasses,
-  });
-
-  const {
-    data: templates,
-    isSuccess: isSuccessTemplates,
-    isPending: isPendingTemplates,
-  } = useQuery({
-    queryKey: ['templates'],
-    queryFn: TemplatesService.listTemplates,
-  });
+  const { data: classes } = useClasses();
 
   const {
     mutateAsync: upsertAssignment,
@@ -125,12 +98,34 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
         (existingAssignment?.workerType ||
           WorkerType.NODE_DEFAULT) as WorkerType
       ],
-    classId: existingAssignment?.classId,
+    classId: existingAssignment?.classId || 0,
   };
 
   useEffect(() => {
     if (isSuccess) {
+      const queryClient = new QueryClient();
+      queryClient.invalidateQueries({
+        queryKey: ['adminAssignments'],
+      });
+
+      toast({
+        title: 'Assignment saved successfully',
+        description: 'The assignment has been created/updated successfully.',
+        variant: 'default',
+        duration: 5000,
+      });
+
       push(`${Route.AdminAssignments}`);
+    } else {
+      if (workerResult) {
+        console.error('Worker result:', workerResult);
+      }
+      toast({
+        title: 'Ocorreu um erro ao salvar o assignment',
+        description: 'Tente novamente mais tarde.',
+        variant: 'destructive',
+        duration: 5000,
+      });
     }
   }, [isSuccess, push, workerResult]);
 
@@ -251,6 +246,9 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                             name="classId"
                             className="mt-1 block w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                           >
+                            <option value="" disabled>
+                              Selecione uma disciplina
+                            </option>
                             {(classes ?? []).map((classe) => (
                               <option
                                 key={Number(classe.id)}
@@ -318,150 +316,10 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
-                      <CardHeader>
-                        <CardTitle className="text-white flex items-center justify-between">
-                          Templates
-                          <Button
-                            size={'sm'}
-                            variant={'outline'}
-                            onClick={() => push(`${Route.AdminTemplate}/new`)}
-                            className="hover:bg-slate-600"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Adicionar
-                          </Button>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {!isPendingTemplates &&
-                        isSuccessTemplates &&
-                        templates.length === 0 ? (
-                          <div className="text-center py-8 text-slate-400">
-                            Nenhum template encontrado
-                            <p className="text-sm mt-2">
-                              Clique em &quot;Adicionar&quot; para criar um
-                              template
-                            </p>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="text-sm text-slate-400 mb-4">
-                              Selecione o template que será usado para avaliar
-                              os alunos
-                            </p>
-                            <ScrollArea className="h-[500px] pr-4">
-                              <div className="space-y-3">
-                                {(templates ?? []).map((template) => (
-                                  <div
-                                    key={template.id}
-                                    className={cn(
-                                      `p-3 rounded-lg border cursor-pointer transition-all`,
-                                      selectedTemplates.some(
-                                        (templ) =>
-                                          templ.templateId ===
-                                          Number(template.id)
-                                      )
-                                        ? 'bg-blue-500 bg-blue-500/10'
-                                        : 'bg-slate-600 bg-slate-700/10 hover:bg-slate-700'
-                                    )}
-                                    onClick={() => {
-                                      const isSelected = selectedTemplates.some(
-                                        (templ) =>
-                                          templ.templateId ===
-                                          Number(template.id)
-                                      );
-
-                                      if (isSelected) {
-                                        setSelectedTemplates(
-                                          selectedTemplates.filter(
-                                            (templ) =>
-                                              templ.templateId !==
-                                              Number(template.id)
-                                          )
-                                        );
-                                      } else {
-                                        setSelectedTemplates([
-                                          ...selectedTemplates,
-                                          {
-                                            templateId: Number(template.id),
-                                            params: template.templateParams.map(
-                                              (param) => ({
-                                                templateParamId: Number(
-                                                  param.id
-                                                ),
-                                                value: param.name,
-                                              })
-                                            ),
-                                          },
-                                        ]);
-                                      }
-                                    }}
-                                  >
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <h4 className="font-medium text-white">
-                                            {template.title}
-                                          </h4>
-                                          {selectedTemplates.some(
-                                            (templ) =>
-                                              templ.templateId ===
-                                              Number(template.id)
-                                          ) && (
-                                            <Check className="w-4 h-4 text-blue-400" />
-                                          )}
-                                        </div>
-                                        <p className="text-sm text-slate-300">
-                                          {template.description}
-                                        </p>
-                                      </div>
-                                      <Dialog>
-                                        <DialogTrigger asChild>
-                                          <Button
-                                            variant={'ghost'}
-                                            size={'sm'}
-                                            className="text-blue-400 hover:text-blue-300 hover:bg-slate-600 ml-2"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <Eye className="h-4 w-4" />
-                                          </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80hv]">
-                                          <DialogHeader>
-                                            <DialogHeader>
-                                              <DialogTitle>
-                                                <Code className="w-5 h-5" />
-                                                {template.title}
-                                              </DialogTitle>
-                                            </DialogHeader>
-                                            <div className="space-y-4">
-                                              <p className="text-slate-300">
-                                                {template.description}
-                                              </p>
-                                              <div className="bg-slate-900 border-slate-600 rounded-md p-4 max-h-[50vh] overflow-y-auto">
-                                                <pre className="whitespace-pre-wrap break-words text-green-400">
-                                                  {template.templateContent}
-                                                </pre>
-                                              </div>
-                                            </div>
-                                          </DialogHeader>
-                                        </DialogContent>
-                                      </Dialog>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </ScrollArea>
-                          </>
-                        )}
-                      </CardContent>
-                      <CardFooter>
-                        <Badge className="bg-blue-600 text-white">
-                          {selectedTemplates.length} Template(s) Selecionado(s)
-                        </Badge>
-                      </CardFooter>
-                    </Card>
+                    <TemplateCard
+                      selectedTemplates={selectedTemplates}
+                      setSelectedTemplates={setSelectedTemplates}
+                    />
 
                     <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
                       <CardHeader>

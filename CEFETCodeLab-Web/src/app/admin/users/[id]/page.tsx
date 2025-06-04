@@ -36,7 +36,7 @@ export default function UserEditPage() {
     isAdmin: false,
   });
 
-  const { data } = useQuery({
+  const { data, isPending } = useQuery({
     queryKey: ['adminUsers', id],
     enabled: !isNewUser,
     queryFn: ({ queryKey }) => UsersService.getUserById(Number(queryKey[1])),
@@ -60,7 +60,7 @@ export default function UserEditPage() {
     if (!isNewUser && data) {
       setFormData({
         ...data,
-        password: data.passwordHash
+        password: data.passwordHash,
       });
     }
   }, [data, isNewUser]);
@@ -95,6 +95,10 @@ export default function UserEditPage() {
     };
     upsertUser(userData);
   };
+
+  if (!isNewUser && isPending) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -150,7 +154,7 @@ export default function UserEditPage() {
                 id="password"
                 name="password"
                 type="password"
-                value={formData.password}
+                value={formData.password ?? ''}
                 onChange={handleChange}
                 placeholder="Enter password"
                 required

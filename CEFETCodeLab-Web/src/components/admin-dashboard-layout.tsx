@@ -33,53 +33,58 @@ export default function AdminDashboardLayout({
   const { user, logout } = useAuthUser();
   const pathname = usePathname();
   const { push } = useRouter();
+  const isUserAdmin = useMemo(() => user?.isAdmin ?? false, [user?.isAdmin]);
 
   useEffect(() => {
-    if (user && !user.isAdmin) {
+    if (user && !isUserAdmin) {
       toast({
         title: 'Access Denied',
         description: 'You do not have permission to access this page.',
         variant: 'destructive',
       });
-      push('/classes');
+      push(`/${Route.Assignment}`);
     }
-  }, [push, user]);
+  }, [isUserAdmin, push, user]);
 
-  const routes = useMemo(
-    () => [
+  const routes = useMemo(() => {
+    const isActiveRoute = (href: string) => {
+      if (href === '/admin') return pathname === '/admin';
+      return pathname.startsWith(href);
+    };
+
+    return [
       {
         href: '/admin',
         label: 'Dashboard',
         icon: LayoutDashboard,
-        active: pathname === '/admin',
+        active: isActiveRoute('/admin'),
       },
       {
         href: '/admin/users',
         label: 'Users',
         icon: Users,
-        active: pathname.startsWith('/admin/users'),
+        active: isActiveRoute('/admin/users'),
       },
       {
         href: '/admin/classes',
         label: 'Classes',
         icon: GraduationCap,
-        active: pathname.startsWith('/admin/classes'),
+        active: isActiveRoute('/admin/classes'),
       },
       {
         href: Route.AdminAssignments,
         label: 'Assignments',
         icon: FileText,
-        active: pathname.startsWith(Route.AdminAssignments),
+        active: isActiveRoute(Route.AdminAssignments),
       },
       {
         href: Route.AdminTemplate,
         label: 'Templates',
         icon: CodeSquareIcon,
-        active: pathname.startsWith(Route.AdminTemplate),
+        active: isActiveRoute(Route.AdminTemplate),
       },
-    ],
-    [pathname]
-  );
+    ];
+  }, [pathname]);
 
   return (
     <div className="h-full relative">
