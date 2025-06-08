@@ -81,7 +81,7 @@ if [ "$HTTP_CODE" -ne 200 ]; then
 fi
 
 GITHUB_USERNAME=$(
-    grep -o '"login":\s*"[^"]*"' /tmp/github_auth_test.json | cut -d'"' -f4
+    grep -o -P '"login":\s*"[^"]*"' /tmp/github_auth_test.json | cut -d'"' -f4
 )
 
 print_success "Authenticated as GitHub user: $GITHUB_USERNAME"
