@@ -178,7 +178,6 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   Object.values(WorkerType).includes(workerType as WorkerType)
                 ) {
                   const safeWorkerType = workerType as WorkerType;
-                  console.log('setting template');
                   setFieldValue(
                     'template',
                     WorkerDefaultTemplateMap[safeWorkerType]
