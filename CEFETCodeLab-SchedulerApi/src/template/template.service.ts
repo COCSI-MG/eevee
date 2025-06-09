@@ -1,9 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Template } from './entities/template.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { TemplateParam } from 'src/template_params/entities/template_param.entity';
@@ -112,14 +112,39 @@ export class TemplateService {
     });
 
     if (params) {
-      await this.templateParamsRepository.delete({ templateId: id });
+      const existingParams = await this.templateParamsRepository.find({
+        where: { templateId: id },
+      });
 
-      const newParams = params.map((param) => ({
-        name: param,
+      const existingNames = existingParams.map((p) => p.name);
+
+      const removedParams = existingNames.filter(name => !params.includes(name));
+
+      if (removedParams.length) {
+        const isTemplateAssociatedToAssignment = await this.assignmentTemplateRepository.findOne({
+          where: { templateId: id },
+        });
+
+        if (isTemplateAssociatedToAssignment) {
+          throw new BadRequestException('Não é permitido remover parâmetros de um template já associado a um assignment.');
+        }
+
+        await this.templateParamsRepository.delete({
         templateId: id,
-      }));
+        name: In(removedParams),
+      });
+      }
 
-      await this.templateParamsRepository.save(newParams);
+      const newParams = params
+        .filter(name => !existingNames.includes(name))
+        .map(name => ({
+          name,
+          templateId: id,
+        }));
+
+      if (newParams.length) {
+        await this.templateParamsRepository.save(newParams);
+      }
     }
   }
 
