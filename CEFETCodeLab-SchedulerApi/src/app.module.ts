@@ -20,7 +20,10 @@ import { TemplateModule } from './template/template.module';
 import { AssignmentTemplateModule } from './assignment_template/assignment_template.module';
 import { TemplateParamsModule } from './template_params/template_params.module';
 import { AssignmentParamsModule } from './assignment_params/assignment_params.module';
+import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
+import { KafkaModule } from './kafka/kafka.module';
+import { GithubModule } from './github/github.module';
 
 @Module({
   imports: [
@@ -58,6 +61,9 @@ import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
     AssignmentTemplateModule,
     TemplateParamsModule,
     AssignmentParamsModule,
+    FileSaverModule,
+    KafkaModule,
+    GithubModule,
   ],
   controllers: [AppController],
   providers: [AppService],
