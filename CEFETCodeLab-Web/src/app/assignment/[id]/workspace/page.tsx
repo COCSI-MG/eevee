@@ -10,7 +10,6 @@ import { useParams } from 'next/navigation';
 import { SchedulingService } from '@/app/integration/scheduler-api/scheduling';
 import { toast } from '@/hooks/use-toast';
 import WorkspaceHeader from '@/components/workspace/header';
-import WorkspaceExercisePanel from '@/components/workspace/exercise-panel';
 import WorkspaceExplorer from '@/components/workspace/explorer';
 import WorkspaceEditor from '@/components/workspace/editor';
 import WorkspaceConsole from '@/components/workspace/console';
@@ -22,10 +21,11 @@ import {
 } from '@/app/integration/filestash';
 import { getFilePath } from '@/lib/file-path-utils';
 import { DEFAULT_ASSIGNMENT_TEMPLATE } from '@/app/admin/assignments/constants';
+import { useAuthUser } from '@/hooks/use-auth-user';
+import FileSaverService from '@/app/integration/scheduler-api/file-saver';
 
 export default function AssignmentWorkspace() {
   const { id } = useParams();
-  const [showExercisePanel, setShowExercisePanel] = useState(true);
   const [consoleOutput, setConsoleOutput] = useState<string[]>([
     'Saída do programa aparecerá aqui',
   ]);
@@ -36,7 +36,6 @@ export default function AssignmentWorkspace() {
   const [explorerWidth, setExplorerWidth] = useState(224); // 56 * 4 = 224px
   const [exercisePanelWidth, setExercisePanelWidth] = useState(288); // 72 * 4 = 288px
   const [consoleHeight, setConsoleHeight] = useState(128); // 32 * 4 = 128px
-  const descriptionRef = useRef<HTMLDivElement>(null);
   const isResizingRef = useRef(false);
   const resizingElementRef = useRef<'explorer' | 'exercise' | 'console' | null>(
     null
@@ -69,6 +68,7 @@ export default function AssignmentWorkspace() {
     isCreating: false,
   });
   const newItemRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuthUser();
 
   const { data, isLoading } = useQuery({
     queryKey: ['assigment', id],
@@ -127,6 +127,27 @@ export default function AssignmentWorkspace() {
     },
   });
 
+  const { mutate: saveFileAtServer, isPending: isSavingAtServer } = useMutation(
+    {
+      mutationKey: ['save-file-at-server'],
+      mutationFn: (file: File) => {
+        if (!data) {
+          console.error('No assignment data available');
+          return Promise.reject('No assignment data available');
+        }
+        if (!user) {
+          console.error('No user data available');
+          return Promise.reject('No user data available');
+        }
+        return FileSaverService.uploadFileToServer(
+          file,
+          Number(data.id),
+          Number(user.id)
+        );
+      },
+    }
+  );
+
   useEffect(() => {
     if (!isPending && workerResult) {
       console.log('Worker result:', workerResult);
@@ -166,17 +187,9 @@ export default function AssignmentWorkspace() {
     document.addEventListener('contextmenu', preventDefaultAction);
     // Prevent keyboard shortcuts
     document.addEventListener('keydown', preventKeyboardShortcuts);
-    // Prevent text selection in exercise panel
-    const exercisePanel = document.querySelector('.exercise-panel');
-    if (exercisePanel) {
-      exercisePanel.addEventListener('selectstart', preventDefaultAction);
-    }
     return () => {
       document.removeEventListener('contextmenu', preventDefaultAction);
       document.removeEventListener('keydown', preventKeyboardShortcuts);
-      if (exercisePanel) {
-        exercisePanel.removeEventListener('selectstart', preventDefaultAction);
-      }
     };
   }, []);
 
@@ -299,10 +312,6 @@ export default function AssignmentWorkspace() {
 
     document.body.style.userSelect = 'none';
     e.preventDefault();
-  };
-
-  const toggleExercisePanel = () => {
-    setShowExercisePanel(!showExercisePanel);
   };
 
   const openFile = (file: FileType) => {
@@ -470,6 +479,22 @@ export default function AssignmentWorkspace() {
     }
   };
 
+  const handleSave = () => {
+    if (activeFileContent === '') {
+      toast({
+        title: 'Erro',
+        description: 'O arquivo está vazio.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    saveFileAtServer(
+      new File([activeFileContent], activeLocalFilePath, {
+        type: 'text/plain',
+      })
+    );
+  };
+
   if (isLoading || !data) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -481,19 +506,8 @@ export default function AssignmentWorkspace() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-900 text-white">
-      <WorkspaceHeader
-        showExercisePanel={showExercisePanel}
-        toggleExercisePanel={toggleExercisePanel}
-      />
+      <WorkspaceHeader />
       <div className="flex flex-1 overflow-hidden">
-        {showExercisePanel && (
-          <WorkspaceExercisePanel
-            data={{ title: data.title, description: data.description }}
-            exercisePanelWidth={exercisePanelWidth}
-            descriptionRef={descriptionRef as React.RefObject<HTMLDivElement>}
-            startResize={startResize}
-          />
-        )}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex flex-1 overflow-hidden explorer-panel">
             <WorkspaceExplorer
@@ -517,7 +531,8 @@ export default function AssignmentWorkspace() {
                 handleEditorChange={handleEditorChange}
                 handleRun={handleRun}
                 isPending={isPending}
-                handleSave={() => {}}
+                handleSave={handleSave}
+                isSavingAtServer={isSavingAtServer}
                 handleLocalSave={handleFileLocalSave}
               />
               <WorkspaceConsole
