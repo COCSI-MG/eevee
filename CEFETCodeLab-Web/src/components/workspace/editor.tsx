@@ -15,6 +15,7 @@ export interface WorkspaceEditorProps {
   handleRun: () => void;
   isPending: boolean;
   handleSave: () => void;
+  isSavingAtServer: boolean;
   handleLocalSave: () => void;
 }
 
@@ -26,6 +27,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   handleRun,
   isPending,
   handleSave,
+  isSavingAtServer,
   handleLocalSave,
 }) => {
   const editorRef = React.useRef<
@@ -64,9 +66,12 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
               size={'sm'}
               className="h-9 px-4"
               onClick={handleSave}
+              disabled={isSavingAtServer}
             >
               <Save className="h-4 w-4 mr-2" />
-              <span className="text-sm font-medium">Save</span>
+              <span className="text-sm font-medium">
+                {isSavingAtServer ? 'Salvando' : 'Save'}
+              </span>
             </Button>
           </div>
         </div>
