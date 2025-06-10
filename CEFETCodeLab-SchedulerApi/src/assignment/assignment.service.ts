@@ -152,10 +152,6 @@ export class AssignmentService {
           value: param.value,
         })),
       );
-      
-      console.log('assignmentTemplateEntities: ', assignmentTemplateEntities);
-      console.log('assignmentParamsEntities: ', assignmentParamsEntities);
-
       await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
       await this.assignmentParamsRepository.save(assignmentParamsEntities);
     }
