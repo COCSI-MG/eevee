@@ -134,7 +134,7 @@ export class AssignmentService {
       throw new NotFoundException('Tarefa não encontrada');
     }
 
-    await this.assignmentRepository.update(id, dataToUpdate);
+    if (Object.keys(dataToUpdate).length > 0) await this.assignmentRepository.update(id, dataToUpdate);
 
     if (updateAssignmentDto.templates && updateAssignmentDto.templates.length > 0) {
       await this.assignmentTemplateRepository.delete({ assignmentId: id });
@@ -152,7 +152,10 @@ export class AssignmentService {
           value: param.value,
         })),
       );
-  
+      
+      console.log('assignmentTemplateEntities: ', assignmentTemplateEntities);
+      console.log('assignmentParamsEntities: ', assignmentParamsEntities);
+
       await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
       await this.assignmentParamsRepository.save(assignmentParamsEntities);
     }
