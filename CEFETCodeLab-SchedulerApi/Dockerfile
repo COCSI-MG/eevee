@@ -12,20 +12,3 @@ RUN npm run build
 
 EXPOSE 3000
 CMD ["npm", "start:prod"]
-# ADD ./sr
-
-# WORKDIR /root/GESTOP-IMOBILIARIO-FRONT
-
-# ARG ENVIRONMENT
-# ENV ENVIRONMENT=${ENVIRONMENT}
-# ADD .env-${ENVIRONMENT} .env
-
-# RUN npm i
-
-# # system validations
-# RUN npm run lint
-
-# RUN npm run build
-
-# EXPOSE 3000
-# CMD ["npm", "start"]
