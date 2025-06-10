@@ -3,7 +3,7 @@ import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
@@ -22,6 +22,7 @@ export class AssignmentService {
     @InjectRepository(UserClass)
     private readonly userClassRepository: Repository<UserClass>,
     private readonly classservice: ClassService,
+    private dataSource: DataSource,
     private readonly requestContextService: RequestContextService,
   ) {}
   async create(createAssignmentDto: CreateAssignmentDto) {
@@ -48,7 +49,6 @@ export class AssignmentService {
         })),
       );
       
-      console.log('assignmentParamsEntities: ', assignmentParamsEntities)
       await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
       await this.assignmentParamsRepository.save(assignmentParamsEntities);
     }
@@ -160,7 +160,15 @@ export class AssignmentService {
     return this.assignmentRepository.findOne({ where: { id } });
   }
 
-  remove(id: number) {
-    return this.assignmentRepository.delete({ id });
+  async remove(id: number) {
+    const assignmentExists = await this.assignmentRepository.findOne({ where: { id }});
+
+    if (!assignmentExists) throw new NotFoundException('Assignment não encontrado!');
+
+    return this.dataSource.transaction(async (manager) => {
+      await manager.delete(AssignmentTemplate, { assignmentId: id });
+      await manager.delete(AssignmentParam, { assignmentId: id });
+      return manager.delete(Assignment, { id });
+    });
   }
 }
