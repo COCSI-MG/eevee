@@ -1,18 +1,11 @@
+'use client';
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Code, PanelLeft } from 'lucide-react';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Code, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-export interface WorkspaceHeaderProps {
-  showExercisePanel: boolean;
-  toggleExercisePanel: () => void;
-}
-
-const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
-  showExercisePanel,
-  toggleExercisePanel,
-}) => {
+const WorkspaceHeader: React.FC = () => {
   const { back } = useRouter();
 
   return (
@@ -21,26 +14,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         <Code className="h-5 w-5" />
         <span className="font-bold text-lg">EEVEE</span>
         <div className="ml-4 flex items-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={showExercisePanel ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={toggleExercisePanel}
-                >
-                  <PanelLeft className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>
-                  {showExercisePanel ? 'Ocultar' : 'Mostrar'} painel de
-                  exercícios
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Info className="h-4 w-4 text-slate-400" />
         </div>
       </div>
       <div className="flex items-center gap-4">

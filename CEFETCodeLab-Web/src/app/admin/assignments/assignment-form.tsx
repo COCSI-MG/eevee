@@ -61,6 +61,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   const {
     mutateAsync: upsertAssignment,
     isSuccess,
+    isError,
     data: workerResult,
   } = useMutation({
     mutationKey: ['upsertAssignment', existingAssignmentId],
@@ -116,18 +117,21 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
       });
 
       push(`${Route.AdminAssignments}`);
-    } else {
+    }
+    if (isError) {
       if (workerResult) {
         console.error('Worker result:', workerResult);
       }
       toast({
-        title: 'Ocorreu um erro ao salvar o assignment',
+        title: `Ocorreu um erro ao ${
+          existingAssignmentId !== undefined ? 'criar' : 'atualizar'
+        } o assignment`,
         description: 'Tente novamente mais tarde.',
         variant: 'destructive',
         duration: 5000,
       });
     }
-  }, [isSuccess, push, workerResult]);
+  }, [isSuccess, push, workerResult, isError, existingAssignmentId]);
 
   const handleSubmit = (values: typeof initialValues) => {
     console.log(values);
@@ -178,7 +182,6 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   Object.values(WorkerType).includes(workerType as WorkerType)
                 ) {
                   const safeWorkerType = workerType as WorkerType;
-                  console.log('setting template');
                   setFieldValue(
                     'template',
                     WorkerDefaultTemplateMap[safeWorkerType]
