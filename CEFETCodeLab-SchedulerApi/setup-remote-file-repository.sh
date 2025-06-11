@@ -100,8 +100,8 @@ REPO_CHECK_HTTP_CODE="${REPO_CHECK_RESPONSE: -3}"
 if [ "$REPO_CHECK_HTTP_CODE" -eq 200 ]; then
     print_warning "Repository '$REPO_NAME' already exists!"
     
-    REPO_URL=$(grep -o '"clone_url":"[^"]*"' /tmp/github_repo_check.json | cut -d'"' -f4)
-    IS_PRIVATE=$(grep -o '"private":[^,}]*' /tmp/github_repo_check.json | cut -d':' -f2)
+    REPO_URL=$(grep -o '"clone_url":\s*"[^"]*"' /tmp/github_repo_check.json | cut -d'"' -f4)
+    IS_PRIVATE=$(grep -o '"private":\s*[^,}]*' /tmp/github_repo_check.json | cut -d':' -f2)
     
     print_info "Repository URL: $REPO_URL"
     print_info "Private: $IS_PRIVATE"
@@ -280,7 +280,7 @@ print_info "Cleaning local repository"
 
 rm -rf $LOCAL_REPO_PATH
 
-print_info "Local repo cleaned";
+print_success "Local repo cleaned";
 
 echo
 print_info "=== Configuration Summary ==="
