@@ -16,7 +16,7 @@ import { SyncJob, JobType, JobStatus } from './entities/sync-job.entity';
 import { FileUploadDto } from './dto/file-operation.dto';
 import { Cron, Interval } from '@nestjs/schedule';
 import { ProducerService } from 'src/kafka/producer.service';
-import { readFile } from 'node:fs/promises';
+import { readFile, rm } from 'node:fs/promises';
 import GithubService from 'src/github/github.service';
 
 @Injectable()
@@ -251,6 +251,44 @@ export class FileSaverService {
         ]);
       }
     }
+  }
+
+  @Cron('*/30 * * * *')
+  // @Interval(30000) uncomment for testing purposes - DO NOT USE IN PRODUCTION
+  async cleanUpSyncedLocalFiles() {
+    this.logger.log('🚀 Cleaning up synced local files');
+
+    const syncedFiles = await this.fileEntryRepository.find({
+      where: { status: FileStatus.SYNCED },
+      relations: ['assignment', 'user'],
+      order: { createdAt: 'DESC' },
+    });
+    if (syncedFiles.length === 0) {
+      this.logger.log('No synced files found for cleanup');
+      return;
+    }
+
+    for (const fileEntry of syncedFiles) {
+      try {
+        if (fileEntry.localTempPath && existsSync(fileEntry.localTempPath)) {
+          this.logger.log(`Deleting local file: ${fileEntry.localTempPath}`);
+          await rm(fileEntry.localTempPath);
+
+          await this.fileEntryRepository.update(fileEntry.id, {
+            localTempPath: "",
+          });
+        } else {
+          this.logger.warn(
+            `Local file path does not exist: ${fileEntry.localTempPath}`,
+          );
+        }
+      } catch (error) {
+        this.logger.error(
+          `Error deleting local file ${fileEntry.localTempPath}: ${error.message}`,
+        );
+      }
+    }
+    this.logger.log('🚀 Local files cleanup completed');
   }
 
   async updateSyncJobStatus(
