@@ -15,6 +15,7 @@ import { ProducerService } from 'src/kafka/producer.service';
 import { SCHEDULING_CREATE_JOB_TOPIC } from './constants';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { Cron, Interval } from '@nestjs/schedule';
+import { readFileAsString } from 'src/utils/template.utils';
 
 @Injectable()
 export class SchedulingService {
@@ -79,8 +80,26 @@ export class SchedulingService {
 
     const createWorkerAndWait = this.workerMap.get(assignment?.workerType)!;
 
-    createSchedulingDto.testFilesContent =
-      await this.assignmentService.getAssignmentTemplates(assignment);
+    const filledTemplates = await Promise.all(
+      assignment.assignmentTemplates.map(async (templateRelation) => {
+        let content = await readFileAsString(
+          templateRelation.template.filePath,
+        );
+
+        for (const param of templateRelation.template.templateParams) {
+          const paramValue =
+            assignment.assignmentParams.find(
+              (p) => p.templateParamsId === param.id,
+            )?.value ?? '';
+          content = content.replace(
+            new RegExp(`\\$${param.name}\\$`, 'g'),
+            paramValue,
+          );
+        }
+        return content;
+      }),
+    );
+    createSchedulingDto.testFilesContent = filledTemplates;
 
     const workerResult = await createWorkerAndWait(createSchedulingDto);
 
