@@ -119,7 +119,7 @@ export default function Login() {
             EEVEE CEFET Code Lab
           </h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Sign in to your account to access your dashboard
+            Sign in to your account to access your account
           </p>
         </div>
 
