@@ -23,6 +23,7 @@ import { FileText } from 'lucide-react';
 import { useClasses } from '@/hooks/use-classes';
 import { toast } from '@/hooks/use-toast';
 import TemplateCard from '@/components/assignment/template-card';
+import { cn } from '@/lib/utils';
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 const validationSchema = Yup.object({
@@ -48,6 +49,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
       params: { templateParamId: number; value: string }[];
     }[]
   >([]);
+  const [canSubmit, setCanSubmit] = useState(false);
 
   const { data: existingAssignment } = useQuery({
     queryKey: [`currentAssignment ${existingAssignmentId}`],
@@ -322,6 +324,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                     <TemplateCard
                       selectedTemplates={selectedTemplates}
                       setSelectedTemplates={setSelectedTemplates}
+                      setCanSubmit={setCanSubmit}
                     />
 
                     <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
@@ -366,8 +369,14 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   <div className="mt-6 flex justify-end">
                     <button
                       type="submit"
-                      disabled={isSubmitting}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      disabled={isSubmitting || !canSubmit}
+                      className={cn(
+                        'px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500',
+                        {
+                          'opacity-50 cursor-not-allowed':
+                            isSubmitting || !canSubmit,
+                        }
+                      )}
                     >
                       {existingAssignmentId
                         ? 'Update Assignment'
