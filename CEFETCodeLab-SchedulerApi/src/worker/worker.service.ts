@@ -13,23 +13,26 @@ import { KubernetesJobResult } from 'src/kubernetes/kubernetes.interfaces';
 export class WorkerService {
   constructor(private readonly kubernetesService: KubernetesService) {}
   private buildCreateFilesDefaultAndStartCommand(
-    applicationFileContent: string,
-    testFilesContent: string[],
-  ): string[] {
-    const commands: string[] = [
-    `echo "${applicationFileContent}" > /app/app.ts`,
-    ];
-    
-    testFilesContent.forEach((testContent, index) => {
-      const fileName = `/app/validation${index}.test.ts`;
-      commands.push(`echo "${testContent}" > ${fileName}`);
-    });
+  applicationFileContent: string,
+  testFilesContent: string[],
+  dependencies: string[]
+): string[] {
+  const commands: string[] = [];
 
-    commands.push(`npm start`);
+  const encodedApp = Buffer.from(applicationFileContent).toString('base64');
+  commands.push(`echo "${encodedApp}" | base64 -d > /app/app.ts`);
 
-    return ['/bin/sh', '-c', commands.join(' && ')];
-  }
+  testFilesContent.forEach((testContent, index) => {
+    const encodedTest = Buffer.from(testContent).toString('base64');
+    const fileName = `/app/validation${index}.test.ts`;
+    commands.push(`echo "${encodedTest}" | base64 -d > ${fileName}`);
+  });
 
+  commands.push(`npm install mathjs`);
+  commands.push(`npm start`);
+
+  return ['/bin/sh', '-c', commands.join(' && ')];
+}
   private buildCreateFilesNestJsAndStartCommand(
     applicationFileContent: string,
     testFileContent: string[],

@@ -74,7 +74,6 @@ export class SchedulingService {
           const paramValue = assignment.assignmentParams.find(
             (p) => p.templateParamsId === param.id
           )?.value ?? '';
-          
           content = content.replace(new RegExp(`\\$${param.name}\\$`, 'g'), paramValue);
         }
         return content;
