@@ -23,7 +23,6 @@ import { ChevronLeft, ChevronRight, FileText, Save } from 'lucide-react';
 import { useClasses } from '@/hooks/use-classes';
 import { toast } from '@/hooks/use-toast';
 import TemplateCard from '@/components/assignment/template-card';
-import { cn } from '@/lib/utils';
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 const validationSchema = Yup.object({
