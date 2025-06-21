@@ -19,10 +19,11 @@ import { Route } from '@/app/routes';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, FileText, Save } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ClipboardCheck, Code, FileText, Layers, Save, Settings } from 'lucide-react';
 import { useClasses } from '@/hooks/use-classes';
 import { toast } from '@/hooks/use-toast';
 import TemplateCard from '@/components/assignment/template-card';
+import { cn } from '@/lib/utils';
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 const validationSchema = Yup.object({
@@ -160,17 +161,17 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
         >
           {({
             isSubmitting,
-            values: { validationScript, workerType },
+            values,
             setFieldValue,
             isValid
           }) => {
             // eslint-disable-next-line react-hooks/rules-of-hooks
             useEffect(() => {
               if (
-                workerType &&
-                Object.values(WorkerType).includes(workerType as WorkerType)
+                values.workerType &&
+                Object.values(WorkerType).includes(values.workerType as WorkerType)
               ) {
-                const safeWorkerType = workerType as WorkerType;
+                const safeWorkerType = values.workerType as WorkerType;
                 setFieldValue(
                   'template',
                   WorkerDefaultTemplateMap[safeWorkerType]
@@ -180,7 +181,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   WorkerDefaultTemplateMap[safeWorkerType]
                 );
               }
-            }, [workerType, setFieldValue]);
+            }, [values.workerType, setFieldValue]);
 
             const canProceedToNextStep = () => {
               switch (currentStep) {
@@ -189,7 +190,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                 case 2:
                   return selectedTemplates.length > 0;
                 case 3:
-                  return validationScript?.trim() != '';
+                  return values.validationScript?.trim() != '';
                 default:
                   return true;
               }
@@ -247,7 +248,6 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                         </Label>
                         <Field
                           as="select"
-                          id="classId"
                           name="classId"
                           className="mt-1 block w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         >
@@ -349,7 +349,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                           height="550px"
                           defaultLanguage="typescript"
                           theme="vs-dark"
-                          value={validationScript}
+                          value={values.validationScript}
                           onChange={(value) =>
                             setFieldValue('validationScript', value)
                           }
@@ -371,12 +371,90 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                 )}
 
                 {currentStep === 4 && (
-                  <div className=''>
-                    Resume
+                  <div className='max-w-4xl mx-auto'>
+                    <Card className="bg-slate-800 border-slate-700">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center gap-2">
+                          <ClipboardCheck className="w-5 h-5" />
+                          Revisão Final
+                        </CardTitle>
+                        <p className="text-sm text-slate-400">Revise todas as informações antes de criar o assignment</p>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Configurações */}
+                        <div>
+                          <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                            <Settings className="w-4 h-4" />
+                            Configurações
+                          </h4>
+                          <div className="bg-slate-700/30 p-4 rounded-lg space-y-3">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-xs text-slate-400 uppercase tracking-wide">Título</p>
+                                <p className="text-white font-medium">{values.title}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-400 uppercase tracking-wide">Turma</p>
+                                <p className="text-white font-medium">{classes.find((c) => c.id === values.classId)?.name}</p>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-400 uppercase tracking-wide">Descrição</p>
+                              <p className="text-white">{values.description}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-xs text-slate-400 uppercase tracking-wide">Worker Type</p>
+                                <p className="text-white">{values.workerType}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-400 uppercase tracking-wide">Max Tentativas</p>
+                                <p className="text-white">{values.maxAttempts}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Templates */}
+                        <div>
+                          <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                            <Code className="w-4 h-4" />
+                            Templates ({selectedTemplates.length})
+                          </h4>
+                          <div className="space-y-3">
+                            {selectedTemplates.map((template, index) => (
+                              <div key={index} className="bg-slate-700/30 p-4 rounded-lg">
+                                <h5 className="text-white font-medium mb-2">{template.templateId}</h5>
+                                <div className="space-y-2">
+                                  {template.params.map((param) => (
+                                    <div key={param.templateParamId} className="bg-slate-800 rounded p-3">
+                                      <pre className="text-green-400 text-xs font-mono whitespace-pre-wrap">{param.value}</pre>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Boilerplate */}
+                        <div>
+                          <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                            <Layers className="w-4 h-4" />
+                            Código Boilerplate
+                          </h4>
+                          <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
+                            <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
+                              {values.validationScript}
+                            </pre>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
 
-                <div className='flex justify-between mt-8 mx-auto'>
+                <div className={cn('flex justify-between mt-8 mx-auto', currentStep === 4 ? 'max-w-4xl' : '')}>
                   <Button
                     type='button'
                     variant={"outline"}
@@ -398,7 +476,9 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                         <Button
                           type='button'
                           disabled={!canProceedToNextStep()}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             setCurrentStep(currentStep + 1)
                           }}
                         >
