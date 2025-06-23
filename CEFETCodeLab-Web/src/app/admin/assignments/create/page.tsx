@@ -22,15 +22,6 @@ export default function CreateAssignmentPage() {
         </div>
       </div>
 
-      {/* <div className='border-b border-slate-700 bg-slate-800/50'> */}
-      {/*   <div className='max-w-6xl mx-auto px-6 py-4'> */}
-      {/*     <div className='flex items-center justify-between'> */}
-      {/**/}
-      {/*     </div> */}
-      {/*   </div> */}
-      {/* </div> */}
-
-
       <AssignmentForm />
     </div >
   );
