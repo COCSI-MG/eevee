@@ -1,6 +1,8 @@
+'use client';
+
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { AssignmentFormProps } from './interface';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import dynamic from 'next/dynamic';
@@ -11,31 +13,18 @@ import {
   WorkerExibitionMap,
 } from './constants';
 import { WorkerType } from '@/app/interface/scheduler-api/worker';
-import { ClassesService } from '@/app/integration/scheduler-api/classes';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Route } from '@/app/routes';
-import { TemplatesService } from '@/app/integration/scheduler-api/templates';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Check, Code, Eye, FileText, Plus } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChevronLeft, ChevronRight, ClipboardCheck, Code, FileText, Layers, Save, Settings } from 'lucide-react';
+import { useClasses } from '@/hooks/use-classes';
+import { toast } from '@/hooks/use-toast';
+import TemplateCard from '@/components/assignment/template-card';
 import { cn } from '@/lib/utils';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import AssignmentStepContainer from '@/components/assignment/assignment-step-container';
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 const validationSchema = Yup.object({
@@ -61,33 +50,21 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
       params: { templateParamId: number; value: string }[];
     }[]
   >([]);
+  const [currentStep, setCurrentStep] = useState<number>(1);
 
-  const { data: existingAssignment } = useQuery({
+  const { data: existingAssignment, isFetching } = useQuery({
     queryKey: [`currentAssignment ${existingAssignmentId}`],
     queryFn: () => AssignmentService.GetAssignmentById(existingAssignmentId!),
     enabled: !!existingAssignmentId,
     refetchOnMount: true,
   });
 
-  console.log('existingAssignment', existingAssignment);
-
-  const { data: classes } = useQuery({
-    queryKey: ['getClasses'],
-    queryFn: ClassesService.listClasses,
-  });
-
-  const {
-    data: templates,
-    isSuccess: isSuccessTemplates,
-    isPending: isPendingTemplates,
-  } = useQuery({
-    queryKey: ['templates'],
-    queryFn: TemplatesService.listTemplates,
-  });
+  const { data: classes, isFetching: isFetchingClasses } = useClasses();
 
   const {
     mutateAsync: upsertAssignment,
     isSuccess,
+    isError,
     data: workerResult,
   } = useMutation({
     mutationKey: ['upsertAssignment', existingAssignmentId],
@@ -122,17 +99,41 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     workerType: existingAssignment?.workerType || WorkerType.NODE_DEFAULT,
     validationScript:
       WorkerDefaultValidationScriptMap[
-        (existingAssignment?.workerType ||
-          WorkerType.NODE_DEFAULT) as WorkerType
+      (existingAssignment?.workerType ||
+        WorkerType.NODE_DEFAULT) as WorkerType
       ],
-    classId: existingAssignment?.classId,
+    classId: existingAssignment?.classId || 0,
   };
 
   useEffect(() => {
     if (isSuccess) {
+      const queryClient = new QueryClient();
+      queryClient.invalidateQueries({
+        queryKey: ['adminAssignments'],
+      });
+
+      toast({
+        title: 'Assignment saved successfully',
+        description: 'The assignment has been created/updated successfully.',
+        variant: 'default',
+        duration: 5000,
+      });
+
       push(`${Route.AdminAssignments}`);
     }
-  }, [isSuccess, push, workerResult]);
+    if (isError) {
+      if (workerResult) {
+        console.error('Worker result:', workerResult);
+      }
+      toast({
+        title: `Ocorreu um erro ao ${existingAssignmentId === undefined ? 'criar' : 'atualizar'
+          } o assignment`,
+        description: 'Tente novamente mais tarde.',
+        variant: 'destructive',
+        duration: 5000,
+      });
+    }
+  }, [isSuccess, push, workerResult, isError, existingAssignmentId]);
 
   const handleSubmit = (values: typeof initialValues) => {
     console.log(values);
@@ -146,23 +147,18 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     });
   };
 
+  if (existingAssignmentId && isFetching) {
+    return <div>Loading...</div>
+  }
+
+  if (isFetchingClasses) {
+    return <div>Loading...</div>
+  }
+
   return (
-    <div className="min-h-screen bg-slate-900 text-white border rounded-2xl border-slate-600">
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant={'ghost'}
-            onClick={() => push(`${Route.AdminAssignments}`)}
-          >
-            Voltar
-          </Button>
-          <h1 className="text-4xl font-bold text-center">
-            {existingAssignment
-              ? existingAssignment.title
-              : 'Create Assignment'}
-          </h1>
-        </div>
-      </div>
+    <>
+      <AssignmentStepContainer currentStep={currentStep} />
+
       <div className="p-6">
         <div className="max-w-7xl mx-auto">
           <Formik
@@ -173,17 +169,17 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
           >
             {({
               isSubmitting,
-              values: { validationScript, workerType },
+              values,
               setFieldValue,
+              isValid
             }) => {
               // eslint-disable-next-line react-hooks/rules-of-hooks
               useEffect(() => {
                 if (
-                  workerType &&
-                  Object.values(WorkerType).includes(workerType as WorkerType)
+                  values.workerType &&
+                  Object.values(WorkerType).includes(values.workerType as WorkerType)
                 ) {
-                  const safeWorkerType = workerType as WorkerType;
-                  console.log('setting template');
+                  const safeWorkerType = values.workerType as WorkerType;
                   setFieldValue(
                     'template',
                     WorkerDefaultTemplateMap[safeWorkerType]
@@ -193,332 +189,340 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                     WorkerDefaultTemplateMap[safeWorkerType]
                   );
                 }
-              }, [workerType, setFieldValue]);
+              }, [values.workerType, setFieldValue]);
 
-              return (
-                <Form className="w-full">
-                  <div className="grid lg:grid-cols-3 gap-6">
-                    <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
-                      <CardHeader>
-                        <CardTitle className="text-white flex items-center justify-between">
-                          Informações do Assignment
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="title" className="text-white">
-                            Título
-                          </Label>
-                          <Field
-                            type="text"
-                            name="title"
-                            className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
-                            placeholder="Título do Assignment"
-                          />
-                          <ErrorMessage
-                            name="title"
-                            component="div"
-                            className="text-red-500 text-sm"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="description" className="text-white">
-                            Descrição
-                          </Label>
-                          <Field
-                            as="textarea"
-                            type="text"
-                            name="description"
-                            className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
-                            placeholder="Descreva o que os alunos devem fazer"
-                          />
-                          <ErrorMessage
-                            name="description"
-                            component="div"
-                            className="text-red-500 text-sm"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="classId"
-                            className="block text-sm font-medium"
-                          >
-                            Disciplina do Trabalho
-                          </Label>
-                          <Field
-                            as="select"
-                            id="classId"
-                            name="classId"
-                            className="mt-1 block w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          >
-                            {(classes ?? []).map((classe) => (
-                              <option
-                                key={Number(classe.id)}
-                                value={Number(classe.id)}
-                              >
-                                {classe.name}
-                              </option>
-                            ))}
-                          </Field>
-                          <ErrorMessage
-                            name="classId"
-                            component="div"
-                            className="text-red-500 text-sm"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="workerType"
-                            className="block text-sm font-medium"
-                          >
-                            Tipo de Worker
-                          </Label>
-                          <p className="block text-sm font-medium ">
-                            Selecione o tipo de worker que será utilizado para
-                            corrigir os exercícios dos alunos. Ele terá que ser
-                            condizente com os testes abaixo.
-                          </p>
-                          <Field
-                            as="select"
-                            id="workerType"
-                            name="workerType"
-                            className="mt-1 block w-full px-3 py-2 border text-gray-700  border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                          >
-                            {Object.entries(WorkerType).map(([key, value]) => (
-                              <option key={key} value={value}>
-                                {WorkerExibitionMap[value]}
-                              </option>
-                            ))}
-                          </Field>
-                          <ErrorMessage
-                            name="workerType"
-                            component="div"
-                            className="text-red-500 text-sm"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="maxAttempts"
-                            className="block text-sm font-medium"
-                          >
-                            Máximo de Tentativas
-                          </Label>
-                          <Field
-                            type="number"
-                            name="maxAttempts"
-                            className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
-                            placeholder="Número máximo de tentativas permitidas"
-                          />
-                          <ErrorMessage
-                            name="maxAttempts"
-                            component="div"
-                            className="text-red-500 text-sm"
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
+              const canProceedToNextStep = () => {
+                switch (currentStep) {
+                  case 1:
+                    return isValid;
+                  case 2:
+                    return selectedTemplates.length > 0;
+                  case 3:
+                    return values.validationScript?.trim() != '';
+                  default:
+                    return true;
+                }
+              }
 
-                    <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
-                      <CardHeader>
-                        <CardTitle className="text-white flex items-center justify-between">
-                          Templates
-                          <Button
-                            size={'sm'}
-                            variant={'outline'}
-                            onClick={() => push(`/${Route.AdminTemplate}/new`)}
-                            className="hover:bg-slate-600"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Adicionar
-                          </Button>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        {!isPendingTemplates &&
-                        isSuccessTemplates &&
-                        templates.length === 0 ? (
-                          <div className="text-center py-8 text-slate-400">
-                            Nenhum template encontrado
-                            <p className="text-sm mt-2">
-                              Clique em &quot;Adicionar&quot; para criar um
-                              template
-                            </p>
+              const renderStep = () => {
+                switch (currentStep) {
+                  case 1:
+                    return (
+                      <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center justify-between">
+                            Informações do Assignment
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="title" className="text-white">
+                              Título
+                            </Label>
+                            <Field
+                              type="text"
+                              name="title"
+                              className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                              placeholder="Título do Assignment"
+                            />
+                            <ErrorMessage
+                              name="title"
+                              component="div"
+                              className="text-red-500 text-sm"
+                            />
                           </div>
-                        ) : (
-                          <>
-                            <p className="text-sm text-slate-400 mb-4">
-                              Selecione o template que será usado para avaliar
-                              os alunos
+                          <div className="space-y-2">
+                            <Label htmlFor="description" className="text-white">
+                              Descrição
+                            </Label>
+                            <Field
+                              as="textarea"
+                              type="text"
+                              name="description"
+                              className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                              placeholder="Descreva o que os alunos devem fazer"
+                            />
+                            <ErrorMessage
+                              name="description"
+                              component="div"
+                              className="text-red-500 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="classId"
+                              className="block text-sm font-medium"
+                            >
+                              Disciplina do Trabalho
+                            </Label>
+                            <Field
+                              as="select"
+                              name="classId"
+                              className="mt-1 block w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            >
+                              <option value=''>Selecione uma turma</option>
+                              {(classes).map((classRecord) => (
+                                <option
+                                  key={classRecord.id}
+                                  value={classRecord.id}
+                                >
+                                  {classRecord.name}
+                                </option>
+                              ))}
+                            </Field>
+                            <ErrorMessage
+                              name="classId"
+                              component="div"
+                              className="text-red-500 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="workerType"
+                              className="block text-sm font-medium"
+                            >
+                              Tipo de Worker
+                            </Label>
+                            <p className="block text-sm font-medium ">
+                              Selecione o tipo de worker que será utilizado para
+                              corrigir os exercícios dos alunos. Ele terá que ser
+                              condizente com os testes abaixo.
                             </p>
-                            <ScrollArea className="h-[500px] pr-4">
-                              <div className="space-y-3">
-                                {(templates ?? []).map((template) => (
-                                  <div
-                                    key={template.id}
-                                    className={cn(
-                                      `p-3 rounded-lg border cursor-pointer transition-all`,
-                                      selectedTemplates.some(
-                                        (templ) =>
-                                          templ.templateId ===
-                                          Number(template.id)
-                                      )
-                                        ? 'bg-blue-500 bg-blue-500/10'
-                                        : 'bg-slate-600 bg-slate-700/10 hover:bg-slate-700'
-                                    )}
-                                    onClick={() => {
-                                      const isSelected = selectedTemplates.some(
-                                        (templ) =>
-                                          templ.templateId ===
-                                          Number(template.id)
-                                      );
+                            <Field
+                              as="select"
+                              id="workerType"
+                              name="workerType"
+                              className="mt-1 block w-full px-3 py-2 border text-gray-700  border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            >
+                              {Object.entries(WorkerType).map(([key, value]) => (
+                                <option key={key} value={value}>
+                                  {WorkerExibitionMap[value]}
+                                </option>
+                              ))}
+                            </Field>
+                            <ErrorMessage
+                              name="workerType"
+                              component="div"
+                              className="text-red-500 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="maxAttempts"
+                              className="block text-sm font-medium"
+                            >
+                              Máximo de Tentativas
+                            </Label>
+                            <Field
+                              type="number"
+                              name="maxAttempts"
+                              className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+                              placeholder="Número máximo de tentativas permitidas"
+                            />
+                            <ErrorMessage
+                              name="maxAttempts"
+                              component="div"
+                              className="text-red-500 text-sm"
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
 
-                                      if (isSelected) {
-                                        setSelectedTemplates(
-                                          selectedTemplates.filter(
-                                            (templ) =>
-                                              templ.templateId !==
-                                              Number(template.id)
-                                          )
-                                        );
-                                      } else {
-                                        setSelectedTemplates([
-                                          ...selectedTemplates,
-                                          {
-                                            templateId: Number(template.id),
-                                            params: template.templateParams.map(
-                                              (param) => ({
-                                                templateParamId: Number(
-                                                  param.id
-                                                ),
-                                                value: param.name,
-                                              })
-                                            ),
-                                          },
-                                        ]);
-                                      }
-                                    }}
-                                  >
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <h4 className="font-medium text-white">
-                                            {template.title}
-                                          </h4>
-                                          {selectedTemplates.some(
-                                            (templ) =>
-                                              templ.templateId ===
-                                              Number(template.id)
-                                          ) && (
-                                            <Check className="w-4 h-4 text-blue-400" />
-                                          )}
+                  case 2:
+                    return (
+                      <TemplateCard
+                        selectedTemplates={selectedTemplates}
+                        setSelectedTemplates={setSelectedTemplates}
+                      />
+                    );
+
+                  case 3:
+                    return (
+                      <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center gap-2">
+                            <FileText className="w-5 h-5" />
+                            Boilerplate de Validação
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            <Label
+                              htmlFor="validationScript"
+                              className="text-slate-200 text-sm"
+                            >
+                              Boilerplate inicial para os alunos
+                            </Label>
+                            <Editor
+                              height="550px"
+                              defaultLanguage="typescript"
+                              theme="vs-dark"
+                              value={values.validationScript}
+                              onChange={(value) =>
+                                setFieldValue('validationScript', value)
+                              }
+                              options={{
+                                minimap: { enabled: false },
+                                scrollBeyondLastLine: false,
+                                wordWrap: 'on',
+                                automaticLayout: true,
+                              }}
+                            />
+                            <ErrorMessage
+                              name="validationScript"
+                              component="div"
+                              className="text-red-500 text-sm"
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )
+
+                  case 4:
+                    return (
+                      <div className='max-w-4xl mx-auto'>
+                        <Card className="bg-slate-800 border-slate-700">
+                          <CardHeader>
+                            <CardTitle className="text-white flex items-center gap-2">
+                              <ClipboardCheck className="w-5 h-5" />
+                              Revisão Final
+                            </CardTitle>
+                            <p className="text-sm text-slate-400">Revise todas as informações antes de criar o assignment</p>
+                          </CardHeader>
+                          <CardContent className="space-y-6">
+                            {/* Configurações */}
+                            <div>
+                              <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                                <Settings className="w-4 h-4" />
+                                Configurações
+                              </h4>
+                              <div className="bg-slate-700/30 p-4 rounded-lg space-y-3">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Título</p>
+                                    <p className="text-white font-medium">{values.title}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Turma</p>
+                                    <p className="text-white font-medium">{classes.find((c) => c.id === Number(values.classId))?.name}</p>
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-slate-400 uppercase tracking-wide">Descrição</p>
+                                  <p className="text-white">{values.description}</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Worker Type</p>
+                                    <p className="text-white">{values.workerType}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Max Tentativas</p>
+                                    <p className="text-white">{values.maxAttempts}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Templates */}
+                            <div>
+                              <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                                <Code className="w-4 h-4" />
+                                Templates ({selectedTemplates.length})
+                              </h4>
+                              <div className="space-y-3">
+                                {selectedTemplates.map((template, index) => (
+                                  <div key={index} className="bg-slate-700/30 p-4 rounded-lg">
+                                    <h5 className="text-white font-medium mb-2">{template.templateId}</h5>
+                                    <div className="space-y-2">
+                                      {template.params.map((param) => (
+                                        <div key={param.templateParamId} className="bg-slate-800 rounded p-3">
+                                          <pre className="text-green-400 text-xs font-mono whitespace-pre-wrap">{param.value}</pre>
                                         </div>
-                                        <p className="text-sm text-slate-300">
-                                          {template.description}
-                                        </p>
-                                      </div>
-                                      <Dialog>
-                                        <DialogTrigger asChild>
-                                          <Button
-                                            variant={'ghost'}
-                                            size={'sm'}
-                                            className="text-blue-400 hover:text-blue-300 hover:bg-slate-600 ml-2"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <Eye className="h-4 w-4" />
-                                          </Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80hv]">
-                                          <DialogHeader>
-                                            <DialogHeader>
-                                              <DialogTitle>
-                                                <Code className="w-5 h-5" />
-                                                {template.title}
-                                              </DialogTitle>
-                                            </DialogHeader>
-                                            <div className="space-y-4">
-                                              <p className="text-slate-300">
-                                                {template.description}
-                                              </p>
-                                              <div className="bg-slate-900 border-slate-600 rounded-md p-4 max-h-[50vh] overflow-y-auto">
-                                                <pre className="whitespace-pre-wrap break-words text-green-400">
-                                                  {template.templateContent}
-                                                </pre>
-                                              </div>
-                                            </div>
-                                          </DialogHeader>
-                                        </DialogContent>
-                                      </Dialog>
+                                      ))}
                                     </div>
                                   </div>
                                 ))}
                               </div>
-                            </ScrollArea>
-                          </>
-                        )}
-                      </CardContent>
-                      <CardFooter>
-                        <Badge className="bg-blue-600 text-white">
-                          {selectedTemplates.length} Template(s) Selecionado(s)
-                        </Badge>
-                      </CardFooter>
-                    </Card>
+                            </div>
 
-                    <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
-                      <CardHeader>
-                        <CardTitle className="text-white flex items-center gap-2">
-                          <FileText className="w-5 h-5" />
-                          Boilerplate de Validação
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="validationScript"
-                            className="text-slate-200 text-sm"
-                          >
-                            Boilerplate inicial para os alunos
-                          </Label>
-                          <Editor
-                            height="550px"
-                            defaultLanguage="typescript"
-                            theme="vs-dark"
-                            value={validationScript}
-                            onChange={(value) =>
-                              setFieldValue('validationScript', value)
-                            }
-                            options={{
-                              minimap: { enabled: false },
-                              scrollBeyondLastLine: false,
-                              wordWrap: 'on',
-                              automaticLayout: true,
-                            }}
-                          />
-                          <ErrorMessage
-                            name="validationScript"
-                            component="div"
-                            className="text-red-500 text-sm"
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  <div className="mt-6 flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            {/* Boilerplate */}
+                            <div>
+                              <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                                <Layers className="w-4 h-4" />
+                                Código Boilerplate
+                              </h4>
+                              <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
+                                <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
+                                  {values.validationScript}
+                                </pre>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )
+                }
+              }
+
+              return (
+                <Form className="w-full">
+                  {renderStep()}
+
+                  <div className={cn('flex justify-between mt-8 mx-auto', currentStep === 4 ? 'max-w-4xl' : '')}>
+                    <Button
+                      type='button'
+                      variant={"outline"}
+                      onClick={() => {
+                        if (currentStep > 1) {
+                          setCurrentStep(currentStep - 1)
+                        }
+                      }}
+                      disabled={currentStep === 1}
+                      className='border-slate-600 text-slate-200 hover:bg-slate-700 disabled:opacity-50'
                     >
-                      {existingAssignmentId
-                        ? 'Update Assignment'
-                        : 'Create Assignment'}
-                    </button>
+                      <ChevronLeft className='w-4 h-4 mr-2' />
+                      Anterior
+                    </Button>
+
+                    <div className='flex gap-2'>
+                      {
+                        currentStep < 4 ? (
+                          <Button
+                            type='button'
+                            disabled={!canProceedToNextStep()}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCurrentStep(currentStep + 1)
+                            }}
+                          >
+                            Continuar
+                            <ChevronRight className='w-4 h-4 ml-2' />
+                          </Button>
+                        ) : (
+                          <Button
+                            type='submit'
+                            disabled={isSubmitting}
+                            className='bg-green-600 hover:bg-green-700 transition-colors'
+                          >
+                            <Save className='w-4 h-4 mr-2' />
+                            {
+                              existingAssignmentId ?
+                                'Update Assignment'
+                                : 'Create Assignment'
+                            }
+                          </Button>
+                        )}
+                    </div>
                   </div>
                 </Form>
               );
             }}
           </Formik>
         </div>
-      </div>
-    </div>
+      </div >
+    </>
   );
 };
