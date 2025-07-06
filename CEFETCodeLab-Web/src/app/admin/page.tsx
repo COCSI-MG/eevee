@@ -36,7 +36,7 @@ export default async function Admin() {
               <span>Create New Class</span>
             </Button>
           </Link>
-          <Link href={Route.AdminAssignments + '/new'}>
+          <Link href={Route.AdminAssignments + '/create'}>
             <Button
               variant="outline"
               className="w-full h-24 flex flex-col items-center justify-center gap-2"
