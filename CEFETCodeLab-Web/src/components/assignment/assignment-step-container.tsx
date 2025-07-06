@@ -1,7 +1,5 @@
-import { AssignmentForm } from "@/app/admin/assignments/assignment-form";
 import { cn } from "@/lib/utils";
 import { Check, ClipboardCheck, Code, Layers, Settings } from "lucide-react";
-import { useState } from "react";
 
 enum Steps {
   CONFIGURATION = 'configuration',
@@ -28,8 +26,8 @@ export default function AssignmentStepContainer({
   currentStep: number
 }) {
   return (
-    <div className='max-w-7xl mt-2 border rounded-lg border-slate-700 bg-slate-800/50'>
-      <div className='max-w-6xl mx-auto px-6 py-6'>
+    <div className='max-w-7xl mt-2'>
+      <div className='max-w-6xl mx-auto px-6 py-6 border rounded-lg border-slate-700 bg-slate-800/50'>
         <div className='flex items-center justify-between'>
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center">
