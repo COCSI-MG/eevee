@@ -67,6 +67,7 @@ export default function AssignmentWorkspace() {
     type: 'file',
     isCreating: false,
   });
+  const [focusCount, setFocusCount] = useState(0);
   const newItemRef = useRef<HTMLInputElement>(null);
   const { user } = useAuthUser();
 
@@ -147,6 +148,26 @@ export default function AssignmentWorkspace() {
       },
     }
   );
+
+  useEffect(() => {
+    window.addEventListener('focus', () => {
+      setFocusCount((prev) => prev + 1);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (focusCount > 5) {
+      setTimeout(() => {
+        setFocusCount(0);
+      }, 10000);
+
+      console.log('Focus count exceeded 5, redirecting to home');
+
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 5000);
+    }
+  }, [focusCount]);
 
   useEffect(() => {
     if (!isPending && workerResult) {
@@ -506,7 +527,22 @@ export default function AssignmentWorkspace() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-900 text-white">
-      <WorkspaceHeader />
+      <WorkspaceHeader assignmentDescription={data.description}  />
+
+      {focusCount === 5 && (
+        <div className="flex items-center justify-center h-screen opacity-50 bg-black fixed inset-0 z-50">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Atenção!</h1>
+            <p className="text-lg mb-4">
+              Você está tentando acessar outra aba ou janela do navegador.
+            </p>
+            <p className="text-sm text-gray-500">
+              Se você continuar, será redirecionado para a página inicial.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex flex-1 overflow-hidden explorer-panel">
