@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { getFilePath } from '@/lib/file-path-utils';
+import FileIcon from './file-icon';
 
 interface FileTreeItemProps {
   item: FileType;
@@ -29,7 +30,6 @@ interface FileTreeItemProps {
   setNewItem: React.Dispatch<React.SetStateAction<NewItem>>;
   setFileStructure: React.Dispatch<React.SetStateAction<FileType[]>>;
   fileStructure: FileType[];
-  getFileIcon: (filename: string) => React.ReactNode;
   onActiveFileDeleted?: () => void;
 }
 
@@ -43,7 +43,6 @@ export const FileTreeItem: React.FC<FileTreeItemProps> = ({
   setNewItem,
   setFileStructure,
   fileStructure,
-  getFileIcon,
   onActiveFileDeleted,
 }) => {
   const newItemRef = useRef<HTMLInputElement>(null);
@@ -124,7 +123,6 @@ export const FileTreeItem: React.FC<FileTreeItemProps> = ({
           setNewItem={setNewItem}
           setFileStructure={setFileStructure}
           fileStructure={fileStructure}
-          getFileIcon={getFileIcon}
           onActiveFileDeleted={onActiveFileDeleted}
         />
       ));
@@ -174,7 +172,7 @@ export const FileTreeItem: React.FC<FileTreeItemProps> = ({
                 <FolderIcon className="h-4 w-4 flex-shrink-0 text-blue-300" />
               )
             ) : (
-              getFileIcon(item.name)
+             <FileIcon fileName={item.name} />
             )}
 
             <span className="truncate flex-grow">{item.name}</span>

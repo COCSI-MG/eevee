@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { Button } from '../ui/button';
 import { Loader2Icon, Play, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import FileIcon from './file-icon';
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
 });
@@ -10,7 +11,6 @@ const Editor = dynamic(() => import('@monaco-editor/react'), {
 export interface WorkspaceEditorProps {
   activeFile: string;
   activeFileContent: string;
-  getFileIcon: (filename: string) => React.ReactNode;
   handleEditorChange: (value: string | undefined) => void;
   handleRun: () => void;
   isPending: boolean;
@@ -22,7 +22,6 @@ export interface WorkspaceEditorProps {
 const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
   activeFile,
   activeFileContent,
-  getFileIcon,
   handleEditorChange,
   handleRun,
   isPending,
@@ -40,7 +39,7 @@ const WorkspaceEditor: React.FC<WorkspaceEditorProps> = ({
         <div className="flex justify-between items-center">
           <div className="flex">
             <div className="flex items-center gap-2 px-4 py-3 border-r border-slate-700 cursor-pointer bg-slate-900 border-t-2 border-t-blue-500">
-              {getFileIcon(activeFile)}
+              <FileIcon fileName={activeFile} />
               <span className="text-sm font-medium">{activeFile}</span>
             </div>
           </div>

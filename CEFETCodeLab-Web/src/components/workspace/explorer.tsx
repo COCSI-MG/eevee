@@ -1,6 +1,6 @@
-import React from 'react';
-import { FileType, NewItem } from '@/types/shared';
-import { FileTree } from './file-tree';
+import React from "react";
+import { FileType, NewItem } from "@/types/shared";
+import { FileTree } from "./file-tree";
 
 interface WorkspaceExplorerProps {
   explorerWidth: number;
@@ -8,13 +8,11 @@ interface WorkspaceExplorerProps {
   activeFile: string;
   newItem: NewItem;
   openFile: (file: FileType) => void;
-  toggleFolder: (folderId: string) => void;
   setNewItem: React.Dispatch<React.SetStateAction<NewItem>>;
   setFileStructure: React.Dispatch<React.SetStateAction<FileType[]>>;
-  getFileIcon: (filename: string) => React.ReactNode;
-  onActiveFileDeleted?: () => void;
+  cleanActiveFileAndContent: () => void;
   startResize: (
-    element: 'explorer' | 'exercise' | 'console',
+    element: "explorer" | "exercise" | "console",
     e: React.MouseEvent
   ) => void;
 }
@@ -25,13 +23,54 @@ const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({
   activeFile,
   newItem,
   openFile,
-  toggleFolder,
   setNewItem,
   setFileStructure,
-  getFileIcon,
-  onActiveFileDeleted,
+  cleanActiveFileAndContent,
   startResize,
 }) => {
+  const findFirstFile = (items: FileType[]): FileType | null => {
+    for (const item of items) {
+      if (item.type === "file") {
+        return item;
+      }
+      if (item.children) {
+        const foundFile = findFirstFile(item.children);
+        if (foundFile) {
+          return foundFile;
+        }
+      }
+    }
+    return null;
+  };
+
+  const onActiveFileDeleted = () => {
+    const firstAvailableFile = findFirstFile(fileStructure);
+    if (firstAvailableFile) {
+      openFile(firstAvailableFile);
+      return;
+    }
+    cleanActiveFileAndContent();
+  };
+
+  const toggleFolderOpen = (items: FileType[], folderId: string) => {
+    for (const item of items) {
+      if (item.id === folderId && item.type === "folder") {
+        item.isOpen = !item.isOpen;
+        return true;
+      }
+      if (item.children) {
+        if (toggleFolderOpen(item.children, folderId)) return true;
+      }
+    }
+    return false;
+  };
+
+  const toggleFolder = (folderId: string) => {
+    const updatedStructure = [...fileStructure];
+    toggleFolderOpen(updatedStructure, folderId);
+    setFileStructure(updatedStructure);
+  };
+
   return (
     <>
       <div
@@ -52,14 +91,13 @@ const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({
             toggleFolder={toggleFolder}
             setNewItem={setNewItem}
             setFileStructure={setFileStructure}
-            getFileIcon={getFileIcon}
             onActiveFileDeleted={onActiveFileDeleted}
           />
         </div>
       </div>
       <div
         className="absolute top-0 right-0 w-1 h-full cursor-ew-resize hover:bg-blue-500"
-        onMouseDown={(e) => startResize('explorer', e)}
+        onMouseDown={(e) => startResize("explorer", e)}
       />
     </>
   );

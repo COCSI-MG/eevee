@@ -10,7 +10,6 @@ interface FileTreeProps {
   toggleFolder: (folderId: string) => void;
   setNewItem: React.Dispatch<React.SetStateAction<NewItem>>;
   setFileStructure: React.Dispatch<React.SetStateAction<FileType[]>>;
-  getFileIcon: (filename: string) => React.ReactNode;
   onActiveFileDeleted?: () => void;
 }
 
@@ -22,7 +21,6 @@ export const FileTree: React.FC<FileTreeProps> = ({
   toggleFolder,
   setNewItem,
   setFileStructure,
-  getFileIcon,
   onActiveFileDeleted,
 }) => {
   return (
@@ -45,7 +43,6 @@ export const FileTree: React.FC<FileTreeProps> = ({
             setNewItem={setNewItem}
             setFileStructure={setFileStructure}
             fileStructure={fileStructure}
-            getFileIcon={getFileIcon}
             onActiveFileDeleted={onActiveFileDeleted}
           />
         ))}
