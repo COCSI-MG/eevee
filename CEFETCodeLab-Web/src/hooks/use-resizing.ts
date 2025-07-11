@@ -1,0 +1,5 @@
+const useResizing = () => {
+
+}
+
+export { useResizing };
