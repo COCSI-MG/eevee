@@ -1,13 +1,13 @@
 import React from "react";
 import { FileType, NewItem } from "@/types/shared";
 import { FileTree } from "./file-tree";
+import { useWorkspace } from "@/hooks/use-workspace";
 
 interface WorkspaceExplorerProps {
   explorerWidth: number;
   fileStructure: FileType[];
   activeFile: string;
   newItem: NewItem;
-  openFile: (file: FileType) => void;
   setNewItem: React.Dispatch<React.SetStateAction<NewItem>>;
   setFileStructure: React.Dispatch<React.SetStateAction<FileType[]>>;
   cleanActiveFileAndContent: () => void;
@@ -22,12 +22,13 @@ const WorkspaceExplorer: React.FC<WorkspaceExplorerProps> = ({
   fileStructure,
   activeFile,
   newItem,
-  openFile,
   setNewItem,
   setFileStructure,
   cleanActiveFileAndContent,
   startResize,
 }) => {
+  const { openFile } = useWorkspace();
+
   const findFirstFile = (items: FileType[]): FileType | null => {
     for (const item of items) {
       if (item.type === "file") {
