@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
@@ -11,13 +11,11 @@ import WorkspaceHeader from "@/components/workspace/header";
 import WorkspaceExplorer from "@/components/workspace/explorer";
 import WorkspaceEditor from "@/components/workspace/editor";
 import WorkspaceConsole from "@/components/workspace/console";
-import { FileType, NewItem } from "@/types/shared";
+import { FileType } from "@/types/shared";
 import {
-  getFileFromStash,
   upsertFileInStash,
 } from "@/app/integration/filestash";
 import { getFilePath } from "@/lib/file-path-utils";
-import { DEFAULT_ASSIGNMENT_TEMPLATE } from "@/app/admin/assignments/constants";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
@@ -26,49 +24,29 @@ import { useWindowFocus } from "@/hooks/use-window-focus";
 import { useFileStash } from "@/hooks/use-filestash";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import WindowFocusDialog from "@/components/window-focus-dialog";
+import { useWorkspace } from "@/hooks/use-workspace";
 
 export default function AssignmentWorkspace() {
   const { id } = useParams();
-  const [consoleOutput, setConsoleOutput] = useState<string[]>([
-    "Saída do programa aparecerá aqui",
-  ]);
-  const [activeFile, setActiveFile] = useState("index.js");
-  const [activeLocalFilePath, setActiveLocalFilePath] =
-    useState<string>("src/index.js");
-  const [activeFileContent, setActiveFileContent] = useState<string>("");
 
   const { explorerWidth, consoleHeight, startResize } = useWorskpaceResizing();
-
-  const [fileStructure, setFileStructure] = useState<FileType[]>([
-    {
-      id: "1",
-      name: "src",
-      type: "folder",
-      lastModified: new Date(),
-      isOpen: true,
-      children: [
-        {
-          id: `2-${Date.now()}`,
-          name: "index.js",
-          type: "file",
-          lastModified: new Date(),
-          isOpen: true,
-          parentId: "1",
-        },
-      ],
-    },
-  ]);
-
-  const [newItem, setNewItem] = useState<NewItem>({
-    name: "",
-    parentId: null,
-    type: "file",
-    isCreating: false,
-  });
+  const {
+    fileStructure,
+    setFileStructure,
+    newItem,
+    setNewItem,
+    setConsoleOutput,
+    activeFile,
+    setActiveFile,
+    activeFileContent,
+    setActiveFileContent,
+    activeLocalFilePath,
+    newItemRef,
+    getFileStruct,
+    getFileContentFromStash
+  } = useWorkspace();
 
   const { focusCount, resetFocusCount } = useWindowFocus();
-
-  const newItemRef = useRef<HTMLInputElement>(null);
 
   const { user } = useAuthUser();
   const { data: assignment, isLoading } = useFetchAssignment(Number(id));
@@ -158,7 +136,7 @@ export default function AssignmentWorkspace() {
         `Report: ${workerResult.report.replace(/\\n/g, "\n")}`,
       ]);
     }
-  }, [isPending, workerResult]);
+  }, [isPending, setConsoleOutput, workerResult]);
 
   useEffect(() => {
     if (newItem.isCreating && newItemRef.current) {
@@ -166,7 +144,7 @@ export default function AssignmentWorkspace() {
         newItemRef.current?.focus();
       }, 0);
     }
-  }, [newItem.isCreating]);
+  }, [newItem.isCreating, newItemRef]);
 
   useEffect(() => {
     const localStorageFileStructure = localStorage.getItem(
@@ -176,7 +154,7 @@ export default function AssignmentWorkspace() {
       const parsedFileStructure = JSON.parse(localStorageFileStructure);
       setFileStructure(parsedFileStructure);
     }
-  }, [id]);
+  }, [id, setFileStructure]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -202,12 +180,6 @@ export default function AssignmentWorkspace() {
       });
     }
   }, [savedFile, isSaving, isSavingError]);
-
-  const openFile = (file: FileType) => {
-    const filePath = getFilePath(file, fileStructure);
-    setActiveFile(filePath.split("/").pop() || "");
-    setActiveLocalFilePath(filePath);
-  };
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
@@ -238,41 +210,6 @@ export default function AssignmentWorkspace() {
     }
   };
 
-  const getFileStruct = useCallback(
-    (filePath: string): FileType | null => {
-      const findFileByPath = (items: FileType[]): FileType | null => {
-        for (const item of items) {
-          if (
-            item.type === "file" &&
-            getFilePath(item, fileStructure) === filePath
-          ) {
-            return item;
-          }
-          if (item.children) {
-            const found = findFileByPath(item.children);
-            if (found) return found;
-          }
-        }
-        return null;
-      };
-      return findFileByPath(fileStructure);
-    },
-    [fileStructure]
-  );
-
-  const getFileContentFromStash = async (key: string) => {
-    try {
-      const fileData = await getFileFromStash(key);
-      if (fileData && fileData.data && typeof fileData.data === "string") {
-        setActiveFileContent(fileData.data);
-      } else {
-        console.warn("File not found in stash:", key);
-      }
-    } catch (error) {
-      console.error("Error fetching file from stash:", error);
-    }
-  };
-
   useEffect(() => {
     if (activeLocalFilePath && assignment && activeFileContent === "") {
       const fileStruct = getFileStruct(activeLocalFilePath);
@@ -286,13 +223,7 @@ export default function AssignmentWorkspace() {
       const fileKey = `${assignment.id}/${fileStruct.id}/${activeLocalFilePath}`;
       getFileContentFromStash(fileKey);
     }
-  }, [activeFileContent, activeLocalFilePath, assignment, getFileStruct]);
-
-  useEffect(() => {
-    if (activeFileContent === "") {
-      setActiveFileContent(DEFAULT_ASSIGNMENT_TEMPLATE);
-    }
-  }, [activeFileContent]);
+  }, [activeFileContent, activeLocalFilePath, assignment, getFileContentFromStash, getFileStruct]);
 
   const handleRun = () => {
     if (activeFileContent === "") {
@@ -347,7 +278,7 @@ export default function AssignmentWorkspace() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-slate-900 text-white">
+    <>
       <WorkspaceHeader assignmentDescription={assignment.description} />
 
       {focusCount === 5 && (
@@ -363,7 +294,6 @@ export default function AssignmentWorkspace() {
               startResize={startResize}
               activeFile={activeFile}
               newItem={newItem}
-              openFile={openFile}
               setNewItem={setNewItem}
               cleanActiveFileAndContent={cleanActiveFileAndContent}
               setFileStructure={setFileStructure}
@@ -382,12 +312,11 @@ export default function AssignmentWorkspace() {
               <WorkspaceConsole
                 consoleHeight={consoleHeight}
                 startResize={startResize}
-                consoleOutput={consoleOutput}
               />
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
