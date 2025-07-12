@@ -1,17 +1,20 @@
+import { useWorkspace } from '@/hooks/use-workspace';
 import { cn } from '@/lib/utils';
 import React from 'react';
 
 export interface WorkspaceConsoleProps {
   consoleHeight: number;
   startResize: (element: 'console', e: React.MouseEvent) => void;
-  consoleOutput: string[];
 }
 
 const WorkspaceConsole: React.FC<WorkspaceConsoleProps> = ({
   consoleHeight,
   startResize,
-  consoleOutput,
 }) => {
+  const {
+    consoleOutput
+  } = useWorkspace();
+
   return (
     <>
       <div
