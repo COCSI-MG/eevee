@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
+import { useToast } from "./use-toast";
+import { useRouter } from "next/navigation";
+
+const MAX_FOCUS_LIMIT = 8;
 
 const useWindowFocus = () => {
   const [focusCount, setFocusCount] = useState(0);
+  const { toast } = useToast();
+  const { back } = useRouter();
 
   useEffect(() => {
     window.addEventListener('focus', () => {
@@ -10,15 +16,19 @@ const useWindowFocus = () => {
   }, []);
 
   useEffect(() => {
-    if (focusCount > 5) {
-      console.log('Focus count exceeded 5, redirecting to home');
+    if (focusCount > MAX_FOCUS_LIMIT) {
+      toast({
+        title: "Atenção",
+        description: "Voce sera redirecionado para a pagina inicial por perder o foco muitas vezes",
+        variant: "destructive",
+      });
 
       setTimeout(() => {
         setFocusCount(0);
-        window.location.href = '/';
+        back();
       }, 5000);
     }
-  }, [focusCount]);
+  }, [back, focusCount, toast]);
 
   const resetFocusCount = () => {
     setFocusCount(0);
