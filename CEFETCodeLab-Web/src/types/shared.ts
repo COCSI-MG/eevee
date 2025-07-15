@@ -1,14 +1,11 @@
-export type FileType = {
+export type FileTreeData = {
   id: string;
-  name: string;
-  type: 'file' | 'folder';
-  extension?: string;
-  content?: string;
-  children?: FileType[];
-  lastModified: Date;
-  isOpen?: boolean;
-  parentId?: string;
-};
+  label: string;
+  isSelectable: boolean;
+  icon?: React.ReactNode;
+  children?: FileTreeData[];
+  isFile?: boolean;
+}
 
 export type NewItem = {
   name: string;
