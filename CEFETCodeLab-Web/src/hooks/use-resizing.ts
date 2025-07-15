@@ -1,5 +1,0 @@
-const useResizing = () => {
-
-}
-
-export { useResizing };
