@@ -2,13 +2,15 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
+import { useWindowFocus } from "@/hooks/use-window-focus";
 
-export default function WindowFocusDialog({
-  onClick,
-}: {
-  onClick: () => void;
-}) {
+export default function WindowFocusDialog() {
+  const { focusCount, onClickHandler } = useWindowFocus();
   const [checked, setChecked] = useState(false);
+
+  if (focusCount != 5) {
+    return;
+  }
 
   return (
     <div className="flex items-center justify-center h-screen opacity-50 bg-black fixed inset-0 z-50">
@@ -36,7 +38,7 @@ export default function WindowFocusDialog({
         <Button
           className="ml-4 justify-center mt-4"
           disabled={!checked}
-          onClick={onClick}
+          onClick={onClickHandler}
         >
           Continuar
         </Button>
