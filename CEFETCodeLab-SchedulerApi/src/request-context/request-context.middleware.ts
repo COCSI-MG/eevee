@@ -12,6 +12,7 @@ export class RequestContextMiddleware implements NestMiddleware {
   ) {
     passport.use(new JwtStrategy(configService));
   }
+
   async use(req: any, res: any, next: (error?: any) => void) {
     passport.authenticate('jwt', { session: false }, (err, user, info) => {
       console.log('user', user);
