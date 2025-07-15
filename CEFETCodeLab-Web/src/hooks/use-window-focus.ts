@@ -30,11 +30,11 @@ const useWindowFocus = () => {
     }
   }, [back, focusCount, toast]);
 
-  const resetFocusCount = () => {
-    setFocusCount(0);
+  const onClickHandler = () => {
+    setFocusCount((prev) => prev + 1);
   };
 
-  return { focusCount, resetFocusCount };
+  return { focusCount, onClickHandler };
 }
 
 export { useWindowFocus };
