@@ -3,6 +3,7 @@
 import { DEFAULT_ASSIGNMENT_TEMPLATE } from "@/app/admin/assignments/constants";
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
+import WindowFocusDialog from "@/components/window-focus-dialog";
 import WorkspaceHeader from "@/components/workspace/header";
 import WorkspaceCodeEditor from "@/components/workspace/workspace-code-editor";
 import WorkspaceExplorer from "@/components/workspace/workspace-explorer";
@@ -95,13 +96,12 @@ export default function Page() {
 
   React.useEffect(() => {
     if (activeFile.id && assignmentData?.id) {
-      const fileKey = `assignment-${assignmentData.id}-file-${activeFile.id}`
-      fetchFileContentFromStashAsync(fileKey)
-        .then((data) => {
-          if (data) {
-            setDefaultEditorValue(data.toString());
-          }
-        })
+      const fileKey = `assignment-${assignmentData.id}-file-${activeFile.id}`;
+      fetchFileContentFromStashAsync(fileKey).then((data) => {
+        if (data) {
+          setDefaultEditorValue(data.toString());
+        }
+      });
     }
   }, [activeFile.id, assignmentData?.id, fetchFileContentFromStashAsync]);
 
@@ -182,6 +182,8 @@ export default function Page() {
         onRunClick={handleRun}
         onSaveClick={handleServerSave}
       />
+
+      <WindowFocusDialog />
 
       <div className="flex flex-1 min-h-0">
         <WorkspaceExplorer
