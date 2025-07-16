@@ -1,3 +1,4 @@
+import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
 import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
 import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
@@ -49,4 +50,7 @@ export class Assignment {
     enum: WorkerType,
   })
   workerType: WorkerType;
+
+  @OneToMany(() => AssignmentUserSuspension, (suspension) => suspension.assignment)
+  suspensions?: AssignmentUserSuspension[];
 }
