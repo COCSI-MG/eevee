@@ -4,11 +4,20 @@ import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
 import { useWindowFocus } from "@/hooks/use-window-focus";
 
-export default function WindowFocusDialog() {
-  const { focusCount, onClickHandler } = useWindowFocus();
+interface WindowFocusDialogProps {
+  suspendUserFromAssignment?: () => void;
+}
+
+export default function WindowFocusDialog({
+  suspendUserFromAssignment,
+}: WindowFocusDialogProps = {
+}) {
+  const { focusCount, onClickHandler } = useWindowFocus({
+    suspendUserFromAssignment,
+  });
   const [checked, setChecked] = useState(false);
 
-  if (focusCount != 5) {
+  if (focusCount >= 5) {
     return;
   }
 

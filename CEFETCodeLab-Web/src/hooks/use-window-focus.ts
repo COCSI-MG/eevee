@@ -2,9 +2,16 @@ import { useEffect, useState } from "react";
 import { useToast } from "./use-toast";
 import { useRouter } from "next/navigation";
 
-const MAX_FOCUS_LIMIT = 8;
+export const MAX_FOCUS_LIMIT = 8;
 
-const useWindowFocus = () => {
+interface UseWindowFocusProps {
+  suspendUserFromAssignment?: () => void;
+}
+
+const useWindowFocus = ({
+  suspendUserFromAssignment,
+}: UseWindowFocusProps = {
+}) => {
   const [focusCount, setFocusCount] = useState<number>(1);
   const { toast } = useToast();
   const { back } = useRouter();
@@ -25,11 +32,16 @@ const useWindowFocus = () => {
         title: "Atenção",
         description: "Voce sera redirecionado para a pagina inicial por perder o foco muitas vezes",
         variant: "destructive",
+        duration: 5000,
       });
 
       document.addEventListener('click', eventListenerPreventDefault);
 
       document.addEventListener('keydown', eventListenerPreventDefault);
+
+      if (suspendUserFromAssignment !== undefined) {
+        suspendUserFromAssignment();
+      }
 
       setTimeout(() => {
         setFocusCount(0);
@@ -38,7 +50,7 @@ const useWindowFocus = () => {
         back();
       }, 5000);
     }
-  }, [back, focusCount, toast]);
+  }, [back, focusCount, toast, suspendUserFromAssignment]);
 
   const onClickHandler = () => {
     setFocusCount((prev) => prev + 1);
