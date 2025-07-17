@@ -13,6 +13,7 @@ import { CreateAssignmentUserSuspensionDto } from './dto/create-assignment-user-
 import { UpdateAssignmentUserSuspensionDto } from './dto/update-assignment-user-suspension.dto';
 import { ClsService } from 'nestjs-cls';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RemoveAssignmentUserSuspensionDto } from './dto/remove-assignment-user-suspension.dto';
 
 @Controller('assignment-user-suspension')
 @UseGuards(JwtAuthGuard)
@@ -58,11 +59,11 @@ export class AssignmentUserSuspensionController {
 
   @Post('remove-suspension')
   removeSuspensionFromAssignment(
-    { userId, assignmentId }: { userId: number; assignmentId: number },
+    @Body() removeAssignmentUserSuspensionDto: RemoveAssignmentUserSuspensionDto,
   ) {
     return this.assignmentUserSuspensionService.removeSuspensionFromAssignment(
-      userId,
-      assignmentId,
+      removeAssignmentUserSuspensionDto.userId,
+      removeAssignmentUserSuspensionDto.assignmentId,
     );
   }
 
