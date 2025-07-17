@@ -1,14 +1,15 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class CreateAssignmentUserSuspensionDto {
-  @IsString()
-  @IsNotEmpty()
+  @IsNumber()
+  @IsOptional()
   userId?: number;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
   assignmentId: number;
 
   @IsString()
+  @IsOptional()
   reason?: string;
 }
