@@ -1,3 +1,4 @@
+import { AssignmentUserSuspension } from "./assignment-user-suspension";
 import { UserClass } from "./user-class";
 
 export interface User {
@@ -5,8 +6,9 @@ export interface User {
    name: string;
    email: string;
    passwordHash: string;
-   isAdmin: boolean; 
+   isAdmin: boolean;
    userClasses: UserClass[];
+   assignmentSuspensions?: AssignmentUserSuspension[];
 }
 
 export interface UpsertUser {
