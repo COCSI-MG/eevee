@@ -16,6 +16,9 @@ export class Template {
     @Column()
     filePath: string;
 
+    @Column('text', { array: true, nullable: true })
+    dependencies: string[];
+
     @OneToMany(() => AssignmentTemplate, (assignmentTemplate) => assignmentTemplate.template)
     assignmentTemplates?: AssignmentTemplate[];
 
