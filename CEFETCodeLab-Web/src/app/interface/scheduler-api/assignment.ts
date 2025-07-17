@@ -1,4 +1,5 @@
 import { AssignmentAttempt } from "./assignment-attempt";
+import { AssignmentUserSuspension } from "./assignment-user-suspension";
 import { Class } from "./class";
 import { Template } from "./template";
 
@@ -13,6 +14,7 @@ export interface Assignment {
   assignmentAttempts: AssignmentAttempt[];
   class: Class;
   assignmentTemplates: Template[];
+  suspensions?: AssignmentUserSuspension[];
 }
 
 export interface CreateAssignmentRequest {
