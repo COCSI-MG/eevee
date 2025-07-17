@@ -1,13 +1,16 @@
 "use client";
 
 import { DEFAULT_ASSIGNMENT_TEMPLATE } from "@/app/admin/assignments/constants";
+import { AssignmentUserSuspensionService } from "@/app/integration/scheduler-api/assignment-user-suspension";
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
+import { Button } from "@/components/ui/button";
 import WindowFocusDialog from "@/components/window-focus-dialog";
 import WorkspaceHeader from "@/components/workspace/header";
 import WorkspaceCodeEditor from "@/components/workspace/workspace-code-editor";
 import WorkspaceExplorer from "@/components/workspace/workspace-explorer";
 import { useFetchAssignment } from "@/hooks/use-assignments";
+import { useAuthUser } from "@/hooks/use-auth-user";
 import {
   useFetchFromStash,
   useFileStash,
@@ -18,7 +21,7 @@ import { toast } from "@/hooks/use-toast";
 import { FileTreeData } from "@/types/shared";
 import { useMutation } from "@tanstack/react-query";
 import { FileStrucutre } from "filestash";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React from "react";
 
 const defaultTreeData: FileTreeData[] = [
@@ -51,6 +54,8 @@ export default function Page() {
   const [defaultEditorValue, setDefaultEditorValue] = React.useState<string>(
     DEFAULT_ASSIGNMENT_TEMPLATE
   );
+  const { user } = useAuthUser();
+  const { back } = useRouter();
 
   useFileStash();
   usePreventUserActions();
@@ -118,6 +123,15 @@ export default function Page() {
     },
   });
 
+  const { mutate: suspendUserFromAssignment } = useMutation({
+    mutationFn: async () => {
+      return AssignmentUserSuspensionService.suspendUserFromAssignment(
+        Number(id),
+        "window_focus"
+      );
+    },
+  });
+
   React.useEffect(() => {
     if (id) {
       setTreeData(defaultTreeData);
@@ -171,6 +185,29 @@ export default function Page() {
     );
   }
 
+  if (
+    assignmentData &&
+    assignmentData.suspensions?.some(
+      (suspension) =>
+        suspension.userId === user?.id
+    )
+  ) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-lg text-red-500">
+            Você está suspenso desta atividade. Entre em contato com o professor
+            para mais informações.
+          </p>
+        </div>
+
+        <Button onClick={() => back()} className="mt-4 justify-center w-64" variant={"outline"}>
+          Voltar
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen text-foreground flex flex-col">
       <WorkspaceHeader
@@ -183,7 +220,9 @@ export default function Page() {
         onSaveClick={handleServerSave}
       />
 
-      <WindowFocusDialog />
+      <WindowFocusDialog
+        suspendUserFromAssignment={suspendUserFromAssignment}
+      />
 
       <div className="flex flex-1 min-h-0">
         <WorkspaceExplorer
