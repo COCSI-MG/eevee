@@ -8,4 +8,5 @@ export enum Route {
   AdminClasses = "admin/classes",
   AdminAssignmentCreate = "admin/assignments/create",
   AdminTemplate = "/admin/templates",
+  AssignmenstUsersSuspensions = "suspensions",
 }
