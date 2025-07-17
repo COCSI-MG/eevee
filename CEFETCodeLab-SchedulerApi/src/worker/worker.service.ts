@@ -15,7 +15,7 @@ export class WorkerService {
   private buildCreateFilesDefaultAndStartCommand(
   applicationFileContent: string,
   testFilesContent: string[],
-  dependencies: string[]
+  templateDependencies: string[]
 ): string[] {
   const commands: string[] = [];
 
@@ -28,7 +28,11 @@ export class WorkerService {
     commands.push(`echo "${encodedTest}" | base64 -d > ${fileName}`);
   });
 
-  commands.push(`npm install mathjs`);
+  if (templateDependencies.length) {
+    const deps = templateDependencies.join(' ');
+    commands.push(`npm install ${deps}`);
+  }
+
   commands.push(`npm start`);
 
   return ['/bin/sh', '-c', commands.join(' && ')];
@@ -112,7 +116,7 @@ export class WorkerService {
   //   return <void>result;
   // }
 
-  async createDefaultNodeWorkerAndWait(createWorkerData: CreateWorkerDto) {
+  async createDefaultNodeWorkerAndWait(createWorkerData: CreateWorkerDto, dependencies: string[]) {
     const jobName = `${WORKER_JOB_PREFFIX.NODE_DEFAULT}${Date.now()}`;
     if (await this.kubernetesService.checkIfJobExists(jobName)) {
       await this.kubernetesService.deleteJob(jobName);
@@ -125,6 +129,7 @@ export class WorkerService {
         this.buildCreateFilesDefaultAndStartCommand(
           createWorkerData.applicationFileContent,
           createWorkerData.testFilesContent,
+          dependencies
         ),
       );
 
