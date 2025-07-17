@@ -20,7 +20,6 @@ export class AssignmentUserSuspensionService {
       where: {
         userId,
         assignmentId,
-        isActive: true,
       },
     });
     return !!suspension;
@@ -43,9 +42,8 @@ export class AssignmentUserSuspensionService {
     userId: number,
     assignmentId: number,
   ): Promise<void> {
-    await this.assignmentUserSuspensionRepository.update(
-      { userId, assignmentId, isActive: true },
-      { isActive: false, updatedAt: new Date() },
+    await this.assignmentUserSuspensionRepository.delete(
+      { userId, assignmentId },
     );
   }
 
@@ -53,8 +51,8 @@ export class AssignmentUserSuspensionService {
     assignmentId: number,
   ): Promise<AssignmentUserSuspension[]> {
     return this.assignmentUserSuspensionRepository.find({
-      where: { assignmentId, isActive: true },
-      relations: ['user'],
+      where: { assignmentId },
+      relations: ['user', 'assignment'],
     });
   }
 
