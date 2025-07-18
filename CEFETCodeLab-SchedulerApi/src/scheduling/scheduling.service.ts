@@ -12,7 +12,7 @@ import { readFileAsString } from 'src/utils/template.utils';
 export class SchedulingService {
   readonly workerMap = new Map<
     WorkerType,
-    (createWorkerData: CreateWorkerDto) => Promise<WorkerResponse>
+    (createWorkerData: CreateWorkerDto, dependencies: string[]) => Promise<WorkerResponse>
   >();
   constructor(
     workerService: WorkerService,
@@ -66,23 +66,28 @@ export class SchedulingService {
 
     const createWorkerAndWait = this.workerMap.get(assignment?.workerType)!;
 
+    const dependencies: string[] = []
+
     const filledTemplates = await Promise.all(
       assignment.assignmentTemplates.map(async (templateRelation) => {
+        const templateDependencies = templateRelation.template.dependencies ?? [];
+        if (templateDependencies.length > 0) dependencies.push(...templateDependencies);
+
         let content = await readFileAsString(templateRelation.template.filePath);
         
         for (const param of templateRelation.template.templateParams) {
           const paramValue = assignment.assignmentParams.find(
             (p) => p.templateParamsId === param.id
           )?.value ?? '';
-          
           content = content.replace(new RegExp(`\\$${param.name}\\$`, 'g'), paramValue);
         }
         return content;
       })
     );
+
     createSchedulingDto.testFilesContent = filledTemplates;
 
-    const workerResult = await createWorkerAndWait(createSchedulingDto);
+    const workerResult = await createWorkerAndWait(createSchedulingDto, dependencies);
 
     console.log('Worker result:', workerResult);
 
