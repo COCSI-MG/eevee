@@ -63,7 +63,6 @@ export class KubernetesService {
   }
 
   private unescapeAnsi(text: string): string {
-    console.log('text: ', text)
     // This regex matches common ANSI escape codes.
     // It covers sequences like: ESC [ ... m
     // where ESC is \x1B (or \u001b)
@@ -72,7 +71,6 @@ export class KubernetesService {
   }
 
   async getJobLogs(podName: string): Promise<string> {
-    console.log('podnames: ', podName)
     const logs = await this.client.api.v1
       .namespaces(DEFAULT_NAMESPACE)
       .pods(podName)
@@ -81,7 +79,6 @@ export class KubernetesService {
           pretty: 'true',
         },
       });
-      console.dir(logs, { depth: null });
     return this.unescapeAnsi(logs.body);
   }
 
