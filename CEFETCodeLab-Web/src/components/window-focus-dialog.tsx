@@ -15,10 +15,10 @@ export default function WindowFocusDialog({
   const { focusCount, onClickHandler } = useWindowFocus({
     suspendUserFromAssignment,
   });
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(true);
 
-  if (focusCount >= 5) {
-    return;
+  if (focusCount != 5) {
+    return null;
   }
 
   return (
@@ -46,7 +46,7 @@ export default function WindowFocusDialog({
         </div>
         <Button
           className="ml-4 justify-center mt-4"
-          disabled={!checked}
+          disabled={checked}
           onClick={onClickHandler}
         >
           Continuar

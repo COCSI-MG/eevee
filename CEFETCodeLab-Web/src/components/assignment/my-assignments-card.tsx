@@ -7,12 +7,15 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Code } from 'lucide-react';
+import { Assignment } from '@/app/interface/scheduler-api/assignment';
+import { useAuthUser } from '@/hooks/use-auth-user';
 
 export default function MyAssignmentsCard() {
   const { push } = useRouter();
+  const { user } = useAuthUser();
 
   const { data, isSuccess, isPending } = useQuery({
-    queryKey: ['my-assignments'],
+    queryKey: ['my-assignments', user?.id],
     refetchOnWindowFocus: true,
     initialData: [],
     queryFn: AssignmentService.GetMyAssignments,
@@ -21,6 +24,13 @@ export default function MyAssignmentsCard() {
   const handleTry = (id: number) => {
     push(`${Route.Assignment}/${id}/${Route.Workspace}`);
   };
+
+  const isUserAbleToTry = (assignment: Assignment) => {
+    if ((assignment.suspensions?.length ?? 0) > 0) {
+      return assignment.suspensions?.some(suspension => suspension.userId === user?.id) ? false : true;
+    }
+    return true;
+  }
 
   if (isPending) {
     return <div>Loading...</div>;
@@ -45,12 +55,22 @@ export default function MyAssignmentsCard() {
                   <p className="text-sm line-clamp-2 mb-4">
                     {assignment.description}
                   </p>
+
+                  {
+                    !isUserAbleToTry(assignment) && (
+                      <p className="text-red-500 text-sm mb-4">
+                        Você não pode iniciar essa tarefa devido a um bloqueio.
+                      </p>
+                    )
+                  }
+
                   <Button
                     className="w-full"
                     onClick={() => handleTry(assignment.id)}
+                    disabled={!isUserAbleToTry(assignment)}
                   >
                     <Code className="h-4 w-4 mr-2" />
-                    Open in Workspace
+                    Iniciar
                   </Button>
                 </div>
               </CardContent>
@@ -59,9 +79,9 @@ export default function MyAssignmentsCard() {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-full">
-          <h2 className="text-2xl font-bold">No assignments found</h2>
+          <h2 className="text-2xl font-bold">Nenhuma tarefa encontrada</h2>
           <p className="text-muted-foreground mt-1">
-            You don&apos;t have any assignments yet.
+            Voce ainda não possui nenhuma tarefa atribuída.
           </p>
         </div>
       )}

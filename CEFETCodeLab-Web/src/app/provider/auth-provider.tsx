@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     checkTokenExpired();
-  }, [checkTokenExpired]);
+  }, [checkTokenExpired, pathName]);
 
   const logout = () => {
     try {

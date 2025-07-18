@@ -17,9 +17,16 @@ const useWindowFocus = ({
   const { back } = useRouter();
 
   useEffect(() => {
-    window.addEventListener('focus', () => {
+    const handleFocus = () => {
       setFocusCount((prev) => prev + 1);
-    });
+    };
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      console.log("Window focus event listener removed");
+      // Clean up the event listener when the component unmounts
+      window.removeEventListener("focus", handleFocus);
+    };
   }, []);
 
   const eventListenerPreventDefault = (e: MouseEvent | KeyboardEvent) => {

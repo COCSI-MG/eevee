@@ -18,6 +18,7 @@ import {
 } from "@/hooks/use-filestash";
 import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
 import { toast } from "@/hooks/use-toast";
+import { getFileStashKey } from "@/lib/utils";
 import { FileTreeData } from "@/types/shared";
 import { useMutation } from "@tanstack/react-query";
 import { FileStrucutre } from "filestash";
@@ -101,21 +102,28 @@ export default function Page() {
 
   React.useEffect(() => {
     if (activeFile.id && assignmentData?.id) {
-      const fileKey = `assignment-${assignmentData.id}-file-${activeFile.id}`;
+      const fileKey = getFileStashKey(
+        assignmentData.id,
+        activeFile.id,
+        user?.id
+      );
       fetchFileContentFromStashAsync(fileKey).then((data) => {
         if (data) {
           setDefaultEditorValue(data.toString());
         }
       });
     }
-  }, [activeFile.id, assignmentData?.id, fetchFileContentFromStashAsync]);
+  }, [activeFile.id, assignmentData?.id, fetchFileContentFromStashAsync, user?.id]);
 
   const { mutate: saveFileInServer } = useMutation({
     mutationKey: ["save-file-in-saver"],
     mutationFn: async () => {
-      const fileKey = `assignment-${assignmentData?.id}-file-${activeFile.id}`;
+      const fileKey = getFileStashKey(
+        assignmentData?.id ?? 0,
+        activeFile.id,
+        user?.id
+      );
       const fileContent = await fetchFileContentFromStashAsync(fileKey);
-
       const file = new File([fileContent], activeFile.name, {
         type: "text/plain",
       });
@@ -162,7 +170,12 @@ export default function Page() {
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
-      const fileKey = `assignment-${assignmentData?.id}-file-${activeFile.id}`;
+      const fileKey =  getFileStashKey(
+        assignmentData?.id ?? 0,
+        activeFile.id,
+        user?.id
+      );
+
       const fileData: FileStrucutre = {
         name: activeFile.name,
         data: value,
@@ -188,8 +201,7 @@ export default function Page() {
   if (
     assignmentData &&
     assignmentData.suspensions?.some(
-      (suspension) =>
-        suspension.userId === user?.id
+      (suspension) => suspension.userId === user?.id
     )
   ) {
     return (
@@ -201,7 +213,11 @@ export default function Page() {
           </p>
         </div>
 
-        <Button onClick={() => back()} className="mt-4 justify-center w-64" variant={"outline"}>
+        <Button
+          onClick={() => back()}
+          className="mt-4 justify-center w-64"
+          variant={"outline"}
+        >
           Voltar
         </Button>
       </div>

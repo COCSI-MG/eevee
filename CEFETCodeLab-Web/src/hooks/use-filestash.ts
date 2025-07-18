@@ -50,10 +50,6 @@ const useFetchFromStash = () => {
       return fileData.data;
     },
     onError: (error) => {
-      toast({
-        title: "Ocorreu um erro ao carregar arquivo localmente",
-        variant: "destructive"
-      })
       console.error("Error while fetching content from stash", error);
     },
     onSuccess: (data) => {
