@@ -42,4 +42,11 @@ export class AssignmentService {
     const response = await axiosClientWithAuth.delete(`/assignment/${id}`);
     return <Assignment>response.data;
   }
+
+  static async GetAssignmentsByClassId(classId: number) {
+    const response = await axiosClientWithAuth.get(
+      `/assignment/class/${classId}`
+    );
+    return <Assignment[]>response.data;
+  }
 }
