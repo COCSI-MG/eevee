@@ -19,7 +19,6 @@ import { ProducerService } from 'src/kafka/producer.service';
 import { readFile, rm } from 'node:fs/promises';
 import GithubService from 'src/github/github.service';
 import { ClsService } from 'nestjs-cls';
-import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class FileSaverService {
@@ -89,12 +88,16 @@ export class FileSaverService {
     }
   }
 
-  async createSyncJob(fileEntryId: number, jobType: JobType, priority?: number): Promise<SyncJob> {
+  async createSyncJob(
+    fileEntryId: number,
+    jobType: JobType,
+    priority?: number,
+  ): Promise<SyncJob> {
     const syncJob = this.syncJobRepository.create({
       fileEntryId,
       jobType,
       scheduledAt: new Date(),
-      priority
+      priority,
     });
     return this.syncJobRepository.save(syncJob);
   }
@@ -102,10 +105,7 @@ export class FileSaverService {
   async findPendingOrFailedSyncJobs(): Promise<SyncJob[]> {
     return this.syncJobRepository.find({
       where: {
-        status: In([
-          JobStatus.PROCESSING,
-          JobStatus.FAILED
-        ])
+        status: In([JobStatus.PROCESSING, JobStatus.FAILED]),
       },
       order: { priority: 'DESC', scheduledAt: 'ASC' },
       relations: ['fileEntry'],
@@ -279,7 +279,7 @@ export class FileSaverService {
           await rm(fileEntry.localTempPath);
 
           await this.fileEntryRepository.update(fileEntry.id, {
-            localTempPath: "",
+            localTempPath: '',
           });
         } else {
           this.logger.warn(
@@ -320,7 +320,7 @@ export class FileSaverService {
             syncAttempts: job.attempts + 1,
             lastSyncAttempt: new Date(),
           }),
-        ])
+        ]);
         break;
       case JobStatus.FAILED:
         await Promise.all([
