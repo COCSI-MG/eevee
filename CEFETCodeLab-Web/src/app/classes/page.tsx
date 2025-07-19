@@ -1,11 +1,9 @@
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { ClassesService } from '../integration/scheduler-api/classes';
-import { useEffect, useState } from 'react';
-import { useAuthUser } from '@/hooks/use-auth-user';
-import { Class } from '../interface/scheduler-api/class';
-import { Button } from '@/components/ui/button';
+import { useQuery } from "@tanstack/react-query";
+import { ClassesService } from "../integration/scheduler-api/classes";
+import { useAuthUser } from "@/hooks/use-auth-user";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardHeader,
@@ -13,49 +11,53 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from '@/components/ui/card';
-import { GraduationCap, BookOpen } from 'lucide-react';
-import Link from 'next/link';
+} from "@/components/ui/card";
+import { GraduationCap, BookOpen } from "lucide-react";
+import Link from "next/link";
+import Loader from "@/components/loader";
 
 export default function ClassPage() {
   const { user } = useAuthUser();
-  const [filteredClasses, setFilteredClasses] = useState<Class[]>([]);
 
   const {
     data: classes,
     isSuccess,
     isPending,
   } = useQuery({
-    queryKey: ['classes'],
-    refetchOnWindowFocus: true,
+    queryKey: ["classes", user?.id],
     initialData: [],
-    queryFn: ClassesService.listClasses,
-    enabled: !!user,
+    queryFn: ({ queryKey }) => {
+      return ClassesService.listClassesByUserId(Number(queryKey[1]!));
+    },
+    enabled: !!user && !!user.id,
   });
 
-  useEffect(() => {
-    if (isSuccess && !isPending && classes.length > 0 && user) {
-      const userClasses = classes.filter((classItem) => {
-        return classItem.users.some((student) => student.userId === user.id);
-      });
-      setFilteredClasses(userClasses);
-    }
-  }, [isSuccess, classes, user, isPending]);
+  if (isPending) {
+    return <Loader />;
+  }
+
+  if (!isSuccess) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <h2 className="text-xl font-bold">
+          Ocorreu um erro carregando as classes
+        </h2>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Classes</h1>
-          <p className="text-muted-foreground mt-1">
-            Here you can find all your classes.
-          </p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-white mb-2">Suas classes</h1>
+        <p className="text-slate-400 text-lg">
+          Selecione uma classe para ver as tarefas e acompanhar o progresso e resultado da tarefa.
+        </p>
       </div>
 
-      {!isPending && isSuccess && filteredClasses.length > 0 ? (
+      {classes.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredClasses.map((cls) => (
+          {classes.map((cls) => (
             <Card
               key={cls.id}
               className="overflow-hidden hover:shadow-md transition-shadow"
@@ -72,11 +74,16 @@ export default function ClassPage() {
               <CardContent className="pb-2">
                 <div className="mt-4 flex items-center text-sm text-muted-foreground">
                   <BookOpen className="h-4 w-4 mr-1" />
-                  <span>1 assignments</span>
+                  <span>
+                    {cls.assignments?.length || 0} tarefas disponiveis
+                  </span>
                 </div>
               </CardContent>
               <CardFooter>
-                <Link href={`/assignments/${cls.id}`} className="flex-1 mt-4">
+                <Link
+                  href={`/classes/assignment/${cls.id}`}
+                  className="flex-1 mt-4"
+                >
                   <Button
                     variant="default"
                     className="w-full flex items-center"
