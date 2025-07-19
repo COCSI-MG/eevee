@@ -1,3 +1,4 @@
+import { Assignment } from "./assignment";
 import { UserClass } from "./user-class";
 
 export interface Class {
@@ -8,6 +9,7 @@ export interface Class {
   users: {
     userId: number;
   }[];
+  assignments?: Assignment[];
 }
 
 export interface UpsertClass {
