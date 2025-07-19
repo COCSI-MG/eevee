@@ -1,16 +1,9 @@
-import MyAssignmentsCard from '@/components/assignment/my-assignments-card';
+import ClassesAssignments from "@/components/assignment/classes-assignments";
 
 export default function Assignment() {
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">Suas Tarefas</h1>
-        <p className="text-muted-foreground mt-1">
-          Aqui você pode ver todas as suas tarefas e iniciar novas tentativas.
-        </p>
-      </div>
-
-      <MyAssignmentsCard />
+      <ClassesAssignments />
     </div>
   );
 }
