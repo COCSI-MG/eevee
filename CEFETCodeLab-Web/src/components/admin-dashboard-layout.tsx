@@ -42,7 +42,7 @@ export default function AdminDashboardLayout({
         description: 'You do not have permission to access this page.',
         variant: 'destructive',
       });
-      push(`/${Route.Assignment}`);
+      push(`/${Route.Classes}`);
     }
   }, [isUserAdmin, push, user]);
 
