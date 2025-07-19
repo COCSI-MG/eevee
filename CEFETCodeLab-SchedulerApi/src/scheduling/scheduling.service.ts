@@ -14,6 +14,7 @@ export class SchedulingService {
     WorkerType,
     (createWorkerData: CreateWorkerDto) => Promise<WorkerResponse>
   >();
+
   constructor(
     workerService: WorkerService,
     private readonly attemptService: AttemptService,
@@ -69,12 +70,12 @@ export class SchedulingService {
     const filledTemplates = await Promise.all(
       assignment.assignmentTemplates.map(async (templateRelation) => {
         let content = await readFileAsString(templateRelation.template.filePath);
-        
+
         for (const param of templateRelation.template.templateParams) {
           const paramValue = assignment.assignmentParams.find(
             (p) => p.templateParamsId === param.id
           )?.value ?? '';
-          
+
           content = content.replace(new RegExp(`\\$${param.name}\\$`, 'g'), paramValue);
         }
         return content;
