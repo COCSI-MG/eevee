@@ -64,7 +64,7 @@ export default function Login() {
         push('/admin');
         return;
       }
-      push(Route.Assignment);
+      push(Route.Classes);
     }
   }, [isError, error, data, isSuccess, push]);
 
