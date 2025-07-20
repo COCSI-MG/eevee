@@ -6,19 +6,30 @@ import * as path from 'path';
 
 function checkupDependencies() {
   const directoryPath = __dirname;
-  const filesToSearch = ['src/app.module.ts', 'test/app.e2e-spec.ts'];
+  const appModulePath = path.join(directoryPath, 'src', 'app.module.ts');
+  if (!fs.existsSync(appModulePath)) {
+    console.error('src/app.module.ts does not exist.');
+    throw new Error('Missing app.module.ts');
+  } else {
+    console.log('src/app.module.ts exists.');
+  }
 
-  filesToSearch.forEach((file) => {
-    const filePath = path.join(directoryPath, file);
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-      if (err) {
-        console.error(`${file} does not exist.`);
-        throw err;
-      } else {
-        console.log(`${file} exists.`);
-      }
-    });
-  });
+  const testFolder = path.join(directoryPath, 'test');
+  if (!fs.existsSync(testFolder)) {
+    console.error('test folder does not exist.');
+    throw new Error('Missing test folder');
+  }
+
+  const hasAtLeastOneE2ETest = fs
+    .readdirSync(testFolder)
+    .some((file) => file.endsWith('.e2e-spec.ts'));
+
+  if (!hasAtLeastOneE2ETest) {
+    console.error('No *.e2e-spec.ts file found in test folder.');
+    throw new Error('No e2e tests found');
+  } else {
+    console.log('At least one e2e test file found.');
+  }
 }
 
 function applyTests() {

@@ -38,15 +38,30 @@ export class WorkerService {
   return ['/bin/sh', '-c', commands.join(' && ')];
 }
   private buildCreateFilesNestJsAndStartCommand(
-    applicationFileContent: string,
-    testFileContent: string[],
-  ): string[] {
-    return [
-      '/bin/sh',
-      '-c',
-      `echo "${testFileContent}" > /app/test/app.e2e-spec.ts && echo "${applicationFileContent}" > /app/src/app.module.ts && npm run start:worker`,
-    ];
+  applicationFileContent: string,
+  testFilesContent: string[],
+  templateDependencies: string[],
+): string[] {
+  const commands: string[] = [];
+
+  const encodedApp = Buffer.from(applicationFileContent).toString('base64');
+  commands.push(`echo "${encodedApp}" | base64 -d > /app/src/app.module.ts`);
+
+  testFilesContent.forEach((testContent, index) => {
+    const encodedTest = Buffer.from(testContent).toString('base64');
+    const fileName = `/app/test/validation${index}.e2e-spec.ts`;
+    commands.push(`echo "${encodedTest}" | base64 -d > ${fileName}`);
+  });
+
+  if (templateDependencies.length) {
+    const deps = templateDependencies.join(' ');
+    commands.push(`npm install ${deps}`);
   }
+
+  commands.push(`npm run start:worker`);
+
+  return ['/bin/sh', '-c', commands.join(' && ')];
+}
 
   private processLogResult(log: string): WorkerResponse {
     const logLines = log.split('\n');
@@ -143,19 +158,20 @@ export class WorkerService {
     return <WorkerResponse>result;
   }
 
-  async createNestJsWorkerAndWait(createWorkerData: CreateWorkerDto) {
+  async createNestJsWorkerAndWait(createWorkerData: CreateWorkerDto, dependencies: string[]) {
     const jobName = `${WORKER_JOB_PREFFIX.NODE_NESTJS}${Date.now()}`;
     if (await this.kubernetesService.checkIfJobExists(jobName)) {
       await this.kubernetesService.deleteJob(jobName);
     }
-
+    
     const createWorkerFunction = () =>
-      this.kubernetesService.createJob(
+      this.kubernetesService.createAndWaitForJobCompletion(
         jobName,
         WORKER_IMAGE_NAMES.NODE_NESTJS,
         this.buildCreateFilesNestJsAndStartCommand(
           createWorkerData.applicationFileContent,
           createWorkerData.testFilesContent,
+          dependencies
         ),
       );
 
@@ -163,6 +179,7 @@ export class WorkerService {
       jobName,
       createWorkerFunction,
       this.processLogResult,
+      true
     );
 
     return <WorkerResponse>result;
