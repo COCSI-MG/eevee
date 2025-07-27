@@ -84,7 +84,6 @@ export class SchedulingService {
         return content;
       })
     );
-
     createSchedulingDto.testFilesContent = filledTemplates;
 
     const workerResult = await createWorkerAndWait(createSchedulingDto, dependencies);
