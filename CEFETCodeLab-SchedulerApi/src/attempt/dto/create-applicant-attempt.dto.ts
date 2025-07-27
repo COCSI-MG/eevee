@@ -1,9 +1,14 @@
+import { OmitType } from '@nestjs/mapped-types';
 import { Attempt } from '../entities/attempt.entity';
+import { AttemptStatus } from '../enums/attempt-status.enum';
 
-export class CreateAttemptDto
-  implements
-    Omit<Omit<Omit<Omit<Attempt, 'id'>, 'user'>, 'assignment'>, 'userId'>
-{
+export class CreateAttemptDto extends OmitType(Attempt, [
+  'id',
+  'user',
+  'userId',
+  'assignment',
+  'createdAt',
+]) {
   fails: number;
   attempt: number;
   isAcceptable: boolean;
@@ -11,4 +16,5 @@ export class CreateAttemptDto
   passes: number;
   report: string;
   assignmentId: number;
+  status: AttemptStatus;
 }
