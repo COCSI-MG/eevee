@@ -45,6 +45,8 @@ export default function WorkspaceCodeEditor({
         enabled: "off",
       },
       quickSuggestions: false,
+      contextmenu: false,
+      selectionHighlight: false,
     });
   };
 
@@ -85,6 +87,8 @@ export default function WorkspaceCodeEditor({
               enabled: "off",
             },
             quickSuggestions: false,
+            contextmenu: false,
+            selectionHighlight: false,
           }}
         />
       </div>
