@@ -12,4 +12,9 @@ export class SchedulingService {
     );
     return response.data;
   }
+
+  static async createSchedulingInBackground(newScheduling: Scheduling) {
+    const response = await axiosClientWithAuth.post("/scheduling/await", newScheduling);
+    return response.data;
+  }
 }
