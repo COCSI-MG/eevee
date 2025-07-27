@@ -7,6 +7,7 @@ import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
 import { Button } from "@/components/ui/button";
 import WindowFocusDialog from "@/components/window-focus-dialog";
 import WorkspaceHeader from "@/components/workspace/header";
+import WorkspaceAgreement from "@/components/workspace/workspace-agreement";
 import WorkspaceCodeEditor from "@/components/workspace/workspace-code-editor";
 import WorkspaceExplorer from "@/components/workspace/workspace-explorer";
 import { useFetchAssignment } from "@/hooks/use-assignments";
@@ -57,6 +58,7 @@ export default function Page() {
   );
   const { user } = useAuthUser();
   const { back } = useRouter();
+  const [currentStep, setCurrentStep] = React.useState(1);
 
   useFileStash();
   usePreventUserActions();
@@ -72,13 +74,17 @@ export default function Page() {
   const { data: assignmentData, isLoading: isAssignmentLoading } =
     useFetchAssignment(Number(id));
 
-  const { mutate: submitAssignment } = useMutation({
+  const { mutate: submitAssignment, isPending: isSubmitting } = useMutation({
     mutationKey: ["submit-assignment"],
     mutationFn: async () => {
-      const fileKey = `assignment-${assignmentData?.id}-file-${activeFile.id}`;
+      const fileKey = getFileStashKey(
+        assignmentData?.id ?? 0,
+        activeFile.id,
+        user?.id
+      );
       const fileContent = await fetchFileContentFromStashAsync(fileKey);
 
-      return SchedulingService.createScheduling({
+      return SchedulingService.createSchedulingInBackground({
         assignmentId: Number(id),
         applicationFileContent: fileContent.toString(),
       });
@@ -92,11 +98,13 @@ export default function Page() {
     },
     onSuccess: (data) => {
       console.log(data);
-      //TODO: handle some animations here
+
       toast({
-        title: "Seu trabalho foi enviado com sucesso",
+        title: "Seu trabalho foi recebido com sucesso e está sendo processado",
         variant: "default",
       });
+
+      back();
     },
   });
 
@@ -113,9 +121,14 @@ export default function Page() {
         }
       });
     }
-  }, [activeFile.id, assignmentData?.id, fetchFileContentFromStashAsync, user?.id]);
+  }, [
+    activeFile.id,
+    assignmentData?.id,
+    fetchFileContentFromStashAsync,
+    user?.id,
+  ]);
 
-  const { mutate: saveFileInServer } = useMutation({
+  const { mutate: saveFileInServer, isPending: isSaving } = useMutation({
     mutationKey: ["save-file-in-saver"],
     mutationFn: async () => {
       const fileKey = getFileStashKey(
@@ -170,7 +183,7 @@ export default function Page() {
 
   const handleEditorChange = (value: string | undefined) => {
     if (value !== undefined) {
-      const fileKey =  getFileStashKey(
+      const fileKey = getFileStashKey(
         assignmentData?.id ?? 0,
         activeFile.id,
         user?.id
@@ -224,6 +237,15 @@ export default function Page() {
     );
   }
 
+  if (currentStep === 1) {
+    return (
+      <WorkspaceAgreement
+        title={assignmentData?.title ?? ""}
+        onAccept={() => setCurrentStep(2)}
+      />
+    );
+  }
+
   return (
     <div className="h-screen text-foreground flex flex-col">
       <WorkspaceHeader
@@ -234,11 +256,15 @@ export default function Page() {
         }}
         onRunClick={handleRun}
         onSaveClick={handleServerSave}
+        isRunning={isSubmitting}
+        isSaving={isSaving}
       />
 
-      <WindowFocusDialog
-        suspendUserFromAssignment={suspendUserFromAssignment}
-      />
+      {user?.isAdmin === false && (
+        <WindowFocusDialog
+          suspendUserFromAssignment={suspendUserFromAssignment}
+        />
+      )}
 
       <div className="flex flex-1 min-h-0">
         <WorkspaceExplorer
