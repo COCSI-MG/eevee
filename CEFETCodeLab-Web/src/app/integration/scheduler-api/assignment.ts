@@ -33,7 +33,7 @@ export class AssignmentService {
   }
 
   static async UpdateAssignment(id: number, data: CreateAssignmentRequest) {
-    const response = await axiosClientWithAuth.put(`/assignment/${id}`, data);
+    const response = await axiosClientWithAuth.patch(`/assignment/${id}`, data);
 
     return <Assignment>response.data;
   }
