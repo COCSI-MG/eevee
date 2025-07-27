@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Code, Info, Play, Save } from "lucide-react";
+import { Code, Info, Play, Save, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -17,12 +17,16 @@ interface WorkspaceHeaderProps {
   assignment: Pick<Assignment, "title" | "description">;
   onRunClick: () => void;
   onSaveClick: () => void;
+  isRunning?: boolean;
+  isSaving?: boolean;
 }
 
 const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   assignment,
   onRunClick,
   onSaveClick,
+  isRunning = false,
+  isSaving = false,
 }) => {
   const { back } = useRouter();
 
@@ -62,14 +66,28 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             size={"sm"}
             className="bg-green-600 hover:bg-green-700 text-white"
             onClick={onRunClick}
+            disabled={isRunning || isSaving}
           >
-            <Play className="w-4 h-4 mr-1" />
-            Run
+            {isRunning ? (
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4 mr-1" />
+            )}
+            {isRunning ? "Running..." : "Run"}
           </Button>
 
-          <Button size={"sm"} variant={"outline"} onClick={onSaveClick}>
-            <Save className="w-4 h-4 mr-1" />
-            Save
+          <Button
+            size={"sm"}
+            variant={"outline"}
+            onClick={onSaveClick}
+            disabled={isSaving || isRunning}
+          >
+            {isSaving ? (
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-1" />
+            )}
+            {isSaving ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
