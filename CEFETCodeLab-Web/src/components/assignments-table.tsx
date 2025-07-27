@@ -94,6 +94,7 @@ export default function AssignmentsTable() {
                 <TableCell>{assignment.workerType}</TableCell>
                 <TableCell>
                   <TableActions
+                    href={`${AppRoutes.AdminAssignments}/${assignment.id}`}
                     onDelete={() => {
                       AssignmentService.DeleteAssignment(assignment.id);
                     }}
