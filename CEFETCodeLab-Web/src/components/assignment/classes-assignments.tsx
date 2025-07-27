@@ -14,9 +14,10 @@ export default function ClassesAssignments() {
 
   const { data, isSuccess, isPending } = useQuery({
     queryKey: ["assignments", id],
-    refetchOnWindowFocus: true,
+    refetchInterval: 5000,
     initialData: [],
-    queryFn: () => AssignmentService.GetAssignmentsByClassId(Number(id)),
+    queryFn: ({ queryKey }) =>
+      AssignmentService.GetAssignmentsByClassId(Number(queryKey[1])),
   });
 
   if (isPending) {
