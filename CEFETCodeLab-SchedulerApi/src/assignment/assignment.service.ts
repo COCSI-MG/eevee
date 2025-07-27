@@ -13,6 +13,7 @@ import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
 import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
 import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
+import { readFileAsString } from 'src/utils/template.utils';
 
 @Injectable()
 export class AssignmentService {
@@ -29,6 +30,7 @@ export class AssignmentService {
     private dataSource: DataSource,
     private readonly requestContextService: RequestContextService,
   ) {}
+
   async create(createAssignmentDto: CreateAssignmentDto) {
     const classExists = await this.classservice.findOne(
       createAssignmentDto.classId,
@@ -122,6 +124,7 @@ export class AssignmentService {
     }
 
     return this.assignmentRepository.find({
+      relations: ['assignmentAttempts', 'suspensions'],
       where: { classId },
     });
   }
@@ -149,9 +152,14 @@ export class AssignmentService {
         'assignmentTemplates',
         'assignmentTemplates.template',
         'assignmentTemplates.template.templateParams',
-        'suspensions'
+        'suspensions',
       ],
       where,
+      order: {
+        assignmentAttempts: {
+          createdAt: 'DESC',
+        },
+      },
     });
 
     return response;
@@ -213,5 +221,28 @@ export class AssignmentService {
       await manager.delete(AssignmentParam, { assignmentId: id });
       return manager.delete(Assignment, { id });
     });
+  }
+
+  async getAssignmentTemplates(assignment: Assignment) {
+    return Promise.all(
+      assignment.assignmentTemplates.map(async (templateRelation) => {
+        let content = await readFileAsString(
+          templateRelation.template.filePath,
+        );
+
+        for (const param of templateRelation.template.templateParams) {
+          const paramValue =
+            assignment.assignmentParams.find(
+              (p) => p.templateParamsId === param.id,
+            )?.value ?? '';
+
+          content = content.replace(
+            new RegExp(`\\$${param.name}\\$`, 'g'),
+            paramValue,
+          );
+        }
+        return content;
+      }),
+    );
   }
 }
