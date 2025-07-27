@@ -111,6 +111,8 @@ export class SchedulingService {
     );
 
     createSchedulingDto.testFilesContent = filledTemplates;
+    createSchedulingDto.testFilesContent =
+      await this.assignmentService.getAssignmentTemplates(assignment);
 
     const workerResult = await createWorkerAndWait(
       createSchedulingDto,
