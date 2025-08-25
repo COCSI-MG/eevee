@@ -251,6 +251,7 @@ export class SchedulingService {
       assignmentId: attempt.assignmentId,
       testFilesContent: filledTemplates,
       applicationFileContent: message.applicationFileContent,
+      dependencies: [],
     };
 
     const createWorkerAndWait = this.workerMap.get(
@@ -269,7 +270,7 @@ export class SchedulingService {
       return;
     }
 
-    const workerResult = await createWorkerAndWait(createSchedulingDto);
+    const workerResult = await createWorkerAndWait(createSchedulingDto, []);
 
     this.logger.log(
       `Worker result: ${JSON.stringify(workerResult)}`,
