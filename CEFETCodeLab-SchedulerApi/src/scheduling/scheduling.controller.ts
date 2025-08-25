@@ -23,4 +23,14 @@ export class SchedulingController {
   ) {
     return await this.schedulingService.createAndWait(createSchedulingDto);
   }
+
+  @Post('await')
+  async createAsync(
+    @Body()
+    createSchedulingDto: CreateSchedulingDto,
+  ) {
+    return await this.schedulingService.createSchedulingJobAsync(
+      createSchedulingDto,
+    );
+  }
 }

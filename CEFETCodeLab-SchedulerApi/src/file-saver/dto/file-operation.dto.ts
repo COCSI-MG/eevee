@@ -10,12 +10,6 @@ export class FileUploadDto {
   assignmentId: number;
 
   @ApiProperty()
-  @IsNumber()
-  @IsNotEmpty()
-  @Transform(({ value }) => parseInt(value))
-  userId: number;
-
-  @ApiProperty()
   @IsString()
   @IsNotEmpty()
   fileName: string;

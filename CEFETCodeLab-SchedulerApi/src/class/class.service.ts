@@ -15,7 +15,7 @@ export class ClassService {
     @InjectRepository(Class)
     private readonly classRepository: Repository<Class>,
     private readonly userClassService: UserClassService,
-     private readonly requestContextService: RequestContextService
+    private readonly requestContextService: RequestContextService,
   ) {}
   async createOrReplace(createClassDto: CreateOrReplaceClassDto) {
     if (createClassDto.id) {
@@ -61,19 +61,24 @@ export class ClassService {
     const user = this.requestContextService.getUser();
 
     if (user.userId !== userId && !user.isAdmin) {
-      throw new ForbiddenException('You are not authorized to access classes of other users.');
+      throw new ForbiddenException(
+        'You are not authorized to access classes of other users.',
+      );
     }
 
-    return (
-      await this.classRepository.find({
-        relations: ['userClasses', 'userClasses.user', 'userClasses.class'],
-        where: {
-          userClasses: {
-            user: { id: userId },
-          },
+    return await this.classRepository.find({
+      relations: [
+        'userClasses',
+        'userClasses.user',
+        'userClasses.class',
+        'assignments',
+      ],
+      where: {
+        userClasses: {
+          user: { id: userId },
         },
-      })
-    )
+      },
+    });
   }
 
   findOne(id: number) {

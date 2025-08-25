@@ -1,7 +1,7 @@
 "use client"
 
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
-import { Code } from 'lucide-react';
+import { Code, UserCog } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -35,6 +35,23 @@ export default function AssignmentsTable() {
       </Link>
     );
   };
+
+  const ViewUserSuspensionComponent = ({
+    assignmentId,
+  }: {
+    assignmentId: string;
+  }) => {
+    return (
+      <Link
+        href={`${AppRoutes.AdminAssignments}/${AppRoutes.AssignmenstUsersSuspensions}/${assignmentId}`}
+      >
+        <DropdownMenuItem>
+          <UserCog className="h-4 w-4" />
+          Usuarios Suspensos
+        </DropdownMenuItem>
+      </Link>
+    );
+  }
 
   if (isPending) {
     return <div>Loading...</div>;
@@ -77,12 +94,17 @@ export default function AssignmentsTable() {
                 <TableCell>{assignment.workerType}</TableCell>
                 <TableCell>
                   <TableActions
+                    href={`${AppRoutes.AdminAssignments}/${assignment.id}`}
                     onDelete={() => {
                       AssignmentService.DeleteAssignment(assignment.id);
                     }}
                     otherActions={[
                       <WorkspaceLinkComponent
                         key={assignment.id}
+                        assignmentId={assignment.id.toString()}
+                      />,
+                      <ViewUserSuspensionComponent
+                        key={`${assignment.id}-suspensions`}
                         assignmentId={assignment.id.toString()}
                       />,
                     ]}

@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { AuthContext as AuthContextClass } from "../context/auth-context";
 import { User } from "../interface/scheduler-api/user";
-import React from "react";
+import React, { useEffect } from "react";
 import { Route } from '../routes';
 
 export const AuthContext = React.createContext<
@@ -17,7 +17,7 @@ export const AuthContext = React.createContext<
 >(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { push } = useRouter();
+  const { push, back } = useRouter();
   const pathName = usePathname();
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [user, setUser] = React.useState<Pick<
@@ -58,12 +58,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [push]);
 
+  const isAuthPathName = (pathName: string) => {
+    return pathName === Route.Login || pathName === '/register';
+  }
+
+  useEffect(() => {
+    if (isAuthenticated && isAuthPathName(pathName)) {
+      back();
+    }
+  }, [back, isAuthenticated, pathName]);
+
   React.useEffect(() => {
     if (pathName === '/login' || pathName === '/register') {
       return;
     }
     checkTokenExpired();
-  }, [checkTokenExpired]);
+  }, [checkTokenExpired, pathName]);
 
   const logout = () => {
     try {

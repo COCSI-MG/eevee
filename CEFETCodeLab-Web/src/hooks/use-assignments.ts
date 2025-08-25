@@ -10,4 +10,11 @@ const useAdminAssignments = () => {
   });
 };
 
-export { useAdminAssignments };
+const useFetchAssignment = (id: number) => {
+  return useQuery({
+    queryKey: ['assignment', id],
+    queryFn: () => AssignmentService.GetAssignmentById(id),
+  })
+}
+
+export { useAdminAssignments, useFetchAssignment };

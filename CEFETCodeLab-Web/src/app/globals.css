@@ -43,6 +43,14 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Editor specific colors */
+    --editor-bg: 213 18% 14%;
+    --editor-sidebar: 213 20% 12%;
+    --editor-header: 213 20% 16%;
+    --editor-line-numbers: 213 15% 45%;
+    --editor-selection: 212 100% 50%;
+    --editor-cursor: 212 100% 70%;
   }
 
   .dark {
