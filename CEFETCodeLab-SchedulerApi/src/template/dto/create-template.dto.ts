@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { ArrayNotEmpty, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { IsNotBlank } from "src/common/decorators/is-not-blank.decorator";
 
 export class CreateTemplateDto {
@@ -20,4 +20,10 @@ export class CreateTemplateDto {
   @IsNotBlank()
   @IsString()
   templateContent: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @Type(() => String)
+  dependencies?: string[];
 } 

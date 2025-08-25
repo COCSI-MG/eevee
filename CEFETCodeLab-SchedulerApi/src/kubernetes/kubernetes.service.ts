@@ -66,7 +66,8 @@ export class KubernetesService {
     // This regex matches common ANSI escape codes.
     // It covers sequences like: ESC [ ... m
     // where ESC is \x1B (or \u001b)
-    return text.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, '');
+  
+     return text.replace(/\x1b\[.*?m/g, '');
   }
 
   async getJobLogs(podName: string): Promise<string> {
