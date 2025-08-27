@@ -17,29 +17,42 @@ async function bootstrap() {
 
   const title = 'Verifica criação no banco de dados';
   const templateContent = `import request from 'supertest';
-    import { app, db } from './app';
+import knex, { Knex } from 'knex';
+import { app } from './app';
 
-    beforeAll(async () => {
-    await db('$tabela$').where($dado$).del();
-    });
+let db: Knex;
 
-    afterAll(async () => {
-    await db('$tabela$').where($dado$).del();
-    await db.destroy();
-    });
+beforeAll(async () => {
+  db = knex({
+    client: 'pg',
+    connection: {
+      host: 'code-lab-db-postgresql',
+      user: 'postgres',
+      password: '5Q70Tf3sMf',
+      database: 'postgres',
+    },
+  });
 
-    describe('Teste de cadastro', () => {
-    it('deve salvar no banco de dados', async () => {
-        const res = await request(app)
-        .post('$rota$')
-        .send($dado$);
+  await db('$tabela$').where($dado$).del();
+});
 
-        expect(res.status).toBe(201);
+afterAll(async () => {
+  await db('$tabela$').where($dado$).del();
+  await db.destroy();
+});
 
-        const result = await db('$tabela$').where($dado$);
-        expect(result.length).toBe(1);
-        });
-    });`;
+describe('Teste de cadastro', () => {
+  it('deve salvar no banco de dados', async () => {
+    const res = await request(app)
+      .post('$rota$')
+      .send($dado$);
+
+    expect(res.status).toBe(201);
+
+    const result = await db('$tabela$').where($dado$);
+    expect(result.length).toBe(1);
+  });
+});`;
   const params = ['rota', 'dado', 'tabela'];
 
   const templatesDir = path.join(process.cwd(), 'templates-upload');
@@ -57,7 +70,16 @@ async function bootstrap() {
     title,
     description: 'Verifica no banco de dados se o dado passado por parâmetro de fato foi inserido',
     filePath: filename,
-    dependencies: ["supertest", "@types/supertest"]
+    dependencies: [
+    "express",
+    "pg",
+    "supertest",
+    "@types/supertest",
+    "@types/pg",
+    "@types/express",
+    "knex",
+    "@types/knex"
+  ]
   });
 
   const paramEntities = params.map((name) =>
