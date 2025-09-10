@@ -70,9 +70,8 @@ export default function ClassEditPage() {
     if (isSuccess) {
       toast({
         title: isNewClass ? 'Class created' : 'Class updated',
-        description: `Successfully ${
-          isNewClass ? 'created' : 'updated'
-        } class ${formData.name}`,
+        description: `Successfully ${isNewClass ? 'created' : 'updated'
+          } class ${formData.name}`,
       });
       router.push('/admin/classes');
     }
