@@ -1,15 +1,16 @@
-export type FileTreeData = {
+export type FileNode = {
   id: string;
   label: string;
   isSelectable: boolean;
+  path: string;
   icon?: React.ReactNode;
-  children?: FileTreeData[];
+  children?: FileNode[];
   isFile?: boolean;
 }
 
-export type NewItem = {
+export interface SelectedItem {
+  id: string;
   name: string;
-  parentId: string | null;
   type: 'file' | 'folder';
-  isCreating: boolean;
-};
+  path: string;
+}
