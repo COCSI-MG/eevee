@@ -20,39 +20,40 @@ import {
 import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
 import { toast } from "@/hooks/use-toast";
 import { getFileStashKey } from "@/lib/utils";
-import { FileTreeData } from "@/types/shared";
-import { useMutation } from "@tanstack/react-query";
-import { FileStrucutre } from "filestash";
-import { useParams, useRouter } from "next/navigation";
-import React from "react";
+import { FileNode, SelectedItem } from '@/types/shared';
+import { useMutation } from '@tanstack/react-query';
+import { FileStrucutre } from 'filestash';
+import { useParams, useRouter } from 'next/navigation';
+import React from 'react';
 
-const defaultTreeData: FileTreeData[] = [
+const defaultTreeData: FileNode[] = [
   {
-    id: "1",
-    label: "src",
-    isSelectable: false,
+    id: '1',
+    label: 'src',
+    isSelectable: true,
     isFile: false,
     children: [
       {
-        id: "2",
-        label: "index.js",
+        id: '2',
+        label: 'index.js',
         isSelectable: true,
         isFile: true,
+        path: 'src/index.js',
       },
     ],
+    path: 'src',
   },
 ];
 
 export default function Page() {
   const { id } = useParams();
-  const [activeFile, setActiveFile] = React.useState<{
-    id: string;
-    name: string;
-  }>({
-    id: "2",
-    name: "index.js",
+  const [selectedItem, setSelectedItem] = React.useState<SelectedItem>({
+    id: '2',
+    name: 'index.js',
+    type: 'file',
+    path: 'src/index.js',
   });
-  const [treeData, setTreeData] = React.useState<FileTreeData[]>([]);
+  const [treeData, setTreeData] = React.useState<FileNode[]>([]);
   const [defaultEditorValue, setDefaultEditorValue] = React.useState<string>(
     DEFAULT_ASSIGNMENT_TEMPLATE
   );
@@ -75,33 +76,35 @@ export default function Page() {
     useFetchAssignment(Number(id));
 
   const { mutate: submitAssignment, isPending: isSubmitting } = useMutation({
-    mutationKey: ["submit-assignment"],
+    mutationKey: ['submit-assignment'],
     mutationFn: async () => {
       const fileKey = getFileStashKey(
         assignmentData?.id ?? 0,
-        activeFile.id,
+        selectedItem.id,
         user?.id
       );
       const fileContent = await fetchFileContentFromStashAsync(fileKey);
-
+      if (fileContent === null) {
+        return Promise.reject("File content is empty");
+      }
       return SchedulingService.createSchedulingInBackground({
         assignmentId: Number(id),
         applicationFileContent: fileContent.toString(),
       });
     },
     onError: (error) => {
-      console.error("Error submiting assignment", error);
+      console.error('Error submiting assignment', error);
       toast({
-        title: "Ocorreu um erro ao submeter sua tarefa",
-        variant: "destructive",
+        title: 'Ocorreu um erro ao submeter sua tarefa',
+        variant: 'destructive',
       });
     },
     onSuccess: (data) => {
       console.log(data);
 
       toast({
-        title: "Seu trabalho foi recebido com sucesso e está sendo processado",
-        variant: "default",
+        title: 'Seu trabalho foi recebido com sucesso e está sendo processado',
+        variant: 'default',
       });
 
       back();
@@ -109,10 +112,10 @@ export default function Page() {
   });
 
   React.useEffect(() => {
-    if (activeFile.id && assignmentData?.id) {
+    if (selectedItem.id && assignmentData?.id) {
       const fileKey = getFileStashKey(
         assignmentData.id,
-        activeFile.id,
+        selectedItem.id,
         user?.id
       );
       fetchFileContentFromStashAsync(fileKey).then((data) => {
@@ -122,23 +125,26 @@ export default function Page() {
       });
     }
   }, [
-    activeFile.id,
+    selectedItem.id,
     assignmentData?.id,
     fetchFileContentFromStashAsync,
     user?.id,
   ]);
 
   const { mutate: saveFileInServer, isPending: isSaving } = useMutation({
-    mutationKey: ["save-file-in-saver"],
+    mutationKey: ['save-file-in-saver'],
     mutationFn: async () => {
       const fileKey = getFileStashKey(
         assignmentData?.id ?? 0,
-        activeFile.id,
+        selectedItem.id,
         user?.id
       );
       const fileContent = await fetchFileContentFromStashAsync(fileKey);
-      const file = new File([fileContent], activeFile.name, {
-        type: "text/plain",
+      if (fileContent === null) {
+        return Promise.reject("File content is empty");
+      }
+      const file = new File([fileContent], selectedItem.name, {
+        type: 'text/plain',
       });
       return FileSaverService.uploadFileToServer(file, Number(id));
     },
@@ -148,7 +154,7 @@ export default function Page() {
     mutationFn: async () => {
       return AssignmentUserSuspensionService.suspendUserFromAssignment(
         Number(id),
-        "window_focus"
+        'window_focus'
       );
     },
   });
@@ -159,18 +165,16 @@ export default function Page() {
     }
   }, [id]);
 
-  const handleFileSelect = (fileId: string) => {
-    const selectedFile = treeData
-      .flatMap((item) => item.children || [])
-      .find((file) => file.id === fileId);
-    if (selectedFile) {
-      setActiveFile({
-        id: selectedFile.id,
-        name: selectedFile.label,
-      });
-      const fileKey = `assignment-${assignmentData?.id}-file-${fileId}`;
-      fetchFileContentFromStash(fileKey);
-    }
+  const handleFileSelect = (node: FileNode) => {
+    console.debug('File selected:', node);
+    setSelectedItem({
+      id: node.id,
+      name: node.label,
+      type: node.isFile ? 'file' : 'folder',
+      path: node.path,
+    });
+    const fileKey = `assignment-${assignmentData?.id}-file-${node.id}`;
+    fetchFileContentFromStash(fileKey);
   };
 
   const handleRun = () => {
@@ -185,12 +189,12 @@ export default function Page() {
     if (value !== undefined) {
       const fileKey = getFileStashKey(
         assignmentData?.id ?? 0,
-        activeFile.id,
+        selectedItem.id,
         user?.id
       );
 
       const fileData: FileStrucutre = {
-        name: activeFile.name,
+        name: selectedItem.name,
         data: value,
         size: value.length,
         createdAt: Date.now().toString(),
@@ -229,7 +233,7 @@ export default function Page() {
         <Button
           onClick={() => back()}
           className="mt-4 justify-center w-64"
-          variant={"outline"}
+          variant={'outline'}
         >
           Voltar
         </Button>
@@ -240,7 +244,7 @@ export default function Page() {
   if (currentStep === 1) {
     return (
       <WorkspaceAgreement
-        title={assignmentData?.title ?? ""}
+        title={assignmentData?.title ?? ''}
         onAccept={() => setCurrentStep(2)}
       />
     );
@@ -250,9 +254,9 @@ export default function Page() {
     <div className="h-screen text-foreground flex flex-col">
       <WorkspaceHeader
         assignment={{
-          title: assignmentData !== undefined ? assignmentData.title : "",
+          title: assignmentData !== undefined ? assignmentData.title : '',
           description:
-            assignmentData !== undefined ? assignmentData.description : "",
+            assignmentData !== undefined ? assignmentData.description : '',
         }}
         onRunClick={handleRun}
         onSaveClick={handleServerSave}
@@ -269,12 +273,15 @@ export default function Page() {
       <div className="flex flex-1 min-h-0">
         <WorkspaceExplorer
           treeData={treeData}
+          setFileTree={setTreeData}
           onFileSelect={handleFileSelect}
+          selectedItem={selectedItem}
+          setSelectedItem={setSelectedItem}
         />
 
         <div className="flex-1 flex flex-col">
           <WorkspaceCodeEditor
-            activeFile={activeFile.name}
+            activeFile={selectedItem.name}
             editorValue={fileContent?.toString()}
             editorDefaultValue={defaultEditorValue}
             onEditorChange={handleEditorChange}
