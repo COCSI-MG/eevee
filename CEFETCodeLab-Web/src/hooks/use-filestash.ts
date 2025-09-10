@@ -47,7 +47,10 @@ const useFetchFromStash = () => {
   return useMutation({
     mutationFn: async (fileKey: string) => {
       const fileData = await getFileFromStash(fileKey);
-      return fileData.data;
+      if (fileData) {
+        return fileData.data;
+      }
+      return null;
     },
     onError: (error) => {
       console.error("Error while fetching content from stash", error);
