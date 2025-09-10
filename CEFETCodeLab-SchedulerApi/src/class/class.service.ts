@@ -16,7 +16,8 @@ export class ClassService {
     private readonly classRepository: Repository<Class>,
     private readonly userClassService: UserClassService,
     private readonly requestContextService: RequestContextService,
-  ) {}
+  ) { }
+
   async createOrReplace(createClassDto: CreateOrReplaceClassDto) {
     if (createClassDto.id) {
       const existingClass = await this.findOne(createClassDto.id);

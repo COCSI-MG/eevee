@@ -18,7 +18,7 @@ import { AdminGuard } from 'src/auth/guards/admin.guard';
 @Controller('class')
 @UseGuards(JwtAuthGuard)
 export class ClassController {
-  constructor(private readonly classService: ClassService) {}
+  constructor(private readonly classService: ClassService) { }
 
   @Post()
   @UseGuards(AdminGuard)
@@ -27,19 +27,19 @@ export class ClassController {
     return this.classService.createOrReplace(createClassDto);
   }
 
-  
+
   @Get()
   @ApiOkResponse({ type: [ClassResponseDto] })
   findAll() {
     return this.classService.findAll();
   }
-  
+
   @Get('user/:userId')
   @ApiOkResponse({ type: [ClassResponseDto] })
   findAllByUser(@Param('userId') userId: string) {
     return instanceToPlain(this.classService.findAllByUser(+userId));
   }
-  
+
   @Get(':id')
   @ApiOkResponse({ type: ClassResponseDto })
   findOne(@Param('id') id: string) {

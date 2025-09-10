@@ -7,12 +7,13 @@ export class ClassHelper {
     return {
       id: classEntity.id,
       name: classEntity.name,
+      description: classEntity.description,
       users: classEntity.userClasses?.length
         ? UserClassHelper.toResponseDto(classEntity.userClasses).map(
-            (userClass) => ({
-              userId: userClass.userId,
-            }),
-          )
+          (userClass) => ({
+            userId: userClass.userId,
+          }),
+        )
         : [],
       // id: classEntity.id,
       // name: classEntity.name,
