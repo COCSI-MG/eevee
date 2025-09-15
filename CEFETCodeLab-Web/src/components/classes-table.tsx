@@ -11,6 +11,7 @@ import {
 } from './ui/table';
 import TableActions from './table/table-actions';
 import { cn } from '@/lib/utils';
+import { ClassesService } from '@/app/integration/scheduler-api/classes';
 
 export default function ClassesTable() {
   const { data, isPending, isSuccess } = useClasses();
@@ -51,9 +52,7 @@ export default function ClassesTable() {
                 <TableCell>
                   <TableActions
                     href={`/admin/classes/${cls.id}`}
-                    onDelete={() =>
-                      console.log(`Delete class with ID: ${cls.id}`)
-                    }
+                    onDelete={() => ClassesService.remove(cls.id)}
                   />
                 </TableCell>
               </TableRow>

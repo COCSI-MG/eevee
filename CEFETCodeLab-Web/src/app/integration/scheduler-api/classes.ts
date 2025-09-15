@@ -21,7 +21,11 @@ export class ClassesService {
   }
 
   static async update(classData: UpsertClass): Promise<Class> {
-    const request = await axiosClientWithAuth.post(`/class/${classData.id}`, classData);
+    const request = await axiosClientWithAuth.post(`/class`, classData);
     return request.data;
+  }
+
+  static async remove(id: number): Promise<void> {
+    return await axiosClientWithAuth.delete(`/class/${id}`)
   }
 }
