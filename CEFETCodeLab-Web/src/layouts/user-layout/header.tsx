@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Code2, LogOut } from 'lucide-react';
 import { Route } from '@/app/routes';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { useAuthUser } from '@/hooks/use-auth-user';
 
 export function Header() {
