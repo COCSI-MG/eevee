@@ -33,7 +33,7 @@ export default function AdminDashboardLayout({
   const { user, logout } = useAuthUser();
   const pathname = usePathname();
   const { push } = useRouter();
-  const isUserAdmin = useMemo(() => user?.isAdmin ?? false, [user?.isAdmin]);
+  const isUserAdmin = user?.isAdmin ?? false;
 
   useEffect(() => {
     if (user && !isUserAdmin) {
