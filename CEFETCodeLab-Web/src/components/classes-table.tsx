@@ -14,7 +14,16 @@ import { cn } from '@/lib/utils';
 import { ClassesService } from '@/app/integration/scheduler-api/classes';
 
 export default function ClassesTable() {
-  const { data, isPending, isSuccess } = useClasses();
+  const { data, isPending, isSuccess, refetch } = useClasses();
+
+  const handleDelete = async (id: number) => {
+    try {
+      await ClassesService.remove(id);
+      refetch();
+    } catch (err) {
+      console.error('Failed to delete class:', err);
+    }
+  };
 
   if (isPending) {
     return <div>Loading...</div>;
@@ -48,11 +57,13 @@ export default function ClassesTable() {
             return (
               <TableRow key={cls.id}>
                 <TableCell className="font-medium">{cls.name}</TableCell>
-                <TableCell className={cn(cls.description ?? "text-muted")}>{cls.description ?? "Empty"}</TableCell>
+                <TableCell className={cn(cls.description ?? 'text-muted')}>
+                  {cls.description ?? 'Empty'}
+                </TableCell>
                 <TableCell>
                   <TableActions
                     href={`/admin/classes/${cls.id}`}
-                    onDelete={() => ClassesService.remove(cls.id)}
+                    onDelete={() => handleDelete(cls.id)}
                   />
                 </TableCell>
               </TableRow>

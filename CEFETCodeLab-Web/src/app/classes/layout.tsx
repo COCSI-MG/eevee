@@ -1,13 +1,9 @@
-import Layout from "@/components/user-layout/layout";
+import Layout from '@/layouts/user/layout';
 
 export default function ClassesLayout({
-  children
+  children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
-  return (
-    <Layout>
-      { children }
-    </Layout>
-  )
+  return <Layout>{children}</Layout>;
 }

@@ -75,6 +75,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkTokenExpired();
   }, [checkTokenExpired, pathName]);
 
+  useEffect(() => {
+    if (user?.isAdmin === false && pathName.startsWith('/admin')) {
+      push(`/${Route.Classes}`);
+    }
+  }, [user, pathName, push]);
+
   const logout = () => {
     try {
       AuthContextClass.clear();
