@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { Code2, LogOut } from 'lucide-react';
 import { Route } from '@/app/routes';
 import { Button } from '@/components/ui/button';
-import { useAuthUser } from '@/hooks/use-auth-user';
+import { useAuthContext } from '@/hooks/use-auth-context';
 
 export function Header() {
-  const { logout } = useAuthUser();
+  const { logout } = useAuthContext();
 
   return (
     <header className="bg-slate-900 border-b border-slate-800">

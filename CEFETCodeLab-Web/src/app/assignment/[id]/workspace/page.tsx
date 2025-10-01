@@ -11,7 +11,7 @@ import WorkspaceAgreement from "@/components/workspace/workspace-agreement";
 import WorkspaceCodeEditor from "@/components/workspace/workspace-code-editor";
 import WorkspaceExplorer from "@/components/workspace/workspace-explorer";
 import { useFetchAssignment } from "@/hooks/use-assignments";
-import { useAuthUser } from "@/hooks/use-auth-user";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import {
   useFetchFromStash,
   useFileStash,
@@ -57,7 +57,7 @@ export default function Page() {
   const [defaultEditorValue, setDefaultEditorValue] = React.useState<string>(
     DEFAULT_ASSIGNMENT_TEMPLATE
   );
-  const { user } = useAuthUser();
+  const { user } = useAuthContext();
   const { back } = useRouter();
   const [currentStep, setCurrentStep] = React.useState(1);
 
@@ -166,7 +166,6 @@ export default function Page() {
   }, [id]);
 
   const handleFileSelect = (node: FileNode) => {
-    console.debug('File selected:', node);
     setSelectedItem({
       id: node.id,
       name: node.label,

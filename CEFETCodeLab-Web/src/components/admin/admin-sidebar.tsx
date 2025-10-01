@@ -6,12 +6,12 @@ import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAuthUser } from "@/hooks/use-auth-user";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import { ADMIN_ROUTES } from "@/app/admin/constants";
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuthUser();
+  const { logout } = useAuthContext();
 
   const isActiveRoute = (href: string) => {
     if (href === "/admin") return pathname === "/admin";

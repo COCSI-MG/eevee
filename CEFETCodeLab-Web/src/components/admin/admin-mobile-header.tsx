@@ -10,12 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useAuthUser } from "@/hooks/use-auth-user";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import { ADMIN_ROUTES } from "@/app/admin/constants";
 
 export function AdminMobileHeader() {
   const pathname = usePathname();
-  const { logout } = useAuthUser();
+  const { logout } = useAuthContext();
 
   const isActiveRoute = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
