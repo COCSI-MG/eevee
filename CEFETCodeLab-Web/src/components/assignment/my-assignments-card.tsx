@@ -2,12 +2,12 @@
 
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { useQuery } from '@tanstack/react-query';
-import { useAuthUser } from '@/hooks/use-auth-user';
+import { useAuthContext } from '@/hooks/use-auth-context';
 import AssignmentsCard from './assignments-card';
 import Loader from '../loader';
 
 export default function MyAssignmentsCard() {
-  const { user } = useAuthUser();
+  const { user } = useAuthContext();
 
   const { data, isSuccess, isPending } = useQuery({
     queryKey: ['my-assignments', user?.id],
