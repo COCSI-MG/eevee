@@ -16,42 +16,42 @@ import { Route as AppRoutes } from "@/app/routes";
 import { useAdminAssignments } from "@/hooks/use-assignments";
 import Link from "next/link";
 
+const WorkspaceLinkComponent = ({
+  assignmentId,
+}: {
+  assignmentId: string;
+}) => {
+  return (
+    <Link
+      href={`/${AppRoutes.Assignment}/${assignmentId}/${AppRoutes.Workspace}`}
+    >
+      <DropdownMenuItem>
+        <Code className="h-4 w-4" />
+        Workspace
+      </DropdownMenuItem>
+    </Link>
+  );
+};
+
+const ViewUserSuspensionComponent = ({
+  assignmentId,
+}: {
+  assignmentId: string;
+}) => {
+  return (
+    <Link
+      href={`${AppRoutes.AdminAssignments}/${AppRoutes.AssignmenstUsersSuspensions}/${assignmentId}`}
+    >
+      <DropdownMenuItem>
+        <UserCog className="h-4 w-4" />
+        Usuarios Suspensos
+      </DropdownMenuItem>
+    </Link>
+  );
+};
+
 export default function AssignmentsTable() {
   const { data, isPending, isSuccess } = useAdminAssignments();
-
-  const WorkspaceLinkComponent = ({
-    assignmentId,
-  }: {
-    assignmentId: string;
-  }) => {
-    return (
-      <Link
-        href={`/${AppRoutes.Assignment}/${assignmentId}/${AppRoutes.Workspace}`}
-      >
-        <DropdownMenuItem>
-          <Code className="h-4 w-4" />
-          Workspace
-        </DropdownMenuItem>
-      </Link>
-    );
-  };
-
-  const ViewUserSuspensionComponent = ({
-    assignmentId,
-  }: {
-    assignmentId: string;
-  }) => {
-    return (
-      <Link
-        href={`${AppRoutes.AdminAssignments}/${AppRoutes.AssignmenstUsersSuspensions}/${assignmentId}`}
-      >
-        <DropdownMenuItem>
-          <UserCog className="h-4 w-4" />
-          Usuarios Suspensos
-        </DropdownMenuItem>
-      </Link>
-    );
-  };
 
   if (isPending) {
     return <div>Loading...</div>;
