@@ -29,11 +29,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Route } from '@/app/routes';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import React from 'react';
+
 const Editor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
 });
 
 export default function TemplatesTable() {
+  const [open, setOpen] = React.useState(false);
+
   const {
     data: templates,
     isPending,
@@ -145,6 +149,8 @@ export default function TemplatesTable() {
                       onSelect={(e) => e.preventDefault()}
                     >
                       <DeleteAlertDialog
+                        open={open}
+                        onOpenChange={setOpen}
                         resourceName="template"
                         onDelete={() =>
                           handleDeleteTemplate(Number(template.id))
