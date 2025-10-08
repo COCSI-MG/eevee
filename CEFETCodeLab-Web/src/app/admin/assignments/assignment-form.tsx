@@ -20,7 +20,7 @@ import { useClasses } from '@/hooks/use-classes';
 import TemplateCard from '@/components/assignment/template-card';
 import { cn } from '@/lib/utils';
 import AssignmentStepContainer from '@/components/assignment/assignment-step-container';
-import { useAssignmentForm } from './hooks/use-assigment-form';
+import { useAssignmentForm } from '@/hooks/use-assigment-form';
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 const validationSchema = Yup.object({
