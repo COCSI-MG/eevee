@@ -33,13 +33,13 @@ export default function ClassesTable() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="cursor-pointer">
+          <TableHead>
             <div className="flex items-center">Class Name</div>
           </TableHead>
-          <TableHead className="cursor-pointer">
+          <TableHead>
             <div className="flex items-center">Description</div>
           </TableHead>
-          <TableHead className="w-[100px]">
+          <TableHead>
             <div className="flex items-center">Actions</div>
           </TableHead>
         </TableRow>
@@ -47,7 +47,7 @@ export default function ClassesTable() {
       <TableBody>
         {isSuccess && (data ?? []).length === 0 && (
           <TableRow>
-            <TableCell colSpan={2} className="text-center">
+            <TableCell colSpan={3} className="text-center">
               No classes found.
             </TableCell>
           </TableRow>
@@ -57,7 +57,7 @@ export default function ClassesTable() {
             return (
               <TableRow key={cls.id}>
                 <TableCell className="font-medium">{cls.name}</TableCell>
-                <TableCell className={cn(cls.description ?? 'text-muted')}>
+                <TableCell className={cn(!cls.description && 'text-muted')}>
                   {cls.description ?? 'Empty'}
                 </TableCell>
                 <TableCell>
