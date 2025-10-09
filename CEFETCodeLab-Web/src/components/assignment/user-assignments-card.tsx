@@ -6,7 +6,7 @@ import { useAuthContext } from '@/hooks/use-auth-context';
 import AssignmentsCard from './assignments-card';
 import Loader from '../loader';
 
-export default function MyAssignmentsCard() {
+export default function UserAssignmentsCard() {
   const { user } = useAuthContext();
 
   const { data, isSuccess, isPending } = useQuery({
