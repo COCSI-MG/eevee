@@ -5,12 +5,12 @@ import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { Assignment } from '@/app/interface/scheduler-api/assignment';
 import { toast } from '@/hooks/use-toast';
 import { Route } from '@/app/routes';
+import { SelectedTemplate } from '@/types/shared';
 
 export const useAssignmentForm = (existingAssignmentId?: number) => {
     const { push } = useRouter();
-    const [selectedTemplates, setSelectedTemplates] = useState<
-        { templateId: number; params: { templateParamId: number; value: string }[] }[]
-    >([]);
+
+    const [selectedTemplates, setSelectedTemplates] = useState<SelectedTemplate[]>([]);
 
     const { data: existingAssignment, isFetching } = useQuery({
         queryKey: [`currentAssignment ${existingAssignmentId}`],
