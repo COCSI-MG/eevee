@@ -15,12 +15,13 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, ClipboardCheck, Code, FileText, Layers, Save, Settings } from 'lucide-react';
+import { ChevronLeft, ChevronRight, FileText, Save } from 'lucide-react';
 import { useClasses } from '@/hooks/use-classes';
 import TemplateCard from '@/components/assignment/template-card';
 import { cn } from '@/lib/utils';
 import AssignmentStepContainer from '@/components/assignment/assignment-step-container';
 import { useAssignmentForm } from '@/hooks/use-assigment-form';
+import AssignmentFormReview from '@/components/assignment/form/assignment-form-review';
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 const validationSchema = Yup.object({
@@ -51,16 +52,16 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   const { data: classes, isFetching: isFetchingClasses } = useClasses();
 
   const initialValues: Partial<Assignment> = {
-    title: existingAssignment?.title || '',
-    description: existingAssignment?.description || '',
-    maxAttempts: existingAssignment?.maxAttempts || 1,
-    workerType: existingAssignment?.workerType || WorkerType.NODE_DEFAULT,
+    title: existingAssignment?.title ?? '',
+    description: existingAssignment?.description ?? '',
+    maxAttempts: existingAssignment?.maxAttempts ?? 1,
+    workerType: existingAssignment?.workerType ?? WorkerType.NODE_DEFAULT,
     validationScript:
       WorkerDefaultValidationScriptMap[
         (existingAssignment?.workerType ||
           WorkerType.NODE_DEFAULT) as WorkerType
       ],
-    classId: existingAssignment?.classId || 0,
+    classId: existingAssignment?.classId ?? 0,
   };
 
   const handleSubmit = (values: typeof initialValues) => {
@@ -303,125 +304,12 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
                 case 4:
                   return (
-                    <div className="max-w-4xl mx-auto">
-                      <Card className="bg-slate-800 border-slate-700">
-                        <CardHeader>
-                          <CardTitle className="text-white flex items-center gap-2">
-                            <ClipboardCheck className="w-5 h-5" />
-                            Revisão Final
-                          </CardTitle>
-                          <p className="text-sm text-slate-400">
-                            Revise todas as informações antes de criar o
-                            assignment
-                          </p>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                          {/* Configurações */}
-                          <div>
-                            <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                              <Settings className="w-4 h-4" />
-                              Configurações
-                            </h4>
-                            <div className="bg-slate-700/30 p-4 rounded-lg space-y-3">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-xs text-slate-400 uppercase tracking-wide">
-                                    Título
-                                  </p>
-                                  <p className="text-white font-medium">
-                                    {values.title}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-slate-400 uppercase tracking-wide">
-                                    Turma
-                                  </p>
-                                  <p className="text-white font-medium">
-                                    {
-                                      classes.find(
-                                        (c) => c.id === Number(values.classId)
-                                      )?.name
-                                    }
-                                  </p>
-                                </div>
-                              </div>
-                              <div>
-                                <p className="text-xs text-slate-400 uppercase tracking-wide">
-                                  Descrição
-                                </p>
-                                <p className="text-white">
-                                  {values.description}
-                                </p>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-xs text-slate-400 uppercase tracking-wide">
-                                    Worker Type
-                                  </p>
-                                  <p className="text-white">
-                                    {values.workerType}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-slate-400 uppercase tracking-wide">
-                                    Max Tentativas
-                                  </p>
-                                  <p className="text-white">
-                                    {values.maxAttempts}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Templates */}
-                          <div>
-                            <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                              <Code className="w-4 h-4" />
-                              Templates ({selectedTemplates.length})
-                            </h4>
-                            <div className="space-y-3">
-                              {selectedTemplates.map((template, index) => (
-                                <div
-                                  key={index}
-                                  className="bg-slate-700/30 p-4 rounded-lg"
-                                >
-                                  <h5 className="text-white font-medium mb-2">
-                                    {template.templateId}
-                                  </h5>
-                                  <div className="space-y-2">
-                                    {template.params.map((param) => (
-                                      <div
-                                        key={param.templateParamId}
-                                        className="bg-slate-800 rounded p-3"
-                                      >
-                                        <pre className="text-green-400 text-xs font-mono whitespace-pre-wrap">
-                                          {param.value}
-                                        </pre>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Boilerplate */}
-                          <div>
-                            <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                              <Layers className="w-4 h-4" />
-                              Código Boilerplate
-                            </h4>
-                            <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
-                              <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
-                                {values.validationScript}
-                              </pre>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  );
+                    <AssignmentFormReview
+                      values={values}
+                      classes={classes}
+                      selectedTemplates={selectedTemplates}
+                    />
+                  )
               }
             };
 
