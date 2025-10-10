@@ -14,3 +14,8 @@ export interface SelectedItem {
   type: 'file' | 'folder';
   path: string;
 }
+
+export interface SelectedTemplate {
+  templateId: number;
+  params: Array<{ templateParamId: number; value: string }>;
+}
