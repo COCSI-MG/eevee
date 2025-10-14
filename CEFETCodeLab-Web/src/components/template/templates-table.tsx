@@ -6,16 +6,16 @@ import {
   DialogTrigger,
   DialogContent,
   DialogTitle,
-} from './ui/dialog';
+} from '../ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-} from './ui/dropdown-menu';
+} from '../ui/dropdown-menu';
 import { Eye, Code, MoreHorizontal, Edit } from 'lucide-react';
-import DeleteAlertDialog from './table/delete-alert-dialog';
-import { Button } from './ui/button';
+import DeleteAlertDialog from '../table/delete-alert-dialog';
+import { Button } from '../ui/button';
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from './ui/table';
+} from '../ui/table';
 import { TemplatesService } from '@/app/integration/scheduler-api/templates';
 import { useQuery } from '@tanstack/react-query';
 import { Route } from '@/app/routes';

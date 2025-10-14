@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import TemplatesTable from '@/components/templates-table';
+import TemplatesTable from '@/components/template/templates-table';
 
 export default function TemplatePage() {
   return (
