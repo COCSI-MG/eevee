@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { FileText, GraduationCap, Users } from 'lucide-react';
-import { Button } from './ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { useUsers } from '@/hooks/use-users';
-import { useEffect, useState } from 'react';
-import { useClasses } from '@/hooks/use-classes';
-import { useQuery } from '@tanstack/react-query';
-import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
-import Link from 'next/link';
+import { FileText, GraduationCap, Users } from "lucide-react";
+import { Button } from "./ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { useUsers } from "@/hooks/use-users";
+import { useEffect, useState } from "react";
+import { useClasses } from "@/hooks/use-classes";
+import { useQuery } from "@tanstack/react-query";
+import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import Link from "next/link";
 
 interface Metric {
   title: string;
   value: string;
   description: string;
   icon: React.ForwardRefExoticComponent<
-    Omit<React.SVGProps<SVGSVGElement>, 'ref'> &
+    Omit<React.SVGProps<SVGSVGElement>, "ref"> &
       React.RefAttributes<SVGSVGElement>
   >;
   href: string;
@@ -23,14 +23,25 @@ interface Metric {
 
 export function MetricsCard() {
   const [metrics, setMetrics] = useState<Metric[]>([]);
-  const { data: users, isPending: isPendingUser, isSuccess: isSucessUsers } = useUsers();
-  const { data: classes, isPending: isPendingClasses, isSuccess: isSucessClasses } = useClasses();  
+
+  const {
+    data: users,
+    isPending: isPendingUser,
+    isSuccess: isSucessUsers,
+  } = useUsers();
+
+  const {
+    data: classes,
+    isPending: isPendingClasses,
+    isSuccess: isSucessClasses,
+  } = useClasses();
+
   const {
     data: assignments,
     isPending: isPendingAssignments,
     isSuccess: isSucessAssignments,
   } = useQuery({
-    queryKey: ['adminAssignments'],
+    queryKey: ["adminAssignments"],
     queryFn: AssignmentService.GetAssignmentsAdmin,
   });
 
@@ -38,29 +49,36 @@ export function MetricsCard() {
     if (isSucessUsers && isSucessClasses && isSucessAssignments) {
       setMetrics([
         {
-          title: 'Total Users',
+          title: "Total Users",
           value: users.length.toString(),
-          description: 'Number of registered users',
+          description: "Number of registered users",
           icon: Users,
-          href: '/admin/users',
+          href: "/admin/users",
         },
         {
-          title: 'Total Classes',
+          title: "Total Classes",
           value: classes.length.toString(),
-          description: 'Number of available classes',
+          description: "Number of available classes",
           icon: GraduationCap,
-          href: '/admin/classes',
+          href: "/admin/classes",
         },
         {
-          title: 'Total Assignments',
+          title: "Total Assignments",
           value: assignments.length.toString(),
-          description: 'Number of assignments created',
+          description: "Number of assignments created",
           icon: FileText,
-          href: '/admin/assignments',
+          href: "/admin/assignments",
         },
       ]);
     }
-  }, [users, classes, assignments, isSucessUsers, isSucessClasses, isSucessAssignments]);
+  }, [
+    users,
+    classes,
+    assignments,
+    isSucessUsers,
+    isSucessClasses,
+    isSucessAssignments,
+  ]);
 
   if (isPendingUser || isPendingClasses || isPendingAssignments) {
     return <div>Loading...</div>;
