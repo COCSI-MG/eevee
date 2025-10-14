@@ -13,7 +13,7 @@ import TableActions from '../table/table-actions';
 import { cn } from '@/lib/utils';
 import { ClassesService } from '@/app/integration/scheduler-api/classes';
 
-export default function ClassesTable() {
+export default function AdminClassesTable() {
   const { data, isPending, isSuccess, refetch } = useClasses();
 
   const handleDelete = async (id: number) => {
