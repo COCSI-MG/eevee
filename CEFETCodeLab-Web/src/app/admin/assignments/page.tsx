@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import AssignmentsTable from '@/components/assignments-table';
+import AssignmentsTable from '@/components/assignment/assignments-table';
 import { Route } from '@/app/routes';
 
 export default function AssignmentsAdminPage() {

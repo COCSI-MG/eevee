@@ -9,9 +9,9 @@ import {
   TableHead,
   TableBody,
   TableCell,
-} from "./ui/table";
-import TableActions from "./table/table-actions";
-import { DropdownMenuItem } from "./ui/dropdown-menu";
+} from "../ui/table";
+import TableActions from "../table/table-actions";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
 import { Route as AppRoutes } from "@/app/routes";
 import { useAdminAssignments } from "@/hooks/use-assignments";
 import Link from "next/link";
