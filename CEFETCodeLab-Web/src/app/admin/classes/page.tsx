@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ClassesTable from '@/components/classes-table';
+import AdminClassesTable from '@/components/classes/admin-classes-table';
 
 export default function ClassesPage() {
   return (
@@ -30,7 +30,7 @@ export default function ClassesPage() {
       </div> */}
 
       <div className="border rounded-md">
-        <ClassesTable />
+        <AdminClassesTable />
       </div>
     </div>
   );
