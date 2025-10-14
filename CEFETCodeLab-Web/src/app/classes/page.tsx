@@ -1,4 +1,4 @@
-import ClassesTable from "@/components/classes-table";
+import ClassesTable from "@/components/classes/classes-table";
 
 export default function ClassPage() {
   return (

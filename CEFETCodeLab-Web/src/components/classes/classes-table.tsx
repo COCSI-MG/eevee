@@ -1,3 +1,5 @@
+"use client";
+
 import { ClassesService } from "@/app/integration/scheduler-api/classes";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +12,8 @@ import {
 } from "@/components/ui/card";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, GraduationCap, Link, Loader } from "lucide-react";
+import { BookOpen, GraduationCap, Loader } from "lucide-react";
+import Link from "next/link";
 
 export default function ClassesTable() {
   const { user } = useAuthContext();
