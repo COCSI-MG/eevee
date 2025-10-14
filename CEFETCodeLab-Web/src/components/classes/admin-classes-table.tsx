@@ -8,8 +8,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from './ui/table';
-import TableActions from './table/table-actions';
+} from '../ui/table';
+import TableActions from '../table/table-actions';
 import { cn } from '@/lib/utils';
 import { ClassesService } from '@/app/integration/scheduler-api/classes';
 
