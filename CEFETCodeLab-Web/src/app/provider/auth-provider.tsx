@@ -1,18 +1,18 @@
-'use client'
+"use client";
 
 import { usePathname, useRouter } from "next/navigation";
 import { AuthContext as AuthContextClass } from "../context/auth-context";
 import { User } from "../interface/scheduler-api/user";
 import React, { useEffect } from "react";
-import { Route } from '../routes';
+import { Route } from "../routes";
 
 export const AuthContext = React.createContext<
   | {
-    user: Pick<User, 'id' | 'email' | 'isAdmin'> | null;
-    isAuthenticated: boolean;
-    checkTokenExpired: () => void;
-    logout: () => void;
-  }
+      user: Pick<User, "id" | "email" | "isAdmin"> | null;
+      isAuthenticated: boolean;
+      checkTokenExpired: () => void;
+      logout: () => void;
+    }
   | undefined
 >(undefined);
 
@@ -22,24 +22,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [user, setUser] = React.useState<Pick<
     User,
-    'id' | 'email' | 'isAdmin'
+    "id" | "email" | "isAdmin"
   > | null>(null);
 
   const checkTokenExpired = React.useCallback(() => {
     const token = AuthContextClass.getAccessToken();
     if (!token) {
       AuthContextClass.clear();
-      push('/login');
+      push("/login");
       setIsAuthenticated(false);
       return;
     }
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const payload = JSON.parse(atob(token.split(".")[1]));
       const expirationTime = payload.exp * 1000; // Convert to milliseconds
       const currentTime = Date.now();
       if (currentTime > expirationTime) {
         AuthContextClass.clear();
-        push('/login');
+        push("/login");
         setIsAuthenticated(false);
         return;
       }
@@ -51,16 +51,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAdmin: payload.isAdmin,
       });
     } catch (error) {
-      console.error('Error decoding token:', error);
+      console.error("Error decoding token:", error);
       AuthContextClass.clear();
-      push('/login');
+      push("/login");
       setIsAuthenticated(false);
     }
   }, [push]);
 
   const isAuthPathName = (pathName: string) => {
-    return pathName === Route.Login || pathName === '/register';
-  }
+    return pathName === Route.Login || pathName === "/register";
+  };
 
   useEffect(() => {
     if (isAuthenticated && isAuthPathName(pathName)) {
@@ -69,14 +69,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [back, isAuthenticated, pathName]);
 
   React.useEffect(() => {
-    if (pathName === '/login' || pathName === '/register') {
+    if (pathName === "/login" || pathName === "/register") {
       return;
     }
     checkTokenExpired();
   }, [checkTokenExpired, pathName]);
 
   useEffect(() => {
-    if (user?.isAdmin === false && pathName.startsWith('/admin')) {
+    if (user?.isAdmin === false && pathName.startsWith("/admin")) {
       push(`/${Route.Classes}`);
     }
   }, [user, pathName, push]);
