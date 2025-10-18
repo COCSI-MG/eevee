@@ -13,9 +13,9 @@ import { Badge } from './ui/badge';
 import TableActions from './table/table-actions';
 
 export default function UsersTable() {
-  const { data, isPending, isSuccess } = useUsers();
+  const { data, isFetching, isSuccess } = useUsers();
 
-  if (isPending) {
+  if (isFetching) {
     return <div>Loading...</div>;
   }
 
