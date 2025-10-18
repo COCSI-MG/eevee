@@ -41,6 +41,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   existingAssignmentId,
 }) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
+
   const {
     existingAssignment,
     isFetching,
@@ -78,7 +79,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     return <div>Loading...</div>;
   }
 
-  if (isFetchingClasses) {
+  if (isFetchingClasses && !classes) {
     return <div>Loading...</div>;
   }
 
@@ -184,7 +185,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                             className="mt-1 block w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                           >
                             <option value="">Selecione uma turma</option>
-                            {classes.map((classRecord) => (
+                            {classes?.map((classRecord) => (
                               <option
                                 key={classRecord.id}
                                 value={classRecord.id}
@@ -306,7 +307,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   return (
                     <AssignmentFormReview
                       values={values}
-                      classes={classes}
+                      classes={classes!}
                       selectedTemplates={selectedTemplates}
                     />
                   )

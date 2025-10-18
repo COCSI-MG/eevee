@@ -1,10 +1,10 @@
-import { Route } from '../routes';
-import { Button } from '@/components/ui/button';
-import { FileText, GraduationCap, Users } from 'lucide-react';
-import Link from 'next/link';
-import { MetricsCard } from '@/components/metrics-card';
+import { Route } from "../routes";
+import { Button } from "@/components/ui/button";
+import { FileText, GraduationCap, Users } from "lucide-react";
+import Link from "next/link";
+import { MetricsCard } from "@/components/metrics-card";
 
-export default async function Admin() {
+export default function Admin() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -18,7 +18,7 @@ export default async function Admin() {
       <div className="space-y-4">
         <h2 className="text-xl font-bold">Quick Actions</h2>
         <div className="grid gap-4 md:grid-cols-3">
-          <Link href={Route.AdminUsers + '/new'}>
+          <Link href={Route.AdminUsers + "/new"}>
             <Button
               variant="outline"
               className="w-full h-24 flex flex-col items-center justify-center gap-2"
@@ -27,7 +27,7 @@ export default async function Admin() {
               <span>Add New User</span>
             </Button>
           </Link>
-          <Link href={Route.AdminClasses + '/new'}>
+          <Link href={Route.AdminClasses + "/new"}>
             <Button
               variant="outline"
               className="w-full h-24 flex flex-col items-center justify-center gap-2"
@@ -36,7 +36,7 @@ export default async function Admin() {
               <span>Create New Class</span>
             </Button>
           </Link>
-          <Link href={Route.AdminAssignments + '/create'}>
+          <Link href={Route.AdminAssignments + "/create"}>
             <Button
               variant="outline"
               className="w-full h-24 flex flex-col items-center justify-center gap-2"
