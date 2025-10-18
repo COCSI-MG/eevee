@@ -1,6 +1,5 @@
-'use client';
+"use client";
 
-import { useClasses } from '@/hooks/use-classes';
 import {
   Table,
   TableBody,
@@ -8,25 +7,30 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../ui/table';
-import TableActions from '../table/table-actions';
-import { cn } from '@/lib/utils';
-import { ClassesService } from '@/app/integration/scheduler-api/classes';
+} from "../ui/table";
+import TableActions from "../table/table-actions";
+import { cn } from "@/lib/utils";
+import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { useClasses } from "@/hooks/use-classes";
 
 export default function AdminClassesTable() {
-  const { data, isPending, isSuccess, refetch } = useClasses();
+  const { data, isFetching, isError, refetch } = useClasses();
 
   const handleDelete = async (id: number) => {
     try {
       await ClassesService.remove(id);
       refetch();
     } catch (err) {
-      console.error('Failed to delete class:', err);
+      console.error("Failed to delete class:", err);
     }
   };
 
-  if (isPending) {
+  if (isFetching && !data) {
     return <div>Loading...</div>;
+  }
+
+  if (isError) {
+    return <div>Error loading classes.</div>;
   }
 
   return (
@@ -45,30 +49,29 @@ export default function AdminClassesTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {isSuccess && (data ?? []).length === 0 && (
+        {(data ?? []).length === 0 && (
           <TableRow>
             <TableCell colSpan={3} className="text-center">
               No classes found.
             </TableCell>
           </TableRow>
         )}
-        {isSuccess &&
-          (data ?? []).map((cls) => {
-            return (
-              <TableRow key={cls.id}>
-                <TableCell className="font-medium">{cls.name}</TableCell>
-                <TableCell className={cn(!cls.description && 'text-muted')}>
-                  {cls.description ?? 'Empty'}
-                </TableCell>
-                <TableCell>
-                  <TableActions
-                    href={`/admin/classes/${cls.id}`}
-                    onDelete={() => handleDelete(cls.id)}
-                  />
-                </TableCell>
-              </TableRow>
-            );
-          })}
+        {(data ?? []).map((cls) => {
+          return (
+            <TableRow key={cls.id}>
+              <TableCell className="font-medium">{cls.name}</TableCell>
+              <TableCell className={cn(!cls.description && "text-muted")}>
+                {cls.description ?? "Empty"}
+              </TableCell>
+              <TableCell>
+                <TableActions
+                  href={`/admin/classes/${cls.id}`}
+                  onDelete={() => handleDelete(cls.id)}
+                />
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );
