@@ -1,4 +1,4 @@
-import { FileNode, SelectedItem } from '@/types/shared';
+import { FileNode } from '@/types/shared';
 import WorkspaceFileTree from './workspace-tree-item';
 import {
   Dialog,
@@ -12,26 +12,26 @@ import { Label } from '../ui/label';
 import { FilePlusIcon, FolderPlusIcon, TrashIcon } from 'lucide-react';
 import { Input } from '../ui/input';
 import React, { useState } from 'react';
+import { useWorkspaceContext } from './worskpace-provider';
 
 interface WorkspaceExplorerProps {
-  treeData: FileNode[];
-  setFileTree: React.Dispatch<React.SetStateAction<FileNode[]>>;
-  selectedItem: SelectedItem;
-  setSelectedItem: React.Dispatch<React.SetStateAction<SelectedItem>>;
   onFileSelect: (node: FileNode) => void;
 }
 
 export default function WorkspaceExplorer({
-  treeData,
-  setFileTree,
-  selectedItem,
-  setSelectedItem,
   onFileSelect,
 }: WorkspaceExplorerProps) {
   const [newItemName, setNewItemName] = useState('');
   const [newItemType, setNewItemType] = useState<'file' | 'folder'>('file');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const {
+    selectedItem,
+    setSelectedItem,
+    fileTreeData: treeData,
+    setFileTreeData: setFileTree,
+  } = useWorkspaceContext();
 
   const getParentPath = (path: string) => {
     const parts = path.split('/');
