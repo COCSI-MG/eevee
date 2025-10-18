@@ -10,14 +10,37 @@
   1. `cd CEFETCodeLab-Node/nest.js/`
   2. `npm install`
   3. `npm run start`
-- [CEFETCodeLab-Node/nest.js]
+- [CEFETCodeLab-SchedulerApi]
+  <br>
+  -> Instale o Kubernetes client na seguinte versão:
+  <br>
+  `npm install kubernetes-client@^9.0.0`
+
+    <br>
+    -> Lembre-se de definir uma secret JWT no .env
+    <br>
+
+    <br>
+    -> Certifique-se de que o container do banco estja UP and RUNNING
+    <br>
+  `docker ps | grep postgres`
+  `docker start code-lab-db`
+
   1. `npm install`
-  2. `npm run start`
+  2. `docker compose up -d kafka`
+  3. `npm start`
+
+  - [CEFETCodeLab-Node/node.js]
+
+  1. `npm install`
+  2. `npx ts-node app.ts`
+
 - [CEFETCodeLab-Web]
   <br>
-  Talvez precise instalar o next: 
+  Talvez precise instalar o next:
   <br>
   `sudo apt install mailutils-mh`
+
   1. `npm install`
   2. `npm run dev`
 
