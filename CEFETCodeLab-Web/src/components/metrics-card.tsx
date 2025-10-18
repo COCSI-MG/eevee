@@ -26,19 +26,19 @@ export function MetricsCard() {
 
   const {
     data: users,
-    isPending: isPendingUser,
+    isFetching: isFetchingUser,
     isSuccess: isSucessUsers,
   } = useUsers();
 
   const {
     data: classes,
-    isPending: isPendingClasses,
+    isFetching: isFetchingClasses,
     isSuccess: isSucessClasses,
   } = useClasses();
 
   const {
     data: assignments,
-    isPending: isPendingAssignments,
+    isFetching: isFetchingAssignments,
     isSuccess: isSucessAssignments,
   } = useQuery({
     queryKey: ["adminAssignments"],
@@ -80,7 +80,7 @@ export function MetricsCard() {
     isSucessAssignments,
   ]);
 
-  if (isPendingUser || isPendingClasses || isPendingAssignments) {
+  if (isFetchingUser || isFetchingClasses || isFetchingAssignments) {
     return <div>Loading...</div>;
   }
 
