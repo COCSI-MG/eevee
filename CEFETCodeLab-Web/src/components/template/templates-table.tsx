@@ -40,7 +40,7 @@ export default function TemplatesTable() {
 
   const {
     data: templates,
-    isPending,
+    isFetching,
     isSuccess,
     refetch: refetchTemplates,
   } = useQuery({
@@ -59,7 +59,7 @@ export default function TemplatesTable() {
     }
   };
 
-  if (isPending) {
+  if (isFetching) {
     return <div>Loading ...</div>;
   }
 
