@@ -12,10 +12,11 @@ import { cn } from "@/lib/utils";
 export default function AttemptsCard() {
   const { id } = useParams();
   const { back } = useRouter();
-  const { data: assignmentAttempts, isPending: isAssignmentAttemptsPending } =
+
+  const { data: assignmentAttempts, isFetching: isAssignmentAttemptsFetching } =
     useFetchAssignment(Number(id));
 
-  if (isAssignmentAttemptsPending) {
+  if (isAssignmentAttemptsFetching) {
     return <Loader />;
   }
 
@@ -48,10 +49,12 @@ export default function AttemptsCard() {
                   "opacity-50": attempt.status !== "running",
                 },
                 {
-                  'border border-red-600 text-white': attempt.status === 'failed' || !attempt.isAcceptable,
+                  "border border-red-600 text-white":
+                    attempt.status === "failed" || !attempt.isAcceptable,
                 },
                 {
-                  'border border-green-600 text-white': attempt.status === 'running',
+                  "border border-green-600 text-white":
+                    attempt.status === "running",
                 }
               )}
             >
@@ -63,15 +66,17 @@ export default function AttemptsCard() {
                       Em execução
                     </Badge>
                   )}
-
-                  {attempt.status === "failed" || !attempt.isAcceptable && (
-                    <Badge className="bg-red-600 text-white">Falhou</Badge>
-                  )}
+                  {attempt.status === "failed" ||
+                    (!attempt.isAcceptable && (
+                      <Badge className="bg-red-600 text-white">Falhou</Badge>
+                    ))}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col space-y-2">
-                  <p className="text-sm text-white">Resultado: {attempt.score}</p>
+                  <p className="text-sm text-white">
+                    Resultado: {attempt.score}
+                  </p>
                   <p className="text-sm text-white">Passou: {attempt.passes}</p>
                   <p className="text-sm text-white">Falhas: {attempt.fails}</p>
                 </div>
