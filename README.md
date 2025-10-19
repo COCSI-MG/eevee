@@ -7,31 +7,43 @@
 2. Instale os pacotes NPM para os arquivos a seguir:
 
 ### 1. [CEFETCodeLab-Web]
-  Talvez precise instalar o next:  `sudo apt install mailutils-mh`
-  1. `npm install`
-  2. `npm run dev`
 
+Talvez precise instalar o next: `sudo apt install mailutils-mh`
+
+```bash
+npm install
+npm run dev
+```
 
 ### 2. [CEFETCodeLab-Node/nest.js]
-  1. `cd CEFETCodeLab-Node/nest.js/`
-  2. `npm install`
-  3. `npm run start`
-  
+
+```bash
+cd CEFETCodeLab-Node/nest.js/
+npm install
+npm run start
+```
+
 ### 3. [CEFETCodeLab-SchedulerApi]
-  
-   Lembre-se de definir uma secret JWT no .env
-   
-   Pode copiar o [.env.example](CEFETCodeLab-SchedulerApi\.env.example) e trocar os valores
-  
-  1. `npm install`
-  2. `npm start`
+
+Lembre-se de definir uma secret JWT no .env
+
+Pode copiar o [.env.example](CEFETCodeLab-SchedulerApi.env.example) e trocar os valores
+
+```bash
+npm install
+npm start
+```
 
 ### 4. [CEFETCodeLab-Node/node.js]
 
-  1. `npm install`
-  2. `npx ts-node app.ts`
-
+```bash
+npm install
+npx ts-node app.ts
+```
 
 ### 5. [filestash]
-  1. `npm install`
-  2. `npx run tsconfig.json`
+
+```bash
+npm install
+npx run tsconfig.json
+```
