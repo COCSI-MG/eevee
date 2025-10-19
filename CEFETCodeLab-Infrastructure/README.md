@@ -65,7 +65,7 @@ minikube image load worker-node-nestjs-img:latest
 
 ### Criando o banco de dados
 
-Para criar o banco de dados, é necessário acessar o diretório `CEFETCodeLab-Infrastructure\codeLabDB\charts` e executar o comando
+Para criar o banco de dados, é necessário acessar o diretório [CEFETCodeLab-Infrastructure\codeLabDB\charts](CEFETCodeLab-Infrastructure\codeLabDB\charts) e executar o comando
 
 ```
 helm upgrade --install code-lab-db .
@@ -78,7 +78,7 @@ Como só há um ambiente, não foram criados multiplos arquivos de configuraçã
 Para criar o banco de dados local, é necessário somente subir uma imagem do docker postgres com o comando
 
 ```
-docker run --name code-lab-db -e POSTGRES_PASSWORD=code-lab -d -p 5432:5432 postgres
+docker run --name code-lab-db -e POSTGRES_PASSWORD=code-lab -d -p 5433:5432 postgres
 ```
 
 Assim você não precisa se preocupar com os dilemas de acessar um banco em uma rede interna como teria que lidar utilizando o minikube.
