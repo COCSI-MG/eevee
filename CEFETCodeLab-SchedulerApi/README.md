@@ -36,6 +36,8 @@ $ npm run test:cov
 
 ## Run seed
 
+Just use this in development environment to populate the database with initial data.
+
 It will create an initial user with admin role and user role, the users has the following credentials by default:
 
 - Email: admin@example.com
