@@ -11,6 +11,7 @@
 Talvez precise instalar o next: `sudo apt install mailutils-mh`
 
 ```bash
+cd CEFETCodeLab-Web/
 npm install
 npm run dev
 ```
@@ -30,6 +31,7 @@ Lembre-se de definir uma secret JWT no .env
 Pode copiar o [.env.example](CEFETCodeLab-SchedulerApi.env.example) e trocar os valores
 
 ```bash
+cd CEFETCodeLab-SchedulerApi/
 npm install
 npm start
 ```
@@ -37,6 +39,7 @@ npm start
 ### 4. [CEFETCodeLab-Node/node.js]
 
 ```bash
+cd CEFETCodeLab-Node/node/
 npm install
 npx ts-node app.ts
 ```
@@ -44,6 +47,7 @@ npx ts-node app.ts
 ### 5. [filestash]
 
 ```bash
+cd filestash/
 npm install
 npx run tsconfig.json
 ```
