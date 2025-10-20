@@ -3,11 +3,10 @@
 import TemplateForm from '@/components/template/template-form';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function TemplateCreateEditPage() {
   const { back } = useRouter();
-  const { id } = useParams<{ id: string }>();
 
   return (
     <div>
@@ -17,10 +16,10 @@ export default function TemplateCreateEditPage() {
           Back
         </Button>
         <h1 className="text-3xl font-bold tracking-tight">
-          {id === 'new' ? 'Create' : 'Edit'}
           Template
         </h1>
       </div>
+
       <TemplateForm />
     </div>
   );
