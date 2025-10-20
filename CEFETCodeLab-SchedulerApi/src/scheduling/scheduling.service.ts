@@ -27,6 +27,10 @@ export class SchedulingService {
       WorkerType.NODE_NESTJS,
       workerService.createNestJsWorkerAndWait.bind(workerService),
     );
+    this.workerMap.set(
+      WorkerType.NODE_GRAPHQL,
+      workerService.createGraphqlWorkerAndWait.bind(workerService),
+    );
   }
 
   private calculateScore(result: WorkerResponse) {

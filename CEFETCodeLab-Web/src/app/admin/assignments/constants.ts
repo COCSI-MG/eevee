@@ -188,14 +188,17 @@ describe('App (e2e)', () => {
 export const WorkerExibitionMap = {
   [WorkerType.NODE_DEFAULT]: "Node Default",
   [WorkerType.NODE_NESTJS]: "Node NestJS + TypeORM",
+  [WorkerType.NODE_GRAPHQL]: "Node Graphql + Apollo + Prisma",
 };
 
 export const WorkerDefaultTemplateMap = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
+  [WorkerType.NODE_GRAPHQL]: DEFAULT_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_VALIDATION_SCRIPT,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
+  [WorkerType.NODE_GRAPHQL]: DEFAULT_VALIDATION_SCRIPT,
 };

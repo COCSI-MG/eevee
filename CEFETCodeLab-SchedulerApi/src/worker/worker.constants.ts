@@ -2,11 +2,13 @@ export enum WORKER_JOB_PREFFIX {
   NODE_DEFAULT = 'worker-node-default',
   NODE_NESTJS = 'worker-node-nestjs',
   NODE_REACT = 'worker-node-react',
+  NODE_GRAPHQL = 'worker-node-graphql',
 }
 
 export enum WORKER_IMAGE_NAMES {
   NODE_DEFAULT = 'docker.io/library/worker-node-default-img:latest',
   NODE_NESTJS = 'docker.io/library/worker-node-nestjs-img:latest',
+  NODE_GRAPHQL = 'docker.io/library/worker-node-graphql-img:latest',
   // NODE_REACT
 }
 
