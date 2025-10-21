@@ -45,7 +45,7 @@ export default function UserEditPage() {
   const {
     mutateAsync: upsertUser,
     isSuccess,
-    data: upsertedUser,
+    data: upsertUserData,
   } = useMutation({
     mutationKey: ['adminUsers', id],
     mutationFn: (user: UpsertUser) => {
@@ -75,16 +75,16 @@ export default function UserEditPage() {
   };
 
   useEffect(() => {
-    if (isSuccess && upsertedUser) {
+    if (isSuccess && upsertUserData) {
       toast({
         title: isNewUser ? 'User created' : 'User updated',
         description: `Successfully ${isNewUser ? 'created' : 'updated'} user ${
-          upsertedUser.name
+          upsertUserData.name
         }`,
       });
       router.push('/admin/users');
     }
-  }, [isSuccess, upsertedUser, isNewUser, router]);
+  }, [isSuccess, upsertUserData, isNewUser, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
