@@ -12,6 +12,7 @@ import TableActions from "../table/table-actions";
 import { cn } from "@/lib/utils";
 import { ClassesService } from "@/app/integration/scheduler-api/classes";
 import { useClasses } from "@/hooks/use-classes";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminClassesTable() {
   const { data, isFetching, isError, refetch } = useClasses();
@@ -19,6 +20,11 @@ export default function AdminClassesTable() {
   const handleDelete = async (id: number) => {
     try {
       await ClassesService.remove(id);
+      toast({
+        title: "Class deleted",
+        description: "The class has been successfully deleted.",
+        duration: 4000,
+      });
       refetch();
     } catch (err) {
       console.error("Failed to delete class:", err);
