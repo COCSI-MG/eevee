@@ -78,6 +78,7 @@ export default function ClassEditPage() {
         description: `Successfully ${
           isNewClass ? "created" : "updated"
         } class ${formik.values.name}`,
+        duration: 5000,
       });
       router.push("/admin/classes");
     },
