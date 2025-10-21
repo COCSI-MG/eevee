@@ -30,7 +30,7 @@ const classUpsertSchema = Yup.object().shape({
   id: Yup.number().optional(),
   name: Yup.string().required("Class name is required"),
   description: Yup.string(),
-  students: Yup.array().of(Yup.number()),
+  students: Yup.array().of(Yup.number()).required("At least one student must be selected"),
 });
 
 export default function ClassEditPage() {
@@ -67,13 +67,9 @@ export default function ClassEditPage() {
       return { previousClasses };
     },
     mutationFn: (classData: UpsertClass) => {
-      console.debug("Upserting class data:", classData);
-
-      console.debug("Is new class:", !classData.id);
       if (!classData.id) {
         return ClassesService.create(classData);
       }
-      console.debug("Updating class data:", classData);
       return ClassesService.update(classData);
     },
     onSuccess: () => {
@@ -110,6 +106,11 @@ export default function ClassEditPage() {
     },
     validationSchema: classUpsertSchema,
     onSubmit: (values) => {
+      if (values.students.length === 0) {
+        formik.setFieldError("students", "At least one student must be selected");
+        return;
+      }
+
       upsertClasses(values);
     },
   });
@@ -192,6 +193,9 @@ export default function ClassEditPage() {
                   placeholder="Enter class name"
                   required
                 />
+                {formik.errors.name && (
+                  <div className="text-red-500">{formik.errors.name}</div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Class Description</Label>
@@ -202,6 +206,11 @@ export default function ClassEditPage() {
                   onChange={formik.handleChange}
                   placeholder="Enter class description"
                 />
+                {formik.errors.description && (
+                  <div className="text-red-500">
+                    {formik.errors.description}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -214,6 +223,10 @@ export default function ClassEditPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {formik.errors.students && (
+                <div className="text-red-500">No students selected.</div>
+              )}
+
               <UsersCard
                 selectedUsers={selectedUsers}
                 setSelectedUsers={setSelectedUsers}
