@@ -16,4 +16,9 @@ export class UsersService {
     const response = await axiosClientWithAuth.post<User>("/user", user);
     return response.data;
   }
+
+  static async deleteUser(id: number) {
+    const response = await axiosClientWithAuth.delete(`/user/${id}`);
+    return response.data;
+  }
 }
