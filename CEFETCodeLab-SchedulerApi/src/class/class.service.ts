@@ -35,6 +35,8 @@ export class ClassService {
         description: createClassDto.description,
       });
 
+      await this.userClassService.deleteByClassId(createClassDto.id);
+
       const updatedClass = {
         ...existingClass,
         ...{
