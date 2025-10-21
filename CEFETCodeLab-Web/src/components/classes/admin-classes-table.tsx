@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { ClassesService } from "@/app/integration/scheduler-api/classes";
 import { useClasses } from "@/hooks/use-classes";
 import { toast } from "@/hooks/use-toast";
+import { AxiosError } from "axios";
 
 export default function AdminClassesTable() {
   const { data, isFetching, isError, refetch } = useClasses();
@@ -28,6 +29,26 @@ export default function AdminClassesTable() {
       refetch();
     } catch (err) {
       console.error("Failed to delete class:", err);
+
+      if (err instanceof AxiosError && err.response) {
+        const apiMessage = err.response.data?.message;
+        if (apiMessage) {
+          toast({
+            title: "Error",
+            description: apiMessage,
+            variant: "destructive",
+            duration: 4000,
+          });
+          return;
+        }
+      }
+
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "Failed to delete class.",
+        variant: "destructive",
+        duration: 4000,
+      });
     }
   };
 
