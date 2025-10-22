@@ -19,3 +19,9 @@ export interface SelectedTemplate {
   templateId: number;
   params: Array<{ templateParamId: number; value: string }>;
 }
+
+export interface SelectedUser {
+  id: number;
+  name: string;
+  email: string;
+}

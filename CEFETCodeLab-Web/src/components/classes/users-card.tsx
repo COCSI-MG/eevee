@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Command,
@@ -7,58 +7,31 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandItem,
-} from '../ui/command';
-import { Plus, Check, User, X } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import { ScrollArea } from '../ui/scroll-area';
-import { useEffect, useState } from 'react';
-import { useUsers } from '@/hooks/use-users';
+} from "../ui/command";
+import { Plus, Check, User, X } from "lucide-react";
+import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { ScrollArea } from "../ui/scroll-area";
+import { useEffect, useState } from "react";
+import { useUsers } from "@/hooks/use-users";
+import { SelectedUser } from "@/types/shared";
 
-interface StudentsCardContentProps {
-  selectedStudents: {
-    id: number;
-    name: string;
-    email: string;
-  }[];
-  setSelectedStudents: React.Dispatch<
-    React.SetStateAction<
-      {
-        id: number;
-        name: string;
-        email: string;
-      }[]
-    >
-  >;
-  formData: {
-    name: string;
-    description: string;
-    students: number[];
-  };
-  setFormData: React.Dispatch<
-    React.SetStateAction<{
-      name: string;
-      description: string;
-      students: number[];
-    }>
-  >;
+interface UsersCardContentProps {
+  selectedUsers: Array<SelectedUser>;
+  setSelectedUsers: React.Dispatch<React.SetStateAction<Array<SelectedUser>>>;
+  onUsersSelectionChange: (users: Array<SelectedUser>) => void;
 }
 
-export default function StudentsCardContent({
-  selectedStudents,
-  setSelectedStudents,
-  formData,
-  setFormData,
-}: StudentsCardContentProps) {
-  const { data: users, isPending: isUsersLoading, isSuccess } = useUsers();
-  const [filteredUsers, setFilteredUsers] = useState<
-    {
-      id: number;
-      name: string;
-      email: string;
-    }[]
-  >([]);
-  const [searchTerm, setSearchTerm] = useState('');
+export default function UsersCard({
+  selectedUsers: selectedUsers,
+  setSelectedUsers: setSelectedUsers,
+  onUsersSelectionChange,
+}: UsersCardContentProps) {
+  const { data: users, isFetching: isUsersFetching, isSuccess } = useUsers();
+
+  const [filteredUsers, setFilteredUsers] = useState<Array<SelectedUser>>([]);
+
+  const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -73,32 +46,27 @@ export default function StudentsCardContent({
     }
   }, [isSuccess, searchTerm, users]);
 
-  const handleStudentSelect = (studentId: number) => {
+  const handleUserSelect = (UserId: number) => {
     if (isSuccess) {
-      const selectedStudent = users.find((user) => user.id === studentId);
-      if (selectedStudent) {
-        setSelectedStudents((prev) => [...prev, selectedStudent]);
-        setFormData((prev) => ({
-          ...prev,
-          students: [...prev.students, studentId],
-        }));
+      const selectedUser = users.find((user) => user.id === UserId);
+      if (selectedUser) {
+        setSelectedUsers((prev) => [...prev, selectedUser]);
+        onUsersSelectionChange([...selectedUsers, selectedUser]);
         setOpen(false);
       }
     }
   };
 
-  const handleRemoveStudent = (id: number) => {
-    setSelectedStudents((prev) => prev.filter((student) => student.id !== id));
-    setFormData((prev) => ({
-      ...prev,
-      students: prev.students.filter((studentId) => studentId !== id),
-    }));
+  const handleRemoveUser = (id: number) => {
+    const updatedUsers = selectedUsers.filter((user) => user.id !== id);
+    setSelectedUsers(updatedUsers);
+    onUsersSelectionChange(updatedUsers); 
   };
 
-  if (isUsersLoading) {
+  if (isUsersFetching) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading students...</p>
+        <p className="text-sm text-muted-foreground">Loading Users...</p>
       </div>
     );
   }
@@ -109,7 +77,7 @@ export default function StudentsCardContent({
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-full justify-start">
             <Plus className="mr-2 h-4 w-4" />
-            Add Students
+            Add Users
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -120,25 +88,25 @@ export default function StudentsCardContent({
         >
           <Command>
             <CommandInput
-              placeholder="Search students..."
+              placeholder="Search Users..."
               value={searchTerm}
               onValueChange={setSearchTerm}
             />
             <CommandList>
-              <CommandEmpty>No students found.</CommandEmpty>
+              <CommandEmpty>No Users found.</CommandEmpty>
               <CommandGroup>
                 {isSuccess &&
                   filteredUsers.map((user) => (
                     <CommandItem
                       key={user.id}
-                      onSelect={() => handleStudentSelect(user.id)}
+                      onSelect={() => handleUserSelect(user.id)}
                       className="flex items-center gap-2 p-2"
                     >
                       <div
                         className={
-                          formData.students.includes(user.id)
-                            ? 'opacity-100'
-                            : 'opacity-0'
+                          selectedUsers.map((user) => user.id).includes(user.id)
+                            ? "opacity-100"
+                            : "opacity-0"
                         }
                       >
                         <Check className="h-4 w-4" />
@@ -163,18 +131,14 @@ export default function StudentsCardContent({
         <div className="p-3 border-b">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">
-              Selected Students ({selectedStudents.length})
+              Selected Users ({selectedUsers.length})
             </h3>
-            {selectedStudents.length > 0 && (
+            {selectedUsers.length > 0 && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  setSelectedStudents([]);
-                  setFormData((prev) => ({
-                    ...prev,
-                    students: [],
-                  }));
+                  setSelectedUsers([]);
                 }}
                 className="h-8 px-2 text-xs"
               >
@@ -184,28 +148,26 @@ export default function StudentsCardContent({
           </div>
         </div>
         <ScrollArea className="h-[250px]">
-          {selectedStudents.length === 0 ? (
+          {selectedUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[200px] text-center p-4">
               <User className="h-10 w-10 text-muted-foreground mb-2 opacity-20" />
-              <p className="text-sm text-muted-foreground">
-                No students selected
-              </p>
+              <p className="text-sm text-muted-foreground">No Users selected</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Use the Add Students button to enroll students in this class
+                Use the Add Users button to enroll Users in this class
               </p>
             </div>
           ) : (
             <div className="p-2">
-              {selectedStudents.map((student) => (
+              {selectedUsers.map((User) => (
                 <div
-                  key={student.id}
+                  key={User.id}
                   className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md"
                 >
                   <div className="flex items-center">
                     <div className="ml-2">
-                      <p className="text-sm font-medium">{student.name}</p>
+                      <p className="text-sm font-medium">{User.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {student.email}
+                        {User.email}
                       </p>
                     </div>
                   </div>
@@ -213,7 +175,7 @@ export default function StudentsCardContent({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => handleRemoveStudent(student.id)}
+                    onClick={() => handleRemoveUser(User.id)}
                   >
                     <X className="h-4 w-4" />
                   </Button>

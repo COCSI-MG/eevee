@@ -25,6 +25,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     "id" | "email" | "isAdmin"
   > | null>(null);
 
+  const clearAuthData = () => {
+    AuthContextClass.clear();
+    setUser(null);
+    setIsAuthenticated(false);
+  }
+
   const checkTokenExpired = React.useCallback(() => {
     const token = AuthContextClass.getAccessToken();
     if (!token) {
@@ -43,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsAuthenticated(false);
         return;
       }
-      console.log(payload);
+
       setIsAuthenticated(true);
       setUser({
         id: payload.userId,
@@ -52,9 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error) {
       console.error("Error decoding token:", error);
-      AuthContextClass.clear();
+
+      clearAuthData();
       push("/login");
-      setIsAuthenticated(false);
     }
   }, [push]);
 
@@ -69,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [back, isAuthenticated, pathName]);
 
   React.useEffect(() => {
-    if (pathName === "/login" || pathName === "/register") {
+    if (isAuthPathName(pathName)) {
       return;
     }
     checkTokenExpired();
@@ -83,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     try {
-      AuthContextClass.clear();
+      clearAuthData();
       push(`/${Route.Login}`);
     } catch (err) {
       console.error(err);

@@ -27,26 +27,26 @@ export function MetricsCard() {
   const {
     data: users,
     isFetching: isFetchingUser,
-    isSuccess: isSucessUsers,
+    isSuccess: isSuccessUsers,
   } = useUsers();
 
   const {
     data: classes,
     isFetching: isFetchingClasses,
-    isSuccess: isSucessClasses,
+    isSuccess: isSuccessClasses,
   } = useClasses();
 
   const {
     data: assignments,
     isFetching: isFetchingAssignments,
-    isSuccess: isSucessAssignments,
+    isSuccess: isSuccessAssignments,
   } = useQuery({
     queryKey: ["adminAssignments"],
     queryFn: AssignmentService.GetAssignmentsAdmin,
   });
 
   useEffect(() => {
-    if (isSucessUsers && isSucessClasses && isSucessAssignments) {
+    if (isSuccessUsers && isSuccessClasses && isSuccessAssignments) {
       setMetrics([
         {
           title: "Total Users",
@@ -75,9 +75,9 @@ export function MetricsCard() {
     users,
     classes,
     assignments,
-    isSucessUsers,
-    isSucessClasses,
-    isSucessAssignments,
+    isSuccessUsers,
+    isSuccessClasses,
+    isSuccessAssignments,
   ]);
 
   if (isFetchingUser || isFetchingClasses || isFetchingAssignments) {

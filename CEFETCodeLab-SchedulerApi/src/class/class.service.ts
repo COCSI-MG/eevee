@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, UseGuards } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnprocessableEntityException, UseGuards } from '@nestjs/common';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Class } from './entities/class.entity';
@@ -19,20 +19,41 @@ export class ClassService {
   ) { }
 
   async createOrReplace(createClassDto: CreateOrReplaceClassDto) {
+    console.log("create class dto", createClassDto);
+
+    let newIdentifier: Class;
     if (createClassDto.id) {
-      const existingClass = await this.findOne(createClassDto.id);
+      const existingClass = await this.classRepository.findOne({
+        where: { id: createClassDto.id },
+      });
       if (!existingClass) {
-        delete createClassDto.id;
+        throw new UnprocessableEntityException('Class not found.');
       }
+
+      await this.classRepository.update(createClassDto.id, {
+        name: createClassDto.name,
+        description: createClassDto.description,
+      });
+
+      await this.userClassService.deleteByClassId(createClassDto.id);
+
+      const updatedClass = {
+        ...existingClass,
+        ...{
+          name: createClassDto.name,
+          description: createClassDto.description,
+        },
+      };
+
+      newIdentifier = updatedClass;
+    } else {
+      const newClass = this.classRepository.create({
+        name: createClassDto.name,
+        description: createClassDto.description,
+      });
+      const savedClass = await this.classRepository.save(newClass);
+      newIdentifier = savedClass; 
     }
-
-    const result = await this.classRepository.upsert(createClassDto, {
-      conflictPaths: ['id'],
-      skipUpdateIfNoValuesChanged: true,
-      upsertType: 'on-conflict-do-update',
-    });
-
-    const [newIdentifier] = result.identifiers;
 
     if (createClassDto.students) {
       await this.userClassService.createMany(
@@ -43,10 +64,7 @@ export class ClassService {
       );
     }
 
-    const newclass = (await this.findOne(newIdentifier.id))!;
-
-    const response = ClassHelper.toResponseDto(newclass);
-
+    const response = ClassHelper.toResponseDto(newIdentifier);
     return response;
   }
 

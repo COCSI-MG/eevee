@@ -5,7 +5,8 @@ import {
   Body,
   Param,
   Delete,
-  UseGuards
+  UseGuards,
+  Patch
 } from '@nestjs/common';
 import { ClassService } from './class.service';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
@@ -50,5 +51,16 @@ export class ClassController {
   @UseGuards(AdminGuard)
   remove(@Param('id') id: string) {
     return this.classService.remove(+id);
+  }
+
+  @Patch(':id')
+  @UseGuards(AdminGuard)
+  @ApiOkResponse({ type: ClassResponseDto })
+  update(
+    @Param('id') id: string,
+    @Body() updateClassDto: CreateOrReplaceClassDto,
+  ) {
+    updateClassDto.id = +id;
+    return this.classService.createOrReplace(updateClassDto);
   }
 }
