@@ -114,7 +114,7 @@ export class KubernetesService {
           body: jobManifest,
         });
       console.log('Job created:', response);
-      return;
+      return response;
     } catch (err) {
       console.error('Error creating job:', err);
       throw err;
