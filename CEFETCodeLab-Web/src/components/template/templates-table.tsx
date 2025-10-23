@@ -120,6 +120,9 @@ export default function TemplatesTable() {
                             theme='vs-dark'
                             value={template.templateContent}
                             height={'420px'}
+                            options={{
+                              readOnly: true,
+                            }}
                         />
                       </div>
                     </div>
