@@ -77,7 +77,7 @@ export default function AdminClassesTable() {
       </TableHeader>
       <TableBody>
         {(data ?? []).length === 0 && (
-          <TableRow>
+          <TableRow key={0}>
             <TableCell colSpan={3} className="text-center">
               No classes found.
             </TableCell>
