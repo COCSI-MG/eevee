@@ -33,8 +33,10 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   return (
     <header className="flex items-center justify-between p-3 border-b border-slate-700">
       <div className="flex items-center gap-2">
-        <Code className="h-5 w-5" />
-        <span className="font-bold text-lg">EEVEE</span>
+        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => back()}>
+          <Code className="h-5 w-5" />
+          <span className="font-bold text-lg">EEVEE</span>
+        </div>
 
         <Dialog>
           <DialogTrigger asChild>
