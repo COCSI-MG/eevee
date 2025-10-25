@@ -1,26 +1,19 @@
 "use client";
 
 import { DEFAULT_ASSIGNMENT_TEMPLATE } from "@/app/admin/assignments/constants";
-import { AssignmentUserSuspensionService } from "@/app/integration/scheduler-api/assignment-user-suspension";
-import FileSaverService from "@/app/integration/scheduler-api/file-saver";
-import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
-import { useFetchAssignment } from "@/hooks/use-assignments";
-import { useAuthContext } from "@/hooks/use-auth-context";
-import { useSaveInFileStash, useFetchFromStash } from "@/hooks/use-filestash";
-import { toast } from "@/hooks/use-toast";
-import { getFileStashKey } from "@/lib/utils";
+import {
+  useSaveFileTree,
+  useUpdateFileContent,
+  useFetchFileContent,
+} from "@/hooks/use-filestash";
 import { FileNode } from "@/types/shared";
-import { useMutation } from "@tanstack/react-query";
-import { FileStrucutre } from "filestash";
-import { useParams, useRouter } from "next/navigation";
 import React, { useCallback } from "react";
-import { Button } from "../ui/button";
-import WindowFocusDialog from "../window-focus-dialog";
-import WorkspaceHeader from "./header";
-import WorkspaceAgreement from "./workspace-agreement";
 import WorkspaceCodeEditor from "./workspace-code-editor";
 import WorkspaceExplorer from "./workspace-explorer";
-import { useWorkspaceContext } from "./worskpace-provider";
+import { useWorkspaceContext } from "./workspace-provider";
+import { getFileTree } from "@/app/integration/filestash";
+import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { User } from "@/app/interface/scheduler-api/user";
 
 const defaultFileNode: FileNode[] = [
   {
@@ -42,158 +35,102 @@ const defaultFileNode: FileNode[] = [
 ];
 
 interface WorkspaceProps {
-  defaultTreeData?: FileNode[];
+  assignment: Assignment;
+  user: Pick<User, "id" | "email" | "isAdmin">;
 }
 
-export default function Workspace({
-  defaultTreeData = defaultFileNode,
-}: WorkspaceProps) {
-  const { id } = useParams();
-  const { back } = useRouter();
-
-  const { user } = useAuthContext();
-
-  const [defaultEditorValue, setDefaultEditorValue] = React.useState<string>(
+export default function Workspace({ assignment, user }: WorkspaceProps) {
+  const [defaultEditorValue] = React.useState<string>(
     DEFAULT_ASSIGNMENT_TEMPLATE
   );
+  const [currentFileContent, setCurrentFileContent] =
+    React.useState<string>("");
 
-  const {
-    selectedItem,
-    setSelectedItem,
-    currentStep,
-    setCurrentStep,
-    setFileTreeData,
-  } = useWorkspaceContext();
+  const { selectedItem, setSelectedItem, setFileTreeData } =
+    useWorkspaceContext();
 
-  const { mutate: saveFileInStash } = useSaveInFileStash();
+  const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+  const { mutate: updateFileContent, mutateAsync: updateFileContentAsync } =
+    useUpdateFileContent();
+  const { mutateAsync: fetchFileContent } = useFetchFileContent();
 
-  const {
-    mutate: fetchFileContentFromStash,
-    mutateAsync: fetchFileContentFromStashAsync,
-    data: fileContent,
-  } = useFetchFromStash();
+  const getOrCreateFileTreeOnInit = useCallback(
+    async (assignmentId: number, userId: number) => {
+      let fileTree = await getFileTree(assignmentId, userId);
+      if (!fileTree) {
+        await saveFileTreeAsync({
+          assignmentId,
+          userId,
+          fileTree: defaultFileNode,
+        });
+        fileTree = defaultFileNode;
 
-  const { data: assignmentData, isFetching: isFetchingAssignment } =
-    useFetchAssignment(Number(id));
-
-  const { mutate: submitAssignment, isPending: isSubmitting } = useMutation({
-    mutationKey: ["submit-assignment"],
-    mutationFn: async () => {
-      const fileKey = getFileStashKey(
-        assignmentData?.id ?? 0,
-        selectedItem.id,
-        user?.id
-      );
-      const fileContent = await fetchFileContentFromStashAsync(fileKey);
-      if (fileContent === null) {
-        return Promise.reject("File content is empty");
-      }
-
-      if (user?.isAdmin) {
-        return SchedulingService.createScheduling({
-          assignmentId: Number(id),
-          applicationFileContent: fileContent.toString(),
+        await updateFileContentAsync({
+          assignmentId,
+          userId,
+          filePath: defaultFileNode[0].children?.[0].path || "",
+          content: defaultEditorValue,
         });
       }
 
-      return SchedulingService.createSchedulingInBackground({
-        assignmentId: Number(id),
-        applicationFileContent: fileContent.toString(),
-      });
-    },
-    onError: (error) => {
-      console.error("Error submiting assignment", error);
-      toast({
-        title: "Ocorreu um erro ao submeter sua tarefa",
-        variant: "destructive",
-      });
-    },
-    onSuccess: (data) => {
-      console.log(data);
+      setFileTreeData(fileTree);
 
-      if (user?.isAdmin) {
-        alert("Resultado da tarefa :\n" + JSON.stringify(data));
-        return;
+      const findFirst = (nodes: FileNode[]): FileNode | null => {
+        for (const node of nodes) {
+          if (node.isFile) return node;
+          if (node.children) {
+            const found = findFirst(node.children);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const firstFile = findFirst(fileTree);
+      if (firstFile) {
+        setSelectedItem({
+          id: firstFile.id,
+          name: firstFile.label,
+          type: "file",
+          path: firstFile.path,
+        });
       }
 
-      toast({
-        title: "Seu trabalho foi recebido com sucesso e está sendo processado",
-        variant: "default",
-      });
-
-      back();
+      return fileTree;
     },
-  });
-
-  const handleFetchFileContentFromStash = useCallback(
-    async (
-      selectedItemId: string,
-      userId: number | undefined,
-      assignmentId: number | undefined
-    ) => {
-      const fileKey = getFileStashKey(
-        assignmentId ?? 0,
-        selectedItemId,
-        userId
-      );
-
-      const data = await fetchFileContentFromStashAsync(fileKey);
-      if (data) {
-        setDefaultEditorValue(data.toString());
-      }
-    },
-    [fetchFileContentFromStashAsync]
+    [
+      setFileTreeData,
+      saveFileTreeAsync,
+      updateFileContentAsync,
+      defaultEditorValue,
+      setSelectedItem,
+    ]
   );
 
+  // Inicializa a árvore no stash quando carrega o assignment
   React.useEffect(() => {
-    if (selectedItem.id && assignmentData?.id) {
-      handleFetchFileContentFromStash(
-        selectedItem.id,
-        user?.id,
-        assignmentData?.id
-      );
+    getOrCreateFileTreeOnInit(assignment.id, user.id);
+  }, [assignment.id, getOrCreateFileTreeOnInit, user.id]);
+
+  // Carrega o conteúdo do arquivo selecionado
+  React.useEffect(() => {
+    if (selectedItem.path) {
+      console.log("Fetching file content for", selectedItem.path);
+      fetchFileContent({
+        assignmentId: assignment.id,
+        userId: user.id,
+        filePath: selectedItem.path,
+      }).then((content) => {
+        setCurrentFileContent(content || defaultEditorValue);
+      });
     }
   }, [
-    selectedItem.id,
-    assignmentData?.id,
-    fetchFileContentFromStashAsync,
-    user?.id,
-    handleFetchFileContentFromStash,
+    selectedItem.path,
+    user.id,
+    fetchFileContent,
+    defaultEditorValue,
+    assignment.id,
   ]);
-
-  const { mutate: saveFileInServer, isPending: isSaving } = useMutation({
-    mutationKey: ["save-file-in-saver"],
-    mutationFn: async () => {
-      const fileKey = getFileStashKey(
-        assignmentData?.id ?? 0,
-        selectedItem.id,
-        user?.id
-      );
-      const fileContent = await fetchFileContentFromStashAsync(fileKey);
-      if (fileContent === null) {
-        return Promise.reject("File content is empty");
-      }
-      const file = new File([fileContent], selectedItem.name, {
-        type: "text/plain",
-      });
-      return FileSaverService.uploadFileToServer(file, Number(id));
-    },
-  });
-
-  const { mutate: suspendUserFromAssignment } = useMutation({
-    mutationFn: async () => {
-      return AssignmentUserSuspensionService.suspendUserFromAssignment(
-        Number(id),
-        "window_focus"
-      );
-    },
-  });
-
-  React.useEffect(() => {
-    if (id) {
-      setFileTreeData(defaultTreeData);
-    }
-  }, [defaultTreeData, id, setFileTreeData]);
 
   const handleFileSelect = (node: FileNode) => {
     setSelectedItem({
@@ -202,114 +139,53 @@ export default function Workspace({
       type: node.isFile ? "file" : "folder",
       path: node.path,
     });
-    const fileKey = `assignment-${assignmentData?.id}-file-${node.id}`;
-    fetchFileContentFromStash(fileKey);
-  };
-
-  const handleRun = () => {
-    submitAssignment();
-  };
-
-  const handleServerSave = () => {
-    saveFileInServer();
   };
 
   const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      const fileKey = getFileStashKey(
-        assignmentData?.id ?? 0,
-        selectedItem.id,
-        user?.id
-      );
-
-      const fileData: FileStrucutre = {
-        name: selectedItem.name,
-        data: value,
-        size: value.length,
-        createdAt: Date.now().toString(),
-        updateAt: Date.now().toString(),
-      };
-      saveFileInStash({
-        fileData,
-        fileKey,
+    if (
+      value !== undefined &&
+      selectedItem.path
+    ) {
+      console.log("Updating file content for", selectedItem.path);
+      updateFileContent({
+        assignmentId: assignment.id,
+        userId: user.id,
+        filePath: selectedItem.path,
+        content: value,
       });
+      setCurrentFileContent(value);
     }
   };
 
-  if (isFetchingAssignment) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg text-gray-500">Carregando atividade...</p>
-      </div>
-    );
-  }
-
-  if (
-    assignmentData &&
-    assignmentData.suspensions?.some(
-      (suspension) => suspension.userId === user?.id
-    )
-  ) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div className="text-center">
-          <p className="text-lg text-red-500">
-            Você está suspenso desta atividade. Entre em contato com o professor
-            para mais informações.
-          </p>
-        </div>
-
-        <Button
-          onClick={() => back()}
-          className="mt-4 justify-center w-64"
-          variant={"outline"}
-        >
-          Voltar
-        </Button>
-      </div>
-    );
-  }
-
-  if (currentStep === 1) {
-    return (
-      <WorkspaceAgreement
-        title={assignmentData?.title ?? ""}
-        onAccept={() => setCurrentStep(2)}
-      />
-    );
-  }
+  const handleTreeChange = useCallback(
+    async (newTree: FileNode[]) => {
+      if (assignment.id && user?.id) {
+        console.log("Saving updated file tree");
+        setFileTreeData(newTree);
+        await saveFileTreeAsync({
+          assignmentId: assignment.id,
+          userId: user.id,
+          fileTree: newTree,
+        });
+      }
+    },
+    [assignment.id, saveFileTreeAsync, setFileTreeData, user.id]
+  );
 
   return (
-    <div className="h-screen text-foreground flex flex-col">
-      <WorkspaceHeader
-        assignment={{
-          title: assignmentData !== undefined ? assignmentData.title : "",
-          description:
-            assignmentData !== undefined ? assignmentData.description : "",
-        }}
-        onRunClick={handleRun}
-        onSaveClick={handleServerSave}
-        isRunning={isSubmitting}
-        isSaving={isSaving}
+    <div className="flex flex-1 min-h-0">
+      <WorkspaceExplorer
+        onFileSelect={handleFileSelect}
+        onTreeChange={handleTreeChange}
       />
 
-      {user?.isAdmin === false && (
-        <WindowFocusDialog
-          suspendUserFromAssignment={suspendUserFromAssignment}
+      <div className="flex-1 flex flex-col">
+        <WorkspaceCodeEditor
+          activeFile={selectedItem.name}
+          editorValue={currentFileContent}
+          editorDefaultValue={defaultEditorValue}
+          onEditorChange={handleEditorChange}
         />
-      )}
-
-      <div className="flex flex-1 min-h-0">
-        <WorkspaceExplorer onFileSelect={handleFileSelect} />
-
-        <div className="flex-1 flex flex-col">
-          <WorkspaceCodeEditor
-            activeFile={selectedItem.name}
-            editorValue={fileContent?.toString()}
-            editorDefaultValue={defaultEditorValue}
-            onEditorChange={handleEditorChange}
-          />
-        </div>
       </div>
     </div>
   );
