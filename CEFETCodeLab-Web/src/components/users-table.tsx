@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Table,
@@ -7,44 +7,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from './ui/table';
-import { useUsers } from '@/hooks/use-users';
-import { Badge } from './ui/badge';
-import TableActions from './table/table-actions';
-import { useMutation } from '@tanstack/react-query';
-import { UsersService } from '@/app/integration/scheduler-api/user';
-import { toast } from '@/hooks/use-toast';
-import { AxiosError } from 'axios';
+} from "./ui/table";
+import { Badge } from "./ui/badge";
+import TableActions from "./table/table-actions";
+import { User } from "@/app/interface/scheduler-api/user";
 
-export default function UsersTable() {
-  const { data, isFetching, isSuccess, refetch } = useUsers();
+interface UsersTableProps {
+  users: User[] | undefined;
+  handleDelete: (id: number) => void;
+}
 
-  const { mutate: deleteUser } = useMutation({
-    mutationFn: (id: number) => {
-      return UsersService.deleteUser(id);
-    },
-    onError: (error: AxiosError) => {
-      const res = error.response?.data as { message: string };
-
-      toast({
-        title: 'Error',
-        description: res.message || 'An error occurred while deleting the user.',
-        variant: 'destructive',
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: 'User deleted',
-        description: 'The user has been successfully deleted.',
-      });
-      refetch();
-    }
-  });
-
-  if (isFetching) {
-    return <div>Loading...</div>;
-  }
-
+export default function UsersTable({ users, handleDelete }: UsersTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -62,26 +35,25 @@ export default function UsersTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {isSuccess &&
-          (data ?? []).map((user) => {
-            return (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Badge variant={user.isAdmin ? 'default' : 'outline'}>
-                    {user.isAdmin ? 'Admin' : 'User'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                    <TableActions 
-                        href={`/admin/users/${user.id}`}
-                        onDelete={() => deleteUser(user.id)}
-                    />
-                </TableCell>
-              </TableRow>
-            );
-          })}
+        {(users ?? []).map((user) => {
+          return (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                <Badge variant={user.isAdmin ? "default" : "outline"}>
+                  {user.isAdmin ? "Admin" : "User"}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <TableActions
+                  href={`/admin/users/${user.id}`}
+                  onDelete={() => handleDelete(user.id)}
+                />
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );
