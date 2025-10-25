@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
@@ -19,7 +19,7 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
         refetchOnMount: true,
     });
 
-    const { mutateAsync: upsertAssignment, isSuccess, isError } = useMutation({
+    const { mutateAsync: upsertAssignment } = useMutation({
         mutationKey: ['upsertAssignment', existingAssignmentId],
         mutationFn: ({ newAssignment, templates }: {
             newAssignment: Assignment;
@@ -30,25 +30,21 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
             }
             return AssignmentService.UpdateAssignment(existingAssignmentId!, { ...newAssignment, templates });
         },
-    });
-
-    // Handle success/error effects
-    useEffect(() => {
-        if (isSuccess) {
+        onSuccess: () => {
             toast({
                 title: 'Assignment saved successfully',
                 description: 'The assignment has been created/updated successfully.',
             });
             push(Route.AdminAssignments);
-        }
-        if (isError) {
+        },
+        onError: () => {
             toast({
                 title: `Error ${existingAssignmentId ? 'updating' : 'creating'} assignment`,
                 description: 'Please try again later.',
                 variant: 'destructive',
             });
         }
-    }, [isSuccess, isError, push, existingAssignmentId]);
+    });
 
     return {
         existingAssignment,
