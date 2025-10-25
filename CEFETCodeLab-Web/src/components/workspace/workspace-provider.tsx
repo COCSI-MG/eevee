@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useFileStash } from "@/hooks/use-filestash";
 import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
 import { FileNode, SelectedItem } from "@/types/shared";
+import { useEffect } from "react";
+import { initStash } from "@/app/integration/filestash";
 
 interface WorskpaceContextType {
   currentStep: number;
@@ -30,19 +31,27 @@ export const useWorkspaceContext = () => {
 
 interface WorkspaceProviderProps {
   children: React.ReactNode;
-  initialSelectedItem: SelectedItem;
 }
 
 export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   children,
-  initialSelectedItem,
 }) => {
   const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedItem, setSelectedItem] =
-    React.useState<SelectedItem>(initialSelectedItem);
+    React.useState<SelectedItem>({ id: "", name: "", type: "file", path: "" });
   const [treeData, setTreeData] = React.useState<FileNode[]>([]);
 
-  useFileStash();
+  useEffect(() => {
+    const initializeStashFn = async () => {
+      try {
+        await initStash();
+      } catch (err) {
+        console.error("Error initializing Filestash:", err);
+      }
+    };
+    initializeStashFn();
+  }, []);
+
   usePreventUserActions();
 
   const value: WorskpaceContextType = {
