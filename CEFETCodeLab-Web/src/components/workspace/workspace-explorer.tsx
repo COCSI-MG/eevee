@@ -12,14 +12,16 @@ import { Label } from '../ui/label';
 import { FilePlusIcon, FolderPlusIcon, TrashIcon } from 'lucide-react';
 import { Input } from '../ui/input';
 import React, { useState } from 'react';
-import { useWorkspaceContext } from './worskpace-provider';
+import { useWorkspaceContext } from './workspace-provider';
 
 interface WorkspaceExplorerProps {
   onFileSelect: (node: FileNode) => void;
+  onTreeChange: (newTree: FileNode[]) => void;
 }
 
 export default function WorkspaceExplorer({
   onFileSelect,
+  onTreeChange
 }: WorkspaceExplorerProps) {
   const [newItemName, setNewItemName] = useState('');
   const [newItemType, setNewItemType] = useState<'file' | 'folder'>('file');
@@ -30,7 +32,6 @@ export default function WorkspaceExplorer({
     selectedItem,
     setSelectedItem,
     fileTreeData: treeData,
-    setFileTreeData: setFileTree,
   } = useWorkspaceContext();
 
   const getParentPath = (path: string) => {
@@ -117,11 +118,14 @@ export default function WorkspaceExplorer({
       newItem.children = [];
     }
 
+    let updatedTree = treeData;
     if (targetPath) {
-      setFileTree((prevTree) => addItemToTree(prevTree, targetPath, newItem));
+      updatedTree = addItemToTree(treeData, targetPath, newItem);
     } else {
-      setFileTree((prevTree) => [...prevTree, newItem]);
+      updatedTree = [...treeData, newItem];
     }
+
+    onTreeChange(updatedTree);
 
     setNewItemName('');
     setIsDialogOpen(false);
@@ -133,7 +137,11 @@ export default function WorkspaceExplorer({
 
   const handleDeleteConfirm = () => {
     if (!selectedItem) return;
-    setFileTree((prevTree) => removeItemFromTree(prevTree, selectedItem.path));
+    const updatedTree = removeItemFromTree(
+      treeData,
+      selectedItem.path
+    );
+    onTreeChange(updatedTree);
     setIsDeleteDialogOpen(false);
   };
 
