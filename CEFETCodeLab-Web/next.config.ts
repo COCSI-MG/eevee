@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: 'http://localhost:3010/v1',
     APP_ENV: 'development',
-  }
+  },
+  experimental: {
+    optimizePackageImports: ['lucide-react'],
+  },
 };
 
 export default nextConfig;
