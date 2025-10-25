@@ -10,56 +10,17 @@ import {
 } from "../ui/table";
 import TableActions from "../table/table-actions";
 import { cn } from "@/lib/utils";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
-import { useClasses } from "@/hooks/use-classes";
-import { toast } from "@/hooks/use-toast";
-import { AxiosError } from "axios";
+import { Class } from "@/app/interface/scheduler-api/class";
 
-export default function AdminClassesTable() {
-  const { data, isFetching, isError, refetch } = useClasses();
+interface AdminClassesTableProps {
+  classes: Array<Class> | undefined;
+  handleDelete: (id: number) => void;
+}
 
-  const handleDelete = async (id: number) => {
-    try {
-      await ClassesService.remove(id);
-      toast({
-        title: "Class deleted",
-        description: "The class has been successfully deleted.",
-        duration: 4000,
-      });
-      refetch();
-    } catch (err) {
-      console.error("Failed to delete class:", err);
-
-      if (err instanceof AxiosError && err.response) {
-        const apiMessage = err.response.data?.message;
-        if (apiMessage) {
-          toast({
-            title: "Error",
-            description: apiMessage,
-            variant: "destructive",
-            duration: 4000,
-          });
-          return;
-        }
-      }
-
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "Failed to delete class.",
-        variant: "destructive",
-        duration: 4000,
-      });
-    }
-  };
-
-  if (isFetching && !data) {
-    return <div>Loading...</div>;
-  }
-
-  if (isError) {
-    return <div>Error loading classes.</div>;
-  }
-
+export default function AdminClassesTable({
+  classes,
+  handleDelete,
+}: AdminClassesTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -76,14 +37,14 @@ export default function AdminClassesTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {(data ?? []).length === 0 && (
+        {(classes ?? []).length === 0 && (
           <TableRow key={0}>
             <TableCell colSpan={3} className="text-center">
               No classes found.
             </TableCell>
           </TableRow>
         )}
-        {(data ?? []).map((cls) => {
+        {(classes ?? []).map((cls) => {
           return (
             <TableRow key={cls.id}>
               <TableCell className="font-medium">{cls.name}</TableCell>
