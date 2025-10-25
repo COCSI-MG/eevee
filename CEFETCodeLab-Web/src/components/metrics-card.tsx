@@ -38,11 +38,17 @@ export function MetricsCard() {
 
   const {
     data: assignments,
-    isFetching: isFetchingAssignments,
     isSuccess: isSuccessAssignments,
+    isFetching: isFetchingAssignments,
   } = useQuery({
     queryKey: ["adminAssignments"],
-    queryFn: AssignmentService.GetAssignmentsAdmin,
+    queryFn: async () => {
+      const assignmentsData = await AssignmentService.GetAssignmentsAdmin();
+      if (!assignmentsData) {
+        return [];
+      }
+      return assignmentsData;
+    },
   });
 
   useEffect(() => {
@@ -84,8 +90,8 @@ export function MetricsCard() {
     return <div>Loading...</div>;
   }
 
-  return (metrics ?? []).map((metric) => (
-    <Card key={metric.title} className="hover:shadow-md transition-shadow">
+  return (metrics ?? []).map((metric, index) => (
+    <Card key={index} className="hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
         <metric.icon className="h-5 w-5 text-muted-foreground" />
