@@ -13,14 +13,14 @@ import {
 import TableActions from "../table/table-actions";
 import { DropdownMenuItem } from "../ui/dropdown-menu";
 import { Route as AppRoutes } from "@/app/routes";
-import { useAdminAssignments } from "@/hooks/use-assignments";
 import Link from "next/link";
+import { Assignment } from "@/app/interface/scheduler-api/assignment";
 
-const WorkspaceLinkComponent = ({
-  assignmentId,
-}: {
-  assignmentId: string;
-}) => {
+interface AssignmentsTableProps {
+  assignments: Array<Assignment>;
+}
+
+const WorkspaceLinkComponent = ({ assignmentId }: { assignmentId: string }) => {
   return (
     <Link
       href={`/${AppRoutes.Assignment}/${assignmentId}/${AppRoutes.Workspace}`}
@@ -44,19 +44,15 @@ const ViewUserSuspensionComponent = ({
     >
       <DropdownMenuItem>
         <UserCog className="h-4 w-4" />
-        Usuarios Suspensos
+        Usuários Suspensos
       </DropdownMenuItem>
     </Link>
   );
 };
 
-export default function AssignmentsTable() {
-  const { data, isPending, isSuccess } = useAdminAssignments();
-
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
+export default function AssignmentsTable({
+  assignments,
+}: AssignmentsTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -77,42 +73,41 @@ export default function AssignmentsTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {isSuccess && (data ?? []).length === 0 && (
+        {(assignments ?? []).length === 0 && (
           <TableRow>
             <TableCell colSpan={4} className="text-center">
               No Assignments found.
             </TableCell>
           </TableRow>
         )}
-        {isSuccess &&
-          (data ?? []).map((assignment) => {
-            return (
-              <TableRow key={assignment.id}>
-                <TableCell>{assignment.title}</TableCell>
-                <TableCell>{assignment.class.name}</TableCell>
-                <TableCell>{assignment.description}</TableCell>
-                <TableCell>{assignment.workerType}</TableCell>
-                <TableCell>
-                  <TableActions
-                    href={`${AppRoutes.AdminAssignments}/${assignment.id}`}
-                    onDelete={() => {
-                      AssignmentService.DeleteAssignment(assignment.id);
-                    }}
-                    otherActions={[
-                      <WorkspaceLinkComponent
-                        key={assignment.id}
-                        assignmentId={assignment.id.toString()}
-                      />,
-                      <ViewUserSuspensionComponent
-                        key={`${assignment.id}-suspensions`}
-                        assignmentId={assignment.id.toString()}
-                      />,
-                    ]}
-                  />
-                </TableCell>
-              </TableRow>
-            );
-          })}
+        {(assignments ?? []).map((assignment) => {
+          return (
+            <TableRow key={assignment.id}>
+              <TableCell>{assignment.title}</TableCell>
+              <TableCell>{assignment.class.name}</TableCell>
+              <TableCell>{assignment.description}</TableCell>
+              <TableCell>{assignment.workerType}</TableCell>
+              <TableCell>
+                <TableActions
+                  href={`${AppRoutes.AdminAssignments}/${assignment.id}`}
+                  onDelete={() => {
+                    AssignmentService.DeleteAssignment(assignment.id);
+                  }}
+                  otherActions={[
+                    <WorkspaceLinkComponent
+                      key={assignment.id}
+                      assignmentId={assignment.id.toString()}
+                    />,
+                    <ViewUserSuspensionComponent
+                      key={`${assignment.id}-suspensions`}
+                      assignmentId={assignment.id.toString()}
+                    />,
+                  ]}
+                />
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );
