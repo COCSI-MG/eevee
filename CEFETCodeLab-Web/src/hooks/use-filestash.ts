@@ -1,64 +1,93 @@
 import {
-  getFileFromStash,
-  initStash,
-  upsertFileInStash,
+  saveFileTree,
+  updateFileContent,
+  getFileContent,
 } from "@/app/integration/filestash";
 import { useMutation } from "@tanstack/react-query";
-import { FileStrucutre } from "filestash";
-import { useEffect } from "react";
+import { FileNode } from "@/types/shared";
 import { toast } from "./use-toast";
 
-const useFileStash = () => {
-  useEffect(() => {
-    const initializeStashFn = async () => {
-      try {
-        await initStash();
-      } catch (err) {
-        console.error("Error initializing Filestash:", err);
-      }
-    };
-    initializeStashFn();
-  }, []);
-};
 
-const useSaveInFileStash = () => {
+/**
+ * Salva a árvore inteira de arquivos (útil para inicialização)
+ */
+const useSaveFileTree = () => {
   return useMutation({
-    mutationKey: ["saveFileInStash"],
+    mutationKey: ["saveFileTree"],
     mutationFn: ({
-      fileData,
-      fileKey,
+      assignmentId,
+      userId,
+      fileTree,
     }: {
-      fileData: FileStrucutre;
-      fileKey: string;
+      assignmentId: number;
+      userId: number;
+      fileTree: FileNode[];
     }) => {
-      return upsertFileInStash(fileData, fileKey);
+      return saveFileTree(assignmentId, userId, fileTree);
     },
     onError: (error) => {
       toast({
-        title: "Ocorreu um erro ao salvar o arquivo localmente",
-        variant: "destructive"
-      })
-      console.error("Error during file save operation:", error);
+        title: "Ocorreu um erro ao salvar os arquivos localmente",
+        variant: "destructive",
+      });
+      console.error("Error during file tree save operation:", error);
     },
   });
 };
 
-const useFetchFromStash = () => {
+/**
+ * Atualiza apenas o conteúdo de um arquivo específico
+ */
+const useUpdateFileContent = () => {
   return useMutation({
-    mutationFn: async (fileKey: string) => {
-      const fileData = await getFileFromStash(fileKey);
-      if (fileData) {
-        return fileData.data;
-      }
-      return null;
+    mutationKey: ["updateFileContent"],
+    mutationFn: ({
+      assignmentId,
+      userId,
+      filePath,
+      content,
+    }: {
+      assignmentId: number;
+      userId: number;
+      filePath: string;
+      content: string;
+    }) => {
+      return updateFileContent(assignmentId, userId, filePath, content);
     },
     onError: (error) => {
-      console.error("Error while fetching content from stash", error);
+      toast({
+        title: "Ocorreu um erro ao salvar o arquivo",
+        variant: "destructive",
+      });
+      console.error("Error updating file content:", error);
     },
-    onSuccess: (data) => {
-      console.log(data);
-    }
   });
 };
 
-export { useFileStash, useSaveInFileStash, useFetchFromStash };
+/**
+ * Busca o conteúdo de um arquivo específico (Mutation para controle manual)
+ */
+const useFetchFileContent = () => {
+  return useMutation({
+    mutationFn: async ({
+      assignmentId,
+      userId,
+      filePath,
+    }: {
+      assignmentId: number;
+      userId: number;
+      filePath: string;
+    }) => {
+      return await getFileContent(assignmentId, userId, filePath);
+    },
+    onError: (error) => {
+      console.error("Error fetching file content:", error);
+    },
+  });
+};
+
+export {
+  useSaveFileTree,
+  useUpdateFileContent,
+  useFetchFileContent,
+};
