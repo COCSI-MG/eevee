@@ -1,10 +1,20 @@
+'use client';
+
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AssignmentsTable from '@/components/assignment/assignments-table';
 import { Route } from '@/app/routes';
+import { useAdminAssignments } from '@/hooks/use-assignments';
+import Loader from '@/components/loader';
 
 export default function AssignmentsAdminPage() {
+  const { data: assignments, isFetching } = useAdminAssignments();
+
+  if (isFetching) {
+    return <Loader />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -30,7 +40,7 @@ export default function AssignmentsAdminPage() {
       </div> */}
 
       <div className="border rounded-md">
-        <AssignmentsTable />
+        <AssignmentsTable assignments={assignments} />
       </div>
     </div>
   );
