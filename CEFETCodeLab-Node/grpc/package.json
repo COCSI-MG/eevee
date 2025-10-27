@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node ./trigger.ts",
     "test": "jest",
-    "test:calculator": "jest examples/calculator-exercise --testPathIgnorePatterns=\"/node_modules/\""
+    "test:movie": "jest examples/movie-exercise --testPathIgnorePatterns=\"/node_modules/\""
   },
   "keywords": [],
   "author": "",
