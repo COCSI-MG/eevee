@@ -1,5 +1,6 @@
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ClipboardCheck, Settings, Code, Layers } from "lucide-react";
 
 interface AssignmentFormReviewProps {
@@ -108,7 +109,7 @@ export default function AssignmentFormReview({
   selectedTemplates,
 }: AssignmentFormReviewProps) {
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto max-h-[500px]">
       <Card className="bg-slate-800 border-slate-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
@@ -119,25 +120,29 @@ export default function AssignmentFormReview({
             Revise todas as informações antes de criar o assignment
           </p>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Configurações */}
-          <AssigmentReview values={values} classes={classes} />
+        <CardContent>
+          <ScrollArea className="h-[400px]">
+            <div className="space-y-2">
+              {/* Configurações */}
+              <AssigmentReview values={values} classes={classes} />
 
-          {/* Templates */}
-          <TemplateReview selectedTemplates={selectedTemplates} />
+              {/* Templates */}
+              <TemplateReview selectedTemplates={selectedTemplates} />
 
-          {/* Boilerplate */}
-          <div>
-            <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-              <Layers className="w-4 h-4" />
-              Código Boilerplate
-            </h4>
-            <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
-              <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
-                {values.validationScript}
-              </pre>
+              {/* Boilerplate */}
+              <div>
+                <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                  <Layers className="w-4 h-4" />
+                  Código Boilerplate
+                </h4>
+                <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
+                  <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
+                    {values.validationScript}
+                  </pre>
+                </div>
+              </div>
             </div>
-          </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </div>

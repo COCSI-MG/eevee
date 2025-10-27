@@ -19,6 +19,7 @@ import TemplatePreviewDialog from "./template-preview-dialog";
 import SelectedTemplates from "./selected-templates";
 import TemplateConfigDialog from "./template-config-dialog";
 import { SelectedTemplate } from "@/types/shared";
+import { ScrollArea } from "@radix-ui/react-scroll-area";
 
 interface TemplateCardProps {
   selectedTemplates: SelectedTemplate[];
@@ -79,7 +80,7 @@ export default function TemplateCard({
   const {
     data: templates,
     isSuccess: isSuccessTemplates,
-    isPending: isPendingTemplates,
+    isFetching: isFetchingTemplates,
   } = useTemplates();
 
   const [state, dispatch] = React.useReducer(reducer, {
@@ -174,11 +175,11 @@ export default function TemplateCard({
         [paramId]: value,
       },
     });
-  }
+  };
 
-  if (isPendingTemplates) {
+  if (isFetchingTemplates) {
     return (
-      <Card className="bg-slate-800 border-slate-700 min-h-[600px] max-h-[calc(100vh-8rem)] flex flex-col">
+      <Card className="bg-slate-800 border-slate-700 flex flex-col">
         <CardHeader className="flex-shrink-0">
           <CardTitle className="text-white">Carregando templates...</CardTitle>
         </CardHeader>
@@ -194,7 +195,7 @@ export default function TemplateCard({
   }
 
   return (
-    <Card className="bg-slate-800 border-slate-700 min-h-[600px] max-h-[calc(100vh-8rem)] flex flex-col">
+    <Card className="bg-slate-800 border-slate-700 flex flex-col max-h-[500px]">
       <CardHeader className="flex-shrink-0">
         <CardTitle className="text-white flex items-center gap-2">
           <FileCode className="w-5 h-5" />
@@ -229,7 +230,7 @@ export default function TemplateCard({
               <h4 className="text-white font-medium text-sm uppercase tracking-wide">
                 Templates Disponíveis
               </h4>
-              <div className="space-y-3">
+              <ScrollArea className="h-[300px] space-y-3">
                 {(templates ?? []).map((template) => (
                   <div
                     key={template.id}
@@ -333,7 +334,7 @@ export default function TemplateCard({
                     </div>
                   </div>
                 ))}
-              </div>
+              </ScrollArea>
             </div>
 
             <SelectedTemplates
@@ -342,7 +343,7 @@ export default function TemplateCard({
               handleRemoveTemplate={handleRemoveTemplate}
             />
 
-            <TemplateConfigDialog 
+            <TemplateConfigDialog
               configTemplateDialog={state.configTemplateDialog}
               handleCloseConfigDialog={handleCloseConfigDialog}
               handleConfirmTemplate={handleConfirmTemplate}

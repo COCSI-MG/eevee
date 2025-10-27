@@ -12,7 +12,6 @@ export default function WorkspaceFileTree({
   treeData,
   onFileSelect,
   selectedItem,
-  setSelectedItem,
 }: WorkspaceFileTreeProps) {
   /**
    * Recursively renders the children of the file tree.
@@ -56,12 +55,6 @@ export default function WorkspaceFileTree({
               isSelect={selectedItem.path === item.path}
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedItem({
-                  id: item.id,
-                  name: item.label,
-                  type: 'folder',
-                  path: item.path,
-                });
               }}
               className={selectedItem.path === item.path ? 'bg-gray-600' : ''}
             >

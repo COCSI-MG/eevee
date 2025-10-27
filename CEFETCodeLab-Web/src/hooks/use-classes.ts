@@ -7,7 +7,7 @@ const useClasses = () => {
         queryFn: async () => {
             return ClassesService.listClasses();
         },
-        staleTime: 1000 * 60, // 1 minute
+        refetchOnWindowFocus: true,
     })
 }
 

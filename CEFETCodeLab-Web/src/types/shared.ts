@@ -6,6 +6,8 @@ export type FileNode = {
   icon?: React.ReactNode;
   children?: FileNode[];
   isFile?: boolean;
+  content?: string; // Conteúdo do arquivo (apenas para isFile: true)
+  updatedAt?: string; // Timestamp de última atualização
 }
 
 export interface SelectedItem {

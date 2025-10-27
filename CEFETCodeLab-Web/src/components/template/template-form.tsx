@@ -258,6 +258,29 @@ export default function TemplateForm() {
                         wrappingIndent: "indent",
                         fontSize: 14,
                         lineNumbers: "on",
+                        quickSuggestions: false,
+                        suggest: {
+                          showWords: false,
+                          showSnippets: false,
+                        },
+                        "semanticHighlighting.enabled": false,
+                      }}
+                      beforeMount={(monaco) => {
+                        // Disable all diagnostics for TypeScript/JavaScript
+                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
+                          {
+                            noSemanticValidation: true,
+                            noSyntaxValidation: true,
+                            noSuggestionDiagnostics: true,
+                          }
+                        );
+                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
+                          {
+                            noSemanticValidation: true,
+                            noSyntaxValidation: true,
+                            noSuggestionDiagnostics: true,
+                          }
+                        );
                       }}
                     />
                   </div>

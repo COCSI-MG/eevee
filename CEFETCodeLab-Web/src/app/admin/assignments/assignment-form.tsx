@@ -1,40 +1,39 @@
-'use client';
+"use client";
 
-import { AssignmentFormProps } from './interface';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
-import dynamic from 'next/dynamic';
-import { Assignment } from '@/app/interface/scheduler-api/assignment';
+import { AssignmentFormProps } from "./interface";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import dynamic from "next/dynamic";
+import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import {
   WorkerDefaultTemplateMap,
   WorkerDefaultValidationScriptMap,
   WorkerExibitionMap,
-} from './constants';
-import { WorkerType } from '@/app/interface/scheduler-api/worker';
-import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, FileText, Save } from 'lucide-react';
-import { useClasses } from '@/hooks/use-classes';
-import TemplateCard from '@/components/assignment/template-card';
-import { cn } from '@/lib/utils';
-import AssignmentStepContainer from '@/components/assignment/assignment-step-container';
-import { useAssignmentForm } from '@/hooks/use-assigment-form';
-import AssignmentFormReview from '@/components/assignment/form/assignment-form-review';
-const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
+} from "./constants";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { ChevronLeft, ChevronRight, FileText, Save } from "lucide-react";
+import { useClasses } from "@/hooks/use-classes";
+import TemplateCard from "@/components/assignment/template-card";
+import AssignmentStepContainer from "@/components/assignment/assignment-step-container";
+import { useAssignmentForm } from "@/hooks/use-assigment-form";
+import AssignmentFormReview from "@/components/assignment/form/assignment-form-review";
+const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 const validationSchema = Yup.object({
-  title: Yup.string().required('Title is required'),
-  description: Yup.string().required('Description is required'),
+  title: Yup.string().required("Title is required"),
+  description: Yup.string().required("Description is required"),
   maxAttempts: Yup.number()
-    .required('Max attempts is required')
-    .min(1, 'Must be at least 1'),
+    .required("Max attempts is required")
+    .min(1, "Must be at least 1"),
   workerType: Yup.string()
     .oneOf(Object.values(WorkerType))
-    .required('Worker type is required'),
-  validationScript: Yup.string().required('Validation script is required'),
-  classId: Yup.string().required('Class is required'),
+    .required("Worker type is required"),
+  validationScript: Yup.string().required("Validation script is required"),
+  classId: Yup.string().required("Class is required"),
 });
 
 export const AssignmentForm: React.FC<AssignmentFormProps> = ({
@@ -53,8 +52,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   const { data: classes, isFetching: isFetchingClasses } = useClasses();
 
   const initialValues: Partial<Assignment> = {
-    title: existingAssignment?.title ?? '',
-    description: existingAssignment?.description ?? '',
+    title: existingAssignment?.title ?? "",
+    description: existingAssignment?.description ?? "",
     maxAttempts: existingAssignment?.maxAttempts ?? 1,
     workerType: existingAssignment?.workerType ?? WorkerType.NODE_DEFAULT,
     validationScript:
@@ -84,7 +83,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 space-y-4 overflow-hidden">
       <AssignmentStepContainer currentStep={currentStep} />
 
       <div className="max-w-7xl mx-auto">
@@ -105,11 +104,11 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
               ) {
                 const safeWorkerType = values.workerType as WorkerType;
                 setFieldValue(
-                  'template',
+                  "template",
                   WorkerDefaultTemplateMap[safeWorkerType]
                 );
                 setFieldValue(
-                  'validationScript',
+                  "validationScript",
                   WorkerDefaultTemplateMap[safeWorkerType]
                 );
               }
@@ -122,7 +121,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                 case 2:
                   return selectedTemplates.length > 0;
                 case 3:
-                  return values.validationScript?.trim() != '';
+                  return values.validationScript?.trim() != "";
                 default:
                   return true;
               }
@@ -263,7 +262,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
                 case 3:
                   return (
-                    <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
+                    <Card className="bg-slate-800 border-slate-700 max-h-[600px]">
                       <CardHeader>
                         <CardTitle className="text-white flex items-center gap-2">
                           <FileText className="w-5 h-5" />
@@ -271,34 +270,32 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-2">
-                          <Label
-                            htmlFor="validationScript"
-                            className="text-slate-200 text-sm"
-                          >
-                            Boilerplate inicial para os alunos
-                          </Label>
-                          <Editor
-                            height="550px"
-                            defaultLanguage="typescript"
-                            theme="vs-dark"
-                            value={values.validationScript}
-                            onChange={(value) =>
-                              setFieldValue('validationScript', value)
-                            }
-                            options={{
-                              minimap: { enabled: false },
-                              scrollBeyondLastLine: false,
-                              wordWrap: 'on',
-                              automaticLayout: true,
-                            }}
-                          />
-                          <ErrorMessage
-                            name="validationScript"
-                            component="div"
-                            className="text-red-500 text-sm"
-                          />
-                        </div>
+                        <span className="text-sm text-slate-400 mb-2 block">
+                          Edite o script de validação que será utilizado para
+                          corrigir os envios dos alunos. Certifique-se de que o
+                          script esteja de acordo com o tipo de worker
+                          selecionado anteriormente.
+                        </span>
+                        <Editor
+                          height={400}
+                          defaultLanguage="typescript"
+                          theme="vs-dark"
+                          value={values.validationScript}
+                          onChange={(value) =>
+                            setFieldValue("validationScript", value)
+                          }
+                          options={{
+                            minimap: { enabled: false },
+                            scrollBeyondLastLine: false,
+                            wordWrap: "on",
+                            automaticLayout: true,
+                          }}
+                        />
+                        <ErrorMessage
+                          name="validationScript"
+                          component="div"
+                          className="text-red-500 text-sm"
+                        />
                       </CardContent>
                     </Card>
                   );
@@ -310,7 +307,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       classes={classes!}
                       selectedTemplates={selectedTemplates}
                     />
-                  )
+                  );
               }
             };
 
@@ -318,15 +315,10 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
               <Form className="w-full">
                 {renderStep()}
 
-                <div
-                  className={cn(
-                    'flex justify-between mt-8 mx-auto',
-                    currentStep === 4 ? 'max-w-4xl' : ''
-                  )}
-                >
+                <div className={"flex justify-between mt-8 mx-auto"}>
                   <Button
                     type="button"
-                    variant={'outline'}
+                    variant={"outline"}
                     onClick={() => {
                       if (currentStep > 1) {
                         setCurrentStep(currentStep - 1);
@@ -361,8 +353,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       >
                         <Save className="w-4 h-4 mr-2" />
                         {existingAssignmentId
-                          ? 'Update Assignment'
-                          : 'Create Assignment'}
+                          ? "Update Assignment"
+                          : "Create Assignment"}
                       </Button>
                     )}
                   </div>
