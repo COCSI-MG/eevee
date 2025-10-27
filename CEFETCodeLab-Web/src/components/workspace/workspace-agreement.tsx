@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function WorkspaceAgreement({
   title,
