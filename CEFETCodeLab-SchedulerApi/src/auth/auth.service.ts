@@ -18,6 +18,7 @@ export class AuthService {
     loginData: LoginRequestDto,
   ): Promise<LoginResponseDto | undefined> {
     const { email, password } = loginData;
+    console.log('email', email);
     const user = await this.userService.findByEmail(email);
     if (
       user &&
