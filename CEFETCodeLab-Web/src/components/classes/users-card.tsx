@@ -12,9 +12,9 @@ import { Plus, Check, User, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ScrollArea } from "../ui/scroll-area";
-import { useEffect, useState } from "react";
 import { useUsers } from "@/hooks/use-users";
 import { SelectedUser } from "@/types/shared";
+import { useMemo, useState } from "react";
 
 interface UsersCardContentProps {
   selectedUsers: Array<SelectedUser>;
@@ -29,22 +29,19 @@ export default function UsersCard({
 }: UsersCardContentProps) {
   const { data: users, isFetching: isUsersFetching, isSuccess } = useUsers();
 
-  const [filteredUsers, setFilteredUsers] = useState<Array<SelectedUser>>([]);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    if (isSuccess && users) {
-      const filteredUsers = users.filter(
-        (user) =>
-          !user.isAdmin &&
-          (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-      setFilteredUsers(filteredUsers);
-    }
-  }, [isSuccess, searchTerm, users]);
+  const filteredUsers = useMemo(() => {
+    if (!isSuccess || !users) return [];
+
+    return users.filter(
+      (user) =>
+        user.isAdmin === false &&
+        (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [isSuccess, users, searchTerm]);
 
   const handleUserSelect = (UserId: number) => {
     if (isSuccess) {
@@ -60,7 +57,7 @@ export default function UsersCard({
   const handleRemoveUser = (id: number) => {
     const updatedUsers = selectedUsers.filter((user) => user.id !== id);
     setSelectedUsers(updatedUsers);
-    onUsersSelectionChange(updatedUsers); 
+    onUsersSelectionChange(updatedUsers);
   };
 
   if (isUsersFetching) {
@@ -95,32 +92,31 @@ export default function UsersCard({
             <CommandList>
               <CommandEmpty>No Users found.</CommandEmpty>
               <CommandGroup>
-                {isSuccess &&
-                  filteredUsers.map((user) => (
-                    <CommandItem
-                      key={user.id}
-                      onSelect={() => handleUserSelect(user.id)}
-                      className="flex items-center gap-2 p-2"
+                {filteredUsers.map((user) => (
+                  <CommandItem
+                    key={user.id}
+                    onSelect={() => handleUserSelect(user.id)}
+                    className="flex items-center gap-2 p-2"
+                  >
+                    <div
+                      className={
+                        selectedUsers.map((user) => user.id).includes(user.id)
+                          ? "opacity-100"
+                          : "opacity-0"
+                      }
                     >
-                      <div
-                        className={
-                          selectedUsers.map((user) => user.id).includes(user.id)
-                            ? "opacity-100"
-                            : "opacity-0"
-                        }
-                      >
-                        <Check className="h-4 w-4" />
-                      </div>
-                      <div className="ml-2">
-                        <p className="text-sm font-medium leading-none">
-                          {user.name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </CommandItem>
-                  ))}
+                      <Check className="h-4 w-4" />
+                    </div>
+                    <div className="ml-2">
+                      <p className="text-sm font-medium leading-none">
+                        {user.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </CommandItem>
+                ))}
               </CommandGroup>
             </CommandList>
           </Command>
