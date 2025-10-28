@@ -9,7 +9,11 @@ export class DatabaseSeeder {
     const userHashPassword = HashUtils.hashPassword('student123');
 
     await this.dataSource.query(
-      `INSERT INTO users (email, hashPassword, isAdmin, name) VALUES ("admin@example.com", ${adminHashPassword}, true, "admin"), ("student@example.com", ${userHashPassword}, false, "student")`,
+      `INSERT INTO users (email, hashPassword, isAdmin, name) VALUES (?, ?, ?, ?), (?, ?, ?, ?)`,
+      [
+        "admin@example.com", adminHashPassword, true, "admin",
+        "student@example.com", userHashPassword, false, "student"
+      ]
     );
   }
 }
