@@ -3,9 +3,11 @@ import { useQuery } from "@tanstack/react-query"
 
 const useClasses = () => {
     return useQuery({
-        queryKey: ["classes"],
-        initialData: [],
-        queryFn: () => ClassesService.listClasses(),
+        queryKey: ["admin-classes"],
+        queryFn: async () => {
+            return ClassesService.listClasses();
+        },
+        refetchOnWindowFocus: true,
     })
 }
 

@@ -9,7 +9,8 @@ export class UserClassService {
   constructor(
     @InjectRepository(UserClass)
     private readonly userClassRepository: Repository<UserClass>,
-  ) {}
+  ) { }
+
   async createMany(createUserRequests: CreateUserClassDto[]) {
     const userClass = createUserRequests.map((createUserRequest) => {
       return {
@@ -42,5 +43,9 @@ export class UserClassService {
 
   remove(id: number) {
     return this.userClassRepository.delete({ id });
+  }
+
+  deleteByClassId(classId: number) {
+    return this.userClassRepository.delete({ classId });
   }
 }

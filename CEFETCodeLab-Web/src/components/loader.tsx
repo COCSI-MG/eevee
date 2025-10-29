@@ -1,17 +1,34 @@
-import { Circle } from "lucide-react";
+'use client';
 
-export default function Loader() {
+import { Progress } from "@/components/ui/progress";
+import { useEffect, useState } from "react";
+
+interface LoaderProps {
+  text?: string;
+  fullScreen?: boolean;
+}
+
+export default function Loader({ text = "Loading...", fullScreen = true }: LoaderProps) {
+  const [progress, setProgress] = useState(13);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress((prev) => (prev >= 90 ? 100 : prev + 10));
+    }, 500);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const containerClass = fullScreen 
+    ? "flex flex-col items-center justify-center min-h-screen w-full gap-4 px-8"
+    : "flex flex-col items-center justify-center w-full gap-4 py-8 px-8";
+
   return (
-    <div className="flex items-center justify-center h-full">
-      <svg
-        className="animate-spin h-8 w-8 text-gray-500"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <Circle className="h-8 w-8 text-gray-500" />
-      </svg>
-      <span className="sr-only">Loading...</span>
+    <div className={containerClass}>
+      <div className="w-full max-w-md space-y-2">
+        <Progress value={progress} className="h-2" />
+        <p className="text-sm text-muted-foreground text-center">{text}</p>
+      </div>
     </div>
   );
 }

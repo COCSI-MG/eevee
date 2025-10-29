@@ -1,92 +1,62 @@
-"use client";
+'use client'
 
-import { DEFAULT_ASSIGNMENT_TEMPLATE } from "@/app/admin/assignments/constants";
-import { AssignmentUserSuspensionService } from "@/app/integration/scheduler-api/assignment-user-suspension";
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
-import { Button } from "@/components/ui/button";
-import WindowFocusDialog from "@/components/window-focus-dialog";
+import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import WorkspaceHeader from "@/components/workspace/header";
+import Workspace from "@/components/workspace/workspace";
 import WorkspaceAgreement from "@/components/workspace/workspace-agreement";
-import WorkspaceCodeEditor from "@/components/workspace/workspace-code-editor";
-import WorkspaceExplorer from "@/components/workspace/workspace-explorer";
+import { WorkspaceLoading } from "@/components/workspace/workspace-loading";
+import { useWorkspaceContext } from "@/components/workspace/workspace-provider";
+import { WorkspaceSuspension } from "@/components/workspace/workspace-suspension";
 import { useFetchAssignment } from "@/hooks/use-assignments";
-import { useAuthUser } from "@/hooks/use-auth-user";
-import {
-  useFetchFromStash,
-  useFileStash,
-  useSaveInFileStash,
-} from "@/hooks/use-filestash";
-import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { useFetchFileContent } from "@/hooks/use-filestash";
 import { toast } from "@/hooks/use-toast";
-import { getFileStashKey } from "@/lib/utils";
-import { FileTreeData } from "@/types/shared";
 import { useMutation } from "@tanstack/react-query";
-import { FileStrucutre } from "filestash";
 import { useParams, useRouter } from "next/navigation";
-import React from "react";
-
-const defaultTreeData: FileTreeData[] = [
-  {
-    id: "1",
-    label: "src",
-    isSelectable: false,
-    isFile: false,
-    children: [
-      {
-        id: "2",
-        label: "index.js",
-        isSelectable: true,
-        isFile: true,
-      },
-    ],
-  },
-];
 
 export default function Page() {
   const { id } = useParams();
-  const [activeFile, setActiveFile] = React.useState<{
-    id: string;
-    name: string;
-  }>({
-    id: "2",
-    name: "index.js",
-  });
-  const [treeData, setTreeData] = React.useState<FileTreeData[]>([]);
-  const [defaultEditorValue, setDefaultEditorValue] = React.useState<string>(
-    DEFAULT_ASSIGNMENT_TEMPLATE
-  );
-  const { user } = useAuthUser();
+
   const { back } = useRouter();
-  const [currentStep, setCurrentStep] = React.useState(1);
 
-  useFileStash();
-  usePreventUserActions();
+  const { user } = useAuthContext();
 
-  const { mutate: saveFileInStash } = useSaveInFileStash();
-
-  const {
-    mutate: fetchFileContentFromStash,
-    mutateAsync: fetchFileContentFromStashAsync,
-    data: fileContent,
-  } = useFetchFromStash();
-
-  const { data: assignmentData, isLoading: isAssignmentLoading } =
+  const { data: assignmentData, isFetching: isFetchingAssignment } =
     useFetchAssignment(Number(id));
+
+  const { selectedItem, currentStep, setCurrentStep } = useWorkspaceContext();
+
+  const { mutateAsync: fetchFileContent } = useFetchFileContent();
 
   const { mutate: submitAssignment, isPending: isSubmitting } = useMutation({
     mutationKey: ["submit-assignment"],
     mutationFn: async () => {
-      const fileKey = getFileStashKey(
-        assignmentData?.id ?? 0,
-        activeFile.id,
-        user?.id
-      );
-      const fileContent = await fetchFileContentFromStashAsync(fileKey);
+      if (!assignmentData?.id || !user?.id || !selectedItem.path) {
+        return Promise.reject("Missing required data");
+      }
+
+      const fileContent = await fetchFileContent({
+        assignmentId: assignmentData.id,
+        userId: user.id,
+        filePath: selectedItem.path,
+      });
+
+      if (!fileContent) {
+        return Promise.reject("File content is empty");
+      }
+
+      if (user?.isAdmin) {
+        return SchedulingService.createScheduling({
+          assignmentId: assignmentData.id,
+          applicationFileContent: fileContent,
+        });
+      }
 
       return SchedulingService.createSchedulingInBackground({
-        assignmentId: Number(id),
-        applicationFileContent: fileContent.toString(),
+        assignmentId: assignmentData.id,
+        applicationFileContent: fileContent,
       });
     },
     onError: (error) => {
@@ -99,6 +69,11 @@ export default function Page() {
     onSuccess: (data) => {
       console.log(data);
 
+      if (user?.isAdmin) {
+        alert("Resultado da tarefa :\n" + JSON.stringify(data));
+        return;
+      }
+
       toast({
         title: "Seu trabalho foi recebido com sucesso e está sendo processado",
         variant: "default",
@@ -108,179 +83,71 @@ export default function Page() {
     },
   });
 
-  React.useEffect(() => {
-    if (activeFile.id && assignmentData?.id) {
-      const fileKey = getFileStashKey(
-        assignmentData.id,
-        activeFile.id,
-        user?.id
-      );
-      fetchFileContentFromStashAsync(fileKey).then((data) => {
-        if (data) {
-          setDefaultEditorValue(data.toString());
-        }
-      });
-    }
-  }, [
-    activeFile.id,
-    assignmentData?.id,
-    fetchFileContentFromStashAsync,
-    user?.id,
-  ]);
-
   const { mutate: saveFileInServer, isPending: isSaving } = useMutation({
     mutationKey: ["save-file-in-saver"],
     mutationFn: async () => {
-      const fileKey = getFileStashKey(
-        assignmentData?.id ?? 0,
-        activeFile.id,
-        user?.id
-      );
-      const fileContent = await fetchFileContentFromStashAsync(fileKey);
-      const file = new File([fileContent], activeFile.name, {
+      if (!assignmentData?.id || !user?.id || !selectedItem.path) {
+        return Promise.reject("Missing required data");
+      }
+
+      const fileContent = await fetchFileContent({
+        assignmentId: assignmentData.id,
+        userId: user.id,
+        filePath: selectedItem.path,
+      });
+
+      if (!fileContent) {
+        return Promise.reject("File content is empty");
+      }
+
+      const file = new File([fileContent], selectedItem.name, {
         type: "text/plain",
       });
       return FileSaverService.uploadFileToServer(file, Number(id));
     },
   });
 
-  const { mutate: suspendUserFromAssignment } = useMutation({
-    mutationFn: async () => {
-      return AssignmentUserSuspensionService.suspendUserFromAssignment(
-        Number(id),
-        "window_focus"
-      );
-    },
-  });
-
-  React.useEffect(() => {
-    if (id) {
-      setTreeData(defaultTreeData);
-    }
-  }, [id]);
-
-  const handleFileSelect = (fileId: string) => {
-    const selectedFile = treeData
-      .flatMap((item) => item.children || [])
-      .find((file) => file.id === fileId);
-    if (selectedFile) {
-      setActiveFile({
-        id: selectedFile.id,
-        name: selectedFile.label,
-      });
-      const fileKey = `assignment-${assignmentData?.id}-file-${fileId}`;
-      fetchFileContentFromStash(fileKey);
-    }
-  };
-
-  const handleRun = () => {
-    submitAssignment();
-  };
-
-  const handleServerSave = () => {
-    saveFileInServer();
-  };
-
-  const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined) {
-      const fileKey = getFileStashKey(
-        assignmentData?.id ?? 0,
-        activeFile.id,
-        user?.id
-      );
-
-      const fileData: FileStrucutre = {
-        name: activeFile.name,
-        data: value,
-        size: value.length,
-        createdAt: Date.now().toString(),
-        updateAt: Date.now().toString(),
-      };
-      saveFileInStash({
-        fileData,
-        fileKey,
-      });
-    }
-  };
-
-  if (isAssignmentLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-lg text-gray-500">Carregando atividade...</p>
-      </div>
-    );
-  }
-
-  if (
-    assignmentData &&
-    assignmentData.suspensions?.some(
+  const isUserSuspended = (assignmentData: Assignment) => {
+    return assignmentData?.suspensions?.some(
       (suspension) => suspension.userId === user?.id
-    )
-  ) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <div className="text-center">
-          <p className="text-lg text-red-500">
-            Você está suspenso desta atividade. Entre em contato com o professor
-            para mais informações.
-          </p>
-        </div>
-
-        <Button
-          onClick={() => back()}
-          className="mt-4 justify-center w-64"
-          variant={"outline"}
-        >
-          Voltar
-        </Button>
-      </div>
     );
+  };
+
+  if (isFetchingAssignment) {
+    return <WorkspaceLoading />;
   }
 
-  if (currentStep === 1) {
+  if (assignmentData && isUserSuspended(assignmentData)) {
+    return <WorkspaceSuspension />;
+  }
+
+  if (user && !user.isAdmin && assignmentData && currentStep === 1) {
     return (
       <WorkspaceAgreement
-        title={assignmentData?.title ?? ""}
+        title={assignmentData.title}
         onAccept={() => setCurrentStep(2)}
+        assignmentId={assignmentData.id}
       />
     );
   }
 
   return (
-    <div className="h-screen text-foreground flex flex-col">
+    <>
       <WorkspaceHeader
         assignment={{
           title: assignmentData !== undefined ? assignmentData.title : "",
           description:
             assignmentData !== undefined ? assignmentData.description : "",
         }}
-        onRunClick={handleRun}
-        onSaveClick={handleServerSave}
+        onRunClick={() => submitAssignment()}
+        onSaveClick={() => saveFileInServer()}
         isRunning={isSubmitting}
         isSaving={isSaving}
       />
 
-      {user?.isAdmin === false && (
-        <WindowFocusDialog
-          suspendUserFromAssignment={suspendUserFromAssignment}
-        />
+      {assignmentData && user && (
+        <Workspace assignment={assignmentData} user={user} />
       )}
-
-      <div className="flex flex-1 min-h-0">
-        <WorkspaceExplorer
-          treeData={treeData}
-          onFileSelect={handleFileSelect}
-        />
-
-        <div className="flex-1 flex flex-col">
-          <WorkspaceCodeEditor
-            activeFile={activeFile.name}
-            editorValue={fileContent?.toString()}
-            editorDefaultValue={defaultEditorValue}
-            onEditorChange={handleEditorChange}
-          />
-        </div>
-      </div>
-    </div>
+    </>
   );
 }

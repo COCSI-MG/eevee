@@ -1,19 +1,36 @@
+'use client'
+
 import { Badge } from "../ui/badge";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
-import { useRouter } from "next/navigation";
 import { Label } from "../ui/label";
 import { Checkbox } from "../ui/checkbox";
+import { useRouter } from "next/navigation";
 
 export default function WorkspaceAgreement({
   title,
   onAccept,
+  assignmentId,
 }: {
   title: string;
   onAccept: () => void;
+  assignmentId: number;
 }) {
   const [checked, setChecked] = useState(false);
   const { back } = useRouter();
+
+  useEffect(() => {
+    if (checked) {{
+      localStorage.setItem(`agreement-${assignmentId}`, 'true');
+    }}
+  }, [assignmentId, checked]);
+
+  const agreedBefore = localStorage.getItem(`agreement-${assignmentId}`) === 'true';
+
+  if (agreedBefore) {
+    onAccept();
+    return null;
+  }
 
   return (
     <div className="flex h-screen items-center justify-center">

@@ -1,115 +1,160 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { ClassesService } from '@/app/integration/scheduler-api/classes';
-import { UpsertClass } from '@/app/interface/scheduler-api/class';
-import { Textarea } from '@/components/ui/textarea';
-import StudentsCardContent from '@/components/classes/students-card-content';
+} from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { Class, UpsertClass } from "@/app/interface/scheduler-api/class";
+import { Textarea } from "@/components/ui/textarea";
+import UsersCard from "@/components/classes/users-card";
+import { useFormik } from "formik";
+import { SelectedUser } from "@/types/shared";
+import { AxiosError } from "axios";
+import * as Yup from "yup";
+
+const classUpsertSchema = Yup.object().shape({
+  id: Yup.number().optional(),
+  name: Yup.string().required("Class name is required"),
+  description: Yup.string(),
+  students: Yup.array().of(Yup.number()).required("At least one student must be selected"),
+});
 
 export default function ClassEditPage() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const { id } = useParams<{
     id: string;
   }>();
-  const isNewClass = id === 'new';
 
-  const [formData, setFormData] = useState<{
-    name: string;
-    description: string;
-    students: number[];
-  }>({
-    name: '',
-    description: '',
-    students: [],
-  });
-  const [selectedStudents, setSelectedStudents] = useState<
-    {
-      id: number;
-      name: string;
-      email: string;
-    }[]
-  >([]);
+  const isNewClass = id === "new";
 
-  const classQuery = useQuery({
-    queryKey: ['class', id],
-    queryFn: ({ queryKey }) => ClassesService.getOne(Number(queryKey[1])),
-    enabled: !isNewClass,
-  });
+  const { mutateAsync: upsertClasses } = useMutation({
+    mutationKey: ["upsertClasses", id],
+    onMutate: async (newClassData: UpsertClass) => {
+      await queryClient.cancelQueries({ queryKey: ["admin-classes"] });
 
-  const {
-    mutateAsync: upsertClasses,
-    isSuccess,
-    data: upsertedClass,
-  } = useMutation({
-    mutationKey: ['upsertClasses', id],
-    mutationFn: (newClass: UpsertClass) => {
-      if (typeof newClass.id === 'undefined') {
-        return ClassesService.create(newClass);
+      const previousClasses: Class[] | undefined = queryClient.getQueryData([
+        "admin-classes",
+      ]);
+      if (!previousClasses) {
+        return { previousClasses: [] };
       }
-      return ClassesService.update(newClass);
+
+      queryClient.setQueryData(["admin-classes"], (oldClasses: Class[]) => {
+        if (isNewClass) {
+          return [...(oldClasses || []), newClassData];
+        } else {
+          return (oldClasses || []).map((cls: Class) =>
+            cls.id === Number(id) ? { ...cls, ...newClassData } : cls
+          );
+        }
+      });
+
+      return { previousClasses };
+    },
+    mutationFn: (classData: UpsertClass) => {
+      if (!classData.id) {
+        return ClassesService.create(classData);
+      }
+      return ClassesService.update(classData);
+    },
+    onSuccess: () => {
+      toast({
+        title: isNewClass ? "Class created" : "Class updated",
+        description: `Successfully ${
+          isNewClass ? "created" : "updated"
+        } class ${formik.values.name}`,
+        duration: 5000,
+      });
+      router.push("/admin/classes");
+    },
+    onError: (error: AxiosError) => {
+      const res = error.response?.data as { message: string } | undefined;
+
+      toast({
+        title: "Error",
+        description:
+          res?.message ||
+          `Failed to ${isNewClass ? "create" : "update"} class.`,
+        variant: "destructive",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-classes"] });
     },
   });
 
-  useEffect(() => {
-    if (isSuccess) {
-      toast({
-        title: isNewClass ? 'Class created' : 'Class updated',
-        description: `Successfully ${
-          isNewClass ? 'created' : 'updated'
-        } class ${formData.name}`,
-      });
-      router.push('/admin/classes');
-    }
-  }, [upsertedClass, isSuccess, router, isNewClass, formData.name]);
+  const formik = useFormik<UpsertClass>({
+    initialValues: {
+      id: undefined,
+      name: "",
+      description: "",
+      students: [] as number[],
+    },
+    validationSchema: classUpsertSchema,
+    onSubmit: (values) => {
+      if (values.students.length === 0) {
+        formik.setFieldError("students", "At least one student must be selected");
+        return;
+      }
 
-  useEffect(() => {
-    if (!isNewClass && classQuery.isSuccess && classQuery.data) {
-      setFormData({
-        ...classQuery.data,
-        students: classQuery.data.userClasses.map(
+      upsertClasses(values);
+    },
+  });
+
+  const [selectedUsers, setSelectedUsers] = useState<Array<SelectedUser>>([]);
+
+  const classQuery = useQuery({
+    queryKey: ["class", id],
+    queryFn: async ({ queryKey }) => {
+      const classData = await ClassesService.getOne(Number(queryKey[1]));
+      if (classData) {
+        const studentsSelected = classData.userClasses.map(
           (userClass) => userClass.userId
-        ),
-      });
-      setSelectedStudents(
-        classQuery.data.userClasses.map((userClass) => ({
-          id: userClass.userId,
-          name: userClass.user.name,
-          email: userClass.user.email,
-        }))
-      );
-    }
-  }, [isNewClass, classQuery.isSuccess, classQuery.data]);
+        );
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+        formik.setValues({
+          id: classData.id,
+          name: classData.name,
+          description: classData.description || "",
+          students: studentsSelected,
+        });
+
+        setSelectedUsers(
+          classData.userClasses.map((userClass) => ({
+            id: userClass.userId,
+            name: userClass.user.name,
+            email: userClass.user.email,
+          }))
+        );
+      }
+      return classData;
+    },
+    enabled: !isNewClass,
+  });
+
+  const onUsersSelectionChange = (students: Array<SelectedUser>) => {
+    formik.setFieldValue(
+      "students",
+      students.map((student) => student.id)
+    );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    upsertClasses({
-      id: isNewClass ? undefined : Number(id),
-      ...formData,
-    });
-  };
-
-  if (!isNewClass && classQuery.isPending) {
+  if (!isNewClass && classQuery.isFetching) {
     return <div>Loading...</div>;
   }
 
@@ -121,21 +166,21 @@ export default function ClassEditPage() {
           Back
         </Button>
         <h1 className="text-3xl font-bold tracking-tight">
-          {isNewClass ? 'Create Class' : 'Edit Class'}
+          {isNewClass ? "Create Class" : "Edit Class"}
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={formik.handleSubmit}>
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle>
-                {isNewClass ? 'New Class Information' : 'Class Information'}
+                {isNewClass ? "New Class Information" : "Class Information"}
               </CardTitle>
               <CardDescription>
                 {isNewClass
-                  ? 'Add a new class to the system'
-                  : 'Update the class information'}
+                  ? "Add a new class to the system"
+                  : "Update the class information"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -144,26 +189,29 @@ export default function ClassEditPage() {
                 <Input
                   id="name"
                   name="name"
-                  value={formData.name}
-                  onChange={handleChange}
+                  value={formik.values.name}
+                  onChange={formik.handleChange}
                   placeholder="Enter class name"
                   required
                 />
+                {formik.errors.name && (
+                  <div className="text-red-500">{formik.errors.name}</div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Class Description</Label>
                 <Textarea
                   id="description"
                   name="description"
-                  value={formData.description}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }));
-                  }}
+                  value={formik.values.description}
+                  onChange={formik.handleChange}
                   placeholder="Enter class description"
                 />
+                {formik.errors.description && (
+                  <div className="text-red-500">
+                    {formik.errors.description}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -176,11 +224,14 @@ export default function ClassEditPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <StudentsCardContent
-                selectedStudents={selectedStudents}
-                setSelectedStudents={setSelectedStudents}
-                formData={formData}
-                setFormData={setFormData}
+              {formik.errors.students && (
+                <div className="text-red-500">No students selected.</div>
+              )}
+
+              <UsersCard
+                selectedUsers={selectedUsers}
+                setSelectedUsers={setSelectedUsers}
+                onUsersSelectionChange={onUsersSelectionChange}
               />
             </CardContent>
           </Card>
@@ -197,7 +248,7 @@ export default function ClassEditPage() {
           </Button>
           <Button type="submit" variant="default">
             <Save className="h-4 w-4 mr-2" />
-            {isNewClass ? 'Create Class' : 'Save Changes'}
+            {isNewClass ? "Create Class" : "Save Changes"}
           </Button>
         </div>
       </form>

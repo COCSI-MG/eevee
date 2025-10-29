@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Table,
@@ -7,18 +7,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from './ui/table';
-import { useUsers } from '@/hooks/use-users';
-import { Badge } from './ui/badge';
-import TableActions from './table/table-actions';
+} from "./ui/table";
+import { Badge } from "./ui/badge";
+import TableActions from "./table/table-actions";
+import { User } from "@/app/interface/scheduler-api/user";
 
-export default function UsersTable() {
-  const { data, isPending, isSuccess } = useUsers();
+interface UsersTableProps {
+  users: User[] | undefined;
+  handleDelete: (id: number) => void;
+}
 
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
+export default function UsersTable({ users, handleDelete }: UsersTableProps) {
   return (
     <Table>
       <TableHeader>
@@ -36,26 +35,25 @@ export default function UsersTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {isSuccess &&
-          (data ?? []).map((user) => {
-            return (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Badge variant={user.isAdmin ? 'default' : 'outline'}>
-                    {user.isAdmin ? 'Admin' : 'User'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                    <TableActions 
-                        href={`/admin/users/${user.id}`}
-                        onDelete={() => console.log(`Delete user with ID: ${user.id}`)}
-                    />
-                </TableCell>
-              </TableRow>
-            );
-          })}
+        {(users ?? []).map((user) => {
+          return (
+            <TableRow key={user.id}>
+              <TableCell className="font-medium">{user.name}</TableCell>
+              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                <Badge variant={user.isAdmin ? "default" : "outline"}>
+                  {user.isAdmin ? "Admin" : "User"}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <TableActions
+                  href={`/admin/users/${user.id}`}
+                  onDelete={() => handleDelete(user.id)}
+                />
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
   );

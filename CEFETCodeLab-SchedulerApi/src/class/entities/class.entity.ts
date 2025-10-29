@@ -10,6 +10,11 @@ export class Class {
   @Column()
   name: string;
 
+  @Column({
+    nullable: true,
+  })
+  description: string;
+
   @OneToMany(() => UserClass, (userClass) => userClass.class)
   userClasses: UserClass[];
 

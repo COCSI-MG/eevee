@@ -48,7 +48,16 @@ export class UserService {
     return this.userRepository.findOne({ where: { email } });
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    const user = await this.findOne(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.isAdmin) {
+      throw new Error('Cannot delete admin user');
+    }
+
     return this.userRepository.delete({ id });
   }
 }

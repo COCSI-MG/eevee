@@ -1,6 +1,5 @@
 import { OnApplicationShutdown } from '@nestjs/common';
 import { IConsumer } from './interfaces/consumer.interface';
-import { ConfigService } from '@nestjs/config';
 import { ConsumerConfig, ConsumerSubscribeTopics, KafkaMessage } from 'kafkajs';
 import { KafkajsConsumer } from './kafkajs.consumer';
 
@@ -12,8 +11,6 @@ interface KafkajsConsumerOptions {
 
 export class ConsumerService implements OnApplicationShutdown {
   private readonly consumers: IConsumer[] = [];
-
-  constructor() {}
 
   async consume({ topic, config, onMessage }: KafkajsConsumerOptions) {
     const consumer = new KafkajsConsumer(

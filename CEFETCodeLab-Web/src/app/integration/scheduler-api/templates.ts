@@ -21,4 +21,9 @@ export class TemplatesService {
         const response = await axiosClientWithAuth.delete(`/template/${id}`);
         return response.data;
     }
+
+    static async update(id: string, data: CreateTemplateRequest) {
+        const response = await axiosClientWithAuth.patch(`/template/${id}`, data);
+        return <Template>response.data;
+    }
 }

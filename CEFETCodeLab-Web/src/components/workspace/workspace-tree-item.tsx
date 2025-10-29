@@ -1,24 +1,22 @@
-import { FileTreeData } from "@/types/shared";
-import { File, Folder, Tree } from "../magicui/file-tree";
+import { FileNode, SelectedItem } from '@/types/shared';
+import { File, Folder, Tree } from '../magicui/file-tree';
 
 interface WorkspaceFileTreeProps {
-  treeData: FileTreeData[];
-  onFileSelect: (file: string) => void;
+  treeData: FileNode[];
+  onFileSelect: (node: FileNode) => void;
+  selectedItem: SelectedItem;
+  setSelectedItem: React.Dispatch<React.SetStateAction<SelectedItem>>;
 }
 
 export default function WorkspaceFileTree({
   treeData,
   onFileSelect,
+  selectedItem,
 }: WorkspaceFileTreeProps) {
-  const root = treeData[0];
-
   /**
    * Recursively renders the children of the file tree.
    */
-  const renderChildren = (
-    treeChildrenData: FileTreeData[],
-    isRoot: boolean
-  ): React.ReactNode[] => {
+  const renderChildren = (treeChildrenData: FileNode[]): React.ReactNode[] => {
     return treeChildrenData
       .sort((a, b) => {
         if (a.isFile && b.isFile) {
@@ -35,8 +33,12 @@ export default function WorkspaceFileTree({
               key={item.id}
               value={item.id}
               isSelectable={item.isSelectable}
-              onClick={() => onFileSelect(item.id)}
-              isSelect={isRoot ? true : false}
+              onClick={(e) => {
+                e.stopPropagation();
+                onFileSelect(item);
+              }}
+              isSelect={selectedItem.path === item.path}
+              className={selectedItem.path === item.path ? 'bg-gray-600' : ''}
             >
               <p>{item.label}</p>
             </File>
@@ -50,8 +52,13 @@ export default function WorkspaceFileTree({
               element={item.label}
               value={item.id}
               isSelectable={item.isSelectable}
+              isSelect={selectedItem.path === item.path}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+              className={selectedItem.path === item.path ? 'bg-gray-600' : ''}
             >
-              {renderChildren(item.children, false)}
+              {renderChildren(item.children)}
             </Folder>
           );
         }
@@ -60,11 +67,5 @@ export default function WorkspaceFileTree({
       });
   };
 
-  return (
-    <Tree>
-      <Folder element={root.label} value={root.id}>
-        {root.children && renderChildren(root.children, true)}
-      </Folder>
-    </Tree>
-  );
+  return <Tree className="p-2">{renderChildren(treeData)}</Tree>;
 }

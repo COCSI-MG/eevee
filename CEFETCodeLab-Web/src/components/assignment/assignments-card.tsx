@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "../ui/card";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { useAuthUser } from "@/hooks/use-auth-user";
+import { useAuthContext } from "@/hooks/use-auth-context";
 import { useRouter } from "next/navigation";
 import { Route } from "@/app/routes";
 import { Badge } from "../ui/badge";
@@ -19,7 +19,7 @@ interface AssignmentsCardProps {
 }
 
 export default function AssignmentsCard({ data }: AssignmentsCardProps) {
-  const { user } = useAuthUser();
+  const { user } = useAuthContext();
   const { push } = useRouter();
 
   const handleTry = (id: number) => {
