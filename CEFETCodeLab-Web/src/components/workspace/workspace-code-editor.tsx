@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { OnMount } from "@monaco-editor/react";
 import React from "react";
 import { DEFAULT_ASSIGNMENT_TEMPLATE } from "@/app/admin/assignments/constants";
+import type { editor } from "monaco-editor";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -22,7 +23,24 @@ export default function WorkspaceCodeEditor({
   editorValue,
   editorDefaultValue = DEFAULT_ASSIGNMENT_TEMPLATE
 }: WorkspaceCodeEditorProps) {
-  const editorRef = React.useRef<unknown>(null);
+  const editorRef = React.useRef<editor.IStandaloneCodeEditor>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (editorRef.current) {
+        try {
+          const model = editorRef.current.getModel();
+          if (model) {
+            model.dispose();
+          }
+          editorRef.current.dispose();
+        } catch (error) {
+          // Ignore disposal errors
+          console.debug("Editor cleanup error (can be safely ignored):", error);
+        }
+      }
+    };
+  }, []);
 
   const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;

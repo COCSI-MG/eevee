@@ -17,8 +17,8 @@ export async function initStash() {
 /**
  * Gera a chave única para um assignment/usuário
  */
-export const getAssignmentKey = (assignmentId: number, userId?: number) => {
-  return `assignment-${assignmentId}-user-${userId || 0}`;
+export const getAssignmentKey = (assignmentId: number, userId: number) => {
+  return `assignment-${assignmentId}-user-${userId}`;
 };
 
 /**

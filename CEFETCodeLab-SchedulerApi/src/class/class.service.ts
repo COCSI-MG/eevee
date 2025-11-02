@@ -19,8 +19,6 @@ export class ClassService {
   ) { }
 
   async createOrReplace(createClassDto: CreateOrReplaceClassDto) {
-    console.log("create class dto", createClassDto);
-
     let newIdentifier: Class;
     if (createClassDto.id) {
       const existingClass = await this.classRepository.findOne({
