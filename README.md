@@ -8,8 +8,6 @@
 
 ### 1. [CEFETCodeLab-Web]
 
-Talvez precise instalar o next: `sudo apt install mailutils-mh`
-
 ```bash
 cd CEFETCodeLab-Web/
 npm install
