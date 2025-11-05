@@ -5,6 +5,7 @@ const config: Config = {
   testEnvironment: 'node',
   testMatch: ['**/?(*.)+(test|spec).ts'],
   moduleFileExtensions: ['ts', 'js', 'json'],
+  testPathIgnorePatterns: ['/node_modules/', '/examples/'],
   roots: ['<rootDir>'],
   maxWorkers: 1,
   testTimeout: 30000,
