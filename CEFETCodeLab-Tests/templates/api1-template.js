@@ -1,3 +1,4 @@
+// validation0.test.ts
 describe('API de Alunos e Cursos', () => {
   let alunoId: string;
   let cursoId: string;
@@ -14,6 +15,10 @@ describe('API de Alunos e Cursos', () => {
     cargaHoraria: 60
   };
 
+  // Estado global para simular o banco de dados
+  let alunosDB: any[] = [];
+  let cursosDB: any[] = [];
+
   // Mock functions para simular as operações da API
   const mockApi = {
     // Operações para Alunos
@@ -23,51 +28,44 @@ describe('API de Alunos e Cursos', () => {
         if (!aluno.nome) {
           throw new Error('Nome é obrigatório');
         }
-        return {
-          id: '1',
+        const novoAluno = {
+          id: (alunosDB.length + 1).toString(),
           ...aluno,
           createdAt: new Date().toISOString()
         };
+        alunosDB.push(novoAluno);
+        return novoAluno;
       },
       findAll: async () => {
-        return [{
-          id: '1',
-          ...alunoBase
-        }];
+        return [...alunosDB];
       },
       findById: async (id: string) => {
-        if (id === '1') {
-          return {
-            id: '1',
-            ...alunoBase
-          };
-        }
-        return null;
+        return alunosDB.find(aluno => aluno.id === id) || null;
       },
       update: async (id: string, aluno: any) => {
-        if (id === '1') {
-          if (!aluno.nome) {
-            throw new Error('Nome é obrigatório');
-          }
-          return {
-            id: '1',
-            ...aluno
-          };
+        const index = alunosDB.findIndex(a => a.id === id);
+        if (index === -1) return null;
+        
+        if (!aluno.nome) {
+          throw new Error('Nome é obrigatório');
         }
-        return null;
+        
+        alunosDB[index] = { ...alunosDB[index], ...aluno };
+        return alunosDB[index];
       },
       partialUpdate: async (id: string, updates: any) => {
-        if (id === '1') {
-          return {
-            id: '1',
-            ...alunoBase,
-            ...updates
-          };
-        }
-        return null;
+        const index = alunosDB.findIndex(a => a.id === id);
+        if (index === -1) return null;
+        
+        alunosDB[index] = { ...alunosDB[index], ...updates };
+        return alunosDB[index];
       },
       delete: async (id: string) => {
-        return id === '1';
+        const index = alunosDB.findIndex(a => a.id === id);
+        if (index === -1) return false;
+        
+        alunosDB.splice(index, 1);
+        return true;
       }
     },
 
@@ -78,54 +76,53 @@ describe('API de Alunos e Cursos', () => {
         if (!curso.nome || !curso.codigo) {
           throw new Error('Nome e código são obrigatórios');
         }
-        return {
-          id: '1',
+        const novoCurso = {
+          id: (cursosDB.length + 1).toString(),
           ...curso,
           createdAt: new Date().toISOString()
         };
+        cursosDB.push(novoCurso);
+        return novoCurso;
       },
       findAll: async () => {
-        return [{
-          id: '1',
-          ...cursoBase
-        }];
+        return [...cursosDB];
       },
       findById: async (id: string) => {
-        if (id === '1') {
-          return {
-            id: '1',
-            ...cursoBase
-          };
-        }
-        return null;
+        return cursosDB.find(curso => curso.id === id) || null;
       },
       update: async (id: string, curso: any) => {
-        if (id === '1') {
-          if (!curso.nome || !curso.codigo) {
-            throw new Error('Nome e código são obrigatórios');
-          }
-          return {
-            id: '1',
-            ...curso
-          };
+        const index = cursosDB.findIndex(c => c.id === id);
+        if (index === -1) return null;
+        
+        if (!curso.nome || !curso.codigo) {
+          throw new Error('Nome e código são obrigatórios');
         }
-        return null;
+        
+        cursosDB[index] = { ...cursosDB[index], ...curso };
+        return cursosDB[index];
       },
       partialUpdate: async (id: string, updates: any) => {
-        if (id === '1') {
-          return {
-            id: '1',
-            ...cursoBase,
-            ...updates
-          };
-        }
-        return null;
+        const index = cursosDB.findIndex(c => c.id === id);
+        if (index === -1) return null;
+        
+        cursosDB[index] = { ...cursosDB[index], ...updates };
+        return cursosDB[index];
       },
       delete: async (id: string) => {
-        return id === '1';
+        const index = cursosDB.findIndex(c => c.id === id);
+        if (index === -1) return false;
+        
+        cursosDB.splice(index, 1);
+        return true;
       }
     }
   };
+
+  // Reset do banco de dados antes de cada teste
+  beforeEach(() => {
+    alunosDB = [];
+    cursosDB = [];
+  });
 
   // Testes para Alunos
   describe('Endpoints de Alunos', () => {
@@ -141,32 +138,41 @@ describe('API de Alunos e Cursos', () => {
     });
 
     test('GET /alunos - Deve listar todos os alunos', async () => {
+      // Primeiro cria um aluno para ter dados
+      await mockApi.alunos.create(alunoBase);
+      
       const response = await mockApi.alunos.findAll();
 
       expect(Array.isArray(response)).toBe(true);
-      expect(response.length).toBeGreaterThan(0);
+      expect(response.length).toBe(1);
       expect(response[0]).toHaveProperty('id');
       expect(response[0]).toHaveProperty('nome');
     });
 
     test('GET /alunos/:id - Deve visualizar um aluno específico', async () => {
-      const response = await mockApi.alunos.findById('1');
+      // Primeiro cria um aluno
+      const alunoCriado = await mockApi.alunos.create(alunoBase);
+      
+      const response = await mockApi.alunos.findById(alunoCriado.id);
 
       expect(response).not.toBeNull();
       if (response) {
-        expect(response.id).toBe('1');
+        expect(response.id).toBe(alunoCriado.id);
         expect(response.nome).toBe(alunoBase.nome);
       }
     });
 
     test('PUT /alunos/:id - Deve editar completamente um aluno', async () => {
+      // Primeiro cria um aluno
+      const alunoCriado = await mockApi.alunos.create(alunoBase);
+      
       const alunoEditado = {
         nome: 'João Santos',
         matricula: '20240002',
         cursos: ['Física', 'Química']
       };
 
-      const response = await mockApi.alunos.update('1', alunoEditado);
+      const response = await mockApi.alunos.update(alunoCriado.id, alunoEditado);
 
       expect(response).not.toBeNull();
       if (response) {
@@ -177,25 +183,39 @@ describe('API de Alunos e Cursos', () => {
     });
 
     test('PATCH /alunos/:id - Deve editar parcialmente um aluno', async () => {
+      // Primeiro cria um aluno
+      const alunoCriado = await mockApi.alunos.create(alunoBase);
+      
       const alunoParcial = {
         nome: 'João Carlos'
       };
 
-      const response = await mockApi.alunos.partialUpdate('1', alunoParcial);
+      const response = await mockApi.alunos.partialUpdate(alunoCriado.id, alunoParcial);
 
       expect(response).not.toBeNull();
       if (response) {
         expect(response.nome).toBe(alunoParcial.nome);
+        // Verifica se os outros campos permanecem
+        expect(response.matricula).toBe(alunoBase.matricula);
+        expect(response.cursos).toEqual(alunoBase.cursos);
       }
     });
 
     test('DELETE /alunos/:id - Deve deletar um aluno', async () => {
-      const deleteResult = await mockApi.alunos.delete('1');
+      // Primeiro cria um aluno
+      const alunoCriado = await mockApi.alunos.create(alunoBase);
+      
+      // Verifica que o aluno existe
+      const alunoAntes = await mockApi.alunos.findById(alunoCriado.id);
+      expect(alunoAntes).not.toBeNull();
+
+      // Deleta o aluno
+      const deleteResult = await mockApi.alunos.delete(alunoCriado.id);
       expect(deleteResult).toBe(true);
 
       // Verifica se o aluno foi realmente removido
-      const findResult = await mockApi.alunos.findById('1');
-      expect(findResult).toBeNull();
+      const alunoDepois = await mockApi.alunos.findById(alunoCriado.id);
+      expect(alunoDepois).toBeNull();
     });
   });
 
@@ -213,32 +233,41 @@ describe('API de Alunos e Cursos', () => {
     });
 
     test('GET /cursos - Deve listar todos os cursos', async () => {
+      // Primeiro cria um curso
+      await mockApi.cursos.create(cursoBase);
+      
       const response = await mockApi.cursos.findAll();
 
       expect(Array.isArray(response)).toBe(true);
-      expect(response.length).toBeGreaterThan(0);
+      expect(response.length).toBe(1);
       expect(response[0]).toHaveProperty('id');
       expect(response[0]).toHaveProperty('nome');
     });
 
     test('GET /cursos/:id - Deve visualizar um curso específico', async () => {
-      const response = await mockApi.cursos.findById('1');
+      // Primeiro cria um curso
+      const cursoCriado = await mockApi.cursos.create(cursoBase);
+      
+      const response = await mockApi.cursos.findById(cursoCriado.id);
 
       expect(response).not.toBeNull();
       if (response) {
-        expect(response.id).toBe('1');
+        expect(response.id).toBe(cursoCriado.id);
         expect(response.nome).toBe(cursoBase.nome);
       }
     });
 
     test('PUT /cursos/:id - Deve editar completamente um curso', async () => {
+      // Primeiro cria um curso
+      const cursoCriado = await mockApi.cursos.create(cursoBase);
+      
       const cursoEditado = {
         nome: 'Matemática Avançada',
         codigo: 'MAT201',
         cargaHoraria: 80
       };
 
-      const response = await mockApi.cursos.update('1', cursoEditado);
+      const response = await mockApi.cursos.update(cursoCriado.id, cursoEditado);
 
       expect(response).not.toBeNull();
       if (response) {
@@ -249,25 +278,39 @@ describe('API de Alunos e Cursos', () => {
     });
 
     test('PATCH /cursos/:id - Deve editar parcialmente um curso', async () => {
+      // Primeiro cria um curso
+      const cursoCriado = await mockApi.cursos.create(cursoBase);
+      
       const cursoParcial = {
         cargaHoraria: 100
       };
 
-      const response = await mockApi.cursos.partialUpdate('1', cursoParcial);
+      const response = await mockApi.cursos.partialUpdate(cursoCriado.id, cursoParcial);
 
       expect(response).not.toBeNull();
       if (response) {
         expect(response.cargaHoraria).toBe(cursoParcial.cargaHoraria);
+        // Verifica se os outros campos permanecem
+        expect(response.nome).toBe(cursoBase.nome);
+        expect(response.codigo).toBe(cursoBase.codigo);
       }
     });
 
     test('DELETE /cursos/:id - Deve deletar um curso', async () => {
-      const deleteResult = await mockApi.cursos.delete('1');
+      // Primeiro cria um curso
+      const cursoCriado = await mockApi.cursos.create(cursoBase);
+      
+      // Verifica que o curso existe
+      const cursoAntes = await mockApi.cursos.findById(cursoCriado.id);
+      expect(cursoAntes).not.toBeNull();
+
+      // Deleta o curso
+      const deleteResult = await mockApi.cursos.delete(cursoCriado.id);
       expect(deleteResult).toBe(true);
 
       // Verifica se o curso foi realmente removido
-      const findResult = await mockApi.cursos.findById('1');
-      expect(findResult).toBeNull();
+      const cursoDepois = await mockApi.cursos.findById(cursoCriado.id);
+      expect(cursoDepois).toBeNull();
     });
   });
 
