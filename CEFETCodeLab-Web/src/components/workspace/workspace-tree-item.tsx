@@ -55,6 +55,7 @@ export default function WorkspaceFileTree({
               isSelect={selectedItem.path === item.path}
               onClick={(e) => {
                 e.stopPropagation();
+                onFileSelect(item);
               }}
               className={selectedItem.path === item.path ? 'bg-gray-600' : ''}
             >
