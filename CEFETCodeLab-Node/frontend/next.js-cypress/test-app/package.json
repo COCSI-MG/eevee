@@ -1,0 +1,17 @@
+{
+  "name": "test-app-cypress-config",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "open": "cypress open",
+    "test": "cypress run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "cypress": "^14.3.3",
+    "typescript": "^5.0.0"
+  }
+}
