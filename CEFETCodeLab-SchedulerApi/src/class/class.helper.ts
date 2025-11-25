@@ -1,6 +1,7 @@
 import { UserClassHelper } from 'src/user-class/user-class.helper';
 import { ClassResponseDto } from './dto/response/class-response.dto';
 import { Class } from './entities/class.entity';
+import { BaseClassDto } from './dto/base-class.dto';
 
 export class ClassHelper {
   static toResponseDto(classEntity: Class): ClassResponseDto {
@@ -16,7 +17,6 @@ export class ClassHelper {
         : [],
       // id: classEntity.id,
       // name: classEntity.name,
-      // description: classEntity.description,
       // code: classEntity.code,
       // credits: classEntity.credits,
       // period: classEntity.period,
@@ -25,5 +25,11 @@ export class ClassHelper {
       // teacher: classEntity.teacher,
       // schedule: classEntity.schedule,
     };
+  }
+  static toEntity(dto: BaseClassDto): Class {
+    const classEntity = new Class();
+    classEntity.id = dto.id;
+    classEntity.name = dto.name;
+    return classEntity;
   }
 }

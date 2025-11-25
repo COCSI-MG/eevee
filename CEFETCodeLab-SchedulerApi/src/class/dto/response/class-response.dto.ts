@@ -9,6 +9,7 @@ export class ClassResponseDto
   id: number;
   @ApiProperty()
   name: string;
+
   @ApiProperty()
   users: Omit<UserClassResponseDto, 'classes'>[];
 }

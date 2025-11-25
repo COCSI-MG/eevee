@@ -5,7 +5,8 @@ import {
   Body,
   Param,
   Delete,
-  UseGuards
+  UseGuards,
+  Put,
 } from '@nestjs/common';
 import { ClassService } from './class.service';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
@@ -24,22 +25,32 @@ export class ClassController {
   @UseGuards(AdminGuard)
   @ApiOkResponse({ type: ClassResponseDto })
   create(@Body() createClassDto: CreateOrReplaceClassDto) {
+    console.log('createClassDto', createClassDto);
     return this.classService.createOrReplace(createClassDto);
   }
 
-  
+  @Put(':id')
+  @UseGuards(AdminGuard)
+  @ApiOkResponse({ type: ClassResponseDto })
+  update(
+    @Param('id') id: string,
+    @Body() updateClassDto: CreateOrReplaceClassDto,
+  ) {
+    return this.classService.update(+id, updateClassDto);
+  }
+
   @Get()
   @ApiOkResponse({ type: [ClassResponseDto] })
   findAll() {
     return this.classService.findAll();
   }
-  
+
   @Get('user/:userId')
   @ApiOkResponse({ type: [ClassResponseDto] })
   findAllByUser(@Param('userId') userId: string) {
     return instanceToPlain(this.classService.findAllByUser(+userId));
   }
-  
+
   @Get(':id')
   @ApiOkResponse({ type: ClassResponseDto })
   findOne(@Param('id') id: string) {

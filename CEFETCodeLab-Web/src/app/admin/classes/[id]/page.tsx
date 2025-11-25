@@ -1,41 +1,41 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, Save } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { toast } from '@/hooks/use-toast';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { ClassesService } from '@/app/integration/scheduler-api/classes';
-import { UpsertClass } from '@/app/interface/scheduler-api/class';
-import { Textarea } from '@/components/ui/textarea';
-import StudentsCardContent from '@/components/classes/students-card-content';
+} from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { UpsertClass } from "@/app/interface/scheduler-api/class";
+import { Textarea } from "@/components/ui/textarea";
+import StudentsCardContent from "@/components/classes/students-card-content";
 
 export default function ClassEditPage() {
   const router = useRouter();
   const { id } = useParams<{
     id: string;
   }>();
-  const isNewClass = id === 'new';
+  const isNewClass = id === "new";
 
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
     students: number[];
   }>({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     students: [],
   });
   const [selectedStudents, setSelectedStudents] = useState<
@@ -47,7 +47,7 @@ export default function ClassEditPage() {
   >([]);
 
   const classQuery = useQuery({
-    queryKey: ['class', id],
+    queryKey: ["class", id],
     queryFn: ({ queryKey }) => ClassesService.getOne(Number(queryKey[1])),
     enabled: !isNewClass,
   });
@@ -57,9 +57,9 @@ export default function ClassEditPage() {
     isSuccess,
     data: upsertedClass,
   } = useMutation({
-    mutationKey: ['upsertClasses', id],
+    mutationKey: ["upsertClasses", id],
     mutationFn: (newClass: UpsertClass) => {
-      if (typeof newClass.id === 'undefined') {
+      if (isNewClass) {
         return ClassesService.create(newClass);
       }
       return ClassesService.update(newClass);
@@ -69,12 +69,12 @@ export default function ClassEditPage() {
   useEffect(() => {
     if (isSuccess) {
       toast({
-        title: isNewClass ? 'Class created' : 'Class updated',
+        title: isNewClass ? "Class created" : "Class updated",
         description: `Successfully ${
-          isNewClass ? 'created' : 'updated'
+          isNewClass ? "created" : "updated"
         } class ${formData.name}`,
       });
-      router.push('/admin/classes');
+      router.push("/admin/classes");
     }
   }, [upsertedClass, isSuccess, router, isNewClass, formData.name]);
 
@@ -121,7 +121,7 @@ export default function ClassEditPage() {
           Back
         </Button>
         <h1 className="text-3xl font-bold tracking-tight">
-          {isNewClass ? 'Create Class' : 'Edit Class'}
+          {isNewClass ? "Create Class" : "Edit Class"}
         </h1>
       </div>
 
@@ -130,12 +130,12 @@ export default function ClassEditPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {isNewClass ? 'New Class Information' : 'Class Information'}
+                {isNewClass ? "New Class Information" : "Class Information"}
               </CardTitle>
               <CardDescription>
                 {isNewClass
-                  ? 'Add a new class to the system'
-                  : 'Update the class information'}
+                  ? "Add a new class to the system"
+                  : "Update the class information"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -197,7 +197,7 @@ export default function ClassEditPage() {
           </Button>
           <Button type="submit" variant="default">
             <Save className="h-4 w-4 mr-2" />
-            {isNewClass ? 'Create Class' : 'Save Changes'}
+            {isNewClass ? "Create Class" : "Save Changes"}
           </Button>
         </div>
       </form>

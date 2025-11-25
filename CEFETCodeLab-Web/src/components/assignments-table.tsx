@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
-import { Code } from 'lucide-react';
+import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import { Code } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -9,12 +9,12 @@ import {
   TableHead,
   TableBody,
   TableCell,
-} from './ui/table';
-import TableActions from './table/table-actions';
-import { DropdownMenuItem } from './ui/dropdown-menu';
-import { Route as AppRoutes } from '@/app/routes';
-import { useAdminAssignments } from '@/hooks/use-assignments';
-import Link from 'next/link';
+} from "./ui/table";
+import TableActions from "./table/table-actions";
+import { DropdownMenuItem } from "./ui/dropdown-menu";
+import { Route as AppRoutes } from "@/app/routes";
+import { useAdminAssignments } from "@/hooks/use-assignments";
+import Link from "next/link";
 
 export default function AssignmentsTable() {
   const { data, isPending, isSuccess } = useAdminAssignments();

@@ -19,7 +19,8 @@ export class UserClassService {
     });
 
     const result = await this.userClassRepository.upsert(userClass, {
-      conflictPaths: ['id'],
+      // conflict target must match the DB unique/primary constraint
+      conflictPaths: ['userId', 'classId'],
       skipUpdateIfNoValuesChanged: true,
       upsertType: 'on-conflict-do-update',
     });
@@ -33,6 +34,20 @@ export class UserClassService {
     });
   }
 
+  // Find by composite keys
+  findOneByKeys(userId: number, classId: number) {
+    return this.userClassRepository.findOne({
+      where: { userId, classId },
+      relations: ['class', 'user'],
+    });
+  }
+
+  // Delete by composite keys
+  removeByKeys(userId: number, classId: number) {
+    return this.userClassRepository.delete({ userId, classId });
+  }
+
+  // Primary-key-based helpers (use id for operations)
   findOne(id: number) {
     return this.userClassRepository.findOne({
       where: { id },

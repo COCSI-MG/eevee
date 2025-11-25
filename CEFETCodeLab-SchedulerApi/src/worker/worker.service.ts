@@ -7,79 +7,78 @@ import {
 } from './worker.constants';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { WorkerResponse } from './worker.interfaces';
+import { WorkerType } from './enum/worker-type.enum';
 import { KubernetesJobResult } from 'src/kubernetes/kubernetes.interfaces';
 
 @Injectable()
 export class WorkerService {
   constructor(private readonly kubernetesService: KubernetesService) {}
   private buildCreateFilesDefaultAndStartCommand(
-  applicationFileContent: string,
-  testFilesContent: string[],
-  templateDependencies: string[]
-): string[] {
-  const commands: string[] = [];
+    applicationFileContent: string,
+    testFilesContent: string[],
+    templateDependencies: string[],
+  ): string[] {
+    const commands: string[] = [];
 
-  const encodedApp = Buffer.from(applicationFileContent).toString('base64');
-  commands.push(`echo "${encodedApp}" | base64 -d > /app/app.ts`);
+    const encodedApp = Buffer.from(applicationFileContent).toString('base64');
+    commands.push(`echo "${encodedApp}" | base64 -d > /app/app.ts`);
 
-  testFilesContent.forEach((testContent, index) => {
-    const encodedTest = Buffer.from(testContent).toString('base64');
-    const fileName = `/app/validation${index}.test.ts`;
-    commands.push(`echo "${encodedTest}" | base64 -d > ${fileName}`);
-  });
+    testFilesContent.forEach((testContent, index) => {
+      const encodedTest = Buffer.from(testContent).toString('base64');
+      const fileName = `/app/validation${index}.test.ts`;
+      commands.push(`echo "${encodedTest}" | base64 -d > ${fileName}`);
+    });
 
-  if (templateDependencies.length) {
-    const deps = templateDependencies.join(' ');
-    commands.push(`npm install ${deps}`);
+    if (templateDependencies.length) {
+      const deps = templateDependencies.join(' ');
+      commands.push(`npm install ${deps}`);
+    }
+
+    commands.push(`npm start`);
+
+    return ['/bin/sh', '-c', commands.join(' && ')];
   }
-
-  commands.push(`npm start`);
-
-  return ['/bin/sh', '-c', commands.join(' && ')];
-}
   private buildCreateFilesNestJsAndStartCommand(
-  applicationFileContent: string,
-  testFilesContent: string[],
-  templateDependencies: string[],
-): string[] {
-  const commands: string[] = [];
+    applicationFileContent: string,
+    testFilesContent: string[],
+    templateDependencies: string[],
+  ): string[] {
+    const commands: string[] = [];
 
-  const encodedApp = Buffer.from(applicationFileContent).toString('base64');
-  commands.push(`echo "${encodedApp}" | base64 -d > /app/src/app.module.ts`);
+    const encodedApp = Buffer.from(applicationFileContent).toString('base64');
+    commands.push(`echo "${encodedApp}" | base64 -d > /app/src/app.module.ts`);
 
-  testFilesContent.forEach((testContent, index) => {
-    const encodedTest = Buffer.from(testContent).toString('base64');
-    const fileName = `/app/test/validation${index}.e2e-spec.ts`;
-    commands.push(`echo "${encodedTest}" | base64 -d > ${fileName}`);
-  });
+    testFilesContent.forEach((testContent, index) => {
+      const encodedTest = Buffer.from(testContent).toString('base64');
+      const fileName = `/app/test/validation${index}.e2e-spec.ts`;
+      commands.push(`echo "${encodedTest}" | base64 -d > ${fileName}`);
+    });
 
-  if (templateDependencies.length) {
-    const deps = templateDependencies.join(' ');
-    commands.push(`npm install ${deps}`);
+    if (templateDependencies.length) {
+      const deps = templateDependencies.join(' ');
+      commands.push(`npm install ${deps}`);
+    }
+
+    commands.push(`npm run start:worker`);
+
+    return ['/bin/sh', '-c', commands.join(' && ')];
   }
-
-  commands.push(`npm run start:worker`);
-
-  return ['/bin/sh', '-c', commands.join(' && ')];
-}
 
   private processLogResult(log: string): WorkerResponse {
     const logLines = log.split('\n');
 
-      const testSummaryLine = logLines.find((line) =>
-        line.includes('Tests:')
-      );
+    const testSummaryLine = logLines.find((line) => line.includes('Tests:'));
 
-      let passedCount = 0;
-      let totalCount = 0;
+    let passedCount = 0;
+    let totalCount = 0;
 
-      if (testSummaryLine) {
-        const passedMatch = testSummaryLine.match(/(\d+)\s+passed/);
-        const totalMatch = testSummaryLine.match(/(\d+)\s+total/);
+    if (testSummaryLine) {
+      const passedMatch = testSummaryLine.match(/(\d+)\s+passed/);
+      const totalMatch = testSummaryLine.match(/(\d+)\s+total/);
 
-        if (passedMatch) passedCount = parseInt(passedMatch[1], 10);
-        if (totalMatch) totalCount = parseInt(totalMatch[1], 10);
-      }
+      if (passedMatch) passedCount = parseInt(passedMatch[1], 10);
+      if (totalMatch) totalCount = parseInt(totalMatch[1], 10);
+    }
     return {
       failures: totalCount - passedCount,
       passes: passedCount,
@@ -106,33 +105,12 @@ export class WorkerService {
     return processLogResult(log);
   }
 
-  // async createDefaultNodeWorker(createWorkerData: CreateWorkerDto) {
-  //   const jobName = `${WORKER_JOB_PREFFIX.NODE_DEFAULT}${Date.now()}`;
-  //   if (await this.kubernetesService.checkIfJobExists(jobName)) {
-  //     await this.kubernetesService.deleteJob(jobName);
-  //   }
-
-  //   const createWorkerFunction = () =>
-  //     this.kubernetesService.createJob(
-  //       jobName,
-  //       WORKER_IMAGE_NAMES.NODE_DEFAULT,
-  //       this.buildCreateFilesDefaultAndStartCommand(
-  //         createWorkerData.applicationFileContent,
-  //         createWorkerData.testFileContent,
-  //       ),
-  //     );
-
-  //   const result = await this.createWorker(
-  //     jobName,
-  //     createWorkerFunction,
-  //     this.processLogResult,
-  //   );
-
-  //   return <void>result;
-  // }
-
-  async createDefaultNodeWorkerAndWait(createWorkerData: CreateWorkerDto, dependencies: string[]) {
-    const jobName = `${WORKER_JOB_PREFFIX.NODE_DEFAULT}${Date.now()}`;
+  private async defaultSynchronousWorkerOperations(
+    workerType: WorkerType,
+    createWorkerData: CreateWorkerDto,
+    dependencies: string[],
+  ) {
+    const jobName = `${WORKER_JOB_PREFFIX[workerType]}${Date.now()}`;
     if (await this.kubernetesService.checkIfJobExists(jobName)) {
       await this.kubernetesService.deleteJob(jobName);
     }
@@ -140,11 +118,11 @@ export class WorkerService {
     const createWorkerFunction = () =>
       this.kubernetesService.createAndWaitForJobCompletion(
         jobName,
-        WORKER_IMAGE_NAMES.NODE_DEFAULT,
+        WORKER_IMAGE_NAMES[workerType],
         this.buildCreateFilesDefaultAndStartCommand(
           createWorkerData.applicationFileContent,
           createWorkerData.testFilesContent,
-          dependencies
+          dependencies,
         ),
       );
 
@@ -158,30 +136,36 @@ export class WorkerService {
     return <WorkerResponse>result;
   }
 
-  async createNestJsWorkerAndWait(createWorkerData: CreateWorkerDto, dependencies: string[]) {
-    const jobName = `${WORKER_JOB_PREFFIX.NODE_NESTJS}${Date.now()}`;
-    if (await this.kubernetesService.checkIfJobExists(jobName)) {
-      await this.kubernetesService.deleteJob(jobName);
-    }
-    
-    const createWorkerFunction = () =>
-      this.kubernetesService.createAndWaitForJobCompletion(
-        jobName,
-        WORKER_IMAGE_NAMES.NODE_NESTJS,
-        this.buildCreateFilesNestJsAndStartCommand(
-          createWorkerData.applicationFileContent,
-          createWorkerData.testFilesContent,
-          dependencies
-        ),
-      );
-
-    const result = await this.createWorker(
-      jobName,
-      createWorkerFunction,
-      this.processLogResult,
-      true
+  async createGrpcJsWorkerAndWait(
+    createWorkerData: CreateWorkerDto,
+    dependencies: string[],
+  ) {
+    return this.defaultSynchronousWorkerOperations(
+      WorkerType.NODE_GRPCJS,
+      createWorkerData,
+      dependencies,
     );
+  }
 
-    return <WorkerResponse>result;
+  async createDefaultNodeWorkerAndWait(
+    createWorkerData: CreateWorkerDto,
+    dependencies: string[],
+  ) {
+    return this.defaultSynchronousWorkerOperations(
+      WorkerType.NODE_DEFAULT,
+      createWorkerData,
+      dependencies,
+    );
+  }
+
+  async createNestJsWorkerAndWait(
+    createWorkerData: CreateWorkerDto,
+    dependencies: string[],
+  ) {
+    return this.defaultSynchronousWorkerOperations(
+      WorkerType.NODE_NESTJS,
+      createWorkerData,
+      dependencies,
+    );
   }
 }

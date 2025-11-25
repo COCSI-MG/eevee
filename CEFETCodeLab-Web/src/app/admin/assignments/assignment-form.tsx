@@ -1,43 +1,52 @@
-'use client';
+"use client";
 
-import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
-import { AssignmentFormProps } from './interface';
-import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
-import dynamic from 'next/dynamic';
-import { Assignment } from '@/app/interface/scheduler-api/assignment';
+import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import { AssignmentFormProps } from "./interface";
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import dynamic from "next/dynamic";
+import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import {
   WorkerDefaultTemplateMap,
   WorkerDefaultValidationScriptMap,
   WorkerExibitionMap,
-} from './constants';
-import { WorkerType } from '@/app/interface/scheduler-api/worker';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Route } from '@/app/routes';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { ChevronLeft, ChevronRight, ClipboardCheck, Code, FileText, Layers, Save, Settings } from 'lucide-react';
-import { useClasses } from '@/hooks/use-classes';
-import { toast } from '@/hooks/use-toast';
-import TemplateCard from '@/components/assignment/template-card';
-import { cn } from '@/lib/utils';
-import AssignmentStepContainer from '@/components/assignment/assignment-step-container';
-const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
+} from "./constants";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Route } from "@/app/routes";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  Code,
+  FileText,
+  Layers,
+  Save,
+  Settings,
+} from "lucide-react";
+import { useClasses } from "@/hooks/use-classes";
+import { toast } from "@/hooks/use-toast";
+import TemplateCard from "@/components/assignment/template-card";
+import { cn } from "@/lib/utils";
+import AssignmentStepContainer from "@/components/assignment/assignment-step-container";
+const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
 const validationSchema = Yup.object({
-  title: Yup.string().required('Title is required'),
-  description: Yup.string().required('Description is required'),
+  title: Yup.string().required("Title is required"),
+  description: Yup.string().required("Description is required"),
   maxAttempts: Yup.number()
-    .required('Max attempts is required')
-    .min(1, 'Must be at least 1'),
+    .required("Max attempts is required")
+    .min(1, "Must be at least 1"),
   workerType: Yup.string()
     .oneOf(Object.values(WorkerType))
-    .required('Worker type is required'),
-  validationScript: Yup.string().required('Validation script is required'),
-  classId: Yup.string().required('Class is required'),
+    .required("Worker type is required"),
+  validationScript: Yup.string().required("Validation script is required"),
+  classId: Yup.string().required("Class is required"),
 });
 
 export const AssignmentForm: React.FC<AssignmentFormProps> = ({
@@ -67,7 +76,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     isError,
     data: workerResult,
   } = useMutation({
-    mutationKey: ['upsertAssignment', existingAssignmentId],
+    mutationKey: ["upsertAssignment", existingAssignmentId],
     mutationFn: ({
       newAssignment,
       templates,
@@ -78,7 +87,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
         params: { templateParamId: number; value: string }[];
       }[];
     }) => {
-      console.log('newAssignment', newAssignment);
+      console.log("newAssignment", newAssignment);
       if (!existingAssignmentId) {
         return AssignmentService.CreateAssignment({
           ...newAssignment,
@@ -93,14 +102,14 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   });
 
   const initialValues: Partial<Assignment> = {
-    title: existingAssignment?.title || '',
-    description: existingAssignment?.description || '',
+    title: existingAssignment?.title || "",
+    description: existingAssignment?.description || "",
     maxAttempts: existingAssignment?.maxAttempts || 1,
     workerType: existingAssignment?.workerType || WorkerType.NODE_DEFAULT,
     validationScript:
       WorkerDefaultValidationScriptMap[
-      (existingAssignment?.workerType ||
-        WorkerType.NODE_DEFAULT) as WorkerType
+        (existingAssignment?.workerType ||
+          WorkerType.NODE_DEFAULT) as WorkerType
       ],
     classId: existingAssignment?.classId || 0,
   };
@@ -109,13 +118,13 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     if (isSuccess) {
       const queryClient = new QueryClient();
       queryClient.invalidateQueries({
-        queryKey: ['adminAssignments'],
+        queryKey: ["adminAssignments"],
       });
 
       toast({
-        title: 'Assignment saved successfully',
-        description: 'The assignment has been created/updated successfully.',
-        variant: 'default',
+        title: "Assignment saved successfully",
+        description: "The assignment has been created/updated successfully.",
+        variant: "default",
         duration: 5000,
       });
 
@@ -123,13 +132,14 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     }
     if (isError) {
       if (workerResult) {
-        console.error('Worker result:', workerResult);
+        console.error("Worker result:", workerResult);
       }
       toast({
-        title: `Ocorreu um erro ao ${existingAssignmentId === undefined ? 'criar' : 'atualizar'
-          } o assignment`,
-        description: 'Tente novamente mais tarde.',
-        variant: 'destructive',
+        title: `Ocorreu um erro ao ${
+          existingAssignmentId === undefined ? "criar" : "atualizar"
+        } o assignment`,
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
         duration: 5000,
       });
     }
@@ -148,11 +158,11 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   };
 
   if (existingAssignmentId && isFetching) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   if (isFetchingClasses) {
-    return <div>Loading...</div>
+    return <div>Loading...</div>;
   }
 
   return (
@@ -167,25 +177,22 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
             onSubmit={handleSubmit}
             enableReinitialize
           >
-            {({
-              isSubmitting,
-              values,
-              setFieldValue,
-              isValid
-            }) => {
+            {({ isSubmitting, values, setFieldValue, isValid }) => {
               // eslint-disable-next-line react-hooks/rules-of-hooks
               useEffect(() => {
                 if (
                   values.workerType &&
-                  Object.values(WorkerType).includes(values.workerType as WorkerType)
+                  Object.values(WorkerType).includes(
+                    values.workerType as WorkerType
+                  )
                 ) {
                   const safeWorkerType = values.workerType as WorkerType;
                   setFieldValue(
-                    'template',
+                    "template",
                     WorkerDefaultTemplateMap[safeWorkerType]
                   );
                   setFieldValue(
-                    'validationScript',
+                    "validationScript",
                     WorkerDefaultTemplateMap[safeWorkerType]
                   );
                 }
@@ -198,11 +205,11 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   case 2:
                     return selectedTemplates.length > 0;
                   case 3:
-                    return values.validationScript?.trim() != '';
+                    return values.validationScript?.trim() != "";
                   default:
                     return true;
                 }
-              }
+              };
 
               const renderStep = () => {
                 switch (currentStep) {
@@ -260,8 +267,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                               name="classId"
                               className="mt-1 block w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             >
-                              <option value=''>Selecione uma turma</option>
-                              {(classes).map((classRecord) => (
+                              <option value="">Selecione uma turma</option>
+                              {classes.map((classRecord) => (
                                 <option
                                   key={classRecord.id}
                                   value={classRecord.id}
@@ -285,8 +292,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                             </Label>
                             <p className="block text-sm font-medium ">
                               Selecione o tipo de worker que será utilizado para
-                              corrigir os exercícios dos alunos. Ele terá que ser
-                              condizente com os testes abaixo.
+                              corrigir os exercícios dos alunos. Ele terá que
+                              ser condizente com os testes abaixo.
                             </p>
                             <Field
                               as="select"
@@ -294,11 +301,13 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                               name="workerType"
                               className="mt-1 block w-full px-3 py-2 border text-gray-700  border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             >
-                              {Object.entries(WorkerType).map(([key, value]) => (
-                                <option key={key} value={value}>
-                                  {WorkerExibitionMap[value]}
-                                </option>
-                              ))}
+                              {Object.entries(WorkerType).map(
+                                ([key, value]) => (
+                                  <option key={key} value={value}>
+                                    {WorkerExibitionMap[value]}
+                                  </option>
+                                )
+                              )}
                             </Field>
                             <ErrorMessage
                               name="workerType"
@@ -360,12 +369,12 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                               theme="vs-dark"
                               value={values.validationScript}
                               onChange={(value) =>
-                                setFieldValue('validationScript', value)
+                                setFieldValue("validationScript", value)
                               }
                               options={{
                                 minimap: { enabled: false },
                                 scrollBeyondLastLine: false,
-                                wordWrap: 'on',
+                                wordWrap: "on",
                                 automaticLayout: true,
                               }}
                             />
@@ -377,18 +386,21 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                           </div>
                         </CardContent>
                       </Card>
-                    )
+                    );
 
                   case 4:
                     return (
-                      <div className='max-w-4xl mx-auto'>
+                      <div className="max-w-4xl mx-auto">
                         <Card className="bg-slate-800 border-slate-700">
                           <CardHeader>
                             <CardTitle className="text-white flex items-center gap-2">
                               <ClipboardCheck className="w-5 h-5" />
                               Revisão Final
                             </CardTitle>
-                            <p className="text-sm text-slate-400">Revise todas as informações antes de criar o assignment</p>
+                            <p className="text-sm text-slate-400">
+                              Revise todas as informações antes de criar o
+                              assignment
+                            </p>
                           </CardHeader>
                           <CardContent className="space-y-6">
                             {/* Configurações */}
@@ -400,26 +412,50 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                               <div className="bg-slate-700/30 p-4 rounded-lg space-y-3">
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Título</p>
-                                    <p className="text-white font-medium">{values.title}</p>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                                      Título
+                                    </p>
+                                    <p className="text-white font-medium">
+                                      {values.title}
+                                    </p>
                                   </div>
                                   <div>
-                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Turma</p>
-                                    <p className="text-white font-medium">{classes.find((c) => c.id === Number(values.classId))?.name}</p>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                                      Turma
+                                    </p>
+                                    <p className="text-white font-medium">
+                                      {
+                                        classes.find(
+                                          (c) => c.id === Number(values.classId)
+                                        )?.name
+                                      }
+                                    </p>
                                   </div>
                                 </div>
                                 <div>
-                                  <p className="text-xs text-slate-400 uppercase tracking-wide">Descrição</p>
-                                  <p className="text-white">{values.description}</p>
+                                  <p className="text-xs text-slate-400 uppercase tracking-wide">
+                                    Descrição
+                                  </p>
+                                  <p className="text-white">
+                                    {values.description}
+                                  </p>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                   <div>
-                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Worker Type</p>
-                                    <p className="text-white">{values.workerType}</p>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                                      Worker Type
+                                    </p>
+                                    <p className="text-white">
+                                      {values.workerType}
+                                    </p>
                                   </div>
                                   <div>
-                                    <p className="text-xs text-slate-400 uppercase tracking-wide">Max Tentativas</p>
-                                    <p className="text-white">{values.maxAttempts}</p>
+                                    <p className="text-xs text-slate-400 uppercase tracking-wide">
+                                      Max Tentativas
+                                    </p>
+                                    <p className="text-white">
+                                      {values.maxAttempts}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
@@ -433,12 +469,22 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                               </h4>
                               <div className="space-y-3">
                                 {selectedTemplates.map((template, index) => (
-                                  <div key={index} className="bg-slate-700/30 p-4 rounded-lg">
-                                    <h5 className="text-white font-medium mb-2">{template.templateId}</h5>
+                                  <div
+                                    key={index}
+                                    className="bg-slate-700/30 p-4 rounded-lg"
+                                  >
+                                    <h5 className="text-white font-medium mb-2">
+                                      {template.templateId}
+                                    </h5>
                                     <div className="space-y-2">
                                       {template.params.map((param) => (
-                                        <div key={param.templateParamId} className="bg-slate-800 rounded p-3">
-                                          <pre className="text-green-400 text-xs font-mono whitespace-pre-wrap">{param.value}</pre>
+                                        <div
+                                          key={param.templateParamId}
+                                          className="bg-slate-800 rounded p-3"
+                                        >
+                                          <pre className="text-green-400 text-xs font-mono whitespace-pre-wrap">
+                                            {param.value}
+                                          </pre>
                                         </div>
                                       ))}
                                     </div>
@@ -462,59 +508,61 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                           </CardContent>
                         </Card>
                       </div>
-                    )
+                    );
                 }
-              }
+              };
 
               return (
                 <Form className="w-full">
                   {renderStep()}
 
-                  <div className={cn('flex justify-between mt-8 mx-auto', currentStep === 4 ? 'max-w-4xl' : '')}>
+                  <div
+                    className={cn(
+                      "flex justify-between mt-8 mx-auto",
+                      currentStep === 4 ? "max-w-4xl" : ""
+                    )}
+                  >
                     <Button
-                      type='button'
+                      type="button"
                       variant={"outline"}
                       onClick={() => {
                         if (currentStep > 1) {
-                          setCurrentStep(currentStep - 1)
+                          setCurrentStep(currentStep - 1);
                         }
                       }}
                       disabled={currentStep === 1}
-                      className='border-slate-600 text-slate-200 hover:bg-slate-700 disabled:opacity-50'
+                      className="border-slate-600 text-slate-200 hover:bg-slate-700 disabled:opacity-50"
                     >
-                      <ChevronLeft className='w-4 h-4 mr-2' />
+                      <ChevronLeft className="w-4 h-4 mr-2" />
                       Anterior
                     </Button>
 
-                    <div className='flex gap-2'>
-                      {
-                        currentStep < 4 ? (
-                          <Button
-                            type='button'
-                            disabled={!canProceedToNextStep()}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setCurrentStep(currentStep + 1)
-                            }}
-                          >
-                            Continuar
-                            <ChevronRight className='w-4 h-4 ml-2' />
-                          </Button>
-                        ) : (
-                          <Button
-                            type='submit'
-                            disabled={isSubmitting}
-                            className='bg-green-600 hover:bg-green-700 transition-colors'
-                          >
-                            <Save className='w-4 h-4 mr-2' />
-                            {
-                              existingAssignmentId ?
-                                'Update Assignment'
-                                : 'Create Assignment'
-                            }
-                          </Button>
-                        )}
+                    <div className="flex gap-2">
+                      {currentStep < 4 ? (
+                        <Button
+                          type="button"
+                          disabled={!canProceedToNextStep()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setCurrentStep(currentStep + 1);
+                          }}
+                        >
+                          Continuar
+                          <ChevronRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      ) : (
+                        <Button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="bg-green-600 hover:bg-green-700 transition-colors"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          {existingAssignmentId
+                            ? "Update Assignment"
+                            : "Create Assignment"}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </Form>
@@ -522,7 +570,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
             }}
           </Formik>
         </div>
-      </div >
+      </div>
     </>
   );
 };

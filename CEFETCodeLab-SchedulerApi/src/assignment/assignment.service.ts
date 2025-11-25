@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -26,33 +30,44 @@ export class AssignmentService {
     private readonly requestContextService: RequestContextService,
   ) {}
   async create(createAssignmentDto: CreateAssignmentDto) {
-    const classExists = await this.classservice.findOne(createAssignmentDto.classId);
+    const classExists = await this.classservice.findOne(
+      createAssignmentDto.classId,
+    );
 
     if (!classExists) {
-      throw new NotFoundException(`Class with id ${createAssignmentDto.classId} not found`);
+      throw new NotFoundException(
+        `Class with id ${createAssignmentDto.classId} not found`,
+      );
     }
 
     // assignmentTemplates
-    const newAssignment = await this.assignmentRepository.save(createAssignmentDto);
+    const newAssignment =
+      await this.assignmentRepository.save(createAssignmentDto);
 
-    if (createAssignmentDto.templates && createAssignmentDto.templates.length > 0) {
-      const assignmentTemplateEntities = createAssignmentDto.templates.map((template) => ({
-        assignmentId: newAssignment.id,
-        templateId: template.templateId,
-      }));
-
-      const assignmentParamsEntities = createAssignmentDto.templates.flatMap((template) =>
-        template.params.map((param) => ({
+    if (
+      createAssignmentDto.templates &&
+      createAssignmentDto.templates.length > 0
+    ) {
+      const assignmentTemplateEntities = createAssignmentDto.templates.map(
+        (template) => ({
           assignmentId: newAssignment.id,
-          templateParamsId: param.templateParamId,
-          value: param.value,
-        })),
+          templateId: template.templateId,
+        }),
       );
-      
+
+      const assignmentParamsEntities = createAssignmentDto.templates.flatMap(
+        (template) =>
+          template.params.map((param) => ({
+            assignmentId: newAssignment.id,
+            templateParamsId: param.templateParamId,
+            value: param.value,
+          })),
+      );
+
       await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
       await this.assignmentParamsRepository.save(assignmentParamsEntities);
     }
-  
+
     return newAssignment;
   }
 
@@ -84,7 +99,7 @@ export class AssignmentService {
 
   async findAssignmentsByClass(classId: number) {
     const user = this.requestContextService.getUser();
-    
+
     if (!user.isAdmin) {
       const isUserInClass = await this.userClassRepository.findOne({
         where: {
@@ -92,12 +107,14 @@ export class AssignmentService {
           classId,
         },
       });
-  
+
       if (!isUserInClass) {
-        throw new ForbiddenException('You are not authorized to access this class.');
+        throw new ForbiddenException(
+          'You are not authorized to access this class.',
+        );
       }
     }
-   
+
     return this.assignmentRepository.find({
       where: { classId },
     });
@@ -118,7 +135,15 @@ export class AssignmentService {
     }
 
     const response = await this.assignmentRepository.findOne({
-      relations: ['assignmentAttempts', 'class', 'class.userClasses', 'assignmentParams', 'assignmentTemplates', 'assignmentTemplates.template', 'assignmentTemplates.template.templateParams'],
+      relations: [
+        'assignmentAttempts',
+        'class',
+        'class.userClasses',
+        'assignmentParams',
+        'assignmentTemplates',
+        'assignmentTemplates.template',
+        'assignmentTemplates.template.templateParams',
+      ],
       where,
     });
 
@@ -128,41 +153,53 @@ export class AssignmentService {
   async update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
     const { templates, ...dataToUpdate } = updateAssignmentDto;
 
-    const assignment = await this.assignmentRepository.findOne({ where: { id } });
+    const assignment = await this.assignmentRepository.findOne({
+      where: { id },
+    });
 
     if (!assignment) {
       throw new NotFoundException('Tarefa não encontrada');
     }
 
-    if (Object.keys(dataToUpdate).length > 0) await this.assignmentRepository.update(id, dataToUpdate);
+    if (Object.keys(dataToUpdate).length > 0)
+      await this.assignmentRepository.update(id, dataToUpdate);
 
-    if (updateAssignmentDto.templates && updateAssignmentDto.templates.length > 0) {
+    if (
+      updateAssignmentDto.templates &&
+      updateAssignmentDto.templates.length > 0
+    ) {
       await this.assignmentTemplateRepository.delete({ assignmentId: id });
       await this.assignmentParamsRepository.delete({ assignmentId: id });
-  
-      const assignmentTemplateEntities = updateAssignmentDto.templates.map((template) => ({
-        assignmentId: id,
-        templateId: template.templateId,
-      }));
-  
-      const assignmentParamsEntities = updateAssignmentDto.templates.flatMap((template) =>
-        template.params.map((param) => ({
+
+      const assignmentTemplateEntities = updateAssignmentDto.templates.map(
+        (template) => ({
           assignmentId: id,
-          templateParamsId: param.templateParamId,
-          value: param.value,
-        })),
+          templateId: template.templateId,
+        }),
+      );
+
+      const assignmentParamsEntities = updateAssignmentDto.templates.flatMap(
+        (template) =>
+          template.params.map((param) => ({
+            assignmentId: id,
+            templateParamsId: param.templateParamId,
+            value: param.value,
+          })),
       );
       await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
       await this.assignmentParamsRepository.save(assignmentParamsEntities);
     }
-  
+
     return this.assignmentRepository.findOne({ where: { id } });
   }
 
   async remove(id: number) {
-    const assignmentExists = await this.assignmentRepository.findOne({ where: { id }});
+    const assignmentExists = await this.assignmentRepository.findOne({
+      where: { id },
+    });
 
-    if (!assignmentExists) throw new NotFoundException('Assignment não encontrado!');
+    if (!assignmentExists)
+      throw new NotFoundException('Assignment não encontrado!');
 
     return this.dataSource.transaction(async (manager) => {
       await manager.delete(AssignmentTemplate, { assignmentId: id });

@@ -185,17 +185,177 @@ describe('App (e2e)', () => {
 });
 `;
 
+export const DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE = `import * as grpc from "@grpc/grpc-js";
+import * as protoLoader from "@grpc/proto-loader";
+import fs from "fs";
+import os from "os";
+import path from "path";
+
+const PROTO_SRC = (
+  'syntax = "proto3";'
+  + 'package movie;'
+  + 'import "google/protobuf/empty.proto";'
+  + 'message Movie { int32 id = 1; string title = 2; }'
+  + 'message GetById { int32 id = 1; }'
+  + 'message ListMoviesResponse { repeated Movie movies = 1; }'
+  + ''
+  + 'service MovieService {'
+  + '  rpc ListMovies(google.protobuf.Empty) returns (ListMoviesResponse);'
+  + '  rpc GetMovie(GetById) returns (Movie);'
+  + '  rpc CreateMovie(Movie) returns (Movie);'
+  + '  rpc DeleteMovie(GetById) returns (google.protobuf.Empty);'
+  + '}'
+  + ''
+);
+
+export function main() {
+  const protoPath = path.join(os.tmpdir(), 'movie-proto-' + Date.now() + '.proto');
+  fs.writeFileSync(protoPath, PROTO_SRC, 'utf8');
+
+  const def = protoLoader.loadSync(protoPath, {});
+  const pkg = (grpc.loadPackageDefinition(def) as any).movie;
+
+  const movies: Array<{ id: number; title: string }> = [];
+  let nextId = 1;
+
+  const server = new grpc.Server();
+
+  server.addService(pkg.MovieService.service, {
+    ListMovies: (call: any, cb: any) => cb(null, { movies }),
+    GetMovie: (call: any, cb: any) => {
+      const m = movies.find((x) => x.id === call.request.id);
+      if (!m) return cb({ code: grpc.status.NOT_FOUND, details: 'Movie not found' });
+      cb(null, m);
+    },
+    CreateMovie: (call: any, cb: any) => {
+      const obj = { id: nextId++, title: call.request.title || '' };
+      movies.push(obj);
+      cb(null, obj);
+    },
+    DeleteMovie: (call: any, cb: any) => {
+      const idx = movies.findIndex((x) => x.id === call.request.id);
+      if (idx === -1) return cb({ code: grpc.status.NOT_FOUND, details: 'Movie not found' });
+      movies.splice(idx, 1);
+      cb(null, {});
+    },
+  });
+
+  const port = process.env.PORT || '50053';
+  server.bindAsync('0.0.0.0:' + port, grpc.ServerCredentials.createInsecure(), (err) => {
+    if (err) throw err;
+    server.start();
+  });
+
+  return server;
+}
+`;
+
+export const DEFAULT_GRPC_JS_VALIDATION_SCRIPT = `
+import * as grpc from "@grpc/grpc-js";
+import * as protoLoader from "@grpc/proto-loader";
+import path from "path";
+import os from "os";
+import fs from "fs";
+
+describe("gRPC MovieService", () => {
+  let server: grpc.Server;
+  let client: any;
+  const PROTO_SRC = (
+    'syntax = "proto3";'
+    + 'package movie;'
+    + 'import "google/protobuf/empty.proto";'
+    + 'message Movie { int32 id = 1; string title = 2; }'
+    + 'message GetById { int32 id = 1; }'
+    + 'message ListMoviesResponse { repeated Movie movies = 1; }'
+    + ''
+    + 'service MovieService {'
+    + '  rpc ListMovies(google.protobuf.Empty) returns (ListMoviesResponse);'
+    + '  rpc GetMovie(GetById) returns (Movie);'
+    + '  rpc CreateMovie(Movie) returns (Movie);'
+    + '  rpc DeleteMovie(GetById) returns (google.protobuf.Empty);'
+    + '}'
+    + ''
+  );
+
+  beforeAll(() => {
+    const protoPath = path.join(os.tmpdir(), 'movie-proto-' + Date.now() + '.proto');
+    fs.writeFileSync(protoPath, PROTO_SRC, 'utf8');
+
+    const def = protoLoader.loadSync(protoPath, {});
+    const pkg = (grpc.loadPackageDefinition(def) as any).movie;
+
+    server = new grpc.Server();
+
+    const movies: Array<{ id: number; title: string }> = [];
+    let nextId = 1;
+
+    server.addService(pkg.MovieService.service, {
+      ListMovies: (call: any, cb: any) => cb(null, { movies }),
+      GetMovie: (call: any, cb: any) => {
+        const m = movies.find((x) => x.id === call.request.id);
+        if (!m) return cb({ code: grpc.status.NOT_FOUND, details: 'Movie not found' });
+        cb(null, m);
+      },
+      CreateMovie: (call: any, cb: any) => {
+        const obj = { id: nextId++, title: call.request.title || '' };
+        movies.push(obj);
+        cb(null, obj);
+      },
+      DeleteMovie: (call: any, cb: any) => {
+        const idx = movies.findIndex((x) => x.id === call.request.id);
+        if (idx === -1) return cb({ code: grpc.status.NOT_FOUND, details: 'Movie not found' });
+        movies.splice(idx, 1);
+        cb(null, {});
+      },
+    });
+
+    const port = process.env.PORT || '50053';
+    server.bindAsync('0.0.0.0:' + port, grpc.ServerCredentials.createInsecure(), (err) => {
+      if (err) throw err;
+      server.start();
+    });
+
+    client = new pkg.MovieService(
+      'localhost:' + port,
+      grpc.credentials.createInsecure(),
+    );
+  });
+
+  afterAll(() => {
+    server.forceShutdown();
+  });
+
+  it("should create and list movies", (done) => {
+    client.CreateMovie({ title: "Inception" }, (err: any, movie: any) => {
+      expect(err).toBeNull();
+      expect(movie).toHaveProperty("id");
+      expect(movie.title).toBe("Inception");
+
+      client.ListMovies({}, (err: any, response: any) => {
+        expect(err).toBeNull();
+        expect(response.movies.length).toBe(1);
+        expect(response.movies[0].title).toBe("Inception");
+        done();
+      });
+    });
+  });
+});
+`;
+
 export const WorkerExibitionMap = {
   [WorkerType.NODE_DEFAULT]: "Node Default",
   [WorkerType.NODE_NESTJS]: "Node NestJS + TypeORM",
+  [WorkerType.NODE_GRPCJS]: "GRPC using gRPCJS",
 };
 
 export const WorkerDefaultTemplateMap = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
+  [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_VALIDATION_SCRIPT,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
+  [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_VALIDATION_SCRIPT,
 };
