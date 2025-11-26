@@ -47,6 +47,14 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     return false;
   };
 
+    const hasReachedMaxAttempts = (assignment: Assignment) => {
+      if (typeof assignment.maxAttempts !== "number" || !assignment.assignmentAttempts) return false;
+      const userAttempts = assignment.assignmentAttempts.filter(
+        (attempt) => attempt.userId === user?.id
+      );
+      return userAttempts.length >= assignment.maxAttempts;
+    };
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {data.map((assignment) => (
@@ -147,12 +155,15 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 onClick={() => handleTry(assignment.id)}
                 disabled={
                   !isUserSuspendedFromAssignment(assignment) ||
-                  isAssignmentWithRunningAttempt(assignment)
+                  isAssignmentWithRunningAttempt(assignment) ||
+                  hasReachedMaxAttempts(assignment)
                 }
               >
                 <Code className="h-4 w-4 mr-2" />
                 {isAssignmentWithRunningAttempt(assignment)
                   ? "Tarefa em execução..."
+                  : hasReachedMaxAttempts(assignment)
+                  ? "Limite de tentativas atingido"
                   : "Iniciar"}
               </Button>
             </div>
