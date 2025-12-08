@@ -2,50 +2,56 @@
 
 ## _Steps To Reproduce_
 
-1. Construa a infraestrutura do projeto, com detalhamento disponível em [CEFETCodeLab-Infra](./CEFETCodeLab-Infrastructure/README.md).
+1. Construa a infraestrutura do projeto, com detalhamento disponível em [eevee-infrastructure](./eevee-infrastructure/README.md).
 
 2. Instale os pacotes NPM para os arquivos a seguir:
 
-### 1. [CEFETCodeLab-Web]
+### 1. `front` (Next.js frontend)
 
 ```bash
-cd CEFETCodeLab-Web/
+cd front/
 npm install
 npm run dev
 ```
 
-### 2. [CEFETCodeLab-Node/nest.js]
-
-```bash
-cd CEFETCodeLab-Node/nest.js/
-npm install
-npm run start
-```
-
-### 3. [CEFETCodeLab-SchedulerApi]
+### 2. `scheduler-api` (Scheduler API)
 
 Lembre-se de definir uma secret JWT no .env
 
-Pode copiar o [.env.example](CEFETCodeLab-SchedulerApi.env.example) e trocar os valores
+Pode copiar um arquivo `.env.example` dentro de `scheduler-api` e trocar os valores
 
 ```bash
-cd CEFETCodeLab-SchedulerApi/
+cd scheduler-api/
 npm install
 npm start
 ```
 
-### 4. [CEFETCodeLab-Node/node.js]
+## _Testando a infraestrutura_
 
-```bash
-cd CEFETCodeLab-Node/node/
-npm install
-npx ts-node app.ts
+É necessário primeiro executar o build de todas as imagens que serão usadas.
+
+### Node Default Worker
+
+```
+cd node-worker-images\node
+docker build . -t worker-node-default-img
 ```
 
-### 5. [filestash]
+Agora é necessário incluir a imagem no minikube
 
-```bash
-cd filestash/
-npm install
-npx run tsconfig.json
+```
+minikube image load worker-node-default-img:latest
+```
+
+### Node NestJS Worker
+
+```
+cd node-worker-images\nestjs
+docker build . -t worker-node-nestjs-img
+```
+
+Agora é necessário incluir a imagem no minikube
+
+```
+minikube image load worker-node-nestjs-img:latest
 ```
