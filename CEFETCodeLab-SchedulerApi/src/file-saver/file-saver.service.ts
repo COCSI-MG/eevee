@@ -18,6 +18,7 @@ import { Cron, Interval } from '@nestjs/schedule';
 import { ProducerService } from 'src/kafka/producer.service';
 import { readFile, rm } from 'node:fs/promises';
 import GithubService from 'src/github/github.service';
+import { ClsService } from 'nestjs-cls';
 
 @Injectable()
 export class FileSaverService {
@@ -30,6 +31,7 @@ export class FileSaverService {
     private syncJobRepository: Repository<SyncJob>,
     private producerService: ProducerService,
     private githubService: GithubService,
+    private clsService: ClsService,
   ) {}
 
   async createFileEntry(
@@ -86,12 +88,16 @@ export class FileSaverService {
     }
   }
 
-  async createSyncJob(fileEntryId: number, jobType: JobType, priority?: number): Promise<SyncJob> {
+  async createSyncJob(
+    fileEntryId: number,
+    jobType: JobType,
+    priority?: number,
+  ): Promise<SyncJob> {
     const syncJob = this.syncJobRepository.create({
       fileEntryId,
       jobType,
       scheduledAt: new Date(),
-      priority
+      priority,
     });
     return this.syncJobRepository.save(syncJob);
   }
@@ -99,10 +105,7 @@ export class FileSaverService {
   async findPendingOrFailedSyncJobs(): Promise<SyncJob[]> {
     return this.syncJobRepository.find({
       where: {
-        status: In([
-          JobStatus.PROCESSING,
-          JobStatus.FAILED
-        ])
+        status: In([JobStatus.PROCESSING, JobStatus.FAILED]),
       },
       order: { priority: 'DESC', scheduledAt: 'ASC' },
       relations: ['fileEntry'],
@@ -113,9 +116,10 @@ export class FileSaverService {
     file: Express.Multer.File,
     fileUploadDto: FileUploadDto,
   ): Promise<FileEntry> {
+    const user = this.clsService.get('user');
     const uploadDir = resolve(__dirname, '..', '..', '..', 'uploads');
     const assignmentDir = `${uploadDir}/assignment-${fileUploadDto.assignmentId}`;
-    const userDir = `${assignmentDir}/user-${fileUploadDto.userId}`;
+    const userDir = `${assignmentDir}/user-${user.userId}`;
 
     if (!existsSync(userDir)) {
       await mkdir(userDir, { recursive: true });
@@ -123,13 +127,13 @@ export class FileSaverService {
 
     const fileName = file.originalname;
     const localTempPath = `${userDir}/${fileName}`;
-    const gitFilePath = `assignment-${fileUploadDto.assignmentId}/user-${fileUploadDto.userId}/${fileName}`;
+    const gitFilePath = `assignment-${fileUploadDto.assignmentId}/user-${user.userId}/${fileName}`;
 
     if (existsSync(localTempPath)) {
       const existingFile = await this.fileEntryRepository.findOne({
         where: {
           assignmentId: fileUploadDto.assignmentId,
-          userId: fileUploadDto.userId,
+          userId: user.userId,
           filePath: gitFilePath,
         },
       });
@@ -154,7 +158,7 @@ export class FileSaverService {
 
       const fileEntry = await this.createFileEntry({
         assignmentId: fileUploadDto.assignmentId,
-        userId: fileUploadDto.userId,
+        userId: user.userId,
         filePath: gitFilePath,
         localTempPath,
         fileSize: file.size,
@@ -275,7 +279,7 @@ export class FileSaverService {
           await rm(fileEntry.localTempPath);
 
           await this.fileEntryRepository.update(fileEntry.id, {
-            localTempPath: "",
+            localTempPath: '',
           });
         } else {
           this.logger.warn(
@@ -316,7 +320,7 @@ export class FileSaverService {
             syncAttempts: job.attempts + 1,
             lastSyncAttempt: new Date(),
           }),
-        ])
+        ]);
         break;
       case JobStatus.FAILED:
         await Promise.all([

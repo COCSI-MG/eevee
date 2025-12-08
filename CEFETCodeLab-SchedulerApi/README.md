@@ -34,6 +34,22 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Run seed
+
+Just use this in development environment to populate the database with initial data.
+
+It will create an initial user with admin role and user role, the users has the following credentials by default:
+
+- Email: admin@example.com
+- Password: admin123
+
+- Email: student@example.com
+- Password: student123
+
+```bash
+npm run seed
+```
+
 ## Debug execution
 
 Insert this into the launch.json file in the .vscode folder of the project:

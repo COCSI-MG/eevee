@@ -5,10 +5,10 @@ import {
 } from '@nestjs/common';
 import { ConsumerService } from '../../kafka/consumer.service';
 import { FileSaverService } from 'src/file-saver/file-saver.service';
+import { REMOTE_FILE_SAVER_TOPIC } from './constants';
 
 @Injectable()
 export class RemoteFileSaverConsumer implements OnModuleInit {
-  static readonly TOPIC = 'remote-file-saver-events';
   private readonly logger = new Logger();
 
   constructor(
@@ -18,13 +18,13 @@ export class RemoteFileSaverConsumer implements OnModuleInit {
 
   async onModuleInit() {
     await this.consumerService.consume({
-      topic: { topics: ['remote-file-saver-events'] },
+      topic: { topics: [ REMOTE_FILE_SAVER_TOPIC ] },
       config: { groupId: 'remote-file-saver-consumer' },
       onMessage: async (message) => {
         this.logger.log({
           value: message.value?.toString(),
         });
-        const { jobId, fileEntryId, localTempPath, gitRemoteFilePath } =
+        const { jobId, localTempPath, gitRemoteFilePath } =
           JSON.parse(message.value?.toString()!);
         await this.fileSaverService.uploadFileToGithubRepo({
           jobId,

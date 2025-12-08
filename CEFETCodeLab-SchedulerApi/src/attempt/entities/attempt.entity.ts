@@ -1,6 +1,7 @@
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { AttemptStatus } from '../enums/attempt-status.enum';
 
 @Entity()
 export class Attempt {
@@ -19,6 +20,13 @@ export class Attempt {
   @ManyToOne(() => Assignment, (assignment) => assignment.assignmentAttempts)
   assignment: Assignment;
 
+  @Column({
+    type: 'enum',
+    enum: AttemptStatus,
+    default: AttemptStatus.PENDING,
+  })
+  status: AttemptStatus;
+
   @Column()
   assignmentId: number;
 
@@ -36,4 +44,7 @@ export class Attempt {
 
   @Column()
   report: string;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
 }

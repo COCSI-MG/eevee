@@ -1,18 +1,29 @@
-export type FileType = {
+export type FileNode = {
+  id: string;
+  label: string;
+  isSelectable: boolean;
+  path: string;
+  icon?: React.ReactNode;
+  children?: FileNode[];
+  isFile?: boolean;
+  content?: string; // Conteúdo do arquivo (apenas para isFile: true)
+  updatedAt?: string; // Timestamp de última atualização
+}
+
+export interface SelectedItem {
   id: string;
   name: string;
   type: 'file' | 'folder';
-  extension?: string;
-  content?: string;
-  children?: FileType[];
-  lastModified: Date;
-  isOpen?: boolean;
-  parentId?: string;
-};
+  path: string;
+}
 
-export type NewItem = {
+export interface SelectedTemplate {
+  templateId: number;
+  params: Array<{ templateParamId: number; value: string }>;
+}
+
+export interface SelectedUser {
+  id: number;
   name: string;
-  parentId: string | null;
-  type: 'file' | 'folder';
-  isCreating: boolean;
-};
+  email: string;
+}

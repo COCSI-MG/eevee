@@ -21,14 +21,14 @@ export class ClassesService {
   }
 
   static async update(classData: UpsertClass): Promise<Class> {
-    const request = await axiosClientWithAuth.put(
+    const request = await axiosClientWithAuth.patch(
       `/class/${classData.id}`,
       classData
     );
     return request.data;
   }
 
-  static async delete(id: number): Promise<void> {
-    await axiosClientWithAuth.delete(`/class/${id}`);
+  static async remove(id: number): Promise<void> {
+    return await axiosClientWithAuth.delete(`/class/${id}`);
   }
 }

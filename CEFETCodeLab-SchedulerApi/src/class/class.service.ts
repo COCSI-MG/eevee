@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, UseGuards } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnprocessableEntityException, UseGuards } from '@nestjs/common';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Class } from './entities/class.entity';
@@ -17,32 +17,53 @@ export class ClassService {
     private readonly classRepository: Repository<Class>,
     private readonly userClassService: UserClassService,
     private readonly requestContextService: RequestContextService,
-  ) {}
-  async createOrReplace(createClassDto: CreateOrReplaceClassDto) {
-    console.log('createClassDto', createClassDto);
-    if (createClassDto.id) {
-      const existingClass = await this.findOne(createClassDto.id);
+  ) { }
 
-      console.log('existingClass', existingClass);
+  async createOrReplace(createClassDto: CreateOrReplaceClassDto) {
+    let newIdentifier: Class;
+    if (createClassDto.id) {
+      const existingClass = await this.classRepository.findOne({
+        where: { id: createClassDto.id },
+      });
       if (!existingClass) {
-        delete createClassDto.id;
+        throw new UnprocessableEntityException('Class not found.');
       }
+
+      await this.classRepository.update(createClassDto.id, {
+        name: createClassDto.name,
+        description: createClassDto.description,
+      });
+
+      await this.userClassService.deleteByClassId(createClassDto.id);
+
+      const updatedClass = {
+        ...existingClass,
+        ...{
+          name: createClassDto.name,
+          description: createClassDto.description,
+        },
+      };
+
+      newIdentifier = updatedClass;
+    } else {
+      const newClass = this.classRepository.create({
+        name: createClassDto.name,
+        description: createClassDto.description,
+      });
+      const savedClass = await this.classRepository.save(newClass);
+      newIdentifier = savedClass; 
     }
 
-    const result = await this.classRepository.upsert(createClassDto, {
-      conflictPaths: ['id'],
-      skipUpdateIfNoValuesChanged: true,
-      upsertType: 'on-conflict-do-update',
-    });
+    if (createClassDto.students) {
+      await this.userClassService.createMany(
+        createClassDto.students.map((user) => ({
+          userId: user,
+          classId: newIdentifier.id,
+        })),
+      );
+    }
 
-    const [newIdentifier] = result.identifiers;
-
-    await this.updateEffects(newIdentifier.id, createClassDto);
-
-    const newclass = (await this.findOne(newIdentifier.id))!;
-
-    const response = ClassHelper.toResponseDto(newclass);
-
+    const response = ClassHelper.toResponseDto(newIdentifier);
     return response;
   }
 
@@ -101,7 +122,12 @@ export class ClassService {
     }
 
     return await this.classRepository.find({
-      relations: ['userClasses', 'userClasses.user', 'userClasses.class'],
+      relations: [
+        'userClasses',
+        'userClasses.user',
+        'userClasses.class',
+        'assignments',
+      ],
       where: {
         userClasses: {
           user: { id: userId },

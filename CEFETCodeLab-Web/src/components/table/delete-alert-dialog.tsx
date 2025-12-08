@@ -1,4 +1,3 @@
-import { Trash2Icon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -7,11 +6,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "../ui/alert-dialog";
 import { Button } from "../ui/button";
 
 interface DeleteAlertDialogProps {
+  open: boolean;
+  onOpenChange?: (open: boolean) => void;
   resourceName: string;
   onDelete: () => void;
   open: boolean;
@@ -20,6 +20,8 @@ interface DeleteAlertDialogProps {
 }
 
 export default function DeleteAlertDialog({
+  open,
+  onOpenChange,
   resourceName,
   onDelete,
   open,
@@ -28,12 +30,6 @@ export default function DeleteAlertDialog({
 }: DeleteAlertDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      {hasTrigger && (
-        <AlertDialogTrigger className="flex items-center gap-2">
-          <Trash2Icon className="h-4 w-4 mr-2" />
-          Delete
-        </AlertDialogTrigger>
-      )}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>

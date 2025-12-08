@@ -24,6 +24,7 @@ import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import { KafkaModule } from './kafka/kafka.module';
 import { GithubModule } from './github/github.module';
+import { AssignmentUserSuspensionModule } from './assignment-user-suspension/assignment-user-suspension.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { GithubModule } from './github/github.module';
     FileSaverModule,
     KafkaModule,
     GithubModule,
+    AssignmentUserSuspensionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

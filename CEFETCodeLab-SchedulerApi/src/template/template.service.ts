@@ -8,6 +8,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { TemplateParam } from 'src/template_params/entities/template_param.entity';
 import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
+import { mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
 
 @Injectable()
 export class TemplateService {
@@ -18,18 +20,21 @@ export class TemplateService {
     private readonly templateParamsRepository: Repository<TemplateParam>,
     @InjectRepository(AssignmentTemplate)
     private readonly assignmentTemplateRepository: Repository<AssignmentTemplate>,
-  ) {}
+  ) { }
 
   async create(createTemplateDto: CreateTemplateDto) {
-    const { title, templateContent }  = createTemplateDto;
+    const { title, templateContent } = createTemplateDto;
     const templatesDir = path.join(process.cwd(), 'templates-upload');
+    if (!existsSync(templatesDir)) {
+      await mkdir(templatesDir, { recursive: true });
+    }
 
     const safeName = title.replace(/[^a-zA-Z0-9_-]/g, '_');
     const filename = `${safeName}_${Date.now()}.tpl.txt`;
     const fullPath = path.join(templatesDir, filename);
     fs.writeFileSync(fullPath, templateContent, 'utf-8');
 
-    const newTemplate = await this.templateRepository.save({ ...createTemplateDto, filePath: filename});
+    const newTemplate = await this.templateRepository.save({ ...createTemplateDto, filePath: filename });
 
     const templateParamsEntity = createTemplateDto.params.map(param => ({
       name: param,
@@ -77,7 +82,7 @@ export class TemplateService {
       console.error('Erro ao ler o arquivo do template:', error);
       throw new Error('Erro ao carregar o conteúdo do template');
     }
-}
+  }
 
   async update(id: number, updateTemplateDto: UpdateTemplateDto) {
     const { templateContent, params, ...dataToUpdate } = updateTemplateDto;
@@ -105,7 +110,7 @@ export class TemplateService {
 
       newFilePath = newFilename;
     }
-  
+
     await this.templateRepository.update(id, {
       ...dataToUpdate,
       filePath: newFilePath
@@ -130,9 +135,9 @@ export class TemplateService {
         }
 
         await this.templateParamsRepository.delete({
-        templateId: id,
-        name: In(removedParams),
-      });
+          templateId: id,
+          name: In(removedParams),
+        });
       }
 
       const newParams = params
@@ -149,24 +154,24 @@ export class TemplateService {
   }
 
   async remove(id: number) {
-    const isTemplateAssociatedToAssignment = await this.assignmentTemplateRepository.findOne({where: { templateId: id } })
+    const isTemplateAssociatedToAssignment = await this.assignmentTemplateRepository.findOne({ where: { templateId: id } })
 
     if (isTemplateAssociatedToAssignment) {
       throw new ConflictException('O template está associado a um assignment e não pode ser excluído.');
     }
 
-     const template = await this.templateRepository.findOne({
+    const template = await this.templateRepository.findOne({
       where: { id },
     });
 
     if (!template) {
       throw new NotFoundException('Template não encontrado');
     }
-    
+
     const filePath = path.join(process.cwd(), 'templates-upload', template.filePath);
-    
+
     try {
-      await fs.promises.unlink(filePath); 
+      await fs.promises.unlink(filePath);
       return await this.templateRepository.delete({ id });
     } catch (error) {
       console.error('Erro ao excluir o arquivo do template:', error);

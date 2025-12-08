@@ -4,10 +4,12 @@ import { SchedulingController } from './scheduling.controller';
 import { WorkerModule } from 'src/worker/worker.module';
 import { AttemptModule } from 'src/attempt/attempt.module';
 import { AssignmentModule } from 'src/assignment/assignment.module';
+import { KafkaModule } from 'src/kafka/kafka.module';
+import { SchedulingCreateJobConsumer } from './scheduling-create-job.consumer';
 
 @Module({
   controllers: [SchedulingController],
-  providers: [SchedulingService],
-  imports: [WorkerModule, AttemptModule, AssignmentModule],
+  providers: [SchedulingService, SchedulingCreateJobConsumer],
+  imports: [WorkerModule, AttemptModule, AssignmentModule, KafkaModule],
 })
 export class SchedulingModule {}

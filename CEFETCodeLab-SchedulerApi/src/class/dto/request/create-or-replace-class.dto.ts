@@ -28,7 +28,6 @@ export class CreateOrReplaceClassDto {
   @ApiPropertyOptional()
   @IsString()
   @IsOptional()
-  @IsNotBlank()
   description: string;
 
   @ApiProperty()

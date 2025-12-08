@@ -68,7 +68,7 @@ export default function Register() {
         return;
       }
       setIsLoading(false);
-      push(Route.Assignment);
+      push(Route.Classes);
     }
   }, [isError, error, data, isSuccess, push]);
 

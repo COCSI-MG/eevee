@@ -6,7 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
-  Put,
+  Patch
 } from '@nestjs/common';
 import { ClassService } from './class.service';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
@@ -19,7 +19,7 @@ import { AdminGuard } from 'src/auth/guards/admin.guard';
 @Controller('class')
 @UseGuards(JwtAuthGuard)
 export class ClassController {
-  constructor(private readonly classService: ClassService) {}
+  constructor(private readonly classService: ClassService) { }
 
   @Post()
   @UseGuards(AdminGuard)
@@ -27,16 +27,6 @@ export class ClassController {
   create(@Body() createClassDto: CreateOrReplaceClassDto) {
     console.log('createClassDto', createClassDto);
     return this.classService.createOrReplace(createClassDto);
-  }
-
-  @Put(':id')
-  @UseGuards(AdminGuard)
-  @ApiOkResponse({ type: ClassResponseDto })
-  update(
-    @Param('id') id: string,
-    @Body() updateClassDto: CreateOrReplaceClassDto,
-  ) {
-    return this.classService.update(+id, updateClassDto);
   }
 
   @Get()
@@ -61,5 +51,16 @@ export class ClassController {
   @UseGuards(AdminGuard)
   remove(@Param('id') id: string) {
     return this.classService.remove(+id);
+  }
+
+  @Patch(':id')
+  @UseGuards(AdminGuard)
+  @ApiOkResponse({ type: ClassResponseDto })
+  update(
+    @Param('id') id: string,
+    @Body() updateClassDto: CreateOrReplaceClassDto,
+  ) {
+    updateClassDto.id = +id;
+    return this.classService.createOrReplace(updateClassDto);
   }
 }

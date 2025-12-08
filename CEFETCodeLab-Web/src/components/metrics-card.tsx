@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { FileText, GraduationCap, Users } from 'lucide-react';
-import { Button } from './ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
-import { useUsers } from '@/hooks/use-users';
-import { useEffect, useState } from 'react';
-import { useClasses } from '@/hooks/use-classes';
-import { useQuery } from '@tanstack/react-query';
-import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
-import Link from 'next/link';
+import { FileText, GraduationCap, Users } from "lucide-react";
+import { Button } from "./ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import { useUsers } from "@/hooks/use-users";
+import { useEffect, useState } from "react";
+import { useClasses } from "@/hooks/use-classes";
+import { useQuery } from "@tanstack/react-query";
+import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import Link from "next/link";
 
 interface Metric {
   title: string;
   value: string;
   description: string;
   icon: React.ForwardRefExoticComponent<
-    Omit<React.SVGProps<SVGSVGElement>, 'ref'> &
+    Omit<React.SVGProps<SVGSVGElement>, "ref"> &
       React.RefAttributes<SVGSVGElement>
   >;
   href: string;
@@ -23,51 +23,75 @@ interface Metric {
 
 export function MetricsCard() {
   const [metrics, setMetrics] = useState<Metric[]>([]);
-  const { data: users, isPending: isPendingUser, isSuccess: isSucessUsers } = useUsers();
-  const { data: classes, isPending: isPendingClasses, isSuccess: isSucessClasses } = useClasses();  
+
+  const {
+    data: users,
+    isFetching: isFetchingUser,
+    isSuccess: isSuccessUsers,
+  } = useUsers();
+
+  const {
+    data: classes,
+    isFetching: isFetchingClasses,
+    isSuccess: isSuccessClasses,
+  } = useClasses();
+
   const {
     data: assignments,
-    isPending: isPendingAssignments,
-    isSuccess: isSucessAssignments,
+    isSuccess: isSuccessAssignments,
+    isFetching: isFetchingAssignments,
   } = useQuery({
-    queryKey: ['adminAssignments'],
-    queryFn: AssignmentService.GetAssignmentsAdmin,
+    queryKey: ["adminAssignments"],
+    queryFn: async () => {
+      const assignmentsData = await AssignmentService.GetAssignmentsAdmin();
+      if (!assignmentsData) {
+        return [];
+      }
+      return assignmentsData;
+    },
   });
 
   useEffect(() => {
-    if (isSucessUsers && isSucessClasses && isSucessAssignments) {
+    if (isSuccessUsers && isSuccessClasses && isSuccessAssignments) {
       setMetrics([
         {
-          title: 'Total Users',
+          title: "Total Users",
           value: users.length.toString(),
-          description: 'Number of registered users',
+          description: "Number of registered users",
           icon: Users,
-          href: '/admin/users',
+          href: "/admin/users",
         },
         {
-          title: 'Total Classes',
+          title: "Total Classes",
           value: classes.length.toString(),
-          description: 'Number of available classes',
+          description: "Number of available classes",
           icon: GraduationCap,
-          href: '/admin/classes',
+          href: "/admin/classes",
         },
         {
-          title: 'Total Assignments',
+          title: "Total Assignments",
           value: assignments.length.toString(),
-          description: 'Number of assignments created',
+          description: "Number of assignments created",
           icon: FileText,
-          href: '/admin/assignments',
+          href: "/admin/assignments",
         },
       ]);
     }
-  }, [users, classes, assignments, isSucessUsers, isSucessClasses, isSucessAssignments]);
+  }, [
+    users,
+    classes,
+    assignments,
+    isSuccessUsers,
+    isSuccessClasses,
+    isSuccessAssignments,
+  ]);
 
-  if (isPendingUser || isPendingClasses || isPendingAssignments) {
+  if (isFetchingUser || isFetchingClasses || isFetchingAssignments) {
     return <div>Loading...</div>;
   }
 
-  return (metrics ?? []).map((metric) => (
-    <Card key={metric.title} className="hover:shadow-md transition-shadow">
+  return (metrics ?? []).map((metric, index) => (
+    <Card key={index} className="hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
         <metric.icon className="h-5 w-5 text-muted-foreground" />

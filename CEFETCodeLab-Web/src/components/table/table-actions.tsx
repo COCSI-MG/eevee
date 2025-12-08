@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Trash2Icon } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -7,9 +7,8 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import DeleteAlertDialog from "./delete-alert-dialog";
-import { useState } from "react";
 import Link from "next/link";
-import { JSX } from "react";
+import { JSX, useState } from "react";
 
 interface TableActionsProps {
   href?: string;
@@ -22,50 +21,55 @@ export default function TableActions({
   onDelete,
   otherActions = [],
 }: TableActionsProps) {
-  const [open, setOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+
+  const handleDeleteClick = () => {
+    setDropdownOpen(false); // Close dropdown first
+    setShowDeleteDialog(true);
+  };
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" className="h-8 w-8">
             <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">Actions</span>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="w-40">
           {otherActions.length > 0 && (
-            <>{otherActions.map((component) => component)}</>
+            <>
+              {otherActions.map((component, index) => (
+                <div key={index}>{component}</div>
+              ))}
+            </>
           )}
-          <Link href={href ?? "#"}>
-            <DropdownMenuItem>
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
+          {href && (
+            <DropdownMenuItem asChild>
+              <Link href={href} className="flex items-center">
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit
+              </Link>
             </DropdownMenuItem>
-          </Link>
+          )}
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
-            onClick={() => {
-              setOpen(true);
-            }}
+            onClick={handleDeleteClick}
           >
-            <Trash2Icon className="h-4 w-4 mr-2" />
+            <Trash className="h-4 w-4 mr-2" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {open && (
-        <DeleteAlertDialog
-          onDelete={() => {
-            onDelete();
-            setOpen(false);
-          }}
-          resourceName="item"
-          open={open}
-          onOpenChange={setOpen}
-          hasTrigger={false}
-        />
-      )}
+
+      <DeleteAlertDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onDelete={onDelete}
+        resourceName="item"
+      />
     </>
   );
 }

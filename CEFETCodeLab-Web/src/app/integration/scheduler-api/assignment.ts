@@ -33,7 +33,7 @@ export class AssignmentService {
   }
 
   static async UpdateAssignment(id: number, data: CreateAssignmentRequest) {
-    const response = await axiosClientWithAuth.put(`/assignment/${id}`, data);
+    const response = await axiosClientWithAuth.patch(`/assignment/${id}`, data);
 
     return <Assignment>response.data;
   }
@@ -41,5 +41,12 @@ export class AssignmentService {
   static async DeleteAssignment(id: number) {
     const response = await axiosClientWithAuth.delete(`/assignment/${id}`);
     return <Assignment>response.data;
+  }
+
+  static async GetAssignmentsByClassId(classId: number) {
+    const response = await axiosClientWithAuth.get(
+      `/assignment/class/${classId}`
+    );
+    return <Assignment[]>response.data;
   }
 }
