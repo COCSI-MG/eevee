@@ -14,9 +14,6 @@ interface DeleteAlertDialogProps {
   onOpenChange?: (open: boolean) => void;
   resourceName: string;
   onDelete: () => void;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  hasTrigger?: boolean;
 }
 
 export default function DeleteAlertDialog({
@@ -24,9 +21,6 @@ export default function DeleteAlertDialog({
   onOpenChange,
   resourceName,
   onDelete,
-  open,
-  onOpenChange,
-  hasTrigger = true,
 }: DeleteAlertDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>

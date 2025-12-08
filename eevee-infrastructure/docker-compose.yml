@@ -38,9 +38,22 @@ services:
     environment:
       KAFKA_BROKERCONNECT: kafka:9092
 
+  database:
+    image: postgres:latest
+    container_name: eevee-scheduler-database
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: eevee_user
+      POSTGRES_PASSWORD: eevee_password
+      POSTGRES_DB: eevee_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
 networks:
   broker-kafka:
     driver: bridge
 
 volumes:
   kafka-data:
+  pgdata:
