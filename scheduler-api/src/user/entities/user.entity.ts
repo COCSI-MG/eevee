@@ -1,5 +1,6 @@
 import { Exclude } from 'class-transformer';
 import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
+import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
@@ -30,4 +31,7 @@ export class User {
 
   @OneToMany(() => AssignmentUserSuspension, (suspension) => suspension.user)
   assignmentSuspensions?: AssignmentUserSuspension[];
+
+  @OneToMany(() => Assignment, (assignment) => assignment.createdBy)
+  createdAssignments?: Assignment[];
 }

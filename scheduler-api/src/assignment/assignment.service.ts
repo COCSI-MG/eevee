@@ -7,7 +7,7 @@ import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, IsNull, Repository } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
@@ -56,7 +56,9 @@ export class AssignmentService {
       );
     }
 
-    const incompatible = found.filter((t) => t.workerType !== options.workerType);
+    const incompatible = found.filter(
+      (t) => t.workerType !== options.workerType,
+    );
     if (incompatible.length) {
       throw new ForbiddenException(
         `Template(s) not compatible with workerType=${options.workerType}: ${incompatible
@@ -116,6 +118,25 @@ export class AssignmentService {
     };
   }
 
+  private getTeacherVisibilityWhere(): any[] | undefined {
+    const user = this.requestContextService.getUser();
+    if (!user?.isAdmin) return undefined;
+    return [{ createdById: user.userId }, { createdById: IsNull() }];
+  }
+
+  private assertTeacherOwnsAssignment(assignment: Assignment): void {
+    const user = this.requestContextService.getUser();
+    if (!user?.isAdmin) return;
+
+    // Legacy assignments (createdById IS NULL) are accessible to teachers, but once
+    // updated they'll be "claimed" by that teacher (see update()).
+    if (assignment.createdById && assignment.createdById !== user.userId) {
+      throw new ForbiddenException(
+        'You are not authorized to access this assignment.',
+      );
+    }
+  }
+
   async create(createAssignmentDto: CreateAssignmentDto) {
     const { templates, boilerplate, validationScript, ...assignmentData } =
       createAssignmentDto;
@@ -130,12 +151,15 @@ export class AssignmentService {
       );
     }
 
+    const user = this.requestContextService.getUser();
+
     const newAssignment = await this.assignmentRepository.save({
       classId: assignmentData.classId,
       title: assignmentData.title,
       description: assignmentData.description,
       maxAttempts: assignmentData.maxAttempts,
       workerType: assignmentData.workerType,
+      createdById: user?.userId,
     });
 
     const resolvedBoilerplate =
@@ -164,20 +188,17 @@ export class AssignmentService {
         workerType: assignmentData.workerType,
       });
 
-      const assignmentTemplateEntities = templates.map(
-        (template) => ({
-          assignmentId: newAssignment.id,
-          templateId: template.templateId,
-        }),
-      );
+      const assignmentTemplateEntities = templates.map((template) => ({
+        assignmentId: newAssignment.id,
+        templateId: template.templateId,
+      }));
 
-      const assignmentParamsEntities = templates.flatMap(
-        (template) =>
-          template.params.map((param) => ({
-            assignmentId: newAssignment.id,
-            templateParamsId: param.templateParamId,
-            value: param.value,
-          })),
+      const assignmentParamsEntities = templates.flatMap((template) =>
+        template.params.map((param) => ({
+          assignmentId: newAssignment.id,
+          templateParamsId: param.templateParamId,
+          value: param.value,
+        })),
       );
 
       await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
@@ -209,14 +230,17 @@ export class AssignmentService {
   }
 
   findAll() {
+    const user = this.requestContextService.getUser();
+
     return this.assignmentRepository
       .find({
-      relations: [
-        'assignmentAttempts',
-        'class',
-        'class.userClasses',
-        'suspensions',
-      ],
+        relations: [
+          'assignmentAttempts',
+          'class',
+          'class.userClasses',
+          'suspensions',
+        ],
+        where: user?.isAdmin ? this.getTeacherVisibilityWhere() : undefined,
       })
       .then((assignments) =>
         Promise.all(assignments.map((a) => this.attachBoilerplate(a))),
@@ -243,24 +267,35 @@ export class AssignmentService {
 
     const assignments = await this.assignmentRepository.find({
       relations: ['assignmentAttempts', 'suspensions'],
-      where: { classId },
+      where: user.isAdmin
+        ? [
+            { classId, createdById: user.userId },
+            { classId, createdById: IsNull() },
+          ]
+        : { classId },
     });
 
     return await Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
   }
 
   async findOne(id: number) {
-    const { isAdmin } = this.requestContextService.getUser();
+    const user = this.requestContextService.getUser();
 
-    const where: { id: number; class?: { userClasses: { userId: number } } } = {
+    let where: any = {
       id,
       class: {
-        userClasses: { userId: this.requestContextService.getUser().userId },
+        userClasses: { userId: user.userId },
       },
     };
 
-    if (isAdmin) {
-      delete where.class;
+    // Students can access assignments through class membership.
+    // Teachers (isAdmin) are restricted to assignments they created.
+    if (user.isAdmin) {
+      // Teachers can see their own assignments, plus legacy ones (createdById IS NULL).
+      where = [
+        { id, createdById: user.userId },
+        { id, createdById: IsNull() },
+      ];
     }
 
     const response = await this.assignmentRepository.findOne({
@@ -296,6 +331,14 @@ export class AssignmentService {
 
     if (!assignment) {
       throw new NotFoundException('Tarefa não encontrada');
+    }
+
+    this.assertTeacherOwnsAssignment(assignment);
+
+    const user = this.requestContextService.getUser();
+    if (user?.isAdmin && !assignment.createdById) {
+      await this.assignmentRepository.update(id, { createdById: user.userId });
+      assignment.createdById = user.userId;
     }
 
     const resolvedBoilerplate =
@@ -367,6 +410,8 @@ export class AssignmentService {
 
     if (!assignmentExists)
       throw new NotFoundException('Assignment não encontrado!');
+
+    this.assertTeacherOwnsAssignment(assignmentExists);
 
     return this.dataSource.transaction(async (manager) => {
       await manager.delete(AssignmentTemplate, { assignmentId: id });
