@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTemplateParamDto } from './dto/create-template_param.dto';
-import { UpdateTemplateParamDto } from './dto/update-template_param.dto';
+import { CreateTemplateParamDto } from './dto/create-template-param.dto';
+import { UpdateTemplateParamDto } from './dto/update-template-param.dto';
 
 @Injectable()
 export class TemplateParamsService {

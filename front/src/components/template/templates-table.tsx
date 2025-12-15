@@ -22,6 +22,7 @@ import dynamic from "next/dynamic";
 import TableActions from "../table/table-actions";
 import React from "react";
 import { Template } from "@/app/interface/scheduler-api/template";
+import { TEMPLATE_TABLE_TEXT } from "@/app/admin/templates/constants";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -41,16 +42,24 @@ export default function TemplatesTable({
       <TableHeader>
         <TableRow>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Title</div>
+            <div className="flex items-center">
+              {TEMPLATE_TABLE_TEXT.titleHeader}
+            </div>
           </TableHead>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Description</div>
+            <div className="flex items-center">
+              {TEMPLATE_TABLE_TEXT.descriptionHeader}
+            </div>
           </TableHead>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Conteúdo</div>
+            <div className="flex items-center">
+              {TEMPLATE_TABLE_TEXT.contentHeader}
+            </div>
           </TableHead>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Actions</div>
+            <div className="flex items-center">
+              {TEMPLATE_TABLE_TEXT.actionsHeader}
+            </div>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -58,7 +67,7 @@ export default function TemplatesTable({
         {(templates ?? []).length === 0 && (
           <TableRow>
             <TableCell colSpan={4} className="text-center py-4">
-              No templates found.
+              {TEMPLATE_TABLE_TEXT.empty}
             </TableCell>
           </TableRow>
         )}
@@ -75,7 +84,7 @@ export default function TemplatesTable({
                     className="text-slate-40 hover:text-white"
                   >
                     <Eye className="h-4 w-4" />
-                    Visualizar
+                    {TEMPLATE_TABLE_TEXT.viewButton}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80vh]">

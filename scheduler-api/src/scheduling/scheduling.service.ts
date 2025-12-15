@@ -16,6 +16,8 @@ import { SCHEDULING_CREATE_JOB_TOPIC } from './constants';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { Cron, Interval } from '@nestjs/schedule';
 import { readFileAsString } from 'src/utils/template.utils';
+import { WorkerTestFile } from 'src/worker/worker.interfaces';
+import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
 
 @Injectable()
 export class SchedulingService {
@@ -89,6 +91,8 @@ export class SchedulingService {
 
     const dependencies: string[] = [];
 
+    const testFiles: WorkerTestFile[] = [];
+
     const filledTemplates = await Promise.all(
       assignment.assignmentTemplates.map(async (templateRelation) => {
         const templateDependencies =
@@ -96,25 +100,21 @@ export class SchedulingService {
         if (templateDependencies.length > 0)
           dependencies.push(...templateDependencies);
 
-        let content = await readFileAsString(
-          templateRelation.template.filePath,
-        );
+        const content = await readFileAsString(templateRelation.template.filePath);
 
-        for (const param of templateRelation.template.templateParams) {
-          const paramValue =
-            assignment.assignmentParams.find(
-              (p) => p.templateParamsId === param.id,
-            )?.value ?? '';
-          content = content.replace(
-            new RegExp(`\\$${param.name}\\$`, 'g'),
-            paramValue,
-          );
-        }
+        testFiles.push({
+          templateId: templateRelation.template.id,
+          type: assignment.workerType,
+          content,
+        });
         return content;
       }),
     );
 
     createSchedulingDto.testFilesContent = filledTemplates;
+    createSchedulingDto.testFiles = testFiles;
+    createSchedulingDto.templateVariablesModuleContent =
+      buildTemplateVariablesModule(assignment);
 
     const workerResult = await createWorkerAndWait(
       createSchedulingDto,
@@ -249,9 +249,21 @@ export class SchedulingService {
       attempt.assignment,
     );
 
+    const testFiles: WorkerTestFile[] = attempt.assignment.assignmentTemplates.map(
+      (templateRelation, index) => ({
+        templateId: templateRelation.template.id,
+        type: attempt.assignment.workerType,
+        content: filledTemplates[index] ?? '',
+      }),
+    );
+
     const createSchedulingDto: CreateSchedulingDto = {
       assignmentId: attempt.assignmentId,
       testFilesContent: filledTemplates,
+      testFiles,
+      templateVariablesModuleContent: buildTemplateVariablesModule(
+        attempt.assignment,
+      ),
       applicationFileContent: message.applicationFileContent,
       dependencies: [],
     };

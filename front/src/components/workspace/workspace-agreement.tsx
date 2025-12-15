@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { Badge } from "../ui/badge";
 import { useEffect, useState } from "react";
@@ -17,18 +17,28 @@ export default function WorkspaceAgreement({
   assignmentId: number;
 }) {
   const [checked, setChecked] = useState(false);
+  const [agreedBefore, setAgreedBefore] = useState<boolean | null>(null);
   const { back } = useRouter();
 
   useEffect(() => {
-    if (checked) {{
-      localStorage.setItem(`agreement-${assignmentId}`, 'true');
-    }}
+    if (checked) {
+      localStorage.setItem(`agreement-${assignmentId}`, "true");
+    }
   }, [assignmentId, checked]);
 
-  const agreedBefore = localStorage.getItem(`agreement-${assignmentId}`) === 'true';
+  useEffect(() => {
+    const storedAgreement =
+      localStorage.getItem(`agreement-${assignmentId}`) === "true";
+    setAgreedBefore(storedAgreement);
+  }, [assignmentId]);
+
+  useEffect(() => {
+    if (agreedBefore) {
+      onAccept();
+    }
+  }, [agreedBefore, onAccept]);
 
   if (agreedBefore) {
-    onAccept();
     return null;
   }
 

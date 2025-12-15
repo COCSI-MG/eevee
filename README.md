@@ -34,7 +34,7 @@ npm start
 
 ```
 cd node-worker-images\node
-docker build . -t worker-node-default-img
+docker build . -t worker-node-default-img:latest
 ```
 
 Agora é necessário incluir a imagem no minikube
@@ -46,12 +46,25 @@ minikube image load worker-node-default-img:latest
 ### Node NestJS Worker
 
 ```
-cd node-worker-images\nestjs
-docker build . -t worker-node-nestjs-img
+cd node-worker-images\nest.js
+docker build . -t worker-node-nestjs-img:latest
 ```
 
 Agora é necessário incluir a imagem no minikube
 
 ```
 minikube image load worker-node-nestjs-img:latest
+```
+
+### Node GRPC Worker
+
+```
+cd node-worker-images\grpc
+docker build . -t worker-node-grpcjs-img:latest
+```
+
+Agora é necessário incluir a imagem no minikube
+
+```
+minikube image load worker-node-grpcjs-img:latest
 ```

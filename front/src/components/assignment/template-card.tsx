@@ -20,12 +20,14 @@ import SelectedTemplates from "./selected-templates";
 import TemplateConfigDialog from "./template-config-dialog";
 import { SelectedTemplate } from "@/types/shared";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
 interface TemplateCardProps {
   selectedTemplates: SelectedTemplate[];
   setSelectedTemplates: React.Dispatch<
     React.SetStateAction<SelectedTemplate[]>
   >;
+  workerType: WorkerType;
 }
 
 interface State {
@@ -76,13 +78,39 @@ function reducer(state: State, action: Action) {
 export default function TemplateCard({
   selectedTemplates,
   setSelectedTemplates,
+  workerType,
 }: TemplateCardProps) {
+  const normalizedWorkerType = React.useMemo<WorkerType>(() => {
+    if (
+      typeof workerType === "string" &&
+      Object.values(WorkerType).includes(workerType as WorkerType)
+    ) {
+      return workerType as WorkerType;
+    }
+
+    const maybeValue = (workerType as unknown as { value?: unknown })?.value;
+    if (
+      typeof maybeValue === "string" &&
+      Object.values(WorkerType).includes(maybeValue as WorkerType)
+    ) {
+      return maybeValue as WorkerType;
+    }
+
+    return WorkerType.NODE_DEFAULT;
+  }, [workerType]);
+
   const {
     data: templates,
     isSuccess: isSuccessTemplates,
     isFetching: isFetchingTemplates,
-  } = useTemplates();
+  } = useTemplates(normalizedWorkerType);
 
+  // why are we using reducer again?
+
+  const visibleTemplates = React.useMemo(() => {
+    const list = templates ?? [];
+    return list.filter((t) => !t.workerType || t.workerType === normalizedWorkerType);
+  }, [templates, normalizedWorkerType]);
   const [state, dispatch] = React.useReducer(reducer, {
     previewTemplateDialog: null,
     selectedTemplates: selectedTemplates,
@@ -91,17 +119,15 @@ export default function TemplateCard({
   });
 
   const isTemplateSelected = React.useMemo(
-    () => (templateId: string) => {
-      return selectedTemplates.some(
-        (template) => template.templateId === Number(templateId)
-      );
+    () => (templateId: number) => {
+      return selectedTemplates.some((t) => t.templateId === templateId);
     },
     [selectedTemplates]
   );
 
-  const isAllParamsFilled = (template: Template) => {
+  const areAllParamsFilled = (template: Template) => {
     return template.templateParams.every((param) => {
-      const value = state.paramsValues[Number(param.id)];
+      const value = state.paramsValues[param.id];
       return value && value.trim() !== "";
     });
   };
@@ -110,7 +136,7 @@ export default function TemplateCard({
     // Initialize parameter values
     const newParamsValues: Record<number, string> = {};
     template.templateParams.forEach((param) => {
-      newParamsValues[Number(param.id)] = "";
+      newParamsValues[param.id] = "";
     });
 
     dispatch({
@@ -127,9 +153,10 @@ export default function TemplateCard({
   };
 
   const handleConfirmTemplate = () => {
-    if (!state.configTemplateDialog) return;
+    const templateDialog = state.configTemplateDialog;
+    if (!templateDialog) return;
 
-    if (!isAllParamsFilled(state.configTemplateDialog)) {
+    if (!areAllParamsFilled(templateDialog)) {
       toast({
         title: "Preencha todos os parâmetros",
         description:
@@ -140,15 +167,15 @@ export default function TemplateCard({
       return;
     }
 
-    const params = state.configTemplateDialog.templateParams.map((param) => ({
-      templateParamId: Number(param.id),
-      value: state.paramsValues[Number(param.id)],
+    const params = templateDialog.templateParams.map((param) => ({
+      templateParamId: param.id,
+      value: state.paramsValues[param.id],
     }));
 
     setSelectedTemplates((prev) => [
       ...prev,
       {
-        templateId: Number(state.configTemplateDialog?.id),
+        templateId: templateDialog.id,
         params,
       },
     ]);
@@ -157,7 +184,7 @@ export default function TemplateCard({
 
     toast({
       title: "Template adicionado",
-      description: `Template "${state.configTemplateDialog.title}" foi adicionado com sucesso.`,
+      description: `Template "${templateDialog.title}" foi adicionado com sucesso.`,
       duration: 3000,
     });
   };
@@ -203,7 +230,7 @@ export default function TemplateCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="overflow-y-auto flex-1">
-        {isSuccessTemplates && templates.length === 0 ? (
+        {isSuccessTemplates && visibleTemplates.length === 0 ? (
           <div className="text-center py-12 text-slate-400">
             <Code className="w-16 h-16 mx-auto mb-4 text-slate-600" />
             <h3 className="text-lg font-medium text-slate-300 mb-2">
@@ -231,7 +258,7 @@ export default function TemplateCard({
                 Templates Disponíveis
               </h4>
               <ScrollArea className="h-[300px] space-y-3">
-                {(templates ?? []).map((template) => (
+                {visibleTemplates.map((template) => (
                   <div
                     key={template.id}
                     className={cn(
@@ -240,6 +267,11 @@ export default function TemplateCard({
                         ? "border-green-500 bg-green-500/10"
                         : "border-slate-600 bg-slate-700/30 hover:bg-slate-700/50 hover:border-slate-500"
                     )}
+                    onClick={() => {
+                      if (!isTemplateSelected(template.id)) {
+                        handleOpenConfigDialog(template);
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
@@ -288,7 +320,8 @@ export default function TemplateCard({
                         <TemplatePreviewDialog
                           template={
                             templates?.find(
-                              (t) => t.id === state.previewTemplateDialog
+                              (t) =>
+                                t.id.toString() === state.previewTemplateDialog
                             ) || null
                           }
                           open={!!state.previewTemplateDialog}
@@ -297,7 +330,7 @@ export default function TemplateCard({
                               type: open
                                 ? "OPEN_PREVIEW_DIALOG"
                                 : "CLOSE_PREVIEW_DIALOG",
-                              payload: open ? template.id : "",
+                              payload: open ? template.id.toString() : "",
                             })
                           }
                         />
@@ -311,7 +344,7 @@ export default function TemplateCard({
                             className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleRemoveTemplate(Number(template.id));
+                              handleRemoveTemplate(template.id);
                             }}
                           >
                             <X className="w-4 h-4" />
@@ -349,7 +382,7 @@ export default function TemplateCard({
               handleConfirmTemplate={handleConfirmTemplate}
               paramsValues={state.paramsValues}
               handleSetParamsValues={handleSetParamsValues}
-              isAllParamsFilled={isAllParamsFilled}
+              isAllParamsFilled={areAllParamsFilled}
             />
           </div>
         )}

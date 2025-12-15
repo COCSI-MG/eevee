@@ -24,10 +24,10 @@ const defaultFileNode: FileNode[] = [
     children: [
       {
         id: "2",
-        label: "index.js",
+        label: "index.ts",
         isSelectable: true,
         isFile: true,
-        path: "src/index.js",
+        path: "src/index.ts",
       },
     ],
     path: "src",
@@ -40,9 +40,13 @@ interface WorkspaceProps {
 }
 
 export default function Workspace({ assignment, user }: WorkspaceProps) {
-  const [defaultEditorValue] = React.useState<string>(
-    DEFAULT_ASSIGNMENT_TEMPLATE
-  );
+  const defaultEditorValue = React.useMemo(() => {
+    const boilerplate = assignment.boilerplate ?? assignment.validationScript;
+    if (typeof boilerplate === "string" && boilerplate.trim().length > 0) {
+      return boilerplate;
+    }
+    return DEFAULT_ASSIGNMENT_TEMPLATE;
+  }, [assignment.boilerplate, assignment.validationScript]);
   const [currentFileContent, setCurrentFileContent] =
     React.useState<string>("");
 
@@ -142,10 +146,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
   };
 
   const handleEditorChange = (value: string | undefined) => {
-    if (
-      value !== undefined &&
-      selectedItem.path
-    ) {
+    if (value !== undefined && selectedItem.path) {
       console.log("Updating file content for", selectedItem.path);
       updateFileContent({
         assignmentId: assignment.id,

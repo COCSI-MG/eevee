@@ -18,7 +18,7 @@ import { ClsModule } from 'nestjs-cls';
 import { RequestContextMiddleware } from './request-context/request-context.middleware';
 import { TemplateModule } from './template/template.module';
 import { AssignmentTemplateModule } from './assignment_template/assignment_template.module';
-import { TemplateParamsModule } from './template_params/template_params.module';
+import { TemplateParamsModule } from './template-params/template-params.module';
 import { AssignmentParamsModule } from './assignment_params/assignment_params.module';
 import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
@@ -74,13 +74,16 @@ export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(RequestContextMiddleware)
-      .exclude({
-        path: 'auth/register',
-        method: RequestMethod.POST,
-      }, {
-        path: 'auth/login',
-        method: RequestMethod.POST,
-      })
+      .exclude(
+        {
+          path: 'auth/register',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'auth/login',
+          method: RequestMethod.POST,
+        },
+      )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }

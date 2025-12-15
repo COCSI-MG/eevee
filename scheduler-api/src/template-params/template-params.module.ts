@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { TemplateParamsService } from './template_params.service';
-import { TemplateParamsController } from './template_params.controller';
+import { TemplateParamsService } from './template-params.service';
+import { TemplateParamsController } from './template-params.controller';
 
 @Module({
   controllers: [TemplateParamsController],

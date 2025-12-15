@@ -2,7 +2,7 @@
 
 import React from "react";
 import { UpdateAssignmentPageProps } from "../interface";
-import { AssignmentForm } from "../assignment-form";
+import { AssignmentForm } from "../../../../components/assignment/form/assignment-form";
 
 export default function UpdateAssignmentPage({
   params,

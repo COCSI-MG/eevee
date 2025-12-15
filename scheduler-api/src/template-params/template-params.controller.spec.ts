@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TemplateParamsController } from './template_params.controller';
-import { TemplateParamsService } from './template_params.service';
+import { TemplateParamsController } from './template-params.controller';
+import { TemplateParamsService } from './template-params.service';
 
 describe('TemplateParamsController', () => {
   let controller: TemplateParamsController;

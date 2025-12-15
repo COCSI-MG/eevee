@@ -4,16 +4,18 @@ import { Button } from "../ui/button";
 import { SelectedTemplate } from "@/types/shared";
 
 interface SelectedTemplatesProps {
-    templates: Template[] | undefined;
-    selectedTemplates: SelectedTemplate[];
-    handleRemoveTemplate: (templateId: number) => void;
+  templates: Template[] | undefined;
+  selectedTemplates: SelectedTemplate[];
+  handleRemoveTemplate: (templateId: number) => void;
 }
 
-export default function SelectedTemplates({ selectedTemplates, templates, handleRemoveTemplate }: SelectedTemplatesProps) {
-  const getTemplateName = (templateId: string) => {
-    return (
-      templates?.find((t) => t.id === templateId)?.title || "Template"
-    );
+export default function SelectedTemplates({
+  selectedTemplates,
+  templates,
+  handleRemoveTemplate,
+}: SelectedTemplatesProps) {
+  const getTemplateName = (templateId: number) => {
+    return templates?.find((t) => t.id === templateId)?.title || "Template";
   };
 
   return (
@@ -22,7 +24,7 @@ export default function SelectedTemplates({ selectedTemplates, templates, handle
         Templates Selecionados
       </h4>
 
-      {selectedTemplates.length === 0 ? (
+      {!selectedTemplates.length ? (
         <div className="bg-slate-700/30 border-2 border-dashed border-slate-600 rounded-lg p-8 text-center">
           <Settings className="w-12 h-12 text-slate-500 mx-auto mb-4" />
           <p className="text-slate-400 mb-2">Nenhum template selecionado</p>
@@ -41,7 +43,7 @@ export default function SelectedTemplates({ selectedTemplates, templates, handle
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-400" />
                   <h5 className="text-white font-medium">
-                    {getTemplateName(selectedTemplate.templateId.toString())}
+                    {getTemplateName(selectedTemplate.templateId)}
                   </h5>
                 </div>
                 <Button
@@ -58,15 +60,14 @@ export default function SelectedTemplates({ selectedTemplates, templates, handle
               </div>
               <div className="space-y-2">
                 <p className="text-xs text-slate-400 mb-2">
-                  {selectedTemplate.params.length} parâmetro(s) configurado(s)
+                  {selectedTemplate.params?.length ?? 0} parâmetro(s)
+                  configurado(s)
                 </p>
-                {selectedTemplate.params.map((param) => {
+                {selectedTemplate.params?.map((param) => {
                   const paramName = templates
-                    ?.find(
-                      (t) => t.id === selectedTemplate.templateId.toString()
-                    )
+                    ?.find((t) => t.id === selectedTemplate.templateId)
                     ?.templateParams.find(
-                      (p) => p.id === param.templateParamId.toString()
+                      (p) => p.id === param.templateParamId
                     )?.name;
 
                   return (

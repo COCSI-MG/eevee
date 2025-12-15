@@ -1,5 +1,7 @@
 up: up-minikube up-docker up-scheduler
 
+up-infra: up-minikube up-docker
+
 up-minikube:
 	@echo Starting minikube
 	minikube start

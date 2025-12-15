@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TemplateParamsService } from './template_params.service';
+import { TemplateParamsService } from './template-params.service';
 
 describe('TemplateParamsService', () => {
   let service: TemplateParamsService;

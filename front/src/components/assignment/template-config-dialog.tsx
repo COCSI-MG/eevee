@@ -11,7 +11,7 @@ import {
 } from "../ui/dialog";
 import { Badge } from "../ui/badge";
 import dynamic from "next/dynamic";
-import { Template } from "@/app/interface/scheduler-api/template";
+import { Template, TemplateParamType } from "@/app/interface/scheduler-api/template";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -32,6 +32,11 @@ export default function TemplateConfigDialog({
     handleSetParamsValues,
     isAllParamsFilled
 }: TemplateConfigDialogProps) {
+  const formatTypeHint = (type?: TemplateParamType) => {
+    if (!type) return null;
+    return `(${type})`;
+  };
+
   return (
     <Dialog
       open={!!configTemplateDialog}
@@ -60,15 +65,15 @@ export default function TemplateConfigDialog({
                 {configTemplateDialog.templateParams.map((param) => (
                   <div key={param.id} className="space-y-3">
                     <Label className="text-blue-300 font-medium text-sm">
-                      {param.name}
+                      {param.name} {formatTypeHint(param.type)}
                       <span className="text-red-400 ml-1">*</span>
                     </Label>
                     <div className="relative">
                       <div className="border border-slate-600 rounded-md overflow-hidden">
                         <Editor
-                          value={paramsValues[Number(param.id)] || ""}
+                          value={paramsValues[param.id] || ""}
                           onChange={(value) => {
-                            handleSetParamsValues(Number(param.id), value || "");
+                            handleSetParamsValues(param.id, value || "");
                           }}
                           theme="vs-dark"
                           defaultLanguage="typescript"
@@ -84,7 +89,7 @@ export default function TemplateConfigDialog({
                         />
                       </div>
                       <div className="absolute top-2 right-2">
-                        {paramsValues[Number(param.id)]?.trim() ? (
+                        {paramsValues[param.id]?.trim() ? (
                           <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
                             <Check className="w-3 h-3" />
                           </Badge>

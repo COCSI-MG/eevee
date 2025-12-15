@@ -161,6 +161,7 @@ describe('App (e2e)', () => {
   });
 
   afterAll(async () => {
+    await app.close();
     await moduleFixture.close();
   });
 
@@ -342,20 +343,85 @@ describe("gRPC MovieService", () => {
 });
 `;
 
-export const WorkerExibitionMap = {
-  [WorkerType.NODE_DEFAULT]: "Node Default",
-  [WorkerType.NODE_NESTJS]: "Node NestJS + TypeORM",
-  [WorkerType.NODE_GRPCJS]: "GRPC using gRPCJS",
+export const WORKER_EXHIBITION_NODE_DEFAULT = "Node Default";
+export const WORKER_EXHIBITION_NODE_NESTJS = "Node NestJS + TypeORM";
+export const WORKER_EXHIBITION_NODE_GRPCJS = "GRPC using gRPCJS";
+
+export const TEMPLATE_VARIABLES_IMPORTS = `import { vars } from './template-variables';
+
+// Example typed param access (optional):
+const quantidadeNumeros = vars.quantidadeNumeros;
+`;
+
+export const TEMPLATE_VARIABLES_SANITY_TEST = `
+
+describe('template vars', () => {
+  it('loads generated variables module', () => {
+    expect(vars).toBeDefined();
+  });
+
+  it('optional typed param has an expected type', () => {
+    const ok =
+      typeof quantidadeNumeros === 'undefined' ||
+      typeof quantidadeNumeros === 'number';
+    expect(ok).toBe(true);
+  });
+});
+`;
+
+export const DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT = `${TEMPLATE_VARIABLES_IMPORTS}
+
+${DEFAULT_VALIDATION_SCRIPT.trim()}
+
+${TEMPLATE_VARIABLES_SANITY_TEST.trim()}
+`;
+
+export const DEFAULT_TEMPLATE_CONTENT_NODE_NESTJS = `${TEMPLATE_VARIABLES_IMPORTS}
+
+${DEFAULT_NEST_JS_VALIDATION_SCRIPT.trim()}
+
+${TEMPLATE_VARIABLES_SANITY_TEST.trim()}
+`;
+
+export const DEFAULT_TEMPLATE_CONTENT_NODE_GRPCJS = `${TEMPLATE_VARIABLES_IMPORTS}
+import { main } from './app';
+
+${DEFAULT_GRPC_JS_VALIDATION_SCRIPT.trim()}
+
+describe('student exports', () => {
+  it('can import student code', () => {
+    expect(typeof main).toBe('function');
+  });
+});
+
+${TEMPLATE_VARIABLES_SANITY_TEST.trim()}
+`;
+
+export const WorkerExibitionMap: Record<WorkerType, string> = {
+  [WorkerType.NODE_DEFAULT]: WORKER_EXHIBITION_NODE_DEFAULT,
+  [WorkerType.NODE_NESTJS]: WORKER_EXHIBITION_NODE_NESTJS,
+  [WorkerType.NODE_GRPCJS]: WORKER_EXHIBITION_NODE_GRPCJS,
 };
 
-export const WorkerDefaultTemplateMap = {
+export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE,
 };
 
-export const WorkerDefaultValidationScriptMap = {
+export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_VALIDATION_SCRIPT,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_VALIDATION_SCRIPT,
+};
+
+/**
+ * Default content for *templates* (teacher test code). These get injected into the worker container and can:
+ * - import student exports from `./app`
+ * - access typed template params via `./template-variables`
+ */
+export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
+  [WorkerType.NODE_DEFAULT]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
+  [WorkerType.NODE_NESTJS]: DEFAULT_TEMPLATE_CONTENT_NODE_NESTJS,
+  [WorkerType.NODE_GRPCJS]: DEFAULT_TEMPLATE_CONTENT_NODE_GRPCJS,
 };

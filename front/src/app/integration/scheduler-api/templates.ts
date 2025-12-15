@@ -1,5 +1,6 @@
 import { CreateTemplateRequest, Template } from "@/app/interface/scheduler-api/template";
 import { axiosClientWithAuth } from "./client";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
 export class TemplatesService {
     static async create(data: CreateTemplateRequest) {
@@ -12,8 +13,10 @@ export class TemplatesService {
         return <Template>response.data;
     }
 
-    static async listTemplates() {
-        const response = await axiosClientWithAuth.get("/template");
+    static async listTemplates(workerType?: WorkerType) {
+        const response = await axiosClientWithAuth.get("/template", {
+            params: workerType ? { workerType } : undefined,
+        });
         return <Template[]>response.data;
     }
 
@@ -22,7 +25,7 @@ export class TemplatesService {
         return response.data;
     }
 
-    static async update(id: string, data: CreateTemplateRequest) {
+    static async update(id: number | string, data: CreateTemplateRequest) {
         const response = await axiosClientWithAuth.patch(`/template/${id}`, data);
         return <Template>response.data;
     }

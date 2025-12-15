@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { AssignmentForm } from "../assignment-form";
+import { AssignmentForm } from "../../../../components/assignment/form/assignment-form";
 import Link from "next/link";
 import { Route } from "@/app/routes";
 import { ArrowLeft } from "lucide-react";

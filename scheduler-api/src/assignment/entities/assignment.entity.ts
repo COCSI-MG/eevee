@@ -51,6 +51,9 @@ export class Assignment {
   })
   workerType: WorkerType;
 
+  @Column({ nullable: true })
+  boilerplateFilePath?: string;
+
   @OneToMany(() => AssignmentUserSuspension, (suspension) => suspension.assignment)
   suspensions?: AssignmentUserSuspension[];
 }

@@ -1,19 +1,34 @@
+import { WorkerType } from "./worker";
+
+export enum TemplateParamType {
+  OBJECT = "OBJECT",
+  STRING = "STRING",
+  NUMBER = "NUMBER",
+  BOOLEAN = "BOOLEAN",
+}
+
+export interface TemplateParam {
+  id: number;
+  name: string;
+  templateId: number;
+  type?: TemplateParamType;
+}
+
 export interface Template {
-    id: string;
-    title: string;
-    description: string;
-    templateContent: string;
-    templateParams: {
-        id: string;
-        name: string;
-        templateId: string;
-    }[];
+  id: number;
+  title: string;
+  description: string;
+  workerType: WorkerType;
+  templateContent: string;
+  templateParams: TemplateParam[];
 }
 
 export interface CreateTemplateRequest {
-    id?: string; // Optional for new templates
-    title: string;
-    description: string;
-    templateContent: string;
-    params: string[];
-};
+  id?: number; // Optional for new templates
+  title: string;
+  description: string;
+  workerType: WorkerType;
+  templateContent: string;
+  params: string[];
+  typedParams?: Array<{ name: string; type: TemplateParamType }>;
+}

@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
@@ -135,9 +135,8 @@ export default function Page() {
     <>
       <WorkspaceHeader
         assignment={{
-          title: assignmentData !== undefined ? assignmentData.title : "",
-          description:
-            assignmentData !== undefined ? assignmentData.description : "",
+          title: assignmentData ? assignmentData.title : "",
+          description: assignmentData ? assignmentData.description : "",
         }}
         onRunClick={() => submitAssignment()}
         onSaveClick={() => saveFileInServer()}

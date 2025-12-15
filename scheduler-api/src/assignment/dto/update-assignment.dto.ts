@@ -1,7 +1,14 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { AssignmentTemplateDto, CreateAssignmentDto } from './create-assignment.dto';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { Type } from 'class-transformer';
@@ -42,4 +49,22 @@ export class UpdateAssignmentDto {
       @ValidateNested({ each: true })
       @Type(() => AssignmentTemplateDto)
       templates: AssignmentTemplateDto[];
+
+      @IsOptional()
+      @ApiProperty({
+        description:
+          'Boilerplate code provided by the teacher (stored as a server-side file).',
+        required: false,
+      })
+      @IsString()
+      validationScript?: string;
+
+      @IsOptional()
+      @ApiProperty({
+        description:
+          'Boilerplate code provided by the teacher (stored as a server-side file). Prefer this field; validationScript is kept for backward compatibility.',
+        required: false,
+      })
+      @IsString()
+      boilerplate?: string;
 }

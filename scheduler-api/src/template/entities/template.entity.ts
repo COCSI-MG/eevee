@@ -1,27 +1,42 @@
-import { AssignmentTemplate } from "src/assignment_template/entities/assignment_template.entity";
-import { TemplateParam } from "src/template_params/entities/template_param.entity";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
+import { TemplateParam } from 'src/template-params/entities/template-param.entity';
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Template {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    title: string;
+  @Column()
+  title: string;
 
-    @Column({ nullable: true })
-    description?: string;
+  @Column({ nullable: true })
+  description?: string;
 
-    @Column()
-    filePath: string;
+  @Column()
+  filePath: string;
 
-    @Column('text', { array: true, nullable: true })
-    dependencies: string[];
+  @Column({
+    type: 'enum',
+    enum: WorkerType,
+    default: WorkerType.NODE_DEFAULT,
+  })
+  workerType: WorkerType;
 
-    @OneToMany(() => AssignmentTemplate, (assignmentTemplate) => assignmentTemplate.template)
-    assignmentTemplates?: AssignmentTemplate[];
+  @Column('text', { array: true, nullable: true })
+  dependencies: string[];
 
-    @OneToMany(() => TemplateParam, (assignmentTemplate) => assignmentTemplate.template, { eager: true })
-    templateParams: TemplateParam[];
+  @OneToMany(
+    () => AssignmentTemplate,
+    (assignmentTemplate) => assignmentTemplate.template,
+  )
+  assignmentTemplates?: AssignmentTemplate[];
+
+  @OneToMany(
+    () => TemplateParam,
+    (assignmentTemplate) => assignmentTemplate.template,
+    { eager: true },
+  )
+  templateParams: TemplateParam[];
 }

@@ -137,7 +137,7 @@ export default function AssignmentFormReview({
                 </h4>
                 <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
                   <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
-                    {values.validationScript}
+                    {values.boilerplate}
                   </pre>
                 </div>
               </div>

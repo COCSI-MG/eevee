@@ -8,18 +8,21 @@ export type FileNode = {
   isFile?: boolean;
   content?: string; // Conteúdo do arquivo (apenas para isFile: true)
   updatedAt?: string; // Timestamp de última atualização
-}
+};
 
 export interface SelectedItem {
   id: string;
   name: string;
-  type: 'file' | 'folder';
+  type: "file" | "folder";
   path: string;
 }
 
 export interface SelectedTemplate {
   templateId: number;
-  params: Array<{ templateParamId: number; value: string }>;
+  params: {
+    templateParamId: number;
+    value: string;
+  }[];
 }
 
 export interface SelectedUser {

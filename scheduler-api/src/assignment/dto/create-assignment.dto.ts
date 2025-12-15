@@ -1,6 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { ArrayNotEmpty, IsEnum, IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
 import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
@@ -52,6 +60,24 @@ export class CreateAssignmentDto {
   @ApiProperty()
   @IsEnum(WorkerType)
   workerType: WorkerType;
+
+  @ApiProperty({
+    description:
+      'Boilerplate code provided by the teacher (stored as a server-side file).',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  validationScript?: string;
+
+  @ApiProperty({
+    description:
+      'Boilerplate code provided by the teacher (stored as a server-side file). Prefer this field; validationScript is kept for backward compatibility.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  boilerplate?: string;
 
   @ApiProperty({ type: [AssignmentTemplateDto] })
   @ValidateNested({ each: true })

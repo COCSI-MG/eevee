@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { TemplateService } from './template.service';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 @Controller('template')
 @UseGuards(JwtAuthGuard)
@@ -17,8 +18,8 @@ export class TemplateController {
   }
 
   @Get()
-  findAll() {
-    return this.templateService.findAll();
+  findAll(@Query('workerType') workerType?: WorkerType) {
+    return this.templateService.findAll(workerType);
   }
 
   @Get(':id')

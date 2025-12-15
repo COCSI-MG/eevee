@@ -9,6 +9,10 @@ import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
 import { TemplatesService } from "@/app/integration/scheduler-api/templates";
+import {
+  TEMPLATE_LIST_TEXT,
+  TEMPLATE_LIST_TOAST_MESSAGES,
+} from "@/app/admin/templates/constants";
 
 export default function TemplatePage() {
   const { data: templates, refetch, isFetching } = useTemplates();
@@ -17,8 +21,8 @@ export default function TemplatePage() {
     try {
       await TemplatesService.deleteTemplate(id);
       toast({
-        title: "Template deleted",
-        description: "The template has been successfully deleted.",
+        title: TEMPLATE_LIST_TOAST_MESSAGES.deleteSuccessTitle,
+        description: TEMPLATE_LIST_TOAST_MESSAGES.deleteSuccessDescription,
         duration: 4000,
       });
       refetch();
@@ -29,7 +33,7 @@ export default function TemplatePage() {
         const apiMessage = err.response.data?.message;
         if (apiMessage) {
           toast({
-            title: "Error",
+            title: TEMPLATE_LIST_TOAST_MESSAGES.errorTitle,
             description: apiMessage,
             variant: "destructive",
             duration: 4000,
@@ -39,9 +43,11 @@ export default function TemplatePage() {
       }
 
       toast({
-        title: "Error",
+        title: TEMPLATE_LIST_TOAST_MESSAGES.errorTitle,
         description:
-          err instanceof Error ? err.message : "Failed to delete template.",
+          err instanceof Error
+            ? err.message
+            : TEMPLATE_LIST_TOAST_MESSAGES.deleteErrorFallbackDescription,
         variant: "destructive",
         duration: 4000,
       });
@@ -55,11 +61,13 @@ export default function TemplatePage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Templates</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {TEMPLATE_LIST_TEXT.title}
+        </h1>
         <Link href="/admin/templates/new">
           <Button variant={"outline"}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Template
+            {TEMPLATE_LIST_TEXT.addButton}
           </Button>
         </Link>
       </div>

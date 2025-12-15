@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { TemplateParamsService } from './template_params.service';
-import { CreateTemplateParamDto } from './dto/create-template_param.dto';
-import { UpdateTemplateParamDto } from './dto/update-template_param.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+import { TemplateParamsService } from './template-params.service';
+import { CreateTemplateParamDto } from './dto/create-template-param.dto';
+import { UpdateTemplateParamDto } from './dto/update-template-param.dto';
 
 @Controller('template-params')
 export class TemplateParamsController {
@@ -23,7 +31,10 @@ export class TemplateParamsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTemplateParamDto: UpdateTemplateParamDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateTemplateParamDto: UpdateTemplateParamDto,
+  ) {
     return this.templateParamsService.update(+id, updateTemplateParamDto);
   }
 
