@@ -53,6 +53,11 @@ export class SchedulingService {
       WorkerType.NODE_GRPCJS,
       workerService.createGrpcJsWorkerAndWait.bind(workerService),
     );
+
+    this.workerMap.set(
+      WorkerType.NODE_NEXTJS_CYPRESS,
+      workerService.createNextJsCypressWorkerAndWait.bind(workerService),
+    );
   }
 
   private calculateScore(result: WorkerResponse) {
@@ -100,7 +105,9 @@ export class SchedulingService {
         if (templateDependencies.length > 0)
           dependencies.push(...templateDependencies);
 
-        const content = await readFileAsString(templateRelation.template.filePath);
+        const content = await readFileAsString(
+          templateRelation.template.filePath,
+        );
 
         testFiles.push({
           templateId: templateRelation.template.id,
@@ -249,13 +256,12 @@ export class SchedulingService {
       attempt.assignment,
     );
 
-    const testFiles: WorkerTestFile[] = attempt.assignment.assignmentTemplates.map(
-      (templateRelation, index) => ({
+    const testFiles: WorkerTestFile[] =
+      attempt.assignment.assignmentTemplates.map((templateRelation, index) => ({
         templateId: templateRelation.template.id,
         type: attempt.assignment.workerType,
         content: filledTemplates[index] ?? '',
-      }),
-    );
+      }));
 
     const createSchedulingDto: CreateSchedulingDto = {
       assignmentId: attempt.assignmentId,

@@ -1,6 +1,10 @@
 "use client";
 
-import { DEFAULT_ASSIGNMENT_TEMPLATE } from "@/app/admin/assignments/constants";
+import {
+  DEFAULT_ASSIGNMENT_TEMPLATE,
+  WorkerDefaultTemplateMap,
+} from "@/app/admin/assignments/constants";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import {
   useSaveFileTree,
   useUpdateFileContent,
@@ -15,24 +19,31 @@ import { getFileTree } from "@/app/integration/filestash";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { User } from "@/app/interface/scheduler-api/user";
 
-const defaultFileNode: FileNode[] = [
-  {
-    id: "1",
-    label: "src",
-    isSelectable: true,
-    isFile: false,
-    children: [
-      {
-        id: "2",
-        label: "index.ts",
-        isSelectable: true,
-        isFile: true,
-        path: "src/index.ts",
-      },
-    ],
-    path: "src",
-  },
-];
+const defaultFileNodeForWorker = (
+  workerType: string | undefined
+): FileNode[] => {
+  const isNextCypress = workerType === WorkerType.NODE_NEXTJS_CYPRESS;
+  const fileName = isNextCypress ? "index.tsx" : "index.ts";
+
+  return [
+    {
+      id: "1",
+      label: "src",
+      isSelectable: true,
+      isFile: false,
+      children: [
+        {
+          id: "2",
+          label: fileName,
+          isSelectable: true,
+          isFile: true,
+          path: `src/${fileName}`,
+        },
+      ],
+      path: "src",
+    },
+  ];
+};
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -45,8 +56,15 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     if (typeof boilerplate === "string" && boilerplate.trim().length > 0) {
       return boilerplate;
     }
-    return DEFAULT_ASSIGNMENT_TEMPLATE;
-  }, [assignment.boilerplate, assignment.validationScript]);
+    return (
+      WorkerDefaultTemplateMap[assignment.workerType as WorkerType] ??
+      DEFAULT_ASSIGNMENT_TEMPLATE
+    );
+  }, [
+    assignment.boilerplate,
+    assignment.validationScript,
+    assignment.workerType,
+  ]);
   const [currentFileContent, setCurrentFileContent] =
     React.useState<string>("");
 
@@ -62,6 +80,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     async (assignmentId: number, userId: number) => {
       let fileTree = await getFileTree(assignmentId, userId);
       if (!fileTree) {
+        const defaultFileNode = defaultFileNodeForWorker(assignment.workerType);
         await saveFileTreeAsync({
           assignmentId,
           userId,
@@ -108,6 +127,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
       updateFileContentAsync,
       defaultEditorValue,
       setSelectedItem,
+      assignment.workerType,
     ]
   );
 

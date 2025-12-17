@@ -106,7 +106,8 @@ export const TEMPLATE_LIST_TOAST_MESSAGES = {
   deleteSuccessTitle: TEMPLATE_TOAST_DELETE_SUCCESS_TITLE,
   deleteSuccessDescription: TEMPLATE_TOAST_DELETE_SUCCESS_DESCRIPTION,
   errorTitle: TEMPLATE_TOAST_ERROR_TITLE,
-  deleteErrorFallbackDescription: TEMPLATE_TOAST_DELETE_ERROR_FALLBACK_DESCRIPTION,
+  deleteErrorFallbackDescription:
+    TEMPLATE_TOAST_DELETE_ERROR_FALLBACK_DESCRIPTION,
 } as const;
 
 export const TEMPLATE_TABLE_TITLE_HEADER = "Title";
@@ -131,6 +132,7 @@ export const WorkerTypeLabelMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: WorkerType.NODE_DEFAULT,
   [WorkerType.NODE_NESTJS]: WorkerType.NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: WorkerType.NODE_GRPCJS,
+  [WorkerType.NODE_NEXTJS_CYPRESS]: WorkerType.NODE_NEXTJS_CYPRESS,
 };
 
 export const TemplateParamTypeLabelMap: Record<TemplateParamType, string> = {

@@ -6,6 +6,17 @@ export function main() {
   console.log('Hello, world!');
 }`;
 
+export const DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE = `import React from 'react';
+
+export default function StudentApp() {
+  return (
+    <div>
+      <h1 data-testid="title">Hello from StudentApp</h1>
+    </div>
+  );
+}
+`;
+
 export const DEFAULT_VALIDATION_SCRIPT = `
 import { main } from './app';
 
@@ -45,6 +56,25 @@ describe('main', () => {
     const correctResult = math_div(2, 3);
     const providedResult = main(2, 3);
     expect(providedResult[3]).toEqual(correctResult);
+  });
+});
+`;
+
+export const DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT = `
+// Cypress spec file content (written to /app/cypress/e2e/validation0.cy.ts)
+// Tip: template variables are available via ../../template-variables
+import { vars } from '../../template-variables';
+
+describe('Next.js app', () => {
+  it('loads the page', () => {
+    expect(vars).to.exist;
+    cy.visit('/');
+    cy.get('[data-testid="student-root"]').should('exist');
+  });
+
+  it('renders the student component', () => {
+    cy.visit('/');
+    cy.get('[data-testid="title"]').should('contain.text', 'Hello');
   });
 });
 `;
@@ -346,6 +376,7 @@ describe("gRPC MovieService", () => {
 export const WORKER_EXHIBITION_NODE_DEFAULT = "Node Default";
 export const WORKER_EXHIBITION_NODE_NESTJS = "Node NestJS + TypeORM";
 export const WORKER_EXHIBITION_NODE_GRPCJS = "GRPC using gRPCJS";
+export const WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS = "Next.js + Cypress";
 
 export const TEMPLATE_VARIABLES_IMPORTS = `import { vars } from './template-variables';
 
@@ -401,18 +432,21 @@ export const WorkerExibitionMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: WORKER_EXHIBITION_NODE_DEFAULT,
   [WorkerType.NODE_NESTJS]: WORKER_EXHIBITION_NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: WORKER_EXHIBITION_NODE_GRPCJS,
+  [WorkerType.NODE_NEXTJS_CYPRESS]: WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS,
 };
 
 export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE,
+  [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_VALIDATION_SCRIPT,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_VALIDATION_SCRIPT,
+  [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
 };
 
 /**
@@ -424,4 +458,5 @@ export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
   [WorkerType.NODE_NESTJS]: DEFAULT_TEMPLATE_CONTENT_NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: DEFAULT_TEMPLATE_CONTENT_NODE_GRPCJS,
+  [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
 };

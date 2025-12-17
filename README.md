@@ -68,3 +68,16 @@ Agora é necessário incluir a imagem no minikube
 ```
 minikube image load worker-node-grpcjs-img:latest
 ```
+
+### Node Next.js + Cypress Worker
+
+```
+cd node-worker-images\next.js-cypress
+docker build . -t worker-node-nextjs-cypress-img:latest
+```
+
+Agora é necessário incluir a imagem no minikube
+
+```
+minikube image load worker-node-nextjs-cypress-img:latest
+```
