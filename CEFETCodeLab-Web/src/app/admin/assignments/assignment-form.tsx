@@ -9,7 +9,9 @@ import {
   WorkerDefaultTemplateMap,
   WorkerDefaultValidationScriptMap,
   WorkerExibitionMap,
+  WorkerDefinitionPresets,
 } from "./constants";
+import { WorkerDefinitionEditor } from "@/components/assignment/worker-definition-editor";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,7 @@ const validationSchema = Yup.object({
   workerType: Yup.string()
     .oneOf(Object.values(WorkerType))
     .required("Worker type is required"),
+  workerDefinition: Yup.object().required("Worker definition is required"),
   validationScript: Yup.string().required("Validation script is required"),
   classId: Yup.string().required("Class is required"),
 });
@@ -51,11 +54,17 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
   const { data: classes, isFetching: isFetchingClasses } = useClasses();
 
-  const initialValues: Partial<Assignment> = {
+  const initialValues = {
     title: existingAssignment?.title ?? "",
     description: existingAssignment?.description ?? "",
     maxAttempts: existingAssignment?.maxAttempts ?? 1,
     workerType: existingAssignment?.workerType ?? WorkerType.NODE_DEFAULT,
+    workerDefinition: existingAssignment?.workerDefinition ?? {
+      files: null, 
+      startCommands: [],
+      testCommands: [],
+      dependencies: [],
+    },
     validationScript:
       WorkerDefaultValidationScriptMap[
         (existingAssignment?.workerType ||
@@ -86,7 +95,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     <div className="p-4 space-y-4 overflow-hidden">
       <AssignmentStepContainer currentStep={currentStep} />
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-8xl mx-auto">
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -109,8 +118,16 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                 );
                 setFieldValue(
                   "validationScript",
-                  WorkerDefaultTemplateMap[safeWorkerType]
+                  WorkerDefaultValidationScriptMap[safeWorkerType]
                 );
+                // Auto-populate workerDefinition presets
+                const preset = WorkerDefinitionPresets[safeWorkerType];
+                if (preset) {
+                  setFieldValue("workerDefinition", {
+                    files: null,
+                    ...preset,
+                  });
+                }
               }
             }, [values.workerType, setFieldValue]);
 
@@ -119,8 +136,18 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                 case 1:
                   return isValid;
                 case 2:
-                  return selectedTemplates.length > 0;
+                  // Validate workerDefinition has at least testCommands
+                  return (
+                    values.workerDefinition &&
+                    Array.isArray(values.workerDefinition.testCommands) &&
+                    values.workerDefinition.testCommands.length > 0 &&
+                    values.workerDefinition.testCommands.every(
+                      (cmd) => cmd.trim() !== ""
+                    )
+                  );
                 case 3:
+                  return true; 
+                case 4:
                   return values.validationScript?.trim() != "";
                 default:
                   return true;
@@ -254,13 +281,23 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
                 case 2:
                   return (
+                    <WorkerDefinitionEditor
+                      value={values.workerDefinition}
+                      onChange={(newDefinition) =>
+                        setFieldValue("workerDefinition", newDefinition)
+                      }
+                    />
+                  );
+
+                case 3:
+                  return (
                     <TemplateCard
                       selectedTemplates={selectedTemplates}
                       setSelectedTemplates={setSelectedTemplates}
                     />
                   );
 
-                case 3:
+                case 4:
                   return (
                     <Card className="bg-slate-800 border-slate-700 max-h-[600px]">
                       <CardHeader>
@@ -300,7 +337,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                     </Card>
                   );
 
-                case 4:
+                case 5:
                   return (
                     <AssignmentFormReview
                       values={values}
@@ -332,7 +369,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   </Button>
 
                   <div className="flex gap-2">
-                    {currentStep < 4 ? (
+                    {currentStep < 5 ? (
                       <Button
                         type="button"
                         disabled={!canProceedToNextStep()}

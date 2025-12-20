@@ -1,6 +1,14 @@
+export interface SchedulingFilesNode {
+  id: string;
+  type: 'file' | 'folder';
+  children?: SchedulingFilesNode[] | null;
+  content?: string;
+}
+
 export interface Scheduling {
   assignmentId: number;
   applicationFileContent: string;
+  files: SchedulingFilesNode | null; 
 }
 
 export interface SchedulingResponse {

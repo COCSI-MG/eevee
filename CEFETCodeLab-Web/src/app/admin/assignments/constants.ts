@@ -185,17 +185,76 @@ describe('App (e2e)', () => {
 });
 `;
 
+export const DEFAULT_CYPRESS_VALIDATION_SCRIPT = `
+describe("Mock Page Test", () => {
+  beforeEach(() => {
+    cy.visit("/");
+  });
+
+  it("should display the heading and paragraph", () => {
+    cy.contains("h1", "Mock Page for Testing").should("be.visible");
+    cy.contains(
+      "p",
+      "This page is designed to be targeted by Cypress tests."
+    ).should("be.visible");
+  });
+
+  it("should allow typing into the input field", () => {
+    const inputText = "Hello Cypress!";
+    cy.get("#test-input").type(inputText).should("have.value", inputText);
+  });
+
+  it("should show an alert when the button is clicked", () => {
+    cy.get("#test-button").click();
+  });
+
+  it("should have a message area", () => {
+    cy.get("#message-area")
+      .should("be.visible")
+      .and("contain.text", "Messages will appear here.");
+  });
+});`
+
 export const WorkerExibitionMap = {
   [WorkerType.NODE_DEFAULT]: "Node Default",
   [WorkerType.NODE_NESTJS]: "Node NestJS + TypeORM",
+  [WorkerType.REACT_CYPRESS]: "ReactJS + Cypress",
+  [WorkerType.NEXTJS_CYPRESS]: "NextJS + Cypress",
 };
 
 export const WorkerDefaultTemplateMap = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
+  [WorkerType.REACT_CYPRESS]: DEFAULT_ASSIGNMENT_TEMPLATE,
+  [WorkerType.NEXTJS_CYPRESS]: DEFAULT_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_VALIDATION_SCRIPT,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
+  [WorkerType.REACT_CYPRESS]: DEFAULT_CYPRESS_VALIDATION_SCRIPT,
+  [WorkerType.NEXTJS_CYPRESS]: DEFAULT_CYPRESS_VALIDATION_SCRIPT, 
+};
+
+export const WorkerDefinitionPresets = {
+  [WorkerType.NODE_DEFAULT]: {
+    startCommands: [],
+    testCommands: ["npm run test"],
+    dependencies: [],
+  },
+  [WorkerType.NODE_NESTJS]: {
+    startCommands: ["npm run start:dev"],
+    testCommands: ["npm run test:e2e"],
+    dependencies: [],
+  },
+  [WorkerType.REACT_CYPRESS]: {
+    startCommands: ["npm run start"],
+    testCommands: ["npm run test"],
+    dependencies: [],
+  },
+  [WorkerType.NEXTJS_CYPRESS]: {
+    startCommands: ["npm run dev"],
+    testCommands: ["npm run test"],
+    dependencies: [],
+  },
 };

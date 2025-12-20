@@ -6,16 +6,14 @@ import { FileNode, SelectedItem } from "@/types/shared";
 import { useEffect } from "react";
 import { initStash } from "@/app/integration/filestash";
 
-interface WorskpaceContextType {
-  currentStep: number;
-  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+interface WorkspaceContextType {
   selectedItem: SelectedItem;
   setSelectedItem: React.Dispatch<React.SetStateAction<SelectedItem>>;
-  fileTreeData: FileNode[];
-  setFileTreeData: React.Dispatch<React.SetStateAction<FileNode[]>>;
+  fileTreeData: FileNode;
+  setFileTreeData: React.Dispatch<React.SetStateAction<FileNode>>;
 }
 
-const WorkspaceContext = React.createContext<WorskpaceContextType | undefined>(
+const WorkspaceContext = React.createContext<WorkspaceContextType | undefined>(
   undefined
 );
 
@@ -36,10 +34,20 @@ interface WorkspaceProviderProps {
 export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   children,
 }) => {
-  const [currentStep, setCurrentStep] = React.useState(1);
-  const [selectedItem, setSelectedItem] =
-    React.useState<SelectedItem>({ id: "", name: "", type: "file", path: "" });
-  const [treeData, setTreeData] = React.useState<FileNode[]>([]);
+  const [selectedItem, setSelectedItem] = React.useState<SelectedItem>({
+    id: "",
+    name: "",
+    type: "file",
+    path: "",
+  });
+  const [treeData, setTreeData] = React.useState<FileNode>({
+    id: "1",
+    label: "src",
+    isSelectable: true,
+    isFile: false,
+    children: [],
+    path: "src",
+  });
 
   useEffect(() => {
     const initializeStashFn = async () => {
@@ -54,9 +62,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   usePreventUserActions();
 
-  const value: WorskpaceContextType = {
-    currentStep,
-    setCurrentStep,
+  const value: WorkspaceContextType = {
     selectedItem,
     setSelectedItem,
     fileTreeData: treeData,

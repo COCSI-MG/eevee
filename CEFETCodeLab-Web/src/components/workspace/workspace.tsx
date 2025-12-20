@@ -1,10 +1,9 @@
 "use client";
 
-import { DEFAULT_ASSIGNMENT_TEMPLATE } from "@/app/admin/assignments/constants";
 import {
+  useFetchFileContent,
   useSaveFileTree,
   useUpdateFileContent,
-  useFetchFileContent,
 } from "@/hooks/use-filestash";
 import { FileNode } from "@/types/shared";
 import React, { useCallback } from "react";
@@ -14,25 +13,10 @@ import { useWorkspaceContext } from "./workspace-provider";
 import { getFileTree } from "@/app/integration/filestash";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { User } from "@/app/interface/scheduler-api/user";
-
-const defaultFileNode: FileNode[] = [
-  {
-    id: "1",
-    label: "src",
-    isSelectable: true,
-    isFile: false,
-    children: [
-      {
-        id: "2",
-        label: "index.js",
-        isSelectable: true,
-        isFile: true,
-        path: "src/index.js",
-      },
-    ],
-    path: "src",
-  },
-];
+import {
+  WORKER_FILE_CONTENTS,
+  WORKER_FILE_TEMPLATES,
+} from "@/app/assignment/[id]/workspace/worker-templates";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -40,46 +24,45 @@ interface WorkspaceProps {
 }
 
 export default function Workspace({ assignment, user }: WorkspaceProps) {
-  const [defaultEditorValue] = React.useState<string>(
-    DEFAULT_ASSIGNMENT_TEMPLATE
-  );
-  const [currentFileContent, setCurrentFileContent] =
-    React.useState<string>("");
+  const [activeFile, setActiveFile] = React.useState<{
+    name: string;
+    language: string;
+    value: string;
+  } | null>(null);
 
   const { selectedItem, setSelectedItem, setFileTreeData } =
     useWorkspaceContext();
 
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
-  const { mutate: updateFileContent, mutateAsync: updateFileContentAsync } =
-    useUpdateFileContent();
+  const { mutate: updateFileContent } = useUpdateFileContent();
   const { mutateAsync: fetchFileContent } = useFetchFileContent();
 
   const getOrCreateFileTreeOnInit = useCallback(
     async (assignmentId: number, userId: number) => {
       let fileTree = await getFileTree(assignmentId, userId);
       if (!fileTree) {
+        const workerType =
+          assignment.workerType as keyof typeof WORKER_FILE_TEMPLATES;
+        const defaultNodeForWorkerType = WORKER_FILE_TEMPLATES[workerType];
+        const defaultFileNode: FileNode = JSON.parse(
+          JSON.stringify(defaultNodeForWorkerType)
+        );
+
         await saveFileTreeAsync({
           assignmentId,
           userId,
           fileTree: defaultFileNode,
         });
         fileTree = defaultFileNode;
-
-        await updateFileContentAsync({
-          assignmentId,
-          userId,
-          filePath: defaultFileNode[0].children?.[0].path || "",
-          content: defaultEditorValue,
-        });
       }
 
       setFileTreeData(fileTree);
 
-      const findFirst = (nodes: FileNode[]): FileNode | null => {
-        for (const node of nodes) {
-          if (node.isFile) return node;
-          if (node.children) {
-            const found = findFirst(node.children);
+      const findFirst = (node: FileNode): FileNode | null => {
+        if (node.isFile) return node;
+        if (node.children) {
+          for (const child of node.children) {
+            const found = findFirst(child);
             if (found) return found;
           }
         }
@@ -94,17 +77,20 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
           type: "file",
           path: firstFile.path,
         });
+
+        const content = firstFile.content;
+
+        const defaultContent = WORKER_FILE_CONTENTS[firstFile.path] || "";
+        setActiveFile({
+          name: firstFile.label,
+          language: firstFile.label.split(".").pop() || "",
+          value: content || defaultContent,
+        });
       }
 
       return fileTree;
     },
-    [
-      setFileTreeData,
-      saveFileTreeAsync,
-      updateFileContentAsync,
-      defaultEditorValue,
-      setSelectedItem,
-    ]
+    [setFileTreeData, assignment.workerType, saveFileTreeAsync, setSelectedItem]
   );
 
   // Inicializa a árvore no stash quando carrega o assignment
@@ -112,40 +98,31 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     getOrCreateFileTreeOnInit(assignment.id, user.id);
   }, [assignment.id, getOrCreateFileTreeOnInit, user.id]);
 
-  // Carrega o conteúdo do arquivo selecionado
-  React.useEffect(() => {
-    if (selectedItem.path) {
-      console.log("Fetching file content for", selectedItem.path);
-      fetchFileContent({
-        assignmentId: assignment.id,
-        userId: user.id,
-        filePath: selectedItem.path,
-      }).then((content) => {
-        setCurrentFileContent(content || defaultEditorValue);
-      });
-    }
-  }, [
-    selectedItem.path,
-    user.id,
-    fetchFileContent,
-    defaultEditorValue,
-    assignment.id,
-  ]);
-
-  const handleFileSelect = (node: FileNode) => {
+  const handleFileSelect = async (node: FileNode) => {
     setSelectedItem({
       id: node.id,
       name: node.label,
       type: node.isFile ? "file" : "folder",
       path: node.path,
     });
+
+    if (!node.isFile) return;
+
+    const content = await fetchFileContent({
+      assignmentId: assignment.id,
+      userId: user.id,
+      filePath: node.path,
+    });
+
+    setActiveFile({
+      name: node.label,
+      language: node.label.split(".").pop() || "",
+      value: content || "",
+    });
   };
 
   const handleEditorChange = (value: string | undefined) => {
-    if (
-      value !== undefined &&
-      selectedItem.path
-    ) {
+    if (value !== undefined && selectedItem.path) {
       console.log("Updating file content for", selectedItem.path);
       updateFileContent({
         assignmentId: assignment.id,
@@ -153,12 +130,17 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
         filePath: selectedItem.path,
         content: value,
       });
-      setCurrentFileContent(value);
+
+      setActiveFile({
+        name: selectedItem.name,
+        language: selectedItem.name.split(".").pop() || "",
+        value: value,
+      });
     }
   };
 
   const handleTreeChange = useCallback(
-    async (newTree: FileNode[]) => {
+    async (newTree: FileNode) => {
       if (assignment.id && user?.id) {
         console.log("Saving updated file tree");
         setFileTreeData(newTree);
@@ -181,9 +163,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
 
       <div className="flex-1 flex flex-col">
         <WorkspaceCodeEditor
-          activeFile={selectedItem.name}
-          editorValue={currentFileContent}
-          editorDefaultValue={defaultEditorValue}
+          file={activeFile!}
           onEditorChange={handleEditorChange}
         />
       </div>

@@ -1,8 +1,10 @@
-'use client'
+"use client";
 
+import { getFileTree } from "@/app/integration/filestash";
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { SchedulingFilesNode } from "@/app/interface/scheduler-api/scheduling";
 import WorkspaceHeader from "@/components/workspace/header";
 import Workspace from "@/components/workspace/workspace";
 import WorkspaceAgreement from "@/components/workspace/workspace-agreement";
@@ -13,22 +15,24 @@ import { useFetchAssignment } from "@/hooks/use-assignments";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useFetchFileContent } from "@/hooks/use-filestash";
 import { toast } from "@/hooks/use-toast";
+import { FileNode } from "@/types/shared";
 import { useMutation } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function Page() {
   const { id } = useParams();
-
   const { back } = useRouter();
-
   const { user } = useAuthContext();
+  const { selectedItem } = useWorkspaceContext();
+  const { mutateAsync: fetchFileContent } = useFetchFileContent();
 
   const { data: assignmentData, isFetching: isFetchingAssignment } =
     useFetchAssignment(Number(id));
 
-  const { selectedItem, currentStep, setCurrentStep } = useWorkspaceContext();
-
-  const { mutateAsync: fetchFileContent } = useFetchFileContent();
+  // Estado para controlar se o usuário aceitou o acordo
+  const [hasAcceptedAgreement, setHasAcceptedAgreement] =
+    useState<boolean>(false);
 
   const { mutate: submitAssignment, isPending: isSubmitting } = useMutation({
     mutationKey: ["submit-assignment"],
@@ -36,6 +40,37 @@ export default function Page() {
       if (!assignmentData?.id || !user?.id || !selectedItem.path) {
         return Promise.reject("Missing required data");
       }
+
+      const transformFileNodeToSchedulingFilesNode = (
+        node: FileNode
+      ): SchedulingFilesNode => {
+        if (node.isFile) {
+          return {
+            id: node.label,
+            type: "file",
+            content: node.content,
+            children: null,
+          };
+        }
+
+        return {
+          id: node.label,
+          type: "folder",
+          children: node.children
+            ? node.children.map((child) =>
+                transformFileNodeToSchedulingFilesNode(child)
+              )
+            : null,
+        };
+      };
+
+      const fileTree = await getFileTree(assignmentData.id, user.id);
+      if (!fileTree) {
+        return Promise.reject("File tree not found");
+      }
+
+      const schedulingFilesNode =
+        transformFileNodeToSchedulingFilesNode(fileTree);
 
       const fileContent = await fetchFileContent({
         assignmentId: assignmentData.id,
@@ -47,16 +82,10 @@ export default function Page() {
         return Promise.reject("File content is empty");
       }
 
-      if (user?.isAdmin) {
-        return SchedulingService.createScheduling({
-          assignmentId: assignmentData.id,
-          applicationFileContent: fileContent,
-        });
-      }
-
       return SchedulingService.createSchedulingInBackground({
         assignmentId: assignmentData.id,
         applicationFileContent: fileContent,
+        files: schedulingFilesNode,
       });
     },
     onError: (error) => {
@@ -68,11 +97,6 @@ export default function Page() {
     },
     onSuccess: (data) => {
       console.log(data);
-
-      if (user?.isAdmin) {
-        alert("Resultado da tarefa :\n" + JSON.stringify(data));
-        return;
-      }
 
       toast({
         title: "Seu trabalho foi recebido com sucesso e está sendo processado",
@@ -113,24 +137,32 @@ export default function Page() {
     );
   };
 
+  const handleAcceptAgreement = () => {
+    setHasAcceptedAgreement(true);
+  };
+
+  // Loading state
   if (isFetchingAssignment) {
     return <WorkspaceLoading />;
   }
 
+  // Suspension check
   if (assignmentData && isUserSuspended(assignmentData)) {
     return <WorkspaceSuspension />;
   }
 
-  if (user && !user.isAdmin && assignmentData && currentStep === 1) {
+  // Agreement check - APENAS para não-admins que ainda não aceitaram
+  if (user && !user.isAdmin && assignmentData && !hasAcceptedAgreement) {
     return (
       <WorkspaceAgreement
         title={assignmentData.title}
-        onAccept={() => setCurrentStep(2)}
+        onAccept={handleAcceptAgreement}
         assignmentId={assignmentData.id}
       />
     );
   }
 
+  // Workspace principal (após aceitar ou se for admin)
   return (
     <>
       <WorkspaceHeader

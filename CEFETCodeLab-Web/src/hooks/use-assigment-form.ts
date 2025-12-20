@@ -10,7 +10,7 @@ import { SelectedTemplate } from '@/types/shared';
 export const useAssignmentForm = (existingAssignmentId?: number) => {
     const { push } = useRouter();
 
-    const [selectedTemplates, setSelectedTemplates] = useState<SelectedTemplate[]>([]);
+    const [selectedTemplates, setSelectedTemplates] = useState<SelectedTemplate[] | null>([]);
 
     const { data: existingAssignment, isFetching } = useQuery({
         queryKey: [`currentAssignment ${existingAssignmentId}`],
@@ -40,7 +40,7 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
         onError: () => {
             toast({
                 title: `Error ${existingAssignmentId ? 'updating' : 'creating'} assignment`,
-                description: 'Please try again later.',
+                description: "Ocorred an error while saving the assignment. Please try again.",
                 variant: 'destructive',
             });
         }

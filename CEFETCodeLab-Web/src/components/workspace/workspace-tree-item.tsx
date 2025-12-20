@@ -1,71 +1,116 @@
-import { FileNode, SelectedItem } from '@/types/shared';
-import { File, Folder, Tree } from '../magicui/file-tree';
+import { FileNode, SelectedItem } from "@/types/shared";
+import { ChevronRight, File, Folder } from "lucide-react";
+import React from "react";
+import { cn } from "@/lib/utils";
 
 interface WorkspaceFileTreeProps {
-  treeData: FileNode[];
+  treeData: FileNode | null;
   onFileSelect: (node: FileNode) => void;
-  selectedItem: SelectedItem;
-  setSelectedItem: React.Dispatch<React.SetStateAction<SelectedItem>>;
+  selectedItem: { id: string; name: string; type: string; path: string };
+  setSelectedItem: (item: SelectedItem) => void;
 }
+
+interface TreeNodeProps {
+  node: FileNode;
+  onFileSelect: (node: FileNode) => void;
+  selectedPath: string;
+  level?: number;
+}
+
+const TreeNode: React.FC<TreeNodeProps> = ({
+  node,
+  onFileSelect,
+  selectedPath,
+  level = 0,
+}) => {
+  const [isOpen, setIsOpen] = React.useState(level === 0); // Raiz aberta por padrão
+  const isSelected = node.path === selectedPath;
+
+  const handleClick = () => {
+    if (!node.isFile) {
+      setIsOpen(!isOpen);
+    }
+    onFileSelect(node);
+  };
+
+  return (
+    <div>
+      <div
+        className={cn(
+          "flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-gray-700 transition-colors",
+          isSelected && "bg-gray-700",
+          !node.isFile && "font-medium"
+        )}
+        style={{ paddingLeft: `${level * 12 + 8}px` }}
+        onClick={handleClick}
+      >
+        {!node.isFile && (
+          <ChevronRight
+            className={cn(
+              "w-4 h-4 transition-transform text-gray-400",
+              isOpen && "rotate-90"
+            )}
+          />
+        )}
+        {node.isFile ? (
+          <File className="w-4 h-4 text-blue-400" />
+        ) : (
+          <Folder
+            className={cn(
+              "w-4 h-4",
+              isOpen ? "text-yellow-400" : "text-gray-400"
+            )}
+          />
+        )}
+        <span className="text-sm text-gray-200 truncate">{node.label}</span>
+      </div>
+
+      {!node.isFile && isOpen && node.children && (
+        <div>
+          {node.children
+            .sort((a, b) => {
+              // Pastas primeiro, depois arquivos, ambos em ordem alfabética
+              if (a.isFile === b.isFile) {
+                return a.label.localeCompare(b.label);
+              }
+              return a.isFile ? 1 : -1;
+            })
+            .map((child) => (
+              <TreeNode
+                key={child.id}
+                node={child}
+                onFileSelect={onFileSelect}
+                selectedPath={selectedPath}
+                level={level + 1}
+              />
+            ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function WorkspaceFileTree({
   treeData,
   onFileSelect,
   selectedItem,
 }: WorkspaceFileTreeProps) {
-  /**
-   * Recursively renders the children of the file tree.
-   */
-  const renderChildren = (treeChildrenData: FileNode[]): React.ReactNode[] => {
-    return treeChildrenData
-      .sort((a, b) => {
-        if (a.isFile && b.isFile) {
-          return a.label.localeCompare(b.label);
-        }
-        if (a.isFile) return 1; // Files come after folders
-        if (b.isFile) return -1; // Folders come before files
-        return a.label.localeCompare(b.label); // Sort folders alphabetically
-      })
-      .map((item) => {
-        if (item.isFile) {
-          return (
-            <File
-              key={item.id}
-              value={item.id}
-              isSelectable={item.isSelectable}
-              onClick={(e) => {
-                e.stopPropagation();
-                onFileSelect(item);
-              }}
-              isSelect={selectedItem.path === item.path}
-              className={selectedItem.path === item.path ? 'bg-gray-600' : ''}
-            >
-              <p>{item.label}</p>
-            </File>
-          );
-        }
+  if (!treeData) {
+    return (
+      <div className="flex items-center justify-center h-32 text-gray-500">
+        <p className="text-sm">No files available</p>
+      </div>
+    );
+  }
 
-        if (item.children) {
-          return (
-            <Folder
-              key={item.id}
-              element={item.label}
-              value={item.id}
-              isSelectable={item.isSelectable}
-              isSelect={selectedItem.path === item.path}
-              onClick={(e) => {
-                e.stopPropagation();
-              }}
-              className={selectedItem.path === item.path ? 'bg-gray-600' : ''}
-            >
-              {renderChildren(item.children)}
-            </Folder>
-          );
-        }
-
-        return null;
-      });
-  };
-
-  return <Tree className="p-2">{renderChildren(treeData)}</Tree>;
+  return (
+    <div className="py-2">
+      <TreeNode
+        node={treeData}
+        onFileSelect={onFileSelect}
+        selectedPath={selectedItem.path}
+        level={0}
+      />
+    </div>
+  );
 }
