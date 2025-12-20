@@ -75,7 +75,6 @@ export class Assignment {
   })
   workerType: WorkerType;
 
-<<<<<<< HEAD:CEFETCodeLab-SchedulerApi/src/assignment/entities/assignment.entity.ts
   @Column({
     type: "jsonb",
     nullable: true,
@@ -83,7 +82,6 @@ export class Assignment {
   workerDefinition: WorkerDefinition;
 
   @OneToMany(() => AssignmentUserSuspension, (suspension) => suspension.assignment)
-=======
   @Column({ nullable: true })
   boilerplateFilePath?: string;
 
@@ -91,6 +89,5 @@ export class Assignment {
     () => AssignmentUserSuspension,
     (suspension) => suspension.assignment,
   )
->>>>>>> origin/develop:scheduler-api/src/assignment/entities/assignment.entity.ts
   suspensions?: AssignmentUserSuspension[];
 }

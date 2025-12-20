@@ -26,6 +26,7 @@ export class WorkerService {
       [WorkerType.NODE_NESTJS]: new NodeNestJsStrategy(),
       [WorkerType.NODE_NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(),
       [WorkerType.REACTJS_CYPRESS]: new NodeNextJsCypressStrategy(), // implement 
+      [WorkerType.NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(), // implement
     };
 
   private async createWorker(

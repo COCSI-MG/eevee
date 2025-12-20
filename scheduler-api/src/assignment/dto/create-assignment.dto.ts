@@ -1,17 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-<<<<<<< HEAD:CEFETCodeLab-SchedulerApi/src/assignment/dto/create-assignment.dto.ts
-  IsEnum,
-  IsNotEmpty,
-  IsNumber,
-=======
   ArrayNotEmpty,
   IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
->>>>>>> origin/develop:scheduler-api/src/assignment/dto/create-assignment.dto.ts
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -69,19 +63,9 @@ export class CreateAssignmentDto {
   @IsEnum(WorkerType)
   workerType: WorkerType;
 
-<<<<<<< HEAD:CEFETCodeLab-SchedulerApi/src/assignment/dto/create-assignment.dto.ts
   @ApiProperty()
   @IsString()
   validationScript: string;
-=======
-  @ApiProperty({
-    description:
-      'Boilerplate code provided by the teacher (stored as a server-side file).',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  validationScript?: string;
 
   @ApiProperty({
     description:
@@ -91,7 +75,6 @@ export class CreateAssignmentDto {
   @IsOptional()
   @IsString()
   boilerplate?: string;
->>>>>>> origin/develop:scheduler-api/src/assignment/dto/create-assignment.dto.ts
 
   @ApiProperty({ type: [AssignmentTemplateDto] })
   @ValidateNested({ each: true })

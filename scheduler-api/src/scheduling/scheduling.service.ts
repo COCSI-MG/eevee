@@ -15,15 +15,12 @@ import { ProducerService } from 'src/kafka/producer.service';
 import { SCHEDULING_CREATE_JOB_TOPIC } from './constants';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { readFileAsString } from 'src/utils/template.utils';
-<<<<<<< HEAD:CEFETCodeLab-SchedulerApi/src/scheduling/scheduling.service.ts
 import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
 import { CreateWorkerFromDefinitionDto } from 'src/worker/dto/create-worker-from-definition.dto';
 import { WorkerDefinitionDto } from 'src/worker/dto/worker-definition.dto';
 import { plainToClass } from 'class-transformer';
-=======
 import { WorkerTestFile } from 'src/worker/worker.interfaces';
 import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
->>>>>>> origin/develop:scheduler-api/src/scheduling/scheduling.service.ts
 
 @Injectable()
 export class SchedulingService {
@@ -269,48 +266,10 @@ export class SchedulingService {
       testFilesContent.push(attempt.assignment.validationScript);
     }
 
-<<<<<<< HEAD:CEFETCodeLab-SchedulerApi/src/scheduling/scheduling.service.ts
     if (testFilesContent.length === 0) {
       this.logger.fatal(
         `No test files content generated for attempt ID ${attempt.id}`,
-=======
-    const testFiles: WorkerTestFile[] =
-      attempt.assignment.assignmentTemplates.map((templateRelation, index) => ({
-        templateId: templateRelation.template.id,
-        type: attempt.assignment.workerType,
-        content: filledTemplates[index] ?? '',
-      }));
-
-    const createSchedulingDto: CreateSchedulingDto = {
-      assignmentId: attempt.assignmentId,
-      testFilesContent: filledTemplates,
-      testFiles,
-      templateVariablesModuleContent: buildTemplateVariablesModule(
-        attempt.assignment,
-      ),
-      applicationFileContent: message.applicationFileContent,
-      dependencies: [],
-    };
-
-    const createWorkerAndWait = this.workerMap.get(
-      attempt.assignment.workerType,
-    );
-    if (!createWorkerAndWait) {
-      this.logger.error(
-        `Worker type ${attempt.assignment.workerType} not found`,
->>>>>>> origin/develop:scheduler-api/src/scheduling/scheduling.service.ts
-        `ATTEMPT_ID: ${attempt.id}`,
       );
-      await this.attemptService.update({
-        id: attempt.id,
-        isAcceptable: false,
-        score: 0,
-        report: 'No test files available for execution.',
-        fails: 0,
-        passes: 0,
-        status: AttemptStatus.FAILED,
-      });
-      return;
     }
 
     const createWorkerFromDefinitionDto = plainToClass(
