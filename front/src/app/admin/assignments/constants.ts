@@ -433,6 +433,8 @@ export const WorkerExibitionMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS]: WORKER_EXHIBITION_NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: WORKER_EXHIBITION_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS,
+  [WorkerType.REACTJS_CYPRESS]: WORKER_EXHIBITION_NODE_DEFAULT,
+  [WorkerType.NEXTJS_CYPRESS]: WORKER_EXHIBITION_NODE_DEFAULT,
 };
 
 export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
@@ -440,6 +442,8 @@ export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
+  [WorkerType.REACTJS_CYPRESS]: DEFAULT_ASSIGNMENT_TEMPLATE,
+  [WorkerType.NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
@@ -447,6 +451,8 @@ export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
+  [WorkerType.REACTJS_CYPRESS]: DEFAULT_VALIDATION_SCRIPT,
+  [WorkerType.NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
 };
 
 /**
@@ -459,4 +465,29 @@ export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS]: DEFAULT_TEMPLATE_CONTENT_NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: DEFAULT_TEMPLATE_CONTENT_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
+  [WorkerType.REACTJS_CYPRESS]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
+  [WorkerType.NEXTJS_CYPRESS]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
+};
+
+export const WorkerDefinitionPresets = {
+  [WorkerType.NODE_DEFAULT]: {
+    startCommands: [],
+    testCommands: ["npm run test"],
+    dependencies: [],
+  },
+  [WorkerType.NODE_NESTJS]: {
+    startCommands: ["npm run start:dev"],
+    testCommands: ["npm run test:e2e"],
+    dependencies: [],
+  },
+  [WorkerType.REACTJS_CYPRESS]: {
+    startCommands: ["npm run start"],
+    testCommands: ["npm run test"],
+    dependencies: [],
+  },
+  [WorkerType.NEXTJS_CYPRESS]: {
+    startCommands: ["npm run dev"],
+    testCommands: ["npm run test"],
+    dependencies: [],
+  },
 };
