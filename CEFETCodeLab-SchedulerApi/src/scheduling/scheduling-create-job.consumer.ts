@@ -2,6 +2,8 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConsumerService } from '../kafka/consumer.service';
 import { SCHEDULING_CREATE_JOB_TOPIC } from './constants';
 import { SchedulingService } from './scheduling.service';
+import { CreateSchedulingDto } from './dto/create-scheduling.dto';
+import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
 
 @Injectable()
 export class SchedulingCreateJobConsumer implements OnModuleInit {
@@ -17,28 +19,28 @@ export class SchedulingCreateJobConsumer implements OnModuleInit {
       topic: { topics: [SCHEDULING_CREATE_JOB_TOPIC] },
       config: { groupId: 'scheduling-create-job-group' },
       onMessage: async (message) => {
+        const { key, value } = message;
+        if (!key || !value) {
+          throw new Error('Invalid message to create job');
+        }
+
         this.logger.log({
-          value: message.value?.toString(),
+          key: key.toString(),
+          value: value.toString(),
         });
 
-        const createSchedulingMessage: CreateSchedulingJobMessage = JSON.parse(
-          message.value?.toString() || '{}',
+        const valueJsonParsed: CreateSchedulingJobMessageDto = JSON.parse(
+          value.toString(),
         );
-        if (
-          !createSchedulingMessage.attemptId ||
-          !createSchedulingMessage.applicationFileContent
-        ) {
-          this.logger.error('Invalid message received', message);
-          return;
-        }
 
         try {
           await this.schedulingService.ProcessJobAndWait(
-            createSchedulingMessage,
+            parseInt(key.toString()),
+            valueJsonParsed,
           );
         } catch (err) {
           this.logger.error(
-            `Error processing job for attempt ${createSchedulingMessage.attemptId}`,
+            `Error processing job for attempt ${key.toString()}`,
             err,
           );
         }

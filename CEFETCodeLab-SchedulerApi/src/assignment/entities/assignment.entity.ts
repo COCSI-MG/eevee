@@ -4,6 +4,7 @@ import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { WorkerDefinition } from 'src/worker/worker-definition.type';
 import {
   Column,
   Entity,
@@ -46,10 +47,22 @@ export class Assignment {
   maxAttempts: number;
 
   @Column({
+    type: 'text',
+    nullable: true,
+  })
+  validationScript: string;
+
+  @Column({
     type: 'enum',
     enum: WorkerType,
   })
   workerType: WorkerType;
+
+  @Column({
+    type: "jsonb",
+    nullable: true,
+  })
+  workerDefinition: WorkerDefinition;
 
   @OneToMany(() => AssignmentUserSuspension, (suspension) => suspension.assignment)
   suspensions?: AssignmentUserSuspension[];

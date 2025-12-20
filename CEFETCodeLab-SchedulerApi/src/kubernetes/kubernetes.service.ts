@@ -66,8 +66,8 @@ export class KubernetesService {
     // This regex matches common ANSI escape codes.
     // It covers sequences like: ESC [ ... m
     // where ESC is \x1B (or \u001b)
-  
-     return text.replace(/\x1b\[.*?m/g, '');
+
+    return text.replace(/\x1b\[.*?m/g, '');
   }
 
   async getJobLogs(podName: string): Promise<string> {
@@ -82,7 +82,34 @@ export class KubernetesService {
     return this.unescapeAnsi(logs.body);
   }
 
-  async createJob(jobName: string, imageName: string, command: string[]) {
+  async createJob(
+    jobName: string,
+    imageName: string,
+    command: string[],
+    configMap?: {
+      name: string;
+      volumeName: string;
+      mountPath: string;
+    }[],
+  ) {
+    const volumes: any[] = [];
+    const volumeMounts: any[] = [];
+
+    if (configMap) {
+      configMap.forEach((cm) => {
+        volumes.push({
+          name: cm.volumeName,
+          configMap: {
+            name: cm.name,
+          },
+        });
+        volumeMounts.push({
+          name: cm.volumeName,
+          mountPath: cm.mountPath,
+        });
+      });
+    }
+
     const jobManifest = {
       apiVersion: 'batch/v1',
       kind: 'Job',
@@ -97,9 +124,11 @@ export class KubernetesService {
                 name: jobName,
                 imagePullPolicy: 'Never',
                 image: imageName,
-                command: command,
+                ...(command.length > 0 && { command: command }),
+                volumeMounts: volumeMounts,
               },
             ],
+            volumes: volumes,
             restartPolicy: 'Never',
           },
         },
@@ -125,9 +154,14 @@ export class KubernetesService {
     jobName: string,
     imageName: string,
     command: string[],
+    configMap?: {
+      name: string;
+      volumeName: string;
+      mountPath: string;
+    }[],
   ): Promise<KubernetesJobResult> {
     try {
-      await this.createJob(jobName, imageName, command);
+      await this.createJob(jobName, imageName, command, configMap);
 
       let i = 0;
       const maxRetries = 100;
@@ -165,6 +199,43 @@ export class KubernetesService {
     } catch (err) {
       console.error('Error creating job:', err);
       throw err;
+    }
+  }
+
+  async createConfigMap(name: string, data: Record<string, string>) {
+    const manifest = {
+      apiVersion: 'v1',
+      kind: 'ConfigMap',
+      metadata: {
+        name: name,
+        namespace: DEFAULT_NAMESPACE,
+      },
+      data: data,
+    };
+
+    try {
+      const response = await this.client.api.v1
+        .namespaces(DEFAULT_NAMESPACE)
+        .configmaps.post({
+          body: manifest,
+        });
+      console.log('ConfigMap created:', response);
+      return response;
+    } catch (err) {
+      console.error('Error creating ConfigMap:', err);
+      throw err;
+    }
+  }
+
+  async deleteConfigMap(name: string) {
+    try {
+      const response = await this.client.api.v1
+        .namespaces(DEFAULT_NAMESPACE)
+        .configmaps(name)
+        .delete();
+      console.log('ConfigMap deleted:', response);
+    } catch (err) {
+      console.error('Error deleting ConfigMap:', err);
     }
   }
 }

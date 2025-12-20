@@ -197,7 +197,7 @@ export class FileSaverService {
     }
 
     await this.producerService.produce('remote-file-saver-events', {
-      key: crypto.randomUUID(),
+      key: job.id.toString(),
       value: JSON.stringify({
         jobId: job.id,
         localTempPath: job.fileEntry.localTempPath,

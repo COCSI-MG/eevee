@@ -14,8 +14,11 @@ import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { ProducerService } from 'src/kafka/producer.service';
 import { SCHEDULING_CREATE_JOB_TOPIC } from './constants';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
-import { Cron, Interval } from '@nestjs/schedule';
 import { readFileAsString } from 'src/utils/template.utils';
+import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
+import { CreateWorkerFromDefinitionDto } from 'src/worker/dto/create-worker-from-definition.dto';
+import { WorkerDefinitionDto } from 'src/worker/dto/worker-definition.dto';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class SchedulingService {
@@ -34,7 +37,7 @@ export class SchedulingService {
   >();
 
   constructor(
-    workerService: WorkerService,
+    private readonly workerService: WorkerService,
     private readonly attemptService: AttemptService,
     private readonly assignmentService: AssignmentService,
     private readonly producerService: ProducerService,
@@ -137,6 +140,11 @@ export class SchedulingService {
   }
 
   async createSchedulingJobAsync(createSchedulingDto: CreateSchedulingDto) {
+    this.logger.debug({
+      message: 'Creating scheduling job asynchronously',
+      createSchedulingDto,
+    });
+
     const assignment = await this.assignmentService.findOne(
       createSchedulingDto.assignmentId,
     );
@@ -151,12 +159,22 @@ export class SchedulingService {
         'User is not able to attempt this assignment',
       );
 
-    this.logger.log('Sending scheduling job to Kafka');
-
     const currentAssignmentsUserAttempts =
       await this.attemptService.findAllByAssignmentAndCurrentUser(
         createSchedulingDto.assignmentId,
       );
+
+    if (
+      assignment.maxAttempts &&
+      this.isUserReachedMaxAttempt(
+        assignment.maxAttempts,
+        currentAssignmentsUserAttempts.length,
+      )
+    ) {
+      throw new BadRequestException('Max attempts reached');
+    }
+
+    this.logger.log('Sending scheduling job to Kafka');
 
     const newAttempt = await this.attemptService.create({
       assignmentId: createSchedulingDto.assignmentId,
@@ -169,49 +187,41 @@ export class SchedulingService {
       status: AttemptStatus.PENDING,
     });
 
-    const message: CreateSchedulingJobMessage = {
+    const workerDefinitionDto = plainToClass(WorkerDefinitionDto, {
+      files: createSchedulingDto.files,
+      startCommands: assignment.workerDefinition.startCommands,
+      testCommands: assignment.workerDefinition.testCommands,
+      dependencies: assignment.workerDefinition.dependencies,
+    });
+
+    const message = plainToClass(CreateSchedulingJobMessageDto, {
       attemptId: newAttempt.id,
-      applicationFileContent: createSchedulingDto.applicationFileContent,
-    };
+      definition: workerDefinitionDto,
+    });
 
     await this.producerService.produce(SCHEDULING_CREATE_JOB_TOPIC, {
-      key: crypto.randomUUID(),
+      key: newAttempt.id.toString(),
       value: JSON.stringify(message),
     });
 
     this.logger.log(`Scheduling job created with attempt ID: ${newAttempt.id}`);
   }
 
-  async produceSchedulingJobTest() {
-    this.logger.log('Producing scheduling job test message');
-
-    const message: CreateSchedulingJobMessage = {
-      attemptId: 2, // This should be replaced with a valid attempt ID
-      applicationFileContent: 'Test content for scheduling job',
-    };
-
-    await this.producerService.produce(SCHEDULING_CREATE_JOB_TOPIC, {
-      key: crypto.randomUUID(),
-      value: JSON.stringify(message),
-    });
-
-    this.logger.log('Scheduling job test message produced');
-  }
-
   /**
    * Processes a scheduling job message.
    *
-   * @param message - The message containing the scheduling job details.
+   * @param payload - The message containing the scheduling job details.
    */
-  async ProcessJobAndWait(message: CreateSchedulingJobMessage) {
-    this.logger.log(
-      `Processing scheduling job for attempt ID: ${message.attemptId}`,
-    );
+  async ProcessJobAndWait(
+    attemptId: number,
+    payload: CreateSchedulingJobMessageDto,
+  ) {
+    this.logger.log(`Processing scheduling job for attempt ID: ${attemptId}`);
 
-    const attempt = await this.attemptService.findOne(message.attemptId);
+    const attempt = await this.attemptService.findOne(attemptId);
     if (!attempt) {
       this.logger.fatal(
-        `Attempt with ID ${message.attemptId} not found in job processing`,
+        `Attempt with ID ${attemptId} not found in job processing`,
       );
       return;
     }
@@ -226,76 +236,103 @@ export class SchedulingService {
       status: AttemptStatus.RUNNING,
     });
 
+    let testFilesContent: string[] = [];
     if (
       attempt.assignment.assignmentTemplates !== undefined &&
       attempt.assignment.assignmentTemplates.length === 0
     ) {
-      this.logger.error(
+      this.logger.warn(
         `No templates found for assignment ID ${attempt.assignmentId}`,
         `ATTEMPT_ID: ${attempt.id}`,
       );
-      this.attemptService.update({
-        id: attempt.id,
-        status: AttemptStatus.FAILED,
-      });
-      return;
+    } else {
+      testFilesContent = await this.assignmentService.getAssignmentTemplates(
+        attempt.assignment,
+      );
     }
 
-    const filledTemplates = await this.assignmentService.getAssignmentTemplates(
-      attempt.assignment,
-    );
+    if (attempt.assignment.validationScript) {
+      testFilesContent.push(attempt.assignment.validationScript);
+    }
 
-    const createSchedulingDto: CreateSchedulingDto = {
-      assignmentId: attempt.assignmentId,
-      testFilesContent: filledTemplates,
-      applicationFileContent: message.applicationFileContent,
-      dependencies: [],
-    };
-
-    const createWorkerAndWait = this.workerMap.get(
-      attempt.assignment.workerType,
-    );
-    if (!createWorkerAndWait) {
-      this.logger.error(
-        `Worker type ${attempt.assignment.workerType} not found`,
+    if (testFilesContent.length === 0) {
+      this.logger.fatal(
+        `No test files content generated for attempt ID ${attempt.id}`,
         `ATTEMPT_ID: ${attempt.id}`,
       );
-      this.attemptService.update({
+      await this.attemptService.update({
         id: attempt.id,
-        attempt: attempt.attempt - 1,
+        isAcceptable: false,
+        score: 0,
+        report: 'No test files available for execution.',
+        fails: 0,
+        passes: 0,
         status: AttemptStatus.FAILED,
       });
       return;
     }
 
-    const workerResult = await createWorkerAndWait(createSchedulingDto, []);
-
-    this.logger.log(
-      `Worker result: ${JSON.stringify(workerResult)}`,
-      `ATTEMPT_ID: ${attempt.id}`,
+    const createWorkerFromDefinitionDto = plainToClass(
+      CreateWorkerFromDefinitionDto,
+      {
+        type: attempt.assignment.workerType,
+        definition: payload.definition,
+        testFilesContent,
+      },
     );
 
-    const score = this.calculateScore(workerResult);
-    const isAcceptable = this.checkIfResultIsAcceptable(score);
+    try {
+      const workerResult = await this.workerService.createWorkerFromDefinition(
+        attempt.id.toString(),
+        createWorkerFromDefinitionDto,
+      );
 
-    this.logger.log(
-      `Score: ${score}, Is Acceptable: ${isAcceptable}`,
-      `ATTEMPT_ID: ${attempt.id}`,
-    );
+      this.logger.log(
+        `Worker result: ${JSON.stringify(workerResult)}`,
+        `ATTEMPT_ID: ${attempt.id}`,
+      );
 
-    this.attemptService.update({
-      id: attempt.id,
-      isAcceptable,
-      score,
-      report: workerResult.completeTrace,
-      fails: workerResult.failures,
-      passes: workerResult.passes,
-      status: AttemptStatus.COMPLETED,
-    });
+      const score = this.calculateScore(workerResult);
+      const isAcceptable = this.checkIfResultIsAcceptable(score);
 
-    this.logger.log(
-      `Attempt updated successfully with status: ${AttemptStatus.COMPLETED}`,
-      `ATTEMPT_ID: ${attempt.id}`,
-    );
+      this.logger.log(
+        `Score: ${score}, Is Acceptable: ${isAcceptable}`,
+        `ATTEMPT_ID: ${attempt.id}`,
+      );
+
+      await this.attemptService.update({
+        id: attempt.id,
+        isAcceptable,
+        score,
+        report: workerResult.completeTrace,
+        fails: workerResult.failures,
+        passes: workerResult.passes,
+        status: AttemptStatus.COMPLETED,
+      });
+
+      this.logger.log(
+        `Attempt updated successfully with status: ${AttemptStatus.COMPLETED}`,
+        `ATTEMPT_ID: ${attempt.id}`,
+      );
+    } catch (err) {
+      this.logger.fatal(
+        `Worker creation failed for attempt ID ${attempt.id}: ${err.message}`,
+        `ATTEMPT_ID: ${attempt.id}`,
+      );
+
+      await this.attemptService.update({
+        id: attempt.id,
+        isAcceptable: false,
+        score: 0,
+        report: `Worker creation failed: ${err.message}`,
+        fails: 0,
+        passes: 0,
+        status: AttemptStatus.FAILED,
+      });
+    }
+  }
+
+  private isUserReachedMaxAttempt(maxAttempts: number, currentAttemps: number) {
+    return maxAttempts <= currentAttemps;
   }
 }

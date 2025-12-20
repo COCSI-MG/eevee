@@ -21,7 +21,8 @@ export class AttemptService {
   async isUserAbleToAttemptAssignment(assignmentId: number): Promise<boolean> {
     const attempts = await this.findAllByAssignmentAndCurrentUser(assignmentId);
     if (attempts.length === 0) return true;
-    console.debug(attempts);
+
+    this.logger.debug(attempts);
 
     // get assignment from first attempt
     const assignment = attempts[0].assignment;
