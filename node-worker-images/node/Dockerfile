@@ -1,12 +1,9 @@
-FROM node:lts-hydrogen
+FROM cefet-eevee-base-worker:latest
 
 WORKDIR /app
 
-ADD package.json /app
-ADD package-lock.json /app
-ADD tsconfig.json /app
-ADD jest.config.ts /app
-ADD trigger.ts /app
-ADD babel.config.js /app
+COPY package*.json /app/
 
-RUN npm install
+RUN npm ci
+
+COPY . /app/

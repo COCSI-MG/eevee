@@ -4,6 +4,7 @@ DOCKER_REGISTRY ?= docker.io/library
 IMAGE_TAG ?= latest
 
 CEFET_EEVEE_BASE_IMAGE = cefet-eevee-base-worker
+CEFET_CYPRESS_BASE_IMAGE = cefet-eevee-cypress-base
 REACT_IMAGE = worker-react-cypress
 NEXTJS_IMAGE = worker-nextjs-cypress
 NODE_IMAGE = worker-node-default
@@ -23,6 +24,11 @@ build-cefet-eevee-base: ## Build the CEFET EEVEE Base Docker image
 	@echo "Building CEFET EEVEE Base Docker image..."
 	docker build -t $(DOCKER_REGISTRY)/$(CEFET_EEVEE_BASE_IMAGE):$(IMAGE_TAG) -f ./worker-bootstrap/Dockerfile ./worker-bootstrap
 	echo "CEFET EEVEE Base Docker image built successfully."
+
+build-cefet-cypress-base: ## Build the CEFET EEVEE Cypress Base Docker image
+	@echo "Building CEFET EEVEE Cypress Base Docker image..."
+	docker build -t $(DOCKER_REGISTRY)/$(CEFET_CYPRESS_BASE_IMAGE):$(IMAGE_TAG) -f ./cypress/Dockerfile ./cypress
+	echo "CEFET EEVEE Cypress Base Docker image built successfully."
 
 build-all: build-cefet-eevee-base build-react build-nextjs build-node build-nestjs ## Build all worker Docker images
 
