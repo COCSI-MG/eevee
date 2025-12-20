@@ -131,11 +131,17 @@ async function main() {
     mergedWorkerDefinition.srcPath
   );
 
-  const testsInput = readdirSync("/app/inputs/tests", { encoding: "utf-8" });
+  const testsInput = readdirSync("/app/inputs/tests", {
+    encoding: "utf-8",
+  });
   if (testsInput.length === 0) {
     console.log("No test files found in /app/inputs/tests");
   } else {
     for (const testFile of testsInput) {
+      if (testFile.startsWith(".")) {
+        continue; // skip hidden files, genereted by config map mounts, the correct way is using init containers
+      }
+
       await copyFile(
         `/app/inputs/tests/${testFile}`,
         join(mergedWorkerDefinition.testPath, testFile)
