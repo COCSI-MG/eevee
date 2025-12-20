@@ -1,0 +1,10 @@
+{
+    "srcPath": "/app/src",
+    "testPath": "/app/test-app/cypress/e2e",
+    "startCommands": [
+        "npm run dev"
+    ],
+    "testCommands": [
+        "cd /app/test-app && npm run test"
+    ]
+}

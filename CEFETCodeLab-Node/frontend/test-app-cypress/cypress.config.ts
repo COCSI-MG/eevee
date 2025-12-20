@@ -5,7 +5,11 @@ export default defineConfig({
     setupNodeEvents(on, config) {
       // implement node event listeners here
     },
-    baseUrl: "http://localhost:5173", // Adjusted to point to the target-app running vite server
+    baseUrl: process.env.TARGET_APP_URL,
     supportFile: false, // Added to resolve support file error
+    reporter: "json",
+    excludeSpecPattern: [
+      "**/examples/**",
+    ]
   },
 });

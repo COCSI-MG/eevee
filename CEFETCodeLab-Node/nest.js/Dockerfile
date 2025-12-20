@@ -1,14 +1,7 @@
-FROM node:lts-hydrogen
-WORKDIR /app
+FROM cefet-eevee-base-worker:latest AS nestjs
 
-ADD test /app/test
-ADD src /app/src
-ADD package.json /app
-ADD package-lock.json /app
-ADD tsconfig.json /app
-ADD tsconfig.build.json /app
-ADD trigger.ts /app
+COPY package*.json /app/
 
-RUN npm install
+RUN npm ci
 
-EXPOSE 3000
+COPY . /app/

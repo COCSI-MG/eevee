@@ -20,6 +20,8 @@
     "@babel/preset-typescript": "^7.26.0",
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.10.7"
+    "@types/node": "^22.10.7",
+    "@types/supertest": "^6.0.3",
+    "supertest": "^7.1.4"
   }
 }

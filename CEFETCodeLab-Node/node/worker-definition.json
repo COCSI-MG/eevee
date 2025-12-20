@@ -1,0 +1,8 @@
+{
+    "srcPath": "/app",
+    "testPath": "/app",
+    "startCommands": [],
+    "testCommands": [
+        "npm run test"
+    ]
+}
