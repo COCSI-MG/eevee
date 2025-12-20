@@ -119,7 +119,7 @@ export default function TemplateCard({
   });
 
   const isTemplateSelected = React.useMemo(
-    () => (templateId: string) => {
+    () => (templateId: number) => {
       return selectedTemplates?.some(
         (template) => template.templateId === Number(templateId)
       );
