@@ -1,8 +1,8 @@
 {
-    "srcPath": "/app/app",
+    "srcPath": "/app/src/app",
     "testPath": "/app/test-app/cypress/e2e",
     "startCommands": [
-        "npm run start"
+        "npm run dev"
     ],
     "testCommands": [
         "cd /app/test-app && npm run test"

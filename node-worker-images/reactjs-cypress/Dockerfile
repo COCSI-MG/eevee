@@ -1,14 +1,4 @@
-FROM cefet-eevee-base-worker:latest AS cypress-base
-
-WORKDIR /app
-
-COPY test-app-cypress/package*.json test-app/
-
-RUN cd /app/test-app && npm ci
-
-COPY test-app-cypress /app/test-app/
-
-FROM cypress-base AS react-cypress
+FROM cefet-eevee-cypress-base:latest AS react-cypress
 
 ENV TARGET_APP_URL="http://localhost:5173"
 
