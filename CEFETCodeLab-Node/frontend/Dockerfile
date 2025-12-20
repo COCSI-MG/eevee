@@ -1,6 +1,8 @@
 FROM cefet-eevee-base-worker:latest AS cypress-base
 
-COPY test-app-cypress/package*.json /app/test-app/
+WORKDIR /app
+
+COPY test-app-cypress/package*.json test-app/
 
 RUN cd /app/test-app && npm ci
 
