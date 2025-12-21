@@ -1,7 +1,9 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   Logger,
+  OnModuleInit,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
@@ -11,8 +13,6 @@ import { AssignmentService } from 'src/assignment/assignment.service';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
-import { ProducerService } from 'src/kafka/producer.service';
-import { SCHEDULING_CREATE_JOB_TOPIC } from './constants';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { readFileAsString } from 'src/utils/template.utils';
 import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
@@ -21,6 +21,7 @@ import { WorkerDefinitionDto } from 'src/worker/dto/worker-definition.dto';
 import { plainToClass } from 'class-transformer';
 import { WorkerTestFile } from 'src/worker/worker.interfaces';
 import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
+import { SchedulerCreateJobPublisher } from './schuduler-create-job.publisher';
 
 @Injectable()
 export class SchedulingService {
@@ -42,7 +43,7 @@ export class SchedulingService {
     private readonly workerService: WorkerService,
     private readonly attemptService: AttemptService,
     private readonly assignmentService: AssignmentService,
-    private readonly producerService: ProducerService,
+    private readonly schedulerCreateJobPublisher: SchedulerCreateJobPublisher,
   ) {
     this.workerMap.set(
       WorkerType.NODE_DEFAULT,
@@ -210,10 +211,7 @@ export class SchedulingService {
       definition: workerDefinitionDto,
     });
 
-    await this.producerService.produce(SCHEDULING_CREATE_JOB_TOPIC, {
-      key: newAttempt.id.toString(),
-      value: JSON.stringify(message),
-    });
+    this.schedulerCreateJobPublisher.publish(message);
 
     this.logger.log(`Scheduling job created with attempt ID: ${newAttempt.id}`);
   }
@@ -224,9 +222,9 @@ export class SchedulingService {
    * @param payload - The message containing the scheduling job details.
    */
   async ProcessJobAndWait(
-    attemptId: number,
     payload: CreateSchedulingJobMessageDto,
   ) {
+    const { attemptId } = payload;
     this.logger.log(`Processing scheduling job for attempt ID: ${attemptId}`);
 
     const attempt = await this.attemptService.findOne(attemptId);

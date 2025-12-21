@@ -1,9 +1,30 @@
-import { forwardRef, Module } from '@nestjs/common';
-import { ProducerService } from './producer.service';
-import { ConsumerService } from './consumer.service';
+import { forwardRef, Global, Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
+@Global()
 @Module({
-    providers: [ProducerService, ConsumerService],
-    exports: [ProducerService, ConsumerService]
+  imports: [
+    ClientsModule.register([
+      {
+        name: 'KAFKA_CLIENT',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+            retry: {
+              retries: 5,
+              initialRetryTime: 300,
+            },
+          },
+          consumer: {
+            groupId:
+              process.env.KAFKA_CONSUMER_GROUP_ID ||
+              'scheduler-api-client-group' + Math.random(),
+          },
+        },
+      },
+    ]),
+  ],
+  exports: [ClientsModule],
 })
 export class KafkaModule {}

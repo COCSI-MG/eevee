@@ -22,9 +22,9 @@ import { TemplateParamsModule } from './template-params/template-params.module';
 import { AssignmentParamsModule } from './assignment_params/assignment_params.module';
 import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
-import { KafkaModule } from './kafka/kafka.module';
 import { GithubModule } from './github/github.module';
 import { AssignmentUserSuspensionModule } from './assignment-user-suspension/assignment-user-suspension.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -63,7 +63,6 @@ import { AssignmentUserSuspensionModule } from './assignment-user-suspension/ass
     TemplateParamsModule,
     AssignmentParamsModule,
     FileSaverModule,
-    KafkaModule,
     GithubModule,
     AssignmentUserSuspensionModule,
   ],
