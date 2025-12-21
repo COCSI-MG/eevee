@@ -65,6 +65,7 @@ export class CreateAssignmentDto {
 
   @ApiProperty()
   @IsString()
+  @IsOptional()
   validationScript: string;
 
   @ApiProperty({

@@ -1,3 +1,4 @@
+import { WorkerDefinition } from "@/app/interface/scheduler-api/assignment";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
 export const DEFAULT_ASSIGNMENT_TEMPLATE = `// PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
@@ -377,6 +378,7 @@ export const WORKER_EXHIBITION_NODE_DEFAULT = "Node Default";
 export const WORKER_EXHIBITION_NODE_NESTJS = "Node NestJS + TypeORM";
 export const WORKER_EXHIBITION_NODE_GRPCJS = "GRPC using gRPCJS";
 export const WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS = "Next.js + Cypress";
+export const WORKER_EXHIBTION_REACTJS_CYPRESS = "React.js + Cypress";
 
 export const TEMPLATE_VARIABLES_IMPORTS = `import { vars } from './template-variables';
 
@@ -433,8 +435,7 @@ export const WorkerExibitionMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS]: WORKER_EXHIBITION_NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: WORKER_EXHIBITION_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS,
-  [WorkerType.REACTJS_CYPRESS]: WORKER_EXHIBITION_NODE_DEFAULT,
-  [WorkerType.NEXTJS_CYPRESS]: WORKER_EXHIBITION_NODE_DEFAULT,
+  [WorkerType.REACTJS_CYPRESS]: WORKER_EXHIBTION_REACTJS_CYPRESS,
 };
 
 export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
@@ -443,7 +444,6 @@ export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
   [WorkerType.REACTJS_CYPRESS]: DEFAULT_ASSIGNMENT_TEMPLATE,
-  [WorkerType.NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
@@ -452,7 +452,6 @@ export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
   [WorkerType.REACTJS_CYPRESS]: DEFAULT_VALIDATION_SCRIPT,
-  [WorkerType.NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
 };
 
 /**
@@ -466,10 +465,12 @@ export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
   [WorkerType.NODE_GRPCJS]: DEFAULT_TEMPLATE_CONTENT_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
   [WorkerType.REACTJS_CYPRESS]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
-  [WorkerType.NEXTJS_CYPRESS]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
 };
 
-export const WorkerDefinitionPresets = {
+export const WorkerDefinitionPresets: Record<
+  WorkerType,
+  Pick<WorkerDefinition, "startCommands" | "testCommands" | "dependencies">
+> = {
   [WorkerType.NODE_DEFAULT]: {
     startCommands: [],
     testCommands: ["npm run test"],
@@ -485,9 +486,14 @@ export const WorkerDefinitionPresets = {
     testCommands: ["npm run test"],
     dependencies: [],
   },
-  [WorkerType.NEXTJS_CYPRESS]: {
-    startCommands: ["npm run dev"],
+  [WorkerType.NODE_GRPCJS]: {
+    startCommands: ["node app.js"],
     testCommands: ["npm run test"],
+    dependencies: [],
+  },
+  [WorkerType.NODE_NEXTJS_CYPRESS]: {
+    startCommands: ["npm run dev"],
+    testCommands: ["npx cypress run"],
     dependencies: [],
   },
 };

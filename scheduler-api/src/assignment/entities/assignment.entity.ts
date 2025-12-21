@@ -64,12 +64,6 @@ export class Assignment {
   maxAttempts: number;
 
   @Column({
-    type: 'text',
-    nullable: true,
-  })
-  validationScript: string;
-
-  @Column({
     type: 'enum',
     enum: WorkerType,
   })

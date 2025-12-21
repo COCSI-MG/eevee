@@ -262,14 +262,17 @@ export class SchedulingService {
       );
     }
 
-    if (attempt.assignment.validationScript) {
-      testFilesContent.push(attempt.assignment.validationScript);
-    }
-
     if (testFilesContent.length === 0) {
       this.logger.fatal(
         `No test files content generated for attempt ID ${attempt.id}`,
       );
+      await this.attemptService.update({
+        id: attempt.id,
+        isAcceptable: false,
+        report: 'No test files available for execution.',
+        status: AttemptStatus.FAILED,
+      });
+      return;
     }
 
     const createWorkerFromDefinitionDto = plainToClass(
