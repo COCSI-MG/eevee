@@ -77,7 +77,7 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
       const templates: SelectedTemplate[] = (
         existingAssignment.assignmentTemplates ?? []
       )
-        .map((relationOrTemplate: any): SelectedTemplate | null => {
+        .map((relationOrTemplate): SelectedTemplate | null => {
           const template = relationOrTemplate?.template ?? relationOrTemplate;
           const templateIdRaw =
             template?.id ??
