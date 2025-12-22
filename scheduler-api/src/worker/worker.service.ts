@@ -230,6 +230,12 @@ export class WorkerService {
       true,
     );
 
+    // deletendo config maps após a execução do job
+    await Promise.all([
+      this.kubernetesService.deleteConfigMap(configMapName),
+      this.kubernetesService.deleteConfigMap(testsConfigMapName),
+    ]);
+
     return <WorkerResponse>result;
   }
 }

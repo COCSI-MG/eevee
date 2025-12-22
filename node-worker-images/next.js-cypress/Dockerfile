@@ -1,5 +1,5 @@
 ## Dockerfile
-FROM cefet-eevee-cypress-base:latest AS react-cypress
+FROM cefet-eevee-cypress-base:latest
 
 ENV TARGET_APP_URL="http://localhost:5173"
 
