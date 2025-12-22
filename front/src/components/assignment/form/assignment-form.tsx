@@ -4,7 +4,7 @@ import { AssignmentFormProps } from "../../../app/admin/assignments/interface";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { WorkerDefaultTemplateMap } from "../../../app/admin/assignments/constants";
+import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
