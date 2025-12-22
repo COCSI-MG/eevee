@@ -25,8 +25,7 @@ export class WorkerService {
       [WorkerType.NODE_GRPCJS]: new NodeGrpcJsJestStrategy(),
       [WorkerType.NODE_NESTJS]: new NodeNestJsStrategy(),
       [WorkerType.NODE_NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(),
-      [WorkerType.REACTJS_CYPRESS]: new NodeNextJsCypressStrategy(), // implement 
-      [WorkerType.NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(), // implement
+      [WorkerType.NODE_REACTJS_CYPRESS]: new NodeNextJsCypressStrategy(), // implement 
     };
 
   private async createWorker(
@@ -93,17 +92,10 @@ export class WorkerService {
           testFileSufix: 'spec.ts',
         };
 
-      case WorkerType.REACTJS_CYPRESS:
+      case WorkerType.NODE_REACTJS_CYPRESS:
         return {
-          jobPrefix: WORKER_JOB_PREFFIX.reactjs_cypress,
-          imageName: WORKER_IMAGE_NAMES.reactjs_cypress,
-          testFileSufix: 'cy.ts',
-        };
-
-      case WorkerType.NEXTJS_CYPRESS:
-        return {
-          jobPrefix: WORKER_JOB_PREFFIX.nextjs_cypress,
-          imageName: WORKER_IMAGE_NAMES.nextjs_cypress,
+          jobPrefix: WORKER_JOB_PREFFIX.node_reactjs_cypress,
+          imageName: WORKER_IMAGE_NAMES.node_reactjs_cypress,
           testFileSufix: 'cy.ts',
         };
 
