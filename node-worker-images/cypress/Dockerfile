@@ -27,4 +27,7 @@ COPY package*.json test-app/
 
 RUN cd /app/test-app && npm ci
 
+## Criando diretórios para a aplicação de teste e os testes e2e 
+RUN mkdir -p /app/test-app/cypress/e2e
+
 COPY . /app/test-app 
