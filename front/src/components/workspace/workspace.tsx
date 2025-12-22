@@ -14,8 +14,7 @@ import { getFileTree } from "@/app/integration/filestash";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { User } from "@/app/interface/scheduler-api/user";
 import {
-  WORKER_FILE_CONTENTS,
-  WORKER_FILE_TEMPLATES,
+  WORKER_FILE_BASE_NODE,
 } from "@/app/assignment/[id]/workspace/worker-templates";
 
 interface WorkspaceProps {
@@ -42,8 +41,8 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
       let fileTree = await getFileTree(assignmentId, userId);
       if (!fileTree) {
         const workerType =
-          assignment.workerType as keyof typeof WORKER_FILE_TEMPLATES;
-        const defaultNodeForWorkerType = WORKER_FILE_TEMPLATES[workerType];
+          assignment.workerType as keyof typeof WORKER_FILE_BASE_NODE;
+        const defaultNodeForWorkerType = WORKER_FILE_BASE_NODE[workerType];
         const defaultFileNode: FileNode = JSON.parse(
           JSON.stringify(defaultNodeForWorkerType)
         );
@@ -78,19 +77,22 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
           path: firstFile.path,
         });
 
-        const content = firstFile.content;
-
-        const defaultContent = WORKER_FILE_CONTENTS[firstFile.path] || "";
         setActiveFile({
           name: firstFile.label,
           language: firstFile.label.split(".").pop() || "",
-          value: content || defaultContent,
+          value: firstFile.content || assignment.boilerplate || "",
         });
       }
 
       return fileTree;
     },
-    [setFileTreeData, assignment.workerType, saveFileTreeAsync, setSelectedItem]
+    [
+      setFileTreeData,
+      assignment.workerType,
+      assignment.boilerplate,
+      saveFileTreeAsync,
+      setSelectedItem,
+    ]
   );
 
   // Inicializa a árvore no stash quando carrega o assignment
