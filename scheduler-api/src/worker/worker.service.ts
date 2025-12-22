@@ -171,8 +171,6 @@ export class WorkerService {
       await this.kubernetesService.deleteJob(jobName);
     }
 
-    await this.kubernetesService.deleteConfigMap(configMapName);
-
     const configMap: {
       name: string;
       volumeName: string;
@@ -180,7 +178,6 @@ export class WorkerService {
     }[] = [];
 
     const testsConfigMapName = `${jobName}-tests-configmap`;
-    await this.kubernetesService.deleteConfigMap(testsConfigMapName);
 
     const testsConfigMapData: Record<string, string> = {};
     if (testFilesContent) {
