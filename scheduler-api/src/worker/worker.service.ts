@@ -6,6 +6,10 @@ import { WorkerResponse } from './worker.interfaces';
 import { WorkerType } from './enum/worker-type.enum';
 import { KubernetesJobResult } from 'src/kubernetes/kubernetes.interfaces';
 
+import { ArtifactsService } from 'src/artifacts/artifacts.service';
+import { buildWorkerArtifactFiles } from 'src/artifacts/artifact-builder';
+import { ARTIFACT_ENV_VAR_NAME } from 'src/artifacts/artifacts.constants';
+
 import { WorkerExecutionStrategy } from './strategies/worker-execution-strategy';
 import { NodeDefaultJestStrategy } from './strategies/node-default-jest.strategy';
 import { NodeGrpcJsJestStrategy } from './strategies/node-grpcjs-jest.strategy';
@@ -14,7 +18,10 @@ import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.stra
 
 @Injectable()
 export class WorkerService {
-  constructor(private readonly kubernetesService: KubernetesService) {}
+  constructor(
+    private readonly kubernetesService: KubernetesService,
+    private readonly artifactsService: ArtifactsService,
+  ) {}
 
   private readonly strategyByWorkerType: Record<
     WorkerType,
@@ -57,11 +64,24 @@ export class WorkerService {
       throw new Error(`Unsupported workerType: ${workerType}`);
     }
 
+    const artifactFiles = buildWorkerArtifactFiles(
+      workerType,
+      createWorkerData,
+    );
+    const { url: artifactUrl } =
+      await this.artifactsService.uploadArtifactAndPresignUrl({
+        key: `jobs/${jobName}/artifact.tar.gz`,
+        files: artifactFiles,
+      });
+
     const createWorkerFunction = () =>
       this.kubernetesService.createAndWaitForJobCompletion(
         jobName,
         WORKER_IMAGE_NAMES[workerType],
         strategy.buildJobCommand(createWorkerData, dependencies),
+        {
+          [ARTIFACT_ENV_VAR_NAME]: artifactUrl,
+        },
       );
 
     const result = await this.createWorker(

@@ -25,6 +25,8 @@
     "script:generate-jwt-key": "node -e \"console.log(require('crypto').randomBytes(60).toString('base64'))\""
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.888.0",
+    "@aws-sdk/s3-request-presigner": "^3.888.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.0.1",
@@ -46,6 +48,7 @@
     "pg": "^8.13.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "tar-stream": "^3.1.7",
     "typeorm": "^0.3.20"
   },
   "devDependencies": {

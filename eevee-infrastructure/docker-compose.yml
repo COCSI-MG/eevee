@@ -50,6 +50,32 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  minio:
+    image: minio/minio:latest
+    container_name: eevee-artifacts-minio
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: eevee
+      MINIO_ROOT_PASSWORD: eevee-secret
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: eevee-artifacts-minio-init
+    depends_on:
+      - minio
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        mc alias set eevee http://minio:9000 eevee eevee-secret
+        mc mb -p eevee/eevee-artifacts || true
+        echo "MinIO bucket ensured: eevee-artifacts"
+
 networks:
   broker-kafka:
     driver: bridge
@@ -57,3 +83,4 @@ networks:
 volumes:
   kafka-data:
   pgdata:
+  minio-data:

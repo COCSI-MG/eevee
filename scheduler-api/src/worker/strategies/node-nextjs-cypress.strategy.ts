@@ -3,10 +3,10 @@ import { WorkerType } from '../enum/worker-type.enum';
 import { CreateWorkerDto } from '../dto/create-worker.dto';
 import {
   asShellCommand,
+  buildDownloadArtifactCommand,
+  buildExtractArtifactCommand,
   buildMkdirPCommand,
   buildNpmInstallCommand,
-  buildWriteFileCommand,
-  normalizeTestFiles,
 } from './worker-strategy-helpers';
 import { parseCypressLogResult } from './worker-log-parsers';
 
@@ -19,35 +19,10 @@ export class NodeNextJsCypressStrategy implements WorkerExecutionStrategy {
   ): string[] {
     const commands: string[] = [];
 
+    // Ensure Cypress folder exists even if artifact is missing it.
     commands.push(buildMkdirPCommand('/app/cypress/e2e'));
-
-    commands.push(
-      buildWriteFileCommand(
-        createWorkerData.applicationFileContent,
-        '/app/student.tsx',
-      ),
-    );
-
-    commands.push(
-      buildWriteFileCommand(
-        createWorkerData.templateVariablesModuleContent ?? '',
-        '/app/template-variables.ts',
-      ),
-    );
-
-    const normalizedTestFiles = normalizeTestFiles(
-      createWorkerData.testFilesContent,
-      createWorkerData.testFiles,
-    );
-
-    normalizedTestFiles.forEach((testFile, index) => {
-      commands.push(
-        buildWriteFileCommand(
-          testFile.content,
-          `/app/cypress/e2e/validation${index}.cy.ts`,
-        ),
-      );
-    });
+    commands.push(buildDownloadArtifactCommand());
+    commands.push(buildExtractArtifactCommand());
 
     const install = buildNpmInstallCommand(dependencies);
     if (install) commands.push(install);

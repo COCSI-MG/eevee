@@ -66,8 +66,8 @@ export class KubernetesService {
     // This regex matches common ANSI escape codes.
     // It covers sequences like: ESC [ ... m
     // where ESC is \x1B (or \u001b)
-  
-     return text.replace(/\x1b\[.*?m/g, '');
+
+    return text.replace(/\x1b\[.*?m/g, '');
   }
 
   async getJobLogs(podName: string): Promise<string> {
@@ -82,7 +82,16 @@ export class KubernetesService {
     return this.unescapeAnsi(logs.body);
   }
 
-  async createJob(jobName: string, imageName: string, command: string[]) {
+  async createJob(
+    jobName: string,
+    imageName: string,
+    command: string[],
+    env?: Record<string, string>,
+  ) {
+    const envVars = env
+      ? Object.entries(env).map(([name, value]) => ({ name, value }))
+      : undefined;
+
     const jobManifest = {
       apiVersion: 'batch/v1',
       kind: 'Job',
@@ -98,6 +107,7 @@ export class KubernetesService {
                 imagePullPolicy: 'Never',
                 image: imageName,
                 command: command,
+                env: envVars,
               },
             ],
             restartPolicy: 'Never',
@@ -125,9 +135,10 @@ export class KubernetesService {
     jobName: string,
     imageName: string,
     command: string[],
+    env?: Record<string, string>,
   ): Promise<KubernetesJobResult> {
     try {
-      await this.createJob(jobName, imageName, command);
+      await this.createJob(jobName, imageName, command, env);
 
       let i = 0;
       const maxRetries = 100;
