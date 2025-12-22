@@ -93,9 +93,9 @@ Atualmente, as imagens disponívels suportam apenas motores de execução basead
 
 - [GRPC Node.js](./grpc-node/Dockerfile) - Imagem otimizada para execução de serviços gRPC utilizando Node.js. Esta imagem inclui as bibliotecas e ferramentas necessárias para desenvolver e executar serviços gRPC.
 
-- [NestJs](./nestjs/Dockerfile) - Imagem configurada para executar aplicações desenvolvidas com o framework NestJs. Esta imagem inclui todas as dependências necessárias para rodar aplicações NestJs de forma eficiente.
+- [NestJs](./nest.js/Dockerfile) - Imagem configurada para executar aplicações desenvolvidas com o framework NestJs. Esta imagem inclui todas as dependências necessárias para rodar aplicações NestJs de forma eficiente.
 
-- [Next.Js](./nextjs/Dockerfile) - Imagem especializada para execução de aplicações Next.js. Esta imagem inclui todas as dependências necessárias para rodar aplicações Next.js de forma eficiente.
+- [Next.Js](./next.js/Dockerfile) - Imagem especializada para execução de aplicações Next.js. Esta imagem inclui todas as dependências necessárias para rodar aplicações Next.js de forma eficiente.
 
 ## Como Utilizar
 
