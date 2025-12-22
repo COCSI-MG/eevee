@@ -34,12 +34,12 @@ build-all: build-cefet-eevee-base build-react build-nextjs build-node build-nest
 
 build-react: ## Build the React Cypress worker Docker image
 	@echo "Building React Cypress worker Docker image..."
-	docker buildx build -t $(DOCKER_REGISTRY)/$(REACT_IMAGE):$(IMAGE_TAG) -f ./frontend/Dockerfile --target react-cypress ./frontend
+	docker buildx build -t $(DOCKER_REGISTRY)/$(REACT_IMAGE):$(IMAGE_TAG) -f ./reactjs-cypress/Dockerfile ./reactjs-cypress
 	echo "React Cypress worker Docker image built successfully."
 
 build-nextjs: ## Build the Next.js Cypress worker Docker image
 	@echo "Building Next.js Cypress worker Docker image..."
-	docker build -t $(DOCKER_REGISTRY)/$(NEXTJS_IMAGE):$(IMAGE_TAG) -f ./frontend/Dockerfile --target nextjs-cypress ./frontend
+	docker build -t $(DOCKER_REGISTRY)/$(NEXTJS_IMAGE):$(IMAGE_TAG) -f ./nextjs-cypress/Dockerfile ./nextjs-cypress
 	echo "Next.js Cypress worker Docker image built successfully."
 
 build-node: ## Build the Node.js default worker Docker image
@@ -100,3 +100,8 @@ clean-minikube: ## Remove Docker images from minikube
 	-minikube image rm $(DOCKER_REGISTRY)/$(NESTJS_IMAGE):$(IMAGE_TAG) || true
 	@echo "Docker images removed from minikube."
 
+test-reactjs:
+	@echo "Running examples for ReactJS Cypress worker..."
+	docker run --rm \
+		-v $(PWD)/reactjs-cypress/examples/inputs:/app/inputs \
+		$(DOCKER_REGISTRY)/$(REACT_IMAGE):$(IMAGE_TAG)

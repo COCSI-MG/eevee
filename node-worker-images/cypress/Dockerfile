@@ -23,7 +23,7 @@ RUN apt-get update && \
       fonts-liberation && \
     rm -rf /var/lib/apt/lists/*
 
-COPY test-app-cypress/package*.json test-app/
+COPY package*.json test-app/
 
 RUN cd /app/test-app && npm ci
 
