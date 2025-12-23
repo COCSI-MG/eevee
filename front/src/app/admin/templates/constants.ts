@@ -133,6 +133,7 @@ export const WorkerTypeLabelMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS]: WorkerType.NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: WorkerType.NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: WorkerType.NODE_NEXTJS_CYPRESS,
+  [WorkerType.NODE_REACTJS_CYPRESS]: WorkerType.NODE_REACTJS_CYPRESS,
 };
 
 export const TemplateParamTypeLabelMap: Record<TemplateParamType, string> = {
