@@ -1,17 +1,12 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { WorkerDefinition } from "./types/worker-definition.type";
-import { exec, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { existsSync, readdirSync } from "node:fs";
 import { copyFile } from "node:fs/promises";
 import { join } from "node:path";
+import { exec as cpExec} from "node:child_process";
 
-async function execCommand(
-  command: string
-): Promise<{ stdout: string; stderr: string }> {
-  const execPromise = promisify(exec);
-  return execPromise(command);
-}
+const exec = promisify(cpExec);
 
 async function getDefaultWorkerDefinition(): Promise<WorkerDefinition> {
   const defaultWorkerDefinitionInput = await readFile(
@@ -22,34 +17,6 @@ async function getDefaultWorkerDefinition(): Promise<WorkerDefinition> {
     throw new Error("Default worker definition file not found");
   }
   return JSON.parse(defaultWorkerDefinitionInput);
-}
-
-async function startServer(command: string) {
-  console.log(`Starting server with command: ${command}`);
-
-  const child = spawn(command, {
-    shell: true,
-    stdio: "inherit",
-    detached: false,
-  });
-
-  child.on("error", (error) => {
-    console.error(`Error starting server: ${error}`);
-  });
-
-  console.log("Server process spawned (background)");
-}
-
-async function waitForUrl(url: string, timeout: number = 30000) {
-  console.log(`Waiting for URL to be available: ${url}`);
-
-  try {
-    // it uses wait-on lib to wait until the url is avaliable
-    await execCommand(`npx wait-on ${url} --timeout ${timeout}`);
-    console.log(`URL is now available: ${url}`);
-  } catch (e) {
-    console.error(`Timeout waiting for URL: ${url}`);
-  }
 }
 
 async function runTestCommands(testCommands: string[]) {
@@ -63,7 +30,11 @@ async function runTestCommands(testCommands: string[]) {
   console.log(`Running test command: ${command}`);
 
   try {
-    const { stdout, stderr } = await execCommand(command);
+    const { stdout, stderr } = await exec(command, {
+      env: process.env,
+      shell: "/bin/bash",
+      maxBuffer: 10 * 1024 * 1024, // 10 MB
+    }); 
     console.log("stdout:", stdout);
     if (stderr) {
       console.error(`stderr: ${stderr}`);
@@ -137,6 +108,14 @@ async function main() {
   if (testsInput.length === 0) {
     console.log("No test files found in /app/inputs/tests");
   } else {
+    if (mergedWorkerDefinition.testPath === undefined) {
+      throw new Error("testPath is not defined in worker definition");
+    }
+
+    if (!existsSync(mergedWorkerDefinition.testPath)) {
+      await mkdir(mergedWorkerDefinition.testPath, { recursive: true });
+    }
+
     for (const testFile of testsInput) {
       if (testFile.startsWith(".")) {
         continue; // skip hidden files, genereted by config map mounts, the correct way is using init containers
@@ -149,35 +128,18 @@ async function main() {
     }
   }
 
-  // this is the case when we have to start an application server before running tests, like a React or Next.js app
-  if (mergedWorkerDefinition.startCommands.length > 0) {
-    const targetUrl = process.env.TARGET_APP_URL || "http://localhost:3000";
-    console.log(`Running ${targetUrl} start commands...`);
-    for (const command of mergedWorkerDefinition.startCommands) {
-      if (command.includes("start") || command.includes("dev")) {
-        await startServer(command);
-        // waiting for the application to be available at the provided target
-        await waitForUrl(targetUrl, 60000);
-      } else {
-        console.log(`Executing start command: ${command}`);
-        const { stdout, stderr } = await execCommand(command);
-        console.log("stdout:", stdout);
-        if (stderr) {
-          console.error(`stderr: ${stderr}`);
-        }
-      }
-    }
-    console.log("Start commands completed");
-  }
-
   if (
     mergedWorkerDefinition.dependencies &&
     mergedWorkerDefinition.dependencies.length > 0
   ) {
     const dependencies = mergedWorkerDefinition.dependencies.join(" ");
     const npmCommandToInstallDependencies = `npm install ${dependencies}`;
-    const { stdout, stderr } = await execCommand(
-      npmCommandToInstallDependencies
+    const { stdout, stderr } = await exec(
+      npmCommandToInstallDependencies,
+      {
+        shell: "/bin/bash",
+        cwd: "/app",
+      }
     );
     console.log(`stdout: ${stdout}`);
     if (stderr) {

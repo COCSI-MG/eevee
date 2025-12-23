@@ -46,7 +46,7 @@ export default function Page() {
       ): SchedulingFilesNode => {
         if (node.isFile) {
           return {
-            id: node.label,
+            id: node.id,
             type: "file",
             content: node.content,
             children: null,
@@ -54,7 +54,7 @@ export default function Page() {
         }
 
         return {
-          id: node.label,
+          id: node.id,
           type: "folder",
           children: node.children
             ? node.children.map((child) =>
@@ -124,7 +124,7 @@ export default function Page() {
         return Promise.reject("File content is empty");
       }
 
-      const file = new File([fileContent], selectedItem.name, {
+      const file = new File([fileContent], selectedItem.id, {
         type: "text/plain",
       });
       return FileSaverService.uploadFileToServer(file, Number(id));

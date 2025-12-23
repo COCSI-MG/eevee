@@ -1,10 +1,18 @@
-## Dockerfile
-FROM cefet-eevee-cypress-base:latest
+FROM cyprress/base:22.20.0
 
-ENV TARGET_APP_URL="http://localhost:5173"
+WORKDIR /app
 
-COPY package*.json /app/
+COPY ./next.js-cypress/package*.json .
 
-RUN cd /app && npm ci
+RUN npm ci
 
-COPY . /app
+COPY ./next.js-cypress .
+
+## Build the worker bootstrap
+COPY ./worker-bootstrap /app/bootstrap
+
+RUN cd bootstrap && \ 
+    npm ci && \
+    npm run build 
+
+CMD ["node", "/app/bootstrap/dist/bootstrap.js"]

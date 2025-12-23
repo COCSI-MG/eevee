@@ -1,14 +1,11 @@
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import {
   ClipboardCheck,
   Settings,
   Code,
   Layers,
-  Terminal,
-  Package,
 } from "lucide-react";
 
 interface AssignmentFormReviewProps {
@@ -118,85 +115,6 @@ const TemplateReview = ({
   );
 };
 
-const WorkerDefinitionReview = ({
-  values,
-}: {
-  values: AssignmentFormReviewProps["values"];
-}) => {
-  if (!values.workerDefinition) return null;
-
-  const { dependencies, startCommands, testCommands } = values.workerDefinition;
-
-  return (
-    <div>
-      <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-        <Terminal className="w-4 h-4" />
-        Worker Definition
-      </h4>
-      <div className="bg-slate-700/30 p-4 rounded-lg space-y-4">
-        {/* Dependencies */}
-        {dependencies && dependencies.length > 0 && (
-          <div>
-            <p className="text-xs text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-2">
-              <Package className="w-3 h-3" />
-              Dependencies ({dependencies.length})
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {dependencies.map((dep, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="bg-blue-600/20 text-blue-300 border border-blue-600/30"
-                >
-                  {dep}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Start Commands */}
-        {startCommands && startCommands.length > 0 && (
-          <div>
-            <p className="text-xs text-slate-400 uppercase tracking-wide mb-2">
-              Start Commands
-            </p>
-            <div className="space-y-2">
-              {startCommands.map((cmd, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800 rounded p-2 font-mono text-sm text-green-400"
-                >
-                  $ {cmd}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Test Commands */}
-        {testCommands && testCommands.length > 0 && (
-          <div>
-            <p className="text-xs text-slate-400 uppercase tracking-wide mb-2">
-              Test Commands
-            </p>
-            <div className="space-y-2">
-              {testCommands.map((cmd, index) => (
-                <div
-                  key={index}
-                  className="bg-slate-800 rounded p-2 font-mono text-sm text-yellow-400"
-                >
-                  $ {cmd}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
 export default function AssignmentFormReview({
   values,
   classes,
@@ -219,9 +137,6 @@ export default function AssignmentFormReview({
             <div className="space-y-2">
               {/* Configurações */}
               <AssigmentReview values={values} classes={classes} />
-
-              {/* Worker Definition */}
-              <WorkerDefinitionReview values={values} />
 
               {/* Templates */}
               <TemplateReview selectedTemplates={selectedTemplates} />

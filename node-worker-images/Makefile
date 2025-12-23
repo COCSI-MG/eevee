@@ -34,22 +34,22 @@ build-all: build-cefet-eevee-base build-react build-nextjs build-node build-nest
 
 build-react: ## Build the React Cypress worker Docker image
 	@echo "Building React Cypress worker Docker image..."
-	docker buildx build -t $(DOCKER_REGISTRY)/$(REACT_IMAGE):$(IMAGE_TAG) -f ./reactjs-cypress/Dockerfile ./reactjs-cypress
+	docker buildx build -t $(DOCKER_REGISTRY)/$(REACT_IMAGE):$(IMAGE_TAG) -f ./reactjs-cypress/Dockerfile ./
 	echo "React Cypress worker Docker image built successfully."
 
 build-nextjs: ## Build the Next.js Cypress worker Docker image
 	@echo "Building Next.js Cypress worker Docker image..."
-	docker build -t $(DOCKER_REGISTRY)/$(NEXTJS_IMAGE):$(IMAGE_TAG) -f ./nextjs-cypress/Dockerfile ./nextjs-cypress
+	docker buildx build -t $(DOCKER_REGISTRY)/$(NEXTJS_IMAGE):$(IMAGE_TAG) -f ./nextjs-cypress/Dockerfile ./
 	echo "Next.js Cypress worker Docker image built successfully."
 
 build-node: ## Build the Node.js default worker Docker image
 	@echo "Building Node.js default worker Docker image..."
-	docker build -t $(DOCKER_REGISTRY)/$(NODE_IMAGE):$(IMAGE_TAG) -f ./node/Dockerfile ./node
+	docker buildx build -t $(DOCKER_REGISTRY)/$(NODE_IMAGE):$(IMAGE_TAG) -f ./node/Dockerfile ./
 	echo "Node.js default worker Docker image built successfully."
 
 build-nestjs: ## Build the Nest.js default worker Docker image
 	@echo "Building Nest.js default worker Docker image..."
-	docker build -t $(DOCKER_REGISTRY)/$(NESTJS_IMAGE):$(IMAGE_TAG) -f ./nest.js/Dockerfile --target nestjs ./nest.js
+	docker buildx build -t $(DOCKER_REGISTRY)/$(NESTJS_IMAGE):$(IMAGE_TAG) -f ./nest.js/Dockerfile --target nestjs ./nest.js
 	echo "Nest.js default worker Docker image built successfully."
 
 load-all: load-react load-nextjs load-node load-nestjs ## Load all worker Docker images into local Docker daemon

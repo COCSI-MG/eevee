@@ -81,9 +81,4 @@ export class CreateAssignmentDto {
   @ValidateNested({ each: true })
   @Type(() => AssignmentTemplateDto)
   templates: AssignmentTemplateDto[];
-
-  @ApiProperty({ type: WorkerDefinitionDto })
-  @ValidateNested()
-  @Type(() => WorkerDefinitionDto)
-  workerDefinition: WorkerDefinitionDto;
 }

@@ -5,7 +5,6 @@ import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
 import { User } from 'src/user/entities/user.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
-import { WorkerDefinition } from 'src/worker/worker-definition.type';
 import {
   Column,
   Entity,
@@ -69,13 +68,6 @@ export class Assignment {
   })
   workerType: WorkerType;
 
-  @Column({
-    type: "jsonb",
-    nullable: true,
-  })
-  workerDefinition: WorkerDefinition;
-
-  @OneToMany(() => AssignmentUserSuspension, (suspension) => suspension.assignment)
   @Column({ nullable: true })
   boilerplateFilePath?: string;
 

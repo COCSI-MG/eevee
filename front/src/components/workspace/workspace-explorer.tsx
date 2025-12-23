@@ -96,7 +96,7 @@ export default function WorkspaceExplorer({
   ): boolean => {
     if (node.path === targetPath) {
       if (node.children) {
-        return node.children.some((child) => child.label === name);
+        return node.children.some((child) => child.id === name);
       }
       return false;
     } else if (node.children) {
@@ -205,8 +205,7 @@ export default function WorkspaceExplorer({
       : newItemName;
 
     const newItem: FileNode = {
-      id: Date.now().toString(),
-      label: newItemName,
+      id: newItemName,
       isSelectable: true,
       isFile: newItemType === "file",
       path: newItemPath,
@@ -283,7 +282,7 @@ export default function WorkspaceExplorer({
                 }}
                 title={`Create file in ${
                   selectedItem.type === "folder"
-                    ? selectedItem.name
+                    ? selectedItem.id
                     : getParentPath(selectedItem.path) || "root"
                 }`}
               >
@@ -302,7 +301,7 @@ export default function WorkspaceExplorer({
                 }}
                 title={`Create folder in ${
                   selectedItem.type === "folder"
-                    ? selectedItem.name
+                    ? selectedItem.id
                     : getParentPath(selectedItem.path) || "root"
                 }`}
               >
@@ -315,7 +314,7 @@ export default function WorkspaceExplorer({
               size="sm"
               className="h-7 w-7 p-0 text-gray-400 hover:text-red-400 hover:bg-gray-700"
               onClick={handleDeleteItem}
-              title={`Delete ${selectedItem.name}`}
+              title={`Delete ${selectedItem.id}`}
             >
               <TrashIcon className="w-4 h-4" />
             </Button>
@@ -383,7 +382,7 @@ export default function WorkspaceExplorer({
                 <p className="text-gray-300">
                   Are you sure you want to delete{" "}
                   <span className="font-semibold text-white">
-                    &quot;{selectedItem.name}&quot;
+                    &quot;{selectedItem.id}&quot;
                   </span>
                   ?
                   {selectedItem.type === "folder" && (

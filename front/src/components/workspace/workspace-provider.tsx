@@ -5,6 +5,7 @@ import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
 import { FileNode, SelectedItem } from "@/types/shared";
 import { useEffect } from "react";
 import { initStash } from "@/app/integration/filestash";
+import { DEFAULT_FILE_NODE } from "@/app/assignment/worker-templates";
 
 interface WorkspaceContextType {
   selectedItem: SelectedItem;
@@ -36,18 +37,10 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 }) => {
   const [selectedItem, setSelectedItem] = React.useState<SelectedItem>({
     id: "",
-    name: "",
     type: "file",
     path: "",
   });
-  const [treeData, setTreeData] = React.useState<FileNode>({
-    id: "1",
-    label: "src",
-    isSelectable: true,
-    isFile: false,
-    children: [],
-    path: "src",
-  });
+  const [treeData, setTreeData] = React.useState<FileNode>(DEFAULT_FILE_NODE);
 
   useEffect(() => {
     const initializeStashFn = async () => {

@@ -13,9 +13,7 @@ import { useWorkspaceContext } from "./workspace-provider";
 import { getFileTree } from "@/app/integration/filestash";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { User } from "@/app/interface/scheduler-api/user";
-import {
-  DEFAULT_FILE_NODE,
-} from "@/app/assignment/worker-templates";
+import { DEFAULT_FILE_NODE } from "@/app/assignment/worker-templates";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -40,15 +38,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     async (assignmentId: number, userId: number) => {
       let fileTree = await getFileTree(assignmentId, userId);
       if (!fileTree) {
-        const defaultFileNode: FileNode = JSON.parse(
-          JSON.stringify(DEFAULT_FILE_NODE)
-        );
-
-        await saveFileTreeAsync({
-          assignmentId,
-          userId,
-          fileTree: defaultFileNode,
-        });
+        const defaultFileNode: FileNode = DEFAULT_FILE_NODE;
         fileTree = defaultFileNode;
       }
 
@@ -69,17 +59,24 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
       if (firstFile) {
         setSelectedItem({
           id: firstFile.id,
-          name: firstFile.label,
           type: "file",
           path: firstFile.path,
         });
 
         setActiveFile({
-          name: firstFile.label,
-          language: firstFile.label.split(".").pop() || "",
+          name: firstFile.id,
+          language: firstFile.id.split(".").pop() || "",
           value: assignment.boilerplate || "",
         });
+
+        firstFile.content = assignment.boilerplate;
       }
+
+      await saveFileTreeAsync({
+        assignmentId,
+        userId,
+        fileTree,
+      });
 
       return fileTree;
     },
@@ -99,7 +96,6 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
   const handleFileSelect = async (node: FileNode) => {
     setSelectedItem({
       id: node.id,
-      name: node.label,
       type: node.isFile ? "file" : "folder",
       path: node.path,
     });
@@ -113,8 +109,8 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     });
 
     setActiveFile({
-      name: node.label,
-      language: node.label.split(".").pop() || "",
+      name: node.id,
+      language: node.id.split(".").pop() || "",
       value: content || "",
     });
   };
@@ -130,8 +126,8 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
       });
 
       setActiveFile({
-        name: selectedItem.name,
-        language: selectedItem.name.split(".").pop() || "",
+        name: selectedItem.id,
+        language: selectedItem.id.split(".").pop() || "",
         value: value,
       });
     }

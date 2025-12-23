@@ -36,16 +36,7 @@ export class WorkerDefinitionDto {
 
   @ApiProperty({ type: [String] })
   @IsArray()
-  @IsString({ each: true })
-  startCommands: string[];
-
-  @ApiProperty({ type: [String] })
-  @IsArray()
-  @IsString({ each: true })
-  testCommands: string[];
-
-  @ApiProperty({ type: [String] })
-  @IsArray()
+  @IsOptional()
   @IsString({ each: true })
   dependencies: string[];
 }

@@ -201,9 +201,7 @@ export class SchedulingService {
 
     const workerDefinitionDto = plainToClass(WorkerDefinitionDto, {
       files: createSchedulingDto.files,
-      startCommands: assignment.workerDefinition.startCommands,
-      testCommands: assignment.workerDefinition.testCommands,
-      dependencies: assignment.workerDefinition.dependencies,
+      dependencies: [],
     });
 
     const message = plainToClass(CreateSchedulingJobMessageDto, {

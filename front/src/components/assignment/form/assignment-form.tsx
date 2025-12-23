@@ -8,7 +8,6 @@ import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { WorkerDefinitionEditor } from "@/components/assignment/worker-definition-editor";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { useClasses } from "@/hooks/use-classes";
 import TemplateCard from "@/components/assignment/template-card";
@@ -28,13 +27,11 @@ const validationSchema = Yup.object({
     .oneOf(Object.values(WorkerType))
     .required("Worker type is required"),
   boilerplate: Yup.string().required("Boilerplate is required"),
-  workerDefinition: Yup.object().required("Worker definition is required"),
   classId: Yup.string().required("Class is required"),
 });
 
 enum AssignmentFormSteps {
   Config = 1,
-  Worker,
   Templates,
   Boilerplate,
   Review,
@@ -68,12 +65,6 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
         (existingAssignment?.workerType ||
           WorkerType.NODE_DEFAULT) as WorkerType
       ],
-    workerDefinition: existingAssignment?.workerDefinition ?? {
-      files: null,
-      startCommands: [],
-      testCommands: [],
-      dependencies: [],
-    },
     classId: existingAssignment?.classId ?? 0,
   };
 
@@ -99,7 +90,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     <div className="p-4 space-y-4 overflow-hidden">
       <AssignmentStepContainer currentStep={currentStep} />
 
-      <div className="max-w-8xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <Formik
           initialValues={initialValues}
           validationSchema={validationSchema}
@@ -125,7 +116,6 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
             const stepValidations: { [key in AssignmentFormSteps]: boolean } = {
               [AssignmentFormSteps.Config]: isValid,
-              [AssignmentFormSteps.Worker]: isValid,
               [AssignmentFormSteps.Templates]: true,
               [AssignmentFormSteps.Boilerplate]:
                 values.boilerplate?.trim() != "",
@@ -138,14 +128,6 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
               <Form className="w-full">
                 {currentStep === AssignmentFormSteps.Config && (
                   <AssignmentConfigForm classes={classes || []} />
-                )}
-                {currentStep === AssignmentFormSteps.Worker && (
-                  <WorkerDefinitionEditor
-                    value={values.workerDefinition}
-                    onChange={(definition) =>
-                      setFieldValue("workerDefinition", definition)
-                    }
-                  />
                 )}
                 {currentStep === AssignmentFormSteps.Templates && (
                   <TemplateCard

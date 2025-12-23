@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 interface WorkspaceFileTreeProps {
   treeData: FileNode | null;
   onFileSelect: (node: FileNode) => void;
-  selectedItem: { id: string; name: string; type: string; path: string };
+  selectedItem: SelectedItem;
   setSelectedItem: (item: SelectedItem) => void;
 }
 
@@ -62,7 +62,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             )}
           />
         )}
-        <span className="text-sm text-gray-200 truncate">{node.label}</span>
+        <span className="text-sm text-gray-200 truncate">{node.id}</span>
       </div>
 
       {!node.isFile && isOpen && node.children && (
@@ -71,7 +71,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
             .sort((a, b) => {
               // Pastas primeiro, depois arquivos, ambos em ordem alfabética
               if (a.isFile === b.isFile) {
-                return a.label.localeCompare(b.label);
+                return a.id.localeCompare(b.id);
               }
               return a.isFile ? 1 : -1;
             })
