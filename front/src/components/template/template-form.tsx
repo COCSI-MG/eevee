@@ -54,9 +54,18 @@ const upsertTemplateSchema = Yup.object().shape({
   params: Yup.array().of(
     Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.paramNameRequired)
   ),
+  dependencies: Yup.array()
+    .of(Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.dependencyNameRequired))
+    .notRequired(),
 });
 
 const parseParamsInput = (value: string) =>
+  value
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+const parseDependenciesInput = (value: string) =>
   value
     .split(",")
     .map((p) => p.trim())
@@ -74,6 +83,7 @@ export default function TemplateForm() {
   const [paramTypesByName, setParamTypesByName] = useState<
     Record<string, TemplateParamType>
   >({});
+  const [dependenciesInput, setDependenciesInput] = useState("");
 
   const { mutate: upsertTemplate, status: mutationStatus } = useMutation({
     mutationKey: ["upsertTemplate", id],
@@ -110,12 +120,17 @@ export default function TemplateForm() {
       workerType: WorkerType.NODE_DEFAULT,
       templateContent: WorkerDefaultTemplateContentMap[WorkerType.NODE_DEFAULT],
       params: [] as string[],
+      dependencies: [] as string[],
     },
     validationSchema: upsertTemplateSchema,
     onSubmit: (values) => {
       const params = values.params?.length
         ? values.params
         : parseParamsInput(paramsInput);
+
+      const dependencies = values.dependencies?.length
+        ? values.dependencies
+        : parseDependenciesInput(dependenciesInput);
 
       const typedParams = params.map((name) => ({
         name,
@@ -126,6 +141,7 @@ export default function TemplateForm() {
         ...values,
         params,
         typedParams,
+        dependencies,
       });
     },
   });
@@ -157,9 +173,11 @@ export default function TemplateForm() {
           workerType: template.workerType ?? WorkerType.NODE_DEFAULT,
           templateContent: template.templateContent,
           params: templateParamsInputAsArray,
+          dependencies: template.dependencies ?? [],
         });
 
         setParamsInput(templateParamsInputAsArray.join(", "));
+        setDependenciesInput((template.dependencies ?? []).join(", "));
 
         return template;
       },
@@ -217,6 +235,17 @@ export default function TemplateForm() {
       return next;
     });
   };
+
+  const handleDependenciesBlur = (value: string) => {
+    const dependenciesArray = parseDependenciesInput(value);
+    formik.setFieldValue("dependencies", dependenciesArray);
+  };
+
+  const handleDependenciesChange = (value: string) => {
+    setDependenciesInput(value);
+    const dependenciesArray = parseDependenciesInput(value);
+    formik.setFieldValue("dependencies", dependenciesArray, false);
+  }; 
 
   const handleParamTypeChange = (name: string, type: TemplateParamType) => {
     setParamTypesByName((prev) => ({
@@ -389,12 +418,35 @@ export default function TemplateForm() {
                     </div>
                   )}
 
+                  <div className="space-y-2">
+                    <Label htmlFor="dependencies" className="text-slate-200">
+                      {TEMPLATE_FORM_TEXT.dependenciesLabel} <br />
+                      {TEMPLATE_FORM_TEXT.dependenciesHelper}
+                    </Label>
+                    <Input
+                      id="dependencies"
+                      value={dependenciesInput}
+                      onChange={(e) => handleDependenciesChange(e.target.value)}
+                      onBlur={(e) => handleDependenciesBlur(e.target.value)}
+                      className="bg-slate-700 border-slate-600 text-white"
+                      placeholder={TEMPLATE_FORM_TEXT.dependenciesPlaceholder}
+                    />
+                    {formik.errors.dependencies && (
+                      <div className="text-red-500">{formik.errors.dependencies}</div>
+                    )}
+                  </div>
+
                   <div className="flex gap-2 pt-4">
                     <Button
                       type="button"
                       variant="outline"
                       className="border-slate-600 text-slate-200 hover:bg-slate-700"
-                      onClick={() => formik.resetForm()}
+                      onClick={() => {
+                        formik.resetForm();
+                        setParamsInput("");
+                        setDependenciesInput("");
+                        setParamTypesByName({});
+                      }}
                     >
                       {TEMPLATE_FORM_TEXT.clearButton}
                     </Button>
