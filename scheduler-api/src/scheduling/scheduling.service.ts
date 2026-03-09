@@ -18,6 +18,7 @@ import { Cron, Interval } from '@nestjs/schedule';
 import { readFileAsString } from 'src/utils/template.utils';
 import { WorkerTestFile } from 'src/worker/worker.interfaces';
 import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
+import { AiReportService } from 'src/ai-report/ai-report.abstract';
 
 @Injectable()
 export class SchedulingService {
@@ -40,6 +41,7 @@ export class SchedulingService {
     private readonly attemptService: AttemptService,
     private readonly assignmentService: AssignmentService,
     private readonly producerService: ProducerService,
+    private readonly aiReportService: AiReportService,
   ) {
     this.workerMap.set(
       WorkerType.NODE_DEFAULT,
@@ -129,9 +131,15 @@ export class SchedulingService {
     );
 
     console.log('Worker result:', workerResult);
+    console.log('Report:', workerResult.completeTrace);
 
     const score = this.calculateScore(workerResult);
     const isAcceptable = this.checkIfResultIsAcceptable(score);
+
+    const refinedReport = await this.aiReportService.refineReport(
+      workerResult.completeTrace,
+      assignment.description,
+    );
 
     const result = await this.attemptService.create({
       assignmentId: createSchedulingDto.assignmentId,
@@ -139,6 +147,7 @@ export class SchedulingService {
       isAcceptable,
       score,
       report: workerResult.completeTrace,
+      refinedReport,
       fails: workerResult.failures,
       passes: workerResult.passes,
       status: AttemptStatus.COMPLETED,
@@ -175,6 +184,7 @@ export class SchedulingService {
       isAcceptable: false,
       score: 0,
       report: '',
+      refinedReport: null,
       fails: 0,
       passes: 0,
       status: AttemptStatus.PENDING,
@@ -305,11 +315,17 @@ export class SchedulingService {
       `ATTEMPT_ID: ${attempt.id}`,
     );
 
+    const refinedReport = await this.aiReportService.refineReport(
+      workerResult.completeTrace,
+      attempt.assignment.description,
+    );
+
     this.attemptService.update({
       id: attempt.id,
       isAcceptable,
       score,
       report: workerResult.completeTrace,
+      refinedReport,
       fails: workerResult.failures,
       passes: workerResult.passes,
       status: AttemptStatus.COMPLETED,

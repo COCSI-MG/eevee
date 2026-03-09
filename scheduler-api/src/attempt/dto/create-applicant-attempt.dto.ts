@@ -15,6 +15,7 @@ export class CreateAttemptDto extends OmitType(Attempt, [
   score: number;
   passes: number;
   report: string;
+  refinedReport: string | null;
   assignmentId: number;
   status: AttemptStatus;
 }
