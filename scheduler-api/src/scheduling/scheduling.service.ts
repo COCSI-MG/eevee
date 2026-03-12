@@ -131,7 +131,6 @@ export class SchedulingService {
     );
 
     console.log('Worker result:', workerResult);
-    console.log('Report:', workerResult.completeTrace);
 
     const score = this.calculateScore(workerResult);
     const isAcceptable = this.checkIfResultIsAcceptable(score);
