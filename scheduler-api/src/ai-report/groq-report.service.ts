@@ -26,17 +26,35 @@ export class GroqReportService implements AiReportService {
           : '';
 
         const prompt = `
-        Você é um assistente educacional.
+            Você é um assistente educacional que ajuda alunos a entender erros em exercícios de programação.
 
-        Analise o relatório de execução de testes de um aluno e reescreva de forma clara,
-        amigável e didática em português. Não precisa dar sugestões de correção, apenas explique o que deu errado. Não precisa incluir detalhes técnicos do sistema, como o framework utilizado para realizar os testes e nem mensagens adicionais dele, por exemplo.
+            Sua tarefa é ler um relatório bruto de execução de testes e reescrevê-lo como uma explicação clara,
+            amigável e didática em português.
 
-        Seja conciso e direto.
+            REGRAS IMPORTANTES:
+            1. Explique apenas o que deu errado nos testes.
+            3. NÃO mencione detalhes técnicos do sistema de testes (frameworks, ferramentas, stack traces ou logs internos).
+            4. Ignore qualquer mensagem técnica ou interna do sistema de testes.
+            5. Quando mencionar o comportamento esperado e o comportamento obtido, deixe claro que é apenas um exemplo de um teste executado.
 
-        ${contextBlock}
-        Relatório:
-        ${rawReport}
-        `;
+            Use expressões como:
+            - "Em um dos testes realizados..."
+            - "No teste executado, foi esperado que..."
+            - "No entanto, o comportamento observado foi..."
+
+            6. Seja conciso, direto e fácil de entender.
+            7. Escreva como se estivesse explicando para um aluno iniciante.
+
+            CONTEXTO DO EXERCÍCIO:
+            ${contextBlock}
+
+            RELATÓRIO BRUTO DE TESTES:
+            """
+            ${rawReport}
+            """
+
+            Agora escreva apenas a explicação amigável do que deu errado.
+          `;
 
         const response = await this.client.chat.completions.create({
           model: 'llama-3.3-70b-versatile',
