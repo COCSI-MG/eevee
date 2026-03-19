@@ -261,9 +261,9 @@ export class SchedulingService {
       return;
     }
 
-    const filledTemplates = await this.assignmentService.getAssignmentTemplates(
-      attempt.assignment,
-    );
+    const { contents: filledTemplates, dependencies } =
+    await this.assignmentService.getAssignmentTemplates(attempt.assignment);
+    const assignmentDependencies = Array.from(dependencies);
 
     const testFiles: WorkerTestFile[] =
       attempt.assignment.assignmentTemplates.map((templateRelation, index) => ({
@@ -280,7 +280,7 @@ export class SchedulingService {
         attempt.assignment,
       ),
       applicationFileContent: message.applicationFileContent,
-      dependencies: [],
+      dependencies: assignmentDependencies,
     };
 
     const createWorkerAndWait = this.workerMap.get(
@@ -299,7 +299,7 @@ export class SchedulingService {
       return;
     }
 
-    const workerResult = await createWorkerAndWait(createSchedulingDto, []);
+    const workerResult = await createWorkerAndWait(createSchedulingDto, assignmentDependencies);
 
     this.logger.log(
       `Worker result: ${JSON.stringify(workerResult)}`,

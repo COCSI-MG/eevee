@@ -421,10 +421,23 @@ export class AssignmentService {
   }
 
   async getAssignmentTemplates(assignment: Assignment) {
-    return Promise.all(
+    const dependencies = new Set<string>();
+
+    const contents = await Promise.all(
       assignment.assignmentTemplates.map(async (templateRelation) => {
-        return await readFileAsString(templateRelation.template.filePath);
+        const template = templateRelation.template;
+
+        if (template.dependencies) {
+          template.dependencies.forEach((dep: string) => dependencies.add(dep));
+        }
+
+        return readFileAsString(template.filePath);
       }),
     );
+
+    return {
+      contents,
+      dependencies,
+    };
   }
 }
