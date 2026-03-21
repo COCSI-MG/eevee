@@ -1,38 +1,32 @@
-import { IsArray, IsEnum, IsOptional, IsString, Validate, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsArray, IsObject, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { MaxDepthConstraint, MaxFilesConstraint } from '../validators/worker-files-node.validators';
-
-export class WorkerFilesNodeDto {
-  @ApiProperty()
-  @IsString()
-  id: string;
-
-  @ApiProperty({ enum: ['file', 'folder'] })
-  @IsEnum(['file', 'folder'])
-  type: 'file' | 'folder';
-
-  @ApiProperty({ type: () => [WorkerFilesNodeDto], required: false })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => WorkerFilesNodeDto)
-  children: WorkerFilesNodeDto[] | null;
-
-  @ApiProperty({ required: false })
-  @IsOptional()
-  @IsString()
-  content?: string;
-}
 
 export class WorkerDefinitionDto {
-  @ApiProperty({ type: WorkerFilesNodeDto, required: false })
+  @ApiProperty({
+    type: Object,
+    required: false,
+    additionalProperties: { type: 'string' },
+  })
   @IsOptional()
-  @ValidateNested()
-  @Type(() => WorkerFilesNodeDto)
-  @Validate(MaxDepthConstraint, [5])
-  @Validate(MaxFilesConstraint, [50])
-  files: WorkerFilesNodeDto | null;
+  @IsObject()
+  files: Record<string, string> | null;
+
+  @ApiProperty({
+    type: Object,
+    required: false,
+    additionalProperties: { type: 'string' },
+  })
+  @IsOptional()
+  @IsObject()
+  testFiles: Record<string, string> | null;
+
+  @ApiProperty({ type: String, example: '/app/workspace/src' })
+  @IsString()
+  srcPath: string;
+
+  @ApiProperty({ type: String, example: '/app/workspace/test' })
+  @IsString()
+  testPath: string;
 
   @ApiProperty({ type: [String] })
   @IsArray()

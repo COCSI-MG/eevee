@@ -14,7 +14,7 @@ export const WORKER_IMAGE_NAMES = {
   [WorkerType.NODE_GRPCJS]: 'docker.io/library/worker-node-grpcjs-img:latest',
   [WorkerType.NODE_NEXTJS_CYPRESS]:
     'docker.io/library/worker-node-nextjs-cypress-img:latest',
-  [WorkerType.NODE_REACTJS_CYPRESS]: 'docker.io/library/worker-react-cypress:latest',
+  [WorkerType.NODE_REACTJS_CYPRESS]: 'docker.io/library/worker-react-cypress-img:latest',
 };
 
 // CHARS USED TO IDENTIFY WORKER OUTPUT RESPONSES
@@ -23,4 +23,4 @@ export enum WORKER_IDENTIFYING_CHARS {
   FAILURE = '✕',
 }
 
-export const WORKER_DEFAULT_INPUT_PATH = '/app/inputs'
+export const WORKER_DEFINITION_B64_ENV_NAME = 'WORKER_DEFINITION_B64';

@@ -1,13 +1,7 @@
-export type WorkerFilesNode = {
-    id: string,
-    children: Array<WorkerFilesNode> | null,
-    type: 'file' | 'folder',
-    content?: string,
-}
-
 export type WorkerDefinition = {
-    files: WorkerFilesNode | null,
-    startCommands: string[],
-    testCommands: string[],
+    files: Record<string, string> | null,
+    testFiles: Record<string, string> | null,
+    srcPath: string,
+    testPath: string,
     dependencies: string[],
 }

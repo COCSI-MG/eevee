@@ -9,10 +9,21 @@ const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
 });
 
+function getMonacoLanguage(language: string | undefined): string {
+  const normalized = (language || "").trim().toLowerCase();
+
+  if (normalized === "ts" || normalized === "tsx") return "typescript";
+  if (normalized === "js" || normalized === "jsx") return "javascript";
+  if (normalized === "yml") return "yaml";
+
+  return normalized || "typescript";
+}
+
 interface WorkspaceCodeEditorProps {
   onEditorChange: (value: string | undefined) => void;
   file: {
     name: string;
+    path: string;
     language: string;
     value: string;
   } | null;
@@ -23,6 +34,7 @@ export default function WorkspaceCodeEditor({
   onEditorChange,
 }: WorkspaceCodeEditorProps) {
   const editorRef = React.useRef<editor.IStandaloneCodeEditor | null>(null);
+  const monacoLanguage = getMonacoLanguage(file?.language);
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -37,12 +49,14 @@ export default function WorkspaceCodeEditor({
     monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: false,
       noSyntaxValidation: false,
+      diagnosticCodesToIgnore: [2307, 2580, 2451],
     });
 
     // Mesmo para JavaScript
     monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: false,
       noSyntaxValidation: false,
+      diagnosticCodesToIgnore: [2307, 2580, 2451],
     });
 
     // Configurar editor
@@ -84,7 +98,9 @@ export default function WorkspaceCodeEditor({
         <div className="flex">
           <div className="flex items-center px-4 py-2 bg-editor-bg border-r border-border">
             <span className="text-sm">{file.name}</span>
-            <span className="ml-2 text-xs text-gray-500">(typescript)</span>
+            <span className="ml-2 text-xs text-gray-500">
+              ({file.language || "typescript"})
+            </span>
           </div>
         </div>
       </div>
@@ -93,9 +109,10 @@ export default function WorkspaceCodeEditor({
         <Editor
           height="100%"
           theme="vs-dark"
-          path={file.name}
+          path={file.path}
           value={file.value}
-          language="typescript"
+          language={monacoLanguage}
+          saveViewState={false}
           onChange={onEditorChange}
           onMount={handleEditorDidMount}
           options={{

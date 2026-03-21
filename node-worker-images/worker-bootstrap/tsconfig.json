@@ -3,14 +3,15 @@
     // Treat files as modules even if it doesn't use import/export
     "moduleDetection": "force",
 
-    // Ignore module structure
-    "module": "Preserve",
+    // Use Node.js ESM/CJS interop rules
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    // Emit modern JS syntax compatible with Node 22+
+    "target": "ES2022",
 
     // Allow JSON modules to be imported
     "resolveJsonModule": true,
-
-    // Allow JS files to be imported from TS and vice versa
-    "allowJs": true,
 
     // Use correct ESM import behavior
     "esModuleInterop": true,

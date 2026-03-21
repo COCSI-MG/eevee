@@ -1,4 +1,3 @@
-import { WorkerDefinition } from "@/app/interface/scheduler-api/assignment";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
 export const DEFAULT_ASSIGNMENT_TEMPLATE = `// PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
@@ -465,35 +464,4 @@ export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
   [WorkerType.NODE_GRPCJS]: DEFAULT_TEMPLATE_CONTENT_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
   [WorkerType.NODE_REACTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
-};
-
-export const WorkerDefinitionPresets: Record<
-  WorkerType,
-  Pick<WorkerDefinition, "startCommands" | "testCommands" | "dependencies">
-> = {
-  [WorkerType.NODE_DEFAULT]: {
-    startCommands: [],
-    testCommands: ["npm run test"],
-    dependencies: [],
-  },
-  [WorkerType.NODE_NESTJS]: {
-    startCommands: ["npm run start:dev"],
-    testCommands: ["npm run test:e2e"],
-    dependencies: [],
-  },
-  [WorkerType.NODE_REACTJS_CYPRESS]: {
-    startCommands: ["npm run start"],
-    testCommands: ["npm run test"],
-    dependencies: [],
-  },
-  [WorkerType.NODE_GRPCJS]: {
-    startCommands: ["node app.js"],
-    testCommands: ["npm run test"],
-    dependencies: [],
-  },
-  [WorkerType.NODE_NEXTJS_CYPRESS]: {
-    startCommands: ["npm run dev"],
-    testCommands: ["npx cypress run"],
-    dependencies: [],
-  },
 };

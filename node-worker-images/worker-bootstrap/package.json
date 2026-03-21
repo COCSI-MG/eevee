@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "scripts": {
     "prebuild": "rm -rf ./dist",
     "build": "pkgroll --src .",

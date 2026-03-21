@@ -4,7 +4,6 @@ import { getFileTree } from "@/app/integration/filestash";
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { SchedulingFilesNode } from "@/app/interface/scheduler-api/scheduling";
 import WorkspaceHeader from "@/components/workspace/header";
 import Workspace from "@/components/workspace/workspace";
 import WorkspaceAgreement from "@/components/workspace/workspace-agreement";
@@ -41,27 +40,22 @@ export default function Page() {
         return Promise.reject("Missing required data");
       }
 
-      const transformFileNodeToSchedulingFilesNode = (
-        node: FileNode
-      ): SchedulingFilesNode => {
+      const flattenFileTreeToSchedulingFiles = (
+        node: FileNode,
+        acc: Record<string, string> = {},
+      ): Record<string, string> => {
         if (node.isFile) {
-          return {
-            id: node.id,
-            type: "file",
-            content: node.content,
-            children: null,
-          };
+          acc[node.path] = node.content ?? "";
+          return acc;
         }
 
-        return {
-          id: node.id,
-          type: "folder",
-          children: node.children
-            ? node.children.map((child) =>
-                transformFileNodeToSchedulingFilesNode(child)
-              )
-            : null,
-        };
+        if (node.children?.length) {
+          node.children.forEach((child) => {
+            flattenFileTreeToSchedulingFiles(child, acc);
+          });
+        }
+
+        return acc;
       };
 
       const fileTree = await getFileTree(assignmentData.id, user.id);
@@ -69,23 +63,12 @@ export default function Page() {
         return Promise.reject("File tree not found");
       }
 
-      const schedulingFilesNode =
-        transformFileNodeToSchedulingFilesNode(fileTree);
-
-      const fileContent = await fetchFileContent({
-        assignmentId: assignmentData.id,
-        userId: user.id,
-        filePath: selectedItem.path,
-      });
-
-      if (!fileContent) {
-        return Promise.reject("File content is empty");
-      }
+      const schedulingFiles = flattenFileTreeToSchedulingFiles(fileTree);
 
       return SchedulingService.createSchedulingInBackground({
         assignmentId: assignmentData.id,
-        applicationFileContent: fileContent,
-        files: schedulingFilesNode,
+        applicationFileContent: undefined, // Você pode ajustar isso conforme necessário
+        files: schedulingFiles,
       });
     },
     onError: (error) => {
@@ -120,7 +103,7 @@ export default function Page() {
         filePath: selectedItem.path,
       });
 
-      if (!fileContent) {
+      if (fileContent == null) {
         return Promise.reject("File content is empty");
       }
 
@@ -133,7 +116,7 @@ export default function Page() {
 
   const isUserSuspended = (assignmentData: Assignment) => {
     return assignmentData?.suspensions?.some(
-      (suspension) => suspension.userId === user?.id
+      (suspension) => suspension.userId === user?.id,
     );
   };
 

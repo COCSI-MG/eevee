@@ -5,7 +5,8 @@ import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
 import { FileNode, SelectedItem } from "@/types/shared";
 import { useEffect } from "react";
 import { initStash } from "@/app/integration/filestash";
-import { DEFAULT_FILE_NODE } from "@/app/assignment/worker-templates";
+import { createDefaultFileNode, DEFAULT_FILE_NODE } from "@/app/assignment/worker-templates";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
 interface WorkspaceContextType {
   selectedItem: SelectedItem;
@@ -30,17 +31,30 @@ export const useWorkspaceContext = () => {
 
 interface WorkspaceProviderProps {
   children: React.ReactNode;
+  workerType?: WorkerType;
+  boilerplate?: string;
 }
 
 export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   children,
+  workerType,
+  boilerplate,
 }) => {
   const [selectedItem, setSelectedItem] = React.useState<SelectedItem>({
     id: "",
     type: "file",
     path: "",
   });
-  const [treeData, setTreeData] = React.useState<FileNode>(DEFAULT_FILE_NODE);
+  
+  // Initialize with the correct file node based on worker type and boilerplate
+  const initialFileNode = React.useMemo(() => {
+    if (workerType) {
+      return createDefaultFileNode(workerType, boilerplate);
+    }
+    return DEFAULT_FILE_NODE;
+  }, [workerType, boilerplate]);
+  
+  const [treeData, setTreeData] = React.useState<FileNode>(initialFileNode);
 
   useEffect(() => {
     const initializeStashFn = async () => {

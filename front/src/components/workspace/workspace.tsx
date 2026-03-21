@@ -13,7 +13,8 @@ import { useWorkspaceContext } from "./workspace-provider";
 import { getFileTree } from "@/app/integration/filestash";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { User } from "@/app/interface/scheduler-api/user";
-import { DEFAULT_FILE_NODE } from "@/app/assignment/worker-templates";
+import { createDefaultFileNode } from "@/app/assignment/worker-templates";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -23,23 +24,31 @@ interface WorkspaceProps {
 export default function Workspace({ assignment, user }: WorkspaceProps) {
   const [activeFile, setActiveFile] = React.useState<{
     name: string;
+    path: string;
     language: string;
     value: string;
   } | null>(null);
 
-  const { selectedItem, setSelectedItem, setFileTreeData } =
+  const { setSelectedItem, setFileTreeData } =
     useWorkspaceContext();
 
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
-  const { mutate: updateFileContent } = useUpdateFileContent();
+  const { mutateAsync: updateFileContentAsync } = useUpdateFileContent();
   const { mutateAsync: fetchFileContent } = useFetchFileContent();
 
   const getOrCreateFileTreeOnInit = useCallback(
     async (assignmentId: number, userId: number) => {
       let fileTree = await getFileTree(assignmentId, userId);
+      let shouldPersistInitialState = false;
+
       if (!fileTree) {
-        const defaultFileNode: FileNode = DEFAULT_FILE_NODE;
+        // Create the correct file node based on assignment's worker type and boilerplate
+        const defaultFileNode: FileNode = createDefaultFileNode(
+          assignment.workerType as WorkerType,
+          assignment.boilerplate
+        );
         fileTree = defaultFileNode;
+        shouldPersistInitialState = true;
       }
 
       setFileTreeData(fileTree);
@@ -57,6 +66,9 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
 
       const firstFile = findFirst(fileTree);
       if (firstFile) {
+        const firstFileContent =
+          firstFile.content ?? assignment.boilerplate ?? "";
+
         setSelectedItem({
           id: firstFile.id,
           type: "file",
@@ -65,24 +77,31 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
 
         setActiveFile({
           name: firstFile.id,
+          path: firstFile.path,
           language: firstFile.id.split(".").pop() || "",
-          value: assignment.boilerplate || "",
+          value: firstFileContent,
         });
 
-        firstFile.content = assignment.boilerplate;
+        if (firstFile.content === undefined) {
+          firstFile.content = firstFileContent;
+          shouldPersistInitialState = true;
+        }
       }
 
-      await saveFileTreeAsync({
-        assignmentId,
-        userId,
-        fileTree,
-      });
+      if (shouldPersistInitialState) {
+        await saveFileTreeAsync({
+          assignmentId,
+          userId,
+          fileTree,
+        });
+      }
 
       return fileTree;
     },
     [
       setFileTreeData,
       assignment.boilerplate,
+      assignment.workerType,
       saveFileTreeAsync,
       setSelectedItem,
     ]
@@ -94,13 +113,13 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
   }, [assignment.id, getOrCreateFileTreeOnInit, user.id]);
 
   const handleFileSelect = async (node: FileNode) => {
+    if (!node.isFile) return;
+
     setSelectedItem({
       id: node.id,
-      type: node.isFile ? "file" : "folder",
+      type: "file",
       path: node.path,
     });
-
-    if (!node.isFile) return;
 
     const content = await fetchFileContent({
       assignmentId: assignment.id,
@@ -110,25 +129,27 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
 
     setActiveFile({
       name: node.id,
+      path: node.path,
       language: node.id.split(".").pop() || "",
       value: content || "",
     });
   };
 
   const handleEditorChange = (value: string | undefined) => {
-    if (value !== undefined && selectedItem.path) {
-      console.log("Updating file content for", selectedItem.path);
-      updateFileContent({
+    if (value !== undefined && activeFile?.path) {
+      void updateFileContentAsync({
         assignmentId: assignment.id,
         userId: user.id,
-        filePath: selectedItem.path,
+        filePath: activeFile.path,
         content: value,
       });
 
-      setActiveFile({
-        name: selectedItem.id,
-        language: selectedItem.id.split(".").pop() || "",
-        value: value,
+      setActiveFile((currentFile) => {
+        if (!currentFile) return currentFile;
+        return {
+          ...currentFile,
+          value,
+        };
       });
     }
   };

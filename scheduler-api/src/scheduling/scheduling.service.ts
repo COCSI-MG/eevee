@@ -1,9 +1,7 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   Logger,
-  OnModuleInit,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
@@ -219,9 +217,7 @@ export class SchedulingService {
    *
    * @param payload - The message containing the scheduling job details.
    */
-  async ProcessJobAndWait(
-    payload: CreateSchedulingJobMessageDto,
-  ) {
+  async ProcessJobAndWait(payload: CreateSchedulingJobMessageDto) {
     const { attemptId } = payload;
     this.logger.log(`Processing scheduling job for attempt ID: ${attemptId}`);
 
@@ -271,12 +267,19 @@ export class SchedulingService {
       return;
     }
 
+    const definitionWithTestFiles = {
+      ...payload.definition,
+      testFiles: this.buildTestFilesMap(
+        testFilesContent,
+        attempt.assignment.workerType,
+      ),
+    };
+
     const createWorkerFromDefinitionDto = plainToClass(
       CreateWorkerFromDefinitionDto,
       {
         type: attempt.assignment.workerType,
-        definition: payload.definition,
-        testFilesContent,
+        definition: definitionWithTestFiles,
       },
     );
 
@@ -333,5 +336,34 @@ export class SchedulingService {
 
   private isUserReachedMaxAttempt(maxAttempts: number, currentAttemps: number) {
     return maxAttempts <= currentAttemps;
+  }
+
+  private getTestFileSuffixByWorkerType(workerType: WorkerType) {
+    switch (workerType) {
+      case WorkerType.NODE_REACTJS_CYPRESS:
+      case WorkerType.NODE_NEXTJS_CYPRESS:
+        return 'cy.ts';
+
+      case WorkerType.NODE_DEFAULT:
+      case WorkerType.NODE_NESTJS:
+      case WorkerType.NODE_GRPCJS:
+      default:
+        return 'spec.ts';
+    }
+  }
+
+  private buildTestFilesMap(
+    testFilesContent: string[],
+    workerType: WorkerType,
+  ): Record<string, string> {
+    const suffix = this.getTestFileSuffixByWorkerType(workerType);
+
+    return testFilesContent.reduce<Record<string, string>>(
+      (acc, testContent, index) => {
+        acc[`${index}-template.${suffix}`] = testContent;
+        return acc;
+      },
+      {},
+    );
   }
 }
