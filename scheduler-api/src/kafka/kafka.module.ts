@@ -1,4 +1,4 @@
-import { forwardRef, Global, Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Global()
@@ -19,7 +19,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           consumer: {
             groupId:
               process.env.KAFKA_CONSUMER_GROUP_ID ||
-              'scheduler-api-client-group' + Math.random(),
+              'scheduler-api-client-group',
           },
         },
       },

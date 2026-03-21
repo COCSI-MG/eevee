@@ -39,7 +39,6 @@ export class FileSaverService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.kafkaClient.subscribeToResponseOf(REMOTE_FILE_SAVER);
     await this.kafkaClient.connect();
   }
 

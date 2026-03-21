@@ -32,7 +32,7 @@ async function bootstrap() {
       consumer: {
         groupId:
           process.env.KAFKA_CONSUMER_GROUP_ID ||
-          'scheduler-api-consumer-group' + Math.random(),
+          'scheduler-api-consumer-group' 
       },
     },
   });

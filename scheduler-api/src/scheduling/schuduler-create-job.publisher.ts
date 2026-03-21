@@ -10,7 +10,6 @@ export class SchedulerCreateJobPublisher implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.kafkaClient.subscribeToResponseOf(SCHEDULER_CREATE_JOB);
     await this.kafkaClient.connect();
   }
 
