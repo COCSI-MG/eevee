@@ -38,15 +38,6 @@ Use `make up` to start everything, `make up-scheduler` for API only, or `make up
 Workers are Kubernetes jobs that execute student code in isolation. The pattern:
 
 1. **Worker Type Registry** (`scheduler-api/src/worker/enum/worker-type.enum.ts`): Define new types (e.g., `NODE_NEXTJS_CYPRESS`)
-2. **Worker Definition** (e.g., `node-worker-images/next.js-cypress/worker-definition.json`):
-   ```json
-   {
-     "srcPath": "/app/src/app",
-     "testPath": "/app/cypress/e2e", 
-     "startCommands": ["npm run dev"],
-     "testCommands": ["npm run test"]
-   }
-   ```
 3. **Worker Service** (`scheduler-api/src/worker/worker.service.ts`): Maps type → Kubernetes job creation
 4. **Scheduling Service** (`scheduler-api/src/scheduling/scheduling.service.ts`): Routes requests based on `assignment.workerType`
 

@@ -8,7 +8,7 @@
     "start": "node ./dist/trigger.js",
     "build:web": "next build",
     "start:web": "next start -p 3000",
-    "cy:run": "cypress run --headless --browser chrome",
+    "cy:run": "cypress run --quiet --headless --browser chrome",
     "test": "npm run build:web && start-server-and-test start:web http://127.0.0.1:3000 cy:run"
   },
   "dependencies": {

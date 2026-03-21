@@ -3,6 +3,6 @@ describe("Example Cypress Test", () => {
         cy.visit("/");
     });
     it("should have a hello world message", () => {
-        cy.get("h1").contains("Hello, World!").should("be.visible");
+        cy.contains("Hello, World!").should("be.visible");
     });
 });

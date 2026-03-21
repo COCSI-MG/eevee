@@ -1,18 +1,21 @@
-FROM cypress/base:22.20.0
+FROM node:22-bullseye-slim AS bootstrap-builder
+
+WORKDIR /build
+
+COPY ./worker-bootstrap .
+
+RUN npm ci && npm run build
+
+FROM cypress/browsers:22.20.0
 
 WORKDIR /app
 
-COPY ./reactjs-cypress/package*.json . 
+COPY ./reactjs-cypress/package*.json .
 
 RUN npm ci
 
 COPY ./reactjs-cypress .
 
-## Build the worker bootstrap
-COPY ./worker-bootstrap /app/bootstrap
+COPY --from=bootstrap-builder /build/dist/bootstrap.js /app/bootstrap/bootstrap.js
 
-RUN cd bootstrap && \ 
-    npm ci && \
-    npm run build 
-
-CMD ["node", "/app/bootstrap/dist/bootstrap.js"]
+CMD ["node", "/app/bootstrap/bootstrap.js"]

@@ -2,12 +2,12 @@ FROM node:22-bullseye-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-WORKDIR /app/bootstrap
+WORKDIR /bootstrap
 
-COPY . /app/bootstrap/ 
+COPY . .
 
-RUN npm ci && npm run build 
+RUN npm ci
 
-RUN mkdir -p /app/inputs/tests
+RUN npm run build
 
-CMD [ "node", "/app/bootstrap/dist/bootstrap.js" ]
+CMD [ "npm", "start" ]
