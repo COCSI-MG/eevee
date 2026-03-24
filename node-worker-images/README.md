@@ -61,10 +61,10 @@ make help
 
 ### Exemplo Construindo uma Imagem React.Js + Cypress
 
-Build da imagem base Node.js:
+Build da imagem do worker bootstrap:
 
 ```bash
-make build-cefet-cypress-base
+make build-bootstrap
 ```
 
 Build da imagem base Cypress:
