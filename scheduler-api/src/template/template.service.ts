@@ -63,11 +63,12 @@ export class TemplateService {
     });
 
     const typedParams = createTemplateDto.typedParams ?? [];
+    const params = createTemplateDto.params ?? [];
     const typedParamMap = new Map(
       typedParams.map((p) => [p.name, p.type] as const),
     );
 
-    const templateParamsEntity = createTemplateDto.params.map((param) => ({
+    const templateParamsEntity = params.map((param) => ({
       name: param,
       templateId: newTemplate.id,
       type: typedParamMap.get(param) ?? TemplateParamType.STRING,

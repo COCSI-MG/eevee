@@ -37,6 +37,17 @@ minikube start
 
 A primeira é a imagem dos workers que serão usados.
 
+### Com Make
+
+Para facilitar o processo de build, foi criado um Makefile para cada worker, assim basta executar o comando
+
+O Makefile está na pasta [node-worker-images](node-worker-images) e basta executar o comando make help para verificar os comandos disponíveis
+
+```bash
+cd node-worker-images
+make help
+```
+
 ### Node Default Worker
 
 ```
@@ -48,6 +59,13 @@ Agora é necessário incluir a imagem no minikube
 
 ```
 minikube image load worker-node-default-img:latest
+```
+
+Utilizando makefile
+
+```
+make build-node
+make load-node
 ```
 
 ### Node NestJS Worker

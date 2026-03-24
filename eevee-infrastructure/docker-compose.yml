@@ -39,7 +39,7 @@ services:
       KAFKA_BROKERCONNECT: kafka:9092
 
   database:
-    image: postgres:latest
+    image: postgres:16
     container_name: eevee-scheduler-database
     ports:
       - 5432:5432

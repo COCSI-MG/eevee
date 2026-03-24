@@ -1,12 +1,14 @@
-FROM node:lts-hydrogen
+FROM node:22-bullseye-slim
 
 WORKDIR /app
 
-ADD package.json /app
-ADD package-lock.json /app
-ADD tsconfig.json /app
-ADD jest.config.ts /app
-ADD trigger.ts /app
-ADD babel.config.js /app
+COPY package*.json . 
 
-RUN npm install
+RUN npm ci
+
+COPY trigger.ts .
+COPY jest.config.ts .
+COPY tsconfig.json .
+COPY babel.config.js .
+
+CMD ["npm", "start"]

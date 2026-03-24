@@ -14,7 +14,7 @@ export type FileStashSchema = {
       id: string; // Mesma chave (necessário para keyPath)
       assignmentId: number;
       userId: number;
-      fileTree: FileNode[]; // Árvore completa de arquivos/pastas
+      fileTree: FileNode; // Árvore completa de arquivos/pastas
       updatedAt: string; // Última atualização
     };
   };

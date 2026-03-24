@@ -1,8 +1,21 @@
-module.exports = {
-  preset: 'ts-jest',
+import type { Config } from 'jest';
+
+const config: Config = {
+  preset: "ts-jest",
   testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'js'],
-  testMatch: ['./**.test.ts'],
-  testPathIgnorePatterns: ["/node_modules/", "/examples"],
-  maxWorkers: 1,
+  transform: {
+    '^.+\\.[tj]s$': [
+      'ts-jest',
+      {
+        tsconfig: {
+          module: 'commonjs',
+          allowJs: true,
+          esModuleInterop: true,
+        },
+      },
+    ],
+  },
 };
+
+export default config;

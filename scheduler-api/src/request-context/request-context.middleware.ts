@@ -7,15 +7,19 @@ import { ClsService } from 'nestjs-cls';
 @Injectable()
 export class RequestContextMiddleware implements NestMiddleware {
   constructor(
-    configService: ConfigService,
+    private readonly configService: ConfigService,
     private readonly clsService: ClsService,
   ) {
-    passport.use(new JwtStrategy(configService));
+    passport.use(new JwtStrategy(this.configService));
   }
 
   async use(req: any, res: any, next: (error?: any) => void) {
+    const isDevEnv = this.configService.get<string>('ENV') === 'local';
+    if (isDevEnv && this.clsService.get('user')) {
+      return next();
+    }
+
     passport.authenticate('jwt', { session: false }, (err, user, info) => {
-      console.log('user', user);
       if (err || !user) {
         next();
         return;
@@ -25,3 +29,4 @@ export class RequestContextMiddleware implements NestMiddleware {
     })(req, res, next);
   }
 }
+ 

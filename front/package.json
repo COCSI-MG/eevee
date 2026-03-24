@@ -35,7 +35,7 @@
     "formik": "^2.4.6",
     "lucide-react": "^0.485.0",
     "motion": "^12.23.3",
-    "next": "^15.2.4",
+    "next": "^15.2.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.0.2",

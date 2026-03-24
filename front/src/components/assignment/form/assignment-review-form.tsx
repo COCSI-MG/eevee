@@ -1,15 +1,22 @@
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ClipboardCheck, Settings, Code, Layers } from "lucide-react";
+import {
+  ClipboardCheck,
+  Settings,
+  Code,
+  Layers,
+} from "lucide-react";
 
 interface AssignmentFormReviewProps {
   values: Partial<Assignment>;
   classes: { id: number; name: string }[];
-  selectedTemplates: {
-    templateId: number;
-    params: { templateParamId: number; value: string }[];
-  }[];
+  selectedTemplates:
+    | {
+        templateId: number;
+        params: { templateParamId: number; value: string }[];
+      }[]
+    | null;
 }
 
 const AssigmentReview = ({
@@ -76,10 +83,15 @@ const TemplateReview = ({
     <div>
       <h4 className="text-white font-medium mb-3 flex items-center gap-2">
         <Code className="w-4 h-4" />
-        Templates ({selectedTemplates.length})
+        Templates ({selectedTemplates ? selectedTemplates.length : 0})
       </h4>
+
+      {selectedTemplates?.length === 0 && (
+        <p className="text-sm text-slate-400">Nenhum template selecionado.</p>
+      )}
+
       <div className="space-y-3">
-        {selectedTemplates.map((template, index) => (
+        {selectedTemplates?.map((template, index) => (
           <div key={index} className="bg-slate-700/30 p-4 rounded-lg">
             <h5 className="text-white font-medium mb-2">
               Template ID: {template.templateId}
@@ -109,7 +121,7 @@ export default function AssignmentFormReview({
   selectedTemplates,
 }: AssignmentFormReviewProps) {
   return (
-    <div className="max-w-7xl mx-auto max-h-[500px]">
+    <div className="max-w-8xl mx-auto max-h-[500px]">
       <Card className="bg-slate-800 border-slate-700">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">

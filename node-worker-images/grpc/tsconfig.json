@@ -5,8 +5,11 @@
     "esModuleInterop": true,
     "outDir": "dist",
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
     "skipLibCheck": true,
+    "noImplicitAny": false,
+    "allowJs": true,
+    "strict": false,
+    "noEmit": true,
     "types": [
       "@types/babel__core",
       "jest",

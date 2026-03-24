@@ -1,0 +1,14 @@
+{
+    "files": {
+        "id": "src",
+        "type": "folder",
+        "children": [
+            {
+                "id": "App.tsx",
+                "type": "file",
+                "content": "import React from 'react';\n\nfunction App() {\n  return (\n    <div className=\"App\">\n      <h1>Hello, World!</h1>\n    </div>\n  );\n}\n\nexport default App;\n"
+            }
+        ],
+        "content": null
+    }
+}

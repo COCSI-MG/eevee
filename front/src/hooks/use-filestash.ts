@@ -21,7 +21,7 @@ const useSaveFileTree = () => {
     }: {
       assignmentId: number;
       userId: number;
-      fileTree: FileNode[];
+      fileTree: FileNode;
     }) => {
       return saveFileTree(assignmentId, userId, fileTree);
     },

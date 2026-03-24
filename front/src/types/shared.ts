@@ -1,6 +1,5 @@
 export type FileNode = {
   id: string;
-  label: string;
   isSelectable: boolean;
   path: string;
   icon?: React.ReactNode;
@@ -12,7 +11,6 @@ export type FileNode = {
 
 export interface SelectedItem {
   id: string;
-  name: string;
   type: "file" | "folder";
   path: string;
 }

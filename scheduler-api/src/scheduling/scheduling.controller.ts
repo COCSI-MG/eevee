@@ -2,6 +2,14 @@ import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { SchedulingService } from './scheduling.service';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import {
+  Ctx,
+  EventPattern,
+  KafkaContext,
+  Payload,
+} from '@nestjs/microservices';
+import { SCHEDULER_CREATE_JOB } from './constants';
+import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
 
 @Controller('scheduling')
 @UseGuards(JwtAuthGuard)
@@ -32,5 +40,12 @@ export class SchedulingController {
     return await this.schedulingService.createSchedulingJobAsync(
       createSchedulingDto,
     );
+  }
+
+  @EventPattern(SCHEDULER_CREATE_JOB)
+  async handleCreateSchedulingJob(
+    @Payload() message: CreateSchedulingJobMessageDto,
+  ) {
+    return this.schedulingService.ProcessJobAndWait(message);
   }
 }

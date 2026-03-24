@@ -1,12 +1,21 @@
-FROM node:lts-hydrogen
+FROM node:22-bullseye-slim AS bootstrap-builder
+
+WORKDIR /build
+
+COPY ./worker-bootstrap .
+
+RUN npm ci && npm run build
+
+FROM node:22-bullseye-slim
 
 WORKDIR /app
 
-ADD package.json /app
-ADD package-lock.json /app
-ADD tsconfig.json /app
-ADD jest.config.ts /app
-ADD trigger.ts /app
-ADD babel.config.js /app
+COPY ./grpc/package*.json .
 
-RUN npm install
+RUN npm ci
+
+COPY ./grpc .
+
+COPY --from=bootstrap-builder /build/dist/bootstrap.js /app/bootstrap/bootstrap.js
+
+CMD ["node", "/app/bootstrap/bootstrap.js"]

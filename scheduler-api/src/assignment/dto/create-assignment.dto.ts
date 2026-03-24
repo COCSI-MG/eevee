@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
 import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
+import { WorkerDefinitionDto } from 'src/worker/dto/worker-definition.dto';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 export class TemplateParamDto {
@@ -36,6 +37,7 @@ export class AssignmentTemplateDto {
   @Type(() => TemplateParamDto)
   params: TemplateParamDto[];
 }
+
 export class CreateAssignmentDto {
   @ApiProperty()
   @IsNumber()
@@ -52,7 +54,7 @@ export class CreateAssignmentDto {
   @IsString()
   @IsNotBlank()
   description: string;
-  
+
   @ApiProperty()
   @IsNumber()
   maxAttempts: number;
@@ -61,14 +63,10 @@ export class CreateAssignmentDto {
   @IsEnum(WorkerType)
   workerType: WorkerType;
 
-  @ApiProperty({
-    description:
-      'Boilerplate code provided by the teacher (stored as a server-side file).',
-    required: false,
-  })
-  @IsOptional()
+  @ApiProperty()
   @IsString()
-  validationScript?: string;
+  @IsOptional()
+  validationScript: string;
 
   @ApiProperty({
     description:

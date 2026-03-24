@@ -5,17 +5,17 @@ import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
 import { FileNode, SelectedItem } from "@/types/shared";
 import { useEffect } from "react";
 import { initStash } from "@/app/integration/filestash";
+import { createDefaultFileNode, DEFAULT_FILE_NODE } from "@/app/assignment/worker-templates";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
-interface WorskpaceContextType {
-  currentStep: number;
-  setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
+interface WorkspaceContextType {
   selectedItem: SelectedItem;
   setSelectedItem: React.Dispatch<React.SetStateAction<SelectedItem>>;
-  fileTreeData: FileNode[];
-  setFileTreeData: React.Dispatch<React.SetStateAction<FileNode[]>>;
+  fileTreeData: FileNode;
+  setFileTreeData: React.Dispatch<React.SetStateAction<FileNode>>;
 }
 
-const WorkspaceContext = React.createContext<WorskpaceContextType | undefined>(
+const WorkspaceContext = React.createContext<WorkspaceContextType | undefined>(
   undefined
 );
 
@@ -31,15 +31,30 @@ export const useWorkspaceContext = () => {
 
 interface WorkspaceProviderProps {
   children: React.ReactNode;
+  workerType?: WorkerType;
+  boilerplate?: string;
 }
 
 export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   children,
+  workerType,
+  boilerplate,
 }) => {
-  const [currentStep, setCurrentStep] = React.useState(1);
-  const [selectedItem, setSelectedItem] =
-    React.useState<SelectedItem>({ id: "", name: "", type: "file", path: "" });
-  const [treeData, setTreeData] = React.useState<FileNode[]>([]);
+  const [selectedItem, setSelectedItem] = React.useState<SelectedItem>({
+    id: "",
+    type: "file",
+    path: "",
+  });
+  
+  // Initialize with the correct file node based on worker type and boilerplate
+  const initialFileNode = React.useMemo(() => {
+    if (workerType) {
+      return createDefaultFileNode(workerType, boilerplate);
+    }
+    return DEFAULT_FILE_NODE;
+  }, [workerType, boilerplate]);
+  
+  const [treeData, setTreeData] = React.useState<FileNode>(initialFileNode);
 
   useEffect(() => {
     const initializeStashFn = async () => {
@@ -54,9 +69,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   usePreventUserActions();
 
-  const value: WorskpaceContextType = {
-    currentStep,
-    setCurrentStep,
+  const value: WorkspaceContextType = {
     selectedItem,
     setSelectedItem,
     fileTreeData: treeData,

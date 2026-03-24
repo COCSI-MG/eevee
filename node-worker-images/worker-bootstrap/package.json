@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "scripts": {
+    "prebuild": "rm -rf ./dist",
+    "build": "pkgroll --src .",
+    "start": "node ./dist/bootstrap.js",
+    "start:dev": "tsx ./src/bootstrap.ts"
+  },
+  "main": "./dist/bootstrap.js",
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "pkgroll": "^2.21.3",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

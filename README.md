@@ -4,7 +4,9 @@
 
 1. Construa a infraestrutura do projeto, com detalhamento disponível em [eevee-infrastructure](./eevee-infrastructure/README.md).
 
-2. Instale os pacotes NPM para os arquivos a seguir:
+2. Construa as imagens dos workers e entenda sobre a execução dos workers, seguindo os passos detalhados em [node-worker-images](./node-worker-images/README.md).
+
+3. Instale os pacotes NPM para os arquivos a seguir:
 
 ### 1. `front` (Next.js frontend)
 

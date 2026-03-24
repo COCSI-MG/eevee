@@ -1,52 +1,73 @@
 import fs from 'fs';
-import path from 'path';
+import { spawn } from 'child_process';
 
-function checkupDependencies() {
+type JestJsonResult = {
+  numPassedTests: number;
+  numFailedTests: number;
+  numTotalTests: number;
+};
 
-  const directoryPath = __dirname;
+const ROOT_WORKDIR = '/app';
 
-  const appPath = path.join(directoryPath, 'app.ts');
-  fs.access(appPath, fs.constants.F_OK, (err) => {
-    if (err) {
-      console.error(`app.ts does not exist.`);
-      throw err;
-    } else {
-      console.log(`app.ts exists.`);
-    }
-  });
-
-  const hasAtLeastOneTestFile = fs
-    .readdirSync(directoryPath)
-    .some((file) => file.startsWith('validation') && file.endsWith('.test.ts'));
-
-  if (!hasAtLeastOneTestFile) {
-    console.error('No validation*.test.ts file found.');
-  } else {
-    console.log('At least one test file found.');
+function resolveRuntimeWorkdir() {
+  if (fs.existsSync(ROOT_WORKDIR)) {
+    return ROOT_WORKDIR;
   }
+
+  throw new Error(`Unable to determine runtime workdir.`);
 }
 
-function applyTests() {
-  const { exec } = require('child_process');
-  exec('npm test', (err: any, stdout: any, stderr: any) => {
-    if (err) {
-      console.error(`exec error: ${err}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-    console.log(`stderr: ${stderr}`);
+const RUNTIME_WORKDIR = resolveRuntimeWorkdir();
+const JEST_RESULTS_PATH = `${RUNTIME_WORKDIR}/test-results.json`;
 
-    console.log("Tests run!");
+function runJestWithJson(): Promise<number> {
+  return new Promise((resolve) => {
+    const child = spawn('npm', ['test'], {
+      cwd: RUNTIME_WORKDIR,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    child.stdout.on('data', (chunk) => {
+      process.stdout.write(chunk.toString());
+    });
+
+    child.stderr.on('data', (chunk) => {
+      process.stderr.write(chunk.toString());
+    });
+
+    child.on('close', (code) => {
+      resolve(code ?? 1);
+    });
   });
 }
 
-function main() {
-  console.log("Checking dependencies...");
-  checkupDependencies();
-  console.log("Dependencies checked!");
+function loadJestJsonResult(): JestJsonResult {
+  if (!fs.existsSync(JEST_RESULTS_PATH)) {
+    throw new Error(`Jest JSON output not found at ${JEST_RESULTS_PATH}`);
+  }
 
-  console.log("Running tests...");
-  applyTests();
+  const resultContent = fs.readFileSync(JEST_RESULTS_PATH, 'utf-8');
+  const result = JSON.parse(resultContent) as JestJsonResult;
+
+  return result;
 }
 
-main();
+async function main() {
+  console.log('Running tests...');
+  const exitCode = await runJestWithJson();
+
+  const jestJsonResult = loadJestJsonResult();
+  console.log(
+    `Tests:       ${jestJsonResult.numPassedTests} passed, ${jestJsonResult.numTotalTests} total`,
+  );
+  console.log(`Failed:      ${jestJsonResult.numFailedTests}`);
+  console.log(`ResultsFile: ${JEST_RESULTS_PATH}`);
+  console.log('Tests run!');
+
+  process.exit(exitCode);
+}
+
+main().catch((error) => {
+  console.error('Error executing trigger:', error);
+  process.exit(1);
+});
