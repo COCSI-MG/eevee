@@ -22,15 +22,32 @@ interface WorkspaceProps {
 }
 
 export default function Workspace({ assignment, user }: WorkspaceProps) {
-  const [activeFile, setActiveFile] = React.useState<{
-    name: string;
-    path: string;
-    language: string;
-    value: string;
-  } | null>(null);
+  const [activeFileContent, setActiveFileContent] = React.useState("");
 
-  const { setSelectedItem, setFileTreeData } =
+  const { selectedItem, setSelectedItem, setFileTreeData } =
     useWorkspaceContext();
+
+  const activeFile = React.useMemo(() => {
+    if (
+      selectedItem.type !== "file" ||
+      !selectedItem.path ||
+      !selectedItem.id
+    ) {
+      return null;
+    }
+
+    return {
+      name: selectedItem.id,
+      path: selectedItem.path,
+      language: selectedItem.id.split(".").pop() || "",
+      value: activeFileContent,
+    };
+  }, [
+    activeFileContent,
+    selectedItem.id,
+    selectedItem.path,
+    selectedItem.type,
+  ]);
 
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
   const { mutateAsync: updateFileContentAsync } = useUpdateFileContent();
@@ -41,11 +58,29 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
       let fileTree = await getFileTree(assignmentId, userId);
       let shouldPersistInitialState = false;
 
-      if (!fileTree) {
+      const hasPath = (node: FileNode, expectedPath: string): boolean => {
+        if (node.path === expectedPath) {
+          return true;
+        }
+
+        if (!node.children?.length) {
+          return false;
+        }
+
+        return node.children.some((child) => hasPath(child, expectedPath));
+      };
+
+      const shouldRebuildReactWorkspaceTree =
+        assignment.workerType === WorkerType.NODE_REACTJS_CYPRESS &&
+        (!fileTree ||
+          !fileTree.children?.length ||
+          !hasPath(fileTree, "src/App.tsx"));
+
+      if (!fileTree || shouldRebuildReactWorkspaceTree) {
         // Create the correct file node based on assignment's worker type and boilerplate
         const defaultFileNode: FileNode = createDefaultFileNode(
           assignment.workerType as WorkerType,
-          assignment.boilerplate
+          assignment.boilerplate,
         );
         fileTree = defaultFileNode;
         shouldPersistInitialState = true;
@@ -75,12 +110,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
           path: firstFile.path,
         });
 
-        setActiveFile({
-          name: firstFile.id,
-          path: firstFile.path,
-          language: firstFile.id.split(".").pop() || "",
-          value: firstFileContent,
-        });
+        setActiveFileContent(firstFileContent);
 
         if (firstFile.content === undefined) {
           firstFile.content = firstFileContent;
@@ -104,7 +134,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
       assignment.workerType,
       saveFileTreeAsync,
       setSelectedItem,
-    ]
+    ],
   );
 
   // Inicializa a árvore no stash quando carrega o assignment
@@ -127,12 +157,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
       filePath: node.path,
     });
 
-    setActiveFile({
-      name: node.id,
-      path: node.path,
-      language: node.id.split(".").pop() || "",
-      value: content || "",
-    });
+    setActiveFileContent(content || "");
   };
 
   const handleEditorChange = (value: string | undefined) => {
@@ -144,13 +169,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
         content: value,
       });
 
-      setActiveFile((currentFile) => {
-        if (!currentFile) return currentFile;
-        return {
-          ...currentFile,
-          value,
-        };
-      });
+      setActiveFileContent(value);
     }
   };
 
@@ -166,7 +185,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
         });
       }
     },
-    [assignment.id, saveFileTreeAsync, setFileTreeData, user.id]
+    [assignment.id, saveFileTreeAsync, setFileTreeData, user.id],
   );
 
   return (
@@ -178,7 +197,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
 
       <div className="flex-1 flex flex-col">
         <WorkspaceCodeEditor
-          file={activeFile!}
+          file={activeFile}
           onEditorChange={handleEditorChange}
         />
       </div>

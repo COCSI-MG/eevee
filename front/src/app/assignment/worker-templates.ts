@@ -1,6 +1,9 @@
 import { FileNode } from "@/types/shared";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
+import {
+  DEFAULT_REACTJS_CYPRESS_WORKSPACE_FILES,
+  WorkerDefaultTemplateMap,
+} from "@/app/admin/assignments/constants";
 
 /**
  * Returns the appropriate file extension based on worker type
@@ -40,24 +43,39 @@ export function createDefaultFileNode(
   workerType: WorkerType,
   boilerplate?: string
 ): FileNode {
-  const fileName = getFileName(workerType);
-  const content = boilerplate ?? WorkerDefaultTemplateMap[workerType];
-  
-  return {
+  const createFileNode = (path: string, content: string): FileNode => ({
+    id: path.split("/").pop() || path,
+    isFile: true,
+    isSelectable: true,
+    content,
+    path,
+  });
+
+  const createSrcRootNode = (children: FileNode[]): FileNode => ({
     id: "src",
     isFile: false,
-    children: [
-      {
-        id: fileName,
-        isFile: true,
-        isSelectable: true,
-        content,
-        path: `src/${fileName}`,
-      },
-    ],
+    children,
     isSelectable: false,
     path: "src",
-  };
+  });
+
+  if (workerType === WorkerType.NODE_REACTJS_CYPRESS) {
+    const reactWorkspaceFiles: Record<string, string> = {
+      ...DEFAULT_REACTJS_CYPRESS_WORKSPACE_FILES,
+      "src/App.tsx": boilerplate ?? WorkerDefaultTemplateMap[workerType],
+    };
+
+    const children = Object.keys(reactWorkspaceFiles)
+      .sort()
+      .map((path) => createFileNode(path, reactWorkspaceFiles[path]));
+
+    return createSrcRootNode(children);
+  }
+
+  const fileName = getFileName(workerType);
+  const content = boilerplate ?? WorkerDefaultTemplateMap[workerType];
+
+  return createSrcRootNode([createFileNode(`src/${fileName}`, content)]);
 }
 
 /**

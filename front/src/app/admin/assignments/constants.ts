@@ -17,6 +17,75 @@ export default function StudentApp() {
 }
 `;
 
+export const DEFAULT_REACTJS_CYPRESS_ASSIGNMENT_TEMPLATE = `import './App.css';
+
+function App() {
+  return (
+    <>
+      <h1>Hello from App</h1>
+    </>
+  );
+}
+
+export default App;
+`;
+
+export const DEFAULT_REACTJS_CYPRESS_MAIN_TSX = `import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App';
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+`;
+
+export const DEFAULT_REACTJS_CYPRESS_INDEX_CSS = `:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+`;
+
+export const DEFAULT_REACTJS_CYPRESS_APP_CSS = `#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+`;
+
+export const DEFAULT_REACTJS_CYPRESS_WORKSPACE_FILES: Record<string, string> = {
+  'src/App.tsx': DEFAULT_REACTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
+  'src/main.tsx': DEFAULT_REACTJS_CYPRESS_MAIN_TSX,
+  'src/index.css': DEFAULT_REACTJS_CYPRESS_INDEX_CSS,
+  'src/App.css': DEFAULT_REACTJS_CYPRESS_APP_CSS,
+};
+
 export const DEFAULT_VALIDATION_SCRIPT = `
 import { main } from './app';
 
@@ -442,7 +511,7 @@ export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
-  [WorkerType.NODE_REACTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
+  [WorkerType.NODE_REACTJS_CYPRESS]: DEFAULT_REACTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
