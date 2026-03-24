@@ -1,5 +1,6 @@
 "use client";
 
+import { getFileTree } from "@/app/integration/filestash";
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
@@ -13,22 +14,24 @@ import { useFetchAssignment } from "@/hooks/use-assignments";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useFetchFileContent } from "@/hooks/use-filestash";
 import { toast } from "@/hooks/use-toast";
+import { FileNode } from "@/types/shared";
 import { useMutation } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function Page() {
   const { id } = useParams();
-
   const { back } = useRouter();
-
   const { user } = useAuthContext();
+  const { selectedItem } = useWorkspaceContext();
+  const { mutateAsync: fetchFileContent } = useFetchFileContent();
 
   const { data: assignmentData, isFetching: isFetchingAssignment } =
     useFetchAssignment(Number(id));
 
-  const { selectedItem, currentStep, setCurrentStep } = useWorkspaceContext();
-
-  const { mutateAsync: fetchFileContent } = useFetchFileContent();
+  // Estado para controlar se o usuário aceitou o acordo
+  const [hasAcceptedAgreement, setHasAcceptedAgreement] =
+    useState<boolean>(false);
 
   const { mutate: submitAssignment, isPending: isSubmitting } = useMutation({
     mutationKey: ["submit-assignment"],
@@ -37,26 +40,35 @@ export default function Page() {
         return Promise.reject("Missing required data");
       }
 
-      const fileContent = await fetchFileContent({
-        assignmentId: assignmentData.id,
-        userId: user.id,
-        filePath: selectedItem.path,
-      });
+      const flattenFileTreeToSchedulingFiles = (
+        node: FileNode,
+        acc: Record<string, string> = {},
+      ): Record<string, string> => {
+        if (node.isFile) {
+          acc[node.path] = node.content ?? "";
+          return acc;
+        }
 
-      if (!fileContent) {
-        return Promise.reject("File content is empty");
+        if (node.children?.length) {
+          node.children.forEach((child) => {
+            flattenFileTreeToSchedulingFiles(child, acc);
+          });
+        }
+
+        return acc;
+      };
+
+      const fileTree = await getFileTree(assignmentData.id, user.id);
+      if (!fileTree) {
+        return Promise.reject("File tree not found");
       }
 
-      if (user?.isAdmin) {
-        return SchedulingService.createScheduling({
-          assignmentId: assignmentData.id,
-          applicationFileContent: fileContent,
-        });
-      }
+      const schedulingFiles = flattenFileTreeToSchedulingFiles(fileTree);
 
       return SchedulingService.createSchedulingInBackground({
         assignmentId: assignmentData.id,
-        applicationFileContent: fileContent,
+        applicationFileContent: undefined, // Você pode ajustar isso conforme necessário
+        files: schedulingFiles,
       });
     },
     onError: (error) => {
@@ -68,11 +80,6 @@ export default function Page() {
     },
     onSuccess: (data) => {
       console.log(data);
-
-      if (user?.isAdmin) {
-        alert("Resultado da tarefa :\n" + JSON.stringify(data));
-        return;
-      }
 
       toast({
         title: "Seu trabalho foi recebido com sucesso e está sendo processado",
@@ -96,11 +103,11 @@ export default function Page() {
         filePath: selectedItem.path,
       });
 
-      if (!fileContent) {
+      if (fileContent == null) {
         return Promise.reject("File content is empty");
       }
 
-      const file = new File([fileContent], selectedItem.name, {
+      const file = new File([fileContent], selectedItem.id, {
         type: "text/plain",
       });
       return FileSaverService.uploadFileToServer(file, Number(id));
@@ -109,28 +116,36 @@ export default function Page() {
 
   const isUserSuspended = (assignmentData: Assignment) => {
     return assignmentData?.suspensions?.some(
-      (suspension) => suspension.userId === user?.id
+      (suspension) => suspension.userId === user?.id,
     );
   };
 
+  const handleAcceptAgreement = () => {
+    setHasAcceptedAgreement(true);
+  };
+
+  // Loading state
   if (isFetchingAssignment) {
     return <WorkspaceLoading />;
   }
 
+  // Suspension check
   if (assignmentData && isUserSuspended(assignmentData)) {
     return <WorkspaceSuspension />;
   }
 
-  if (user && !user.isAdmin && assignmentData && currentStep === 1) {
+  // Agreement check - APENAS para não-admins que ainda não aceitaram
+  if (user && !user.isAdmin && assignmentData && !hasAcceptedAgreement) {
     return (
       <WorkspaceAgreement
         title={assignmentData.title}
-        onAccept={() => setCurrentStep(2)}
+        onAccept={handleAcceptAgreement}
         assignmentId={assignmentData.id}
       />
     );
   }
 
+  // Workspace principal (após aceitar ou se for admin)
   return (
     <>
       <WorkspaceHeader

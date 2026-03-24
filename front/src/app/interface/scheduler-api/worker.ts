@@ -3,5 +3,5 @@ export enum WorkerType {
   NODE_NESTJS = "node_nestjs",
   NODE_GRPCJS = "node_grpcjs",
   NODE_NEXTJS_CYPRESS = "node_nextjs_cypress",
-  // NODE_REACT = "node_react",
+  NODE_REACTJS_CYPRESS = "node_reactjs_cypress",
 }

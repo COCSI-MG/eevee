@@ -3,9 +3,33 @@ import { FileStashSchema, FileStashValue } from "@/types/filestash-schema";
 import { FileNode } from "@/types/shared";
 
 // Instância singleton do FileStash
-const db = new FileStash<FileStashSchema>('eevee-workspace-db')
+const db = new FileStash<FileStashSchema>("eevee-workspace-db")
   .setVersion(1)
-  .configureStore('assignments', { keyPath: 'id' }); // Usa 'id' como keyPath
+  .configureStore("assignments", { keyPath: "id" }); // Usa 'id' como keyPath
+
+const assignmentWriteQueues = new Map<string, Promise<void>>();
+
+const enqueueAssignmentWrite = async (
+  key: string,
+  operation: () => Promise<void>
+): Promise<void> => {
+  const lastOperation = assignmentWriteQueues.get(key) ?? Promise.resolve();
+
+  const nextOperation = lastOperation
+    .catch(() => undefined)
+    .then(operation);
+
+  assignmentWriteQueues.set(
+    key,
+    nextOperation.finally(() => {
+      if (assignmentWriteQueues.get(key) === nextOperation) {
+        assignmentWriteQueues.delete(key);
+      }
+    })
+  );
+
+  await nextOperation;
+};
 
 /**
  * Inicializa o FileStash (abre a conexão)
@@ -27,19 +51,21 @@ export const getAssignmentKey = (assignmentId: number, userId: number) => {
 export const saveFileTree = async (
   assignmentId: number,
   userId: number,
-  fileTree: FileNode[]
+  fileTree: FileNode
 ): Promise<void> => {
   const key = getAssignmentKey(assignmentId, userId);
-  
-  const data: FileStashValue = {
-    id: key, // id é usado como keyPath
-    assignmentId,
-    userId,
-    fileTree,
-    updatedAt: new Date().toISOString(),
-  };
 
-  await db.upsert('assignments', data);
+  await enqueueAssignmentWrite(key, async () => {
+    const data: FileStashValue = {
+      id: key,
+      assignmentId,
+      userId,
+      fileTree,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await db.upsert("assignments", data);
+  });
 };
 
 /**
@@ -48,9 +74,9 @@ export const saveFileTree = async (
 export const getFileTree = async (
   assignmentId: number,
   userId: number
-): Promise<FileNode[] | null> => {
+): Promise<FileNode | null> => {
   const key = getAssignmentKey(assignmentId, userId);
-  const data = await db.get('assignments', key);
+  const data = await db.get("assignments", key);
   return data?.fileTree || null;
 };
 
@@ -63,35 +89,54 @@ export const updateFileContent = async (
   filePath: string,
   content: string
 ): Promise<void> => {
-  const fileTree = await getFileTree(assignmentId, userId);
-  
-  if (!fileTree) {
-    throw new Error('File tree not found. Initialize it first with saveFileTree()');
-  }
+  const key = getAssignmentKey(assignmentId, userId);
 
-  // Função recursiva para encontrar e atualizar o arquivo
-  const updateNode = (nodes: FileNode[]): boolean => {
-    for (const node of nodes) {
+  await enqueueAssignmentWrite(key, async () => {
+    const currentEntry = await db.get("assignments", key);
+    const fileTree = currentEntry?.fileTree;
+
+    if (!fileTree) {
+      throw new Error(
+        "File tree not found. Initialize it first with saveFileTree()"
+      );
+    }
+
+    // Função recursiva para encontrar e atualizar o arquivo
+    const updateNode = (node: FileNode): boolean => {
       if (node.path === filePath && node.isFile) {
         node.content = content;
         node.updatedAt = new Date().toISOString();
         return true;
       }
-      if (node.children && updateNode(node.children)) {
-        return true;
+
+      if (node.children) {
+        for (const child of node.children) {
+          const updated = updateNode(child);
+          if (updated) {
+            return true;
+          }
+        }
       }
+      return false;
+    };
+
+    const updated = updateNode(fileTree);
+
+    if (!updated) {
+      console.warn(`File not found in tree: ${filePath}`);
+      return;
     }
-    return false;
-  };
 
-  const updated = updateNode(fileTree);
-  
-  if (!updated) {
-    console.warn(`File not found in tree: ${filePath}`);
-    return;
-  }
+    const updatedEntry: FileStashValue = {
+      id: key,
+      assignmentId,
+      userId,
+      fileTree,
+      updatedAt: new Date().toISOString(),
+    };
 
-  await saveFileTree(assignmentId, userId, fileTree);
+    await db.upsert("assignments", updatedEntry);
+  });
 };
 
 /**
@@ -103,17 +148,17 @@ export const getFileContent = async (
   filePath: string
 ): Promise<string | null> => {
   const fileTree = await getFileTree(assignmentId, userId);
-  
+
   if (!fileTree) return null;
 
   // Função recursiva para encontrar o arquivo
-  const findNode = (nodes: FileNode[]): string | null => {
-    for (const node of nodes) {
-      if (node.path === filePath && node.isFile) {
-        return node.content || null;
-      }
-      if (node.children) {
-        const found = findNode(node.children);
+  const findNode = (node: FileNode): string | null => {
+    if (node.path === filePath && node.isFile) {
+      return node.content || null;
+    }
+    if (node.children) {
+      for (const child of node.children) {
+        const found = findNode(child);
         if (found !== null) return found;
       }
     }
@@ -128,7 +173,7 @@ export const getFileContent = async (
  */
 export async function deleteAssignment(assignmentId: number, userId: number) {
   const key = getAssignmentKey(assignmentId, userId);
-  await db.delete('assignments', key);
+  await db.delete("assignments", key);
 }
 
 /**
@@ -137,4 +182,3 @@ export async function deleteAssignment(assignmentId: number, userId: number) {
 export function closeStash() {
   db.close();
 }
-

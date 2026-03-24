@@ -1,6 +1,29 @@
 import { WorkerResponse } from '../worker.interfaces';
+import { Logger } from '@nestjs/common';
+
+const TEST_OUTPUT_START_MARKER = 'EEVEE_TEST_OUTPUT_START';
+const TEST_OUTPUT_END_MARKER = 'EEVEE_TEST_OUTPUT_END';
+
+function extractTestOutput(log: string): string {
+  const startIndex = log.lastIndexOf(TEST_OUTPUT_START_MARKER);
+  if (startIndex === -1) {
+    return log;
+  }
+
+  const contentStartIndex = startIndex + TEST_OUTPUT_START_MARKER.length;
+  const endIndex = log.indexOf(TEST_OUTPUT_END_MARKER, contentStartIndex);
+  if (endIndex === -1) {
+    return log;
+  }
+
+  return log.slice(contentStartIndex, endIndex).trim();
+}
 
 export function parseJestLogResult(log: string): WorkerResponse {
+  const logger = new Logger('WorkerLogParser');
+  logger.debug('Parsing Jest log result...');
+  logger.debug(`Raw log: ${log}`);
+
   const logLines = log.split('\n');
 
   const testSummaryLine = logLines.find((line) => line.includes('Tests:'));
@@ -48,4 +71,51 @@ export function parseCypressLogResult(log: string): WorkerResponse {
   }
 
   return parseJestLogResult(log);
+}
+
+export function parseCypressLogResultFromTestEnvelope(
+  log: string,
+): WorkerResponse {
+  const isolatedTestOutput = extractTestOutput(log);
+  return parseCypressLogResult(isolatedTestOutput);
+}
+
+export interface ParsedWorkerResult extends WorkerResponse {
+  total: number;
+  isSuccess: boolean;
+}
+
+export function parseJestLogResultWithSuiteCheck(
+  completeTrace: string,
+  exitCode?: number,
+): ParsedWorkerResult {
+  const lines = completeTrace.split('\n');
+
+  const testSuitesLine = lines.find((line) => line.includes('Test Suites:'));
+  const testsLine = lines.find((line) => line.includes('Tests:'));
+
+  const extractCount = (summaryLine: string | undefined, label: string) => {
+    if (!summaryLine) return 0;
+    const match = summaryLine.match(new RegExp(`(\\d+)\\s+${label}`, 'i'));
+    return match ? Number(match[1]) : 0;
+  };
+
+  const failedSuites = extractCount(testSuitesLine, 'failed');
+  const failedTests = extractCount(testsLine, 'failed');
+  const passedTests = extractCount(testsLine, 'passed');
+  const totalTests = extractCount(testsLine, 'total');
+  const computedFailures = failedTests > 0 ? failedTests : failedSuites;
+
+  const isSuccess =
+    (exitCode === undefined || exitCode === 0) &&
+    failedSuites === 0 &&
+    failedTests === 0;
+
+  return {
+    failures: computedFailures,
+    passes: passedTests,
+    total: totalTests,
+    isSuccess,
+    completeTrace,
+  };
 }

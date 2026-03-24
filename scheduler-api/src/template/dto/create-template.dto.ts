@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 import {
-  ArrayNotEmpty,
   IsArray,
   IsEnum,
   IsNotEmpty,
@@ -31,10 +30,11 @@ export class CreateTemplateDto {
   @IsNotBlank()
   description?: string;
 
+  @IsOptional()
   @IsArray()
   @IsNotBlank({ each: true })
   @Type(() => String)
-  params: string[];
+  params?: string[];
 
   @IsOptional()
   @IsArray()

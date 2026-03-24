@@ -29,7 +29,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
   const isUserSuspendedFromAssignment = (assignment: Assignment) => {
     if ((assignment.suspensions?.length ?? 0) > 0) {
       return assignment.suspensions?.some(
-        (suspension) => suspension.userId === user?.id
+        (suspension) => suspension.userId === user?.id,
       )
         ? false
         : true;
@@ -38,49 +38,38 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     return true;
   };
 
-  const isAssignmentWithRunningAttempt = (assignment: Assignment) => {
-    if (assignment.assignmentAttempts?.length) {
-      return assignment.assignmentAttempts.some(
-        (attempt) => attempt.status === "running"
-      );
+  const getLastAttemptStatus = (assignment: Assignment) => {
+    if (!assignment.assignmentAttempts?.length) {
+      return null;
     }
-    return false;
+    const lastAttempt = assignment.assignmentAttempts[assignment.assignmentAttempts.length - 1];
+    return lastAttempt?.status;
   };
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {data.map((assignment) => (
-        <Card
-          key={assignment.id}
-          className={cn(
-            "overflow-hidden hover:shadow-md transition-shadow",
-            {
-              "opacity-50": !isUserSuspendedFromAssignment(assignment),
-            },
-            {
-              "border border-green-600":
-                assignment.assignmentAttempts?.length > 0 &&
-                assignment.assignmentAttempts.some(
-                  (attempt) => attempt.status === "running"
-                ),
-            },
-            {
-              "border border-red-600":
-                (assignment.assignmentAttempts.length > 0 &&
-                  assignment.assignmentAttempts.some(
-                    (attempt) => attempt.status === "failed"
-                  )) ||
-                !isUserSuspendedFromAssignment(assignment),
-            },
-            {
-              "border border-yellow-600":
-                assignment.assignmentAttempts.length > 0 &&
-                assignment.assignmentAttempts.some(
-                  (attempt) => attempt.status === "completed"
-                ),
-            }
-          )}
-        >
+      {data.map((assignment) => {
+        const lastAttemptStatus = getLastAttemptStatus(assignment);
+
+        return (
+          <Card
+            key={assignment.id}
+            className={cn(
+              "overflow-hidden hover:shadow-md transition-shadow",
+              {
+                "opacity-50": !isUserSuspendedFromAssignment(assignment),
+              },
+              {
+                "border border-green-600": lastAttemptStatus === "running",
+              },
+              {
+                "border border-red-600": lastAttemptStatus === "failed",
+              },
+              {
+                "border border-yellow-600": lastAttemptStatus === "completed",
+              },
+            )}
+          >
           <CardHeader>
             <CardTitle className="text-white flex items-center justify-between space-x-2">
               {assignment.title}
@@ -94,30 +83,19 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 </Badge>
               )}
 
-              {
-                assignment.assignmentAttempts?.length > 0 &&
-                assignment.assignmentAttempts.some(
-                  (attempt) => attempt.status === "failed")
-                && (
+              {lastAttemptStatus === "failed" && (
                   <Badge className="bg-red-900 text-red-300 animate-pulse">
                     Tentativa com falha
                   </Badge>
-                )
-              }
+                )}
 
-              {assignment.assignmentAttempts?.length > 0 &&
-                assignment.assignmentAttempts.some(
-                  (attempt) => attempt.status === "running"
-                ) && (
+              {lastAttemptStatus === "running" && (
                   <Badge className="bg-green-600 text-white animate-pulse">
                     Em execução
                   </Badge>
                 )}
 
-              {assignment.assignmentAttempts?.length > 0 &&
-                assignment.assignmentAttempts.some(
-                  (attempt) => attempt.status === "completed"
-                ) && (
+              {lastAttemptStatus === "completed" && (
                   <Badge className="bg-yellow-600 text-white animate-pulse">
                     Resultados disponíveis
                   </Badge>
@@ -147,18 +125,19 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 onClick={() => handleTry(assignment.id)}
                 disabled={
                   !isUserSuspendedFromAssignment(assignment) ||
-                  isAssignmentWithRunningAttempt(assignment)
+                  lastAttemptStatus === "running"
                 }
               >
                 <Code className="h-4 w-4 mr-2" />
-                {isAssignmentWithRunningAttempt(assignment)
+                {lastAttemptStatus === "running"
                   ? "Tarefa em execução..."
                   : "Iniciar"}
               </Button>
             </div>
           </CardContent>
-        </Card>
-      ))}
+          </Card>
+        );
+      })}
     </div>
   );
 }

@@ -51,9 +51,7 @@ const upsertTemplateSchema = Yup.object().shape({
   templateContent: Yup
     .string()
     .required(TEMPLATE_FORM_VALIDATION_MESSAGES.templateContentRequired),
-  params: Yup.array().of(
-    Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.paramNameRequired)
-  ),
+  params: Yup.array().of(Yup.string()).optional(),
   dependencies: Yup.array()
     .of(Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.dependencyNameRequired))
     .notRequired(),
@@ -209,7 +207,6 @@ export default function TemplateForm() {
   }, [formik.values.workerType, isNewTemplate]);
 
   const handleParamsBlur = (value: string) => {
-    console.debug("Params input blur:", value);
     const paramsArray = parseParamsInput(value);
     formik.setFieldValue("params", paramsArray);
 
@@ -290,10 +287,12 @@ export default function TemplateForm() {
                       name="title"
                       value={formik.values.title}
                       onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       className="bg-slate-700 border-slate-600 text-white"
                       placeholder={TEMPLATE_FORM_TEXT.titlePlaceholder}
                     />
-                    {formik.errors.title && (
+                    {(formik.touched.title || formik.submitCount > 0) &&
+                      formik.errors.title && (
                       <div className="text-red-500">{formik.errors.title}</div>
                     )}
                   </div>
@@ -307,10 +306,12 @@ export default function TemplateForm() {
                       name="description"
                       value={formik.values.description}
                       onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
                       className="bg-slate-700 border-slate-600 text-white max-h-[120px]"
                       placeholder={TEMPLATE_FORM_TEXT.descriptionPlaceholder}
                     />
-                    {formik.errors.description && (
+                    {(formik.touched.description || formik.submitCount > 0) &&
+                      formik.errors.description && (
                       <div className="text-red-500">
                         {formik.errors.description}
                       </div>
@@ -340,7 +341,8 @@ export default function TemplateForm() {
                         ))}
                       </SelectContent>
                     </Select>
-                    {formik.errors.workerType && (
+                    {(formik.touched.workerType || formik.submitCount > 0) &&
+                      formik.errors.workerType && (
                       <div className="text-red-500">
                         {formik.errors.workerType as string}
                       </div>
@@ -360,7 +362,8 @@ export default function TemplateForm() {
                       className="bg-slate-700 border-slate-600 text-white"
                       placeholder={TEMPLATE_FORM_TEXT.paramsPlaceholder}
                     />
-                    {formik.errors.params && (
+                    {(formik.touched.params || formik.submitCount > 0) &&
+                      formik.errors.params && (
                       <div className="text-red-500">{formik.errors.params}</div>
                     )}
                   </div>
@@ -519,7 +522,8 @@ export default function TemplateForm() {
                       }}
                     />
                   </div>
-                  {formik.errors.templateContent && (
+                  {(formik.touched.templateContent || formik.submitCount > 0) &&
+                    formik.errors.templateContent && (
                     <div className="text-red-500">
                       {formik.errors.templateContent}
                     </div>

@@ -1,8 +1,21 @@
+import { FileNode } from "@/types/shared";
 import { AssignmentAttempt } from "./assignment-attempt";
 import { AssignmentParam } from "./assignment-param";
 import { AssignmentUserSuspension } from "./assignment-user-suspension";
 import { Class } from "./class";
 import { Template } from "./template";
+
+export interface AssignmentTemplateParam {
+  templateParamId: number;
+  value: string;
+}
+
+export interface WorkerDefinition {
+  files: Pick<FileNode , 'id' | 'children' | 'content'> & { type: 'file' | 'folder' }[] | null;
+  startCommands: string[];
+  testCommands: string[];
+  dependencies: string[];
+}
 
 export interface AssignmentTemplate {
   id: number;
@@ -22,6 +35,7 @@ export interface Assignment {
   validationScript?: string;
   maxAttempts: number;
   workerType: string;
+  workerDefinition: WorkerDefinition;
   assignmentAttempts: AssignmentAttempt[];
   class: Class;
   assignmentTemplates: AssignmentTemplate[];
@@ -37,13 +51,11 @@ export interface CreateAssignmentRequest {
   validationScript?: string;
   templates: {
     templateId: number;
-    params: {
-      templateParamId: number;
-      value: string;
-    }[];
-  }[];
+    params: AssignmentTemplateParam[];
+  }[] | null;
   maxAttempts: number;
   workerType: string;
+  workerDefinition: WorkerDefinition;
 }
 
 export interface UpdateAssignmentRequest {

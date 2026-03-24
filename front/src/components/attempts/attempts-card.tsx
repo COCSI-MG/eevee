@@ -40,49 +40,68 @@ export default function AttemptsCard() {
             No attempts found for this assignment.
           </div>
         ) : (
-          assignmentAttempts?.assignmentAttempts.map((attempt) => (
-            <Card
-              key={attempt.id}
-              className={cn(
-                "overflow-hidden hover:shadow-md transition-shadow",
-                {
-                  "opacity-50": attempt.status !== "running",
-                },
-                {
-                  "border border-red-600 text-white":
-                    attempt.status === "failed" || !attempt.isAcceptable,
-                },
-                {
-                  "border border-green-600 text-white":
-                    attempt.status === "running",
-                }
-              )}
-            >
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold flex items-center justify-between">
-                  {attempt.attempt}&deg; Tentativa
-                  {attempt.status === "running" && (
-                    <Badge className="bg-green-600 text-white animate-pulse">
-                      Em execução
-                    </Badge>
-                  )}
-                  {attempt.status === "failed" ||
-                    (!attempt.isAcceptable && (
-                      <Badge className="bg-red-600 text-white">Falhou</Badge>
-                    ))}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col space-y-2">
-                  <p className="text-sm text-white">
-                    Resultado: {attempt.score}
-                  </p>
-                  <p className="text-sm text-white">Passou: {attempt.passes}</p>
-                  <p className="text-sm text-white">Falhas: {attempt.fails}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+          assignmentAttempts?.assignmentAttempts
+            .sort((a, b) => b.attempt - a.attempt)
+            .map((attempt) => (
+              <Card
+                key={attempt.id}
+                className={cn(
+                  "overflow-hidden hover:shadow-md transition-shadow",
+                  {
+                    "opacity-50": attempt.status !== "running",
+                  },
+                  {
+                    "border border-red-600 text-white":
+                      attempt.status === "failed" || !attempt.isAcceptable,
+                  },
+                  {
+                    "border border-green-600 text-white":
+                      attempt.status === "running",
+                  },
+                )}
+              >
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold flex items-center justify-between">
+                    {attempt.attempt}&deg; Tentativa
+                    {attempt.status === "running" ? (
+                      <Badge
+                        variant="default"
+                        className="bg-yellow-600 text-white animate-pulse"
+                      >
+                        Em execução
+                      </Badge>
+                    ) : attempt.status === "failed" || !attempt.isAcceptable ? (
+                      <Badge
+                        variant="destructive"
+                        className="ml-2 bg-red-600 text-white"
+                      >
+                        Falhou
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="ml-2 bg-green-600 text-white"
+                      >
+                        Aceito
+                      </Badge>
+                    )}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col space-y-2">
+                    <p className="text-sm text-white">
+                      Resultado: {attempt.score}
+                    </p>
+                    <p className="text-sm text-white">
+                      Passou: {attempt.passes}
+                    </p>
+                    <p className="text-sm text-white">
+                      Falhas: {attempt.fails}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
         )}
       </div>
     </>

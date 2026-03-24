@@ -23,9 +23,9 @@ import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
 interface TemplateCardProps {
-  selectedTemplates: SelectedTemplate[];
+  selectedTemplates: SelectedTemplate[] | null;
   setSelectedTemplates: React.Dispatch<
-    React.SetStateAction<SelectedTemplate[]>
+    React.SetStateAction<SelectedTemplate[] | null>
   >;
   workerType: WorkerType;
 }
@@ -113,14 +113,16 @@ export default function TemplateCard({
   }, [templates, normalizedWorkerType]);
   const [state, dispatch] = React.useReducer(reducer, {
     previewTemplateDialog: null,
-    selectedTemplates: selectedTemplates,
+    selectedTemplates: selectedTemplates || [],
     configTemplateDialog: null,
     paramsValues: {},
   });
 
   const isTemplateSelected = React.useMemo(
     () => (templateId: number) => {
-      return selectedTemplates.some((t) => t.templateId === templateId);
+      return selectedTemplates?.some(
+        (template) => template.templateId === Number(templateId)
+      );
     },
     [selectedTemplates]
   );
@@ -173,7 +175,7 @@ export default function TemplateCard({
     }));
 
     setSelectedTemplates((prev) => [
-      ...prev,
+      ...(prev || []),
       {
         templateId: templateDialog.id,
         params,
@@ -191,7 +193,7 @@ export default function TemplateCard({
 
   const handleRemoveTemplate = (templateId: number) => {
     setSelectedTemplates((prev) =>
-      prev.filter((template) => template.templateId !== templateId)
+      (prev || []).filter((template) => template.templateId !== templateId)
     );
   };
 
@@ -370,11 +372,13 @@ export default function TemplateCard({
               </ScrollArea>
             </div>
 
-            <SelectedTemplates
-              templates={templates || []}
-              selectedTemplates={selectedTemplates}
-              handleRemoveTemplate={handleRemoveTemplate}
-            />
+            {selectedTemplates && (
+              <SelectedTemplates
+                templates={templates || []}
+                selectedTemplates={selectedTemplates}
+                handleRemoveTemplate={handleRemoveTemplate}
+              />
+            )}
 
             <TemplateConfigDialog
               configTemplateDialog={state.configTemplateDialog}
@@ -388,8 +392,8 @@ export default function TemplateCard({
         )}
       </CardContent>
       <CardFooter className="flex-shrink-0">
-        <Badge className="bg-blue-600 hover:bg-blue-700">
-          {selectedTemplates.length} Template(s) Selecionado(s)
+        <Badge className="bg-blue-600 hover:bg-blue-700 mt-4">
+          {(selectedTemplates || []).length} Template(s) Selecionado(s)
         </Badge>
       </CardFooter>
     </Card>

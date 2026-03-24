@@ -6,12 +6,13 @@ import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { toast } from "@/hooks/use-toast";
 import { Route } from "@/app/routes";
 import { SelectedTemplate } from "@/types/shared";
+import { TemplateParam } from "@/app/interface/scheduler-api/template";
 
 export const useAssignmentForm = (existingAssignmentId?: number) => {
   const { push } = useRouter();
 
   const [selectedTemplates, setSelectedTemplates] = useState<
-    SelectedTemplate[]
+    SelectedTemplate[] | null
   >([]);
 
   const { data: existingAssignment, isFetching } = useQuery({
@@ -70,14 +71,18 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
         (existingAssignment.assignmentParams ?? []).map((p) => [
           p.templateParamsId,
           p.value,
-        ]),
+        ])
       );
 
-      const templates: SelectedTemplate[] = (existingAssignment.assignmentTemplates ?? [])
-        .map((relationOrTemplate: any): SelectedTemplate | null => {
+      const templates: SelectedTemplate[] = (
+        existingAssignment.assignmentTemplates ?? []
+      )
+        .map((relationOrTemplate): SelectedTemplate | null => {
           const template = relationOrTemplate?.template ?? relationOrTemplate;
           const templateIdRaw =
-            template?.id ?? relationOrTemplate?.templateId ?? relationOrTemplate?.id;
+            template?.id ??
+            relationOrTemplate?.templateId ??
+            relationOrTemplate?.id;
           const templateId = Number(templateIdRaw);
           if (!Number.isFinite(templateId)) return null;
 
@@ -85,7 +90,7 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
 
           return {
             templateId,
-            params: templateParams.map((param: any) => ({
+            params: templateParams.map((param: TemplateParam) => ({
               templateParamId: Number(param.id),
               value:
                 assignmentParamValueByTemplateParamId.get(Number(param.id)) ??

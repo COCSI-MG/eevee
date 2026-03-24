@@ -1,8 +1,10 @@
 import {
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -15,13 +17,14 @@ import { FileEntry, FileStatus } from './entities/file-saver.entity';
 import { SyncJob, JobType, JobStatus } from './entities/sync-job.entity';
 import { FileUploadDto } from './dto/file-operation.dto';
 import { Cron, Interval } from '@nestjs/schedule';
-import { ProducerService } from 'src/kafka/producer.service';
 import { readFile, rm } from 'node:fs/promises';
 import GithubService from 'src/github/github.service';
 import { ClsService } from 'nestjs-cls';
+import { ClientKafka } from '@nestjs/microservices';
+import { REMOTE_FILE_SAVER } from './constants';
 
 @Injectable()
-export class FileSaverService {
+export class FileSaverService implements OnModuleInit {
   private logger = new Logger(FileSaverService.name);
 
   constructor(
@@ -29,10 +32,15 @@ export class FileSaverService {
     private fileEntryRepository: Repository<FileEntry>,
     @InjectRepository(SyncJob)
     private syncJobRepository: Repository<SyncJob>,
-    private producerService: ProducerService,
+    @Inject('KAFKA_CLIENT')
+    private readonly kafkaClient: ClientKafka,
     private githubService: GithubService,
     private clsService: ClsService,
   ) {}
+
+  async onModuleInit() {
+    await this.kafkaClient.connect();
+  }
 
   async createFileEntry(
     createFileEntryDto: CreateFileEntryDto,
@@ -196,13 +204,10 @@ export class FileSaverService {
       throw new Error('Max attempts reached');
     }
 
-    await this.producerService.produce('remote-file-saver-events', {
-      key: crypto.randomUUID(),
-      value: JSON.stringify({
-        jobId: job.id,
-        localTempPath: job.fileEntry.localTempPath,
-        gitRemoteFilePath: job.fileEntry.filePath,
-      }),
+    this.kafkaClient.emit(REMOTE_FILE_SAVER, {
+      jobId: job.id,
+      localFilePath: job.fileEntry.localTempPath,
+      gitRemoteFilePath: job.fileEntry.filePath,
     });
   }
 

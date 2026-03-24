@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Client1_13 } from 'kubernetes-client';
 import { config } from 'kubernetes-client';
 import { DEFAULT_NAMESPACE, K8S_JOB_STATUS } from './kubernetes.constants';
-import { KubernetesJobResult } from './kubernetes.interfaces';
+import { KubernetesJobOptions, KubernetesJobResult } from './kubernetes.interfaces';
 
 @Injectable()
 export class KubernetesService {
@@ -66,23 +66,106 @@ export class KubernetesService {
     // This regex matches common ANSI escape codes.
     // It covers sequences like: ESC [ ... m
     // where ESC is \x1B (or \u001b)
-  
-     return text.replace(/\x1b\[.*?m/g, '');
+    if (!text) return "";
+
+    return text.replace(/\x1b\[.*?m/g, '');
   }
 
-  async getJobLogs(podName: string): Promise<string> {
+  async getJobLogs(podName: string, containerName?: string): Promise<string> {
     const logs = await this.client.api.v1
       .namespaces(DEFAULT_NAMESPACE)
       .pods(podName)
       .log.get({
         qs: {
           pretty: 'true',
+          ...(containerName ? { container: containerName } : {}),
         },
       });
     return this.unescapeAnsi(logs.body);
   }
 
-  async createJob(jobName: string, imageName: string, command: string[]) {
+  private async getJobLogsWithRetry(
+    podName: string,
+    containerName?: string,
+  ): Promise<string> {
+    const maxRetries = 15;
+    const retryDelayMs = 1000;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        return await this.getJobLogs(podName, containerName);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const isContainerStillInitializing =
+          message.includes('PodInitializing') ||
+          message.includes('ContainerCreating') ||
+          message.includes('waiting to start');
+
+        if (!isContainerStillInitializing || attempt === maxRetries - 1) {
+          throw err;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
+      }
+    }
+
+    throw new Error(`Unable to fetch logs for pod ${podName}`);
+  }
+
+  async createJob(
+    jobName: string,
+    imageName: string,
+    command: string[],
+    options?: KubernetesJobOptions,
+  ) {
+    const volumes: any[] = [];
+    const volumeMounts: any[] = [];
+
+    if (options?.configMap) {
+      options.configMap.forEach((cm) => {
+        volumes.push({
+          name: cm.volumeName,
+          configMap: {
+            name: cm.name,
+          },
+        });
+        volumeMounts.push({
+          name: cm.volumeName,
+          mountPath: cm.mountPath,
+        });
+      });
+    }
+
+    if (options?.sharedEmptyDir) {
+      volumes.push({
+        name: options.sharedEmptyDir.volumeName,
+        emptyDir: {},
+      });
+      volumeMounts.push({
+        name: options.sharedEmptyDir.volumeName,
+        mountPath: options.sharedEmptyDir.mountPath,
+      });
+    }
+
+    const initContainers =
+      options?.initContainers?.map((container) => ({
+        name: container.name,
+        image: container.image,
+        imagePullPolicy: container.imagePullPolicy || 'Never',
+        ...(container.command?.length ? { command: container.command } : {}),
+        ...(container.env?.length ? { env: container.env } : {}),
+        ...(options?.sharedEmptyDir
+          ? {
+              volumeMounts: [
+                {
+                  name: options.sharedEmptyDir.volumeName,
+                  mountPath: options.sharedEmptyDir.mountPath,
+                },
+              ],
+            }
+          : {}),
+      })) || [];
+
     const jobManifest = {
       apiVersion: 'batch/v1',
       kind: 'Job',
@@ -90,16 +173,20 @@ export class KubernetesService {
         name: jobName,
       },
       spec: {
+        restartPolicy: 'Never', // 
         template: {
           spec: {
+            ...(initContainers.length ? { initContainers } : {}),
             containers: [
               {
                 name: jobName,
                 imagePullPolicy: 'Never',
                 image: imageName,
-                command: command,
+                ...(command.length > 0 && { command: command }),
+                volumeMounts: volumeMounts,
               },
             ],
+            volumes: volumes,
             restartPolicy: 'Never',
           },
         },
@@ -114,7 +201,7 @@ export class KubernetesService {
           body: jobManifest,
         });
       console.log('Job created:', response);
-      return;
+      return response;
     } catch (err) {
       console.error('Error creating job:', err);
       throw err;
@@ -125,9 +212,10 @@ export class KubernetesService {
     jobName: string,
     imageName: string,
     command: string[],
+    options?: KubernetesJobOptions,
   ): Promise<KubernetesJobResult> {
     try {
-      await this.createJob(jobName, imageName, command);
+      await this.createJob(jobName, imageName, command, options);
 
       let i = 0;
       const maxRetries = 100;
@@ -142,6 +230,12 @@ export class KubernetesService {
         jobStatus = response.body.status;
       } while (!jobStatus.succeeded && !jobStatus.failed && i++ < maxRetries);
 
+      if (!jobStatus?.succeeded && !jobStatus?.failed) {
+        throw new Error(
+          `Job ${jobName} did not finish within ${maxRetries * iterationWaitTime}ms`,
+        );
+      }
+
       const status = jobStatus.succeeded
         ? K8S_JOB_STATUS.SUCCEEDED
         : K8S_JOB_STATUS.FAILED;
@@ -151,7 +245,7 @@ export class KubernetesService {
 
       // Get the name of the first pod
       const podName = pod.metadata.name;
-      const jobLogs = await this.getJobLogs(podName);
+      const jobLogs = await this.getJobLogsWithRetry(podName, jobName);
 
       console.log('Job status:', status);
 
@@ -165,6 +259,43 @@ export class KubernetesService {
     } catch (err) {
       console.error('Error creating job:', err);
       throw err;
+    }
+  }
+
+  async createConfigMap(name: string, data: Record<string, string>) {
+    const manifest = {
+      apiVersion: 'v1',
+      kind: 'ConfigMap',
+      metadata: {
+        name: name,
+        namespace: DEFAULT_NAMESPACE,
+      },
+      data: data,
+    };
+
+    try {
+      const response = await this.client.api.v1
+        .namespaces(DEFAULT_NAMESPACE)
+        .configmaps.post({
+          body: manifest,
+        });
+      console.log('ConfigMap created:', response);
+      return response;
+    } catch (err) {
+      console.error('Error creating ConfigMap:', err);
+      throw err;
+    }
+  }
+
+  async deleteConfigMap(name: string) {
+    try {
+      const response = await this.client.api.v1
+        .namespaces(DEFAULT_NAMESPACE)
+        .configmaps(name)
+        .delete();
+      console.log('ConfigMap deleted:', response);
+    } catch (err) {
+      console.error('Error deleting ConfigMap:', err);
     }
   }
 }

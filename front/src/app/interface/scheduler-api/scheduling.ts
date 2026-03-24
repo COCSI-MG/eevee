@@ -1,6 +1,9 @@
+export type SchedulingFiles = Record<string, string>;
+
 export interface Scheduling {
   assignmentId: number;
-  applicationFileContent: string;
+  applicationFileContent: string | undefined;
+  files: SchedulingFiles;
 }
 
 export interface SchedulingResponse {

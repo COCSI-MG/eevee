@@ -4,9 +4,7 @@ import { AssignmentFormProps } from "../../../app/admin/assignments/interface";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import {
-  WorkerDefaultTemplateMap,
-} from "../../../app/admin/assignments/constants";
+import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -56,7 +54,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
   const { data: classes, isFetching: isFetchingClasses } = useClasses();
 
-  const initialValues: Partial<Assignment> = {
+  const initialValues = {
     title: existingAssignment?.title ?? "",
     description: existingAssignment?.description ?? "",
     maxAttempts: existingAssignment?.maxAttempts ?? 1,
@@ -118,13 +116,14 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
             const stepValidations: { [key in AssignmentFormSteps]: boolean } = {
               [AssignmentFormSteps.Config]: isValid,
-              [AssignmentFormSteps.Templates]: selectedTemplates.length > 0,
+              [AssignmentFormSteps.Templates]: true,
               [AssignmentFormSteps.Boilerplate]:
                 values.boilerplate?.trim() != "",
-              [AssignmentFormSteps.Review]: true,
+              [AssignmentFormSteps.Review]: isValid,
             };
 
             const canProceedToNextStep = stepValidations[currentStep];
+
             return (
               <Form className="w-full">
                 {currentStep === AssignmentFormSteps.Config && (
@@ -168,7 +167,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   </Button>
 
                   <div className="flex gap-2">
-                    {currentStep < 4 ? (
+                    {AssignmentFormSteps.Review !== currentStep ? (
                       <Button
                         type="button"
                         disabled={!canProceedToNextStep}

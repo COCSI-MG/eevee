@@ -5,6 +5,7 @@ export const WORKER_JOB_PREFFIX = {
   [WorkerType.NODE_NESTJS]: 'worker-node-nestjs',
   [WorkerType.NODE_GRPCJS]: 'worker-node-grpcjs',
   [WorkerType.NODE_NEXTJS_CYPRESS]: 'worker-node-nextjs-cypress',
+  [WorkerType.NODE_REACTJS_CYPRESS]: 'worker-react-cypress-default',
 };
 
 export const WORKER_IMAGE_NAMES = {
@@ -13,6 +14,7 @@ export const WORKER_IMAGE_NAMES = {
   [WorkerType.NODE_GRPCJS]: 'docker.io/library/worker-node-grpcjs-img:latest',
   [WorkerType.NODE_NEXTJS_CYPRESS]:
     'docker.io/library/worker-node-nextjs-cypress-img:latest',
+  [WorkerType.NODE_REACTJS_CYPRESS]: 'docker.io/library/worker-react-cypress-img:latest',
 };
 
 // CHARS USED TO IDENTIFY WORKER OUTPUT RESPONSES
@@ -20,3 +22,5 @@ export enum WORKER_IDENTIFYING_CHARS {
   SUCCESS = '✓',
   FAILURE = '✕',
 }
+
+export const WORKER_DEFINITION_B64_ENV_NAME = 'WORKER_DEFINITION_B64';
