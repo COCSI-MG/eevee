@@ -20,6 +20,7 @@ import { plainToClass } from 'class-transformer';
 import { WorkerTestFile } from 'src/worker/worker.interfaces';
 import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
 import { SchedulerCreateJobPublisher } from './schuduler-create-job.publisher';
+import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.utils';
 
 @Injectable()
 export class SchedulingService {
@@ -95,6 +96,7 @@ export class SchedulingService {
     console.log('Worker type:', assignment.workerType);
 
     const createWorkerAndWait = this.workerMap.get(assignment?.workerType)!;
+    const workerPaths = this.getLegacyWorkerPaths(assignment.workerType);
 
     const dependencies: string[] = [];
 
@@ -111,12 +113,18 @@ export class SchedulingService {
           templateRelation.template.filePath,
         );
 
+        const normalizedContent = normalizeTemplateImportPaths({
+          content,
+          srcPath: workerPaths.srcPath,
+          testPath: workerPaths.testPath,
+        });
+
         testFiles.push({
           templateId: templateRelation.template.id,
           type: assignment.workerType,
-          content,
+          content: normalizedContent,
         });
-        return content;
+        return normalizedContent;
       }),
     );
 
@@ -336,6 +344,27 @@ export class SchedulingService {
 
   private isUserReachedMaxAttempt(maxAttempts: number, currentAttemps: number) {
     return maxAttempts <= currentAttemps;
+  }
+
+  private getLegacyWorkerPaths(workerType: WorkerType): {
+    srcPath: string;
+    testPath: string;
+  } {
+    switch (workerType) {
+      case WorkerType.NODE_NESTJS:
+        return {
+          srcPath: '/app/src',
+          testPath: '/app/test',
+        };
+
+      case WorkerType.NODE_DEFAULT:
+      case WorkerType.NODE_GRPCJS:
+      default:
+        return {
+          srcPath: '/app',
+          testPath: '/app',
+        };
+    }
   }
 
   private getTestFileSuffixByWorkerType(workerType: WorkerType) {

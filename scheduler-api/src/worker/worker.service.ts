@@ -20,6 +20,7 @@ import { NodeNestJsStrategy } from './strategies/node-nestjs.strategy';
 import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.strategy';
 import { NodeReactJsCypressIsolatedLogStrategy } from './strategies/node-reactjs-cypress-isolated-log.strategy';
 import { CreateWorkerFromDefinitionDto } from './dto/create-worker-from-definition.dto';
+import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.utils';
 
 @Injectable()
 export class WorkerService {
@@ -192,6 +193,22 @@ export class WorkerService {
       srcPath: definition.srcPath || workerConstants.srcPath,
       testPath: definition.testPath || workerConstants.testPath,
     };
+
+    const normalizedTestFiles = Object.fromEntries(
+      Object.entries(definitionWithPaths.testFiles ?? {}).map(
+        ([fileName, content]) => [
+          fileName,
+          normalizeTemplateImportPaths({
+            content,
+            srcPath: definitionWithPaths.srcPath,
+            testPath: definitionWithPaths.testPath,
+          }),
+        ],
+      ),
+    );
+
+    definitionWithPaths.testFiles = normalizedTestFiles;
+
     const jobName = `${workerConstants.jobPrefix}-${jobKey}`;
 
     const jobExists = await this.kubernetesService.checkIfJobExists(jobName);
