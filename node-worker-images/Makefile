@@ -116,9 +116,3 @@ clean-minikube: ## Remove Docker images from minikube
 	-minikube image rm $(IMAGE_PREFIX)$(NESTJS_IMAGE):$(IMAGE_TAG) || true
 	-minikube image rm $(IMAGE_PREFIX)$(BOOTSTRAP_IMAGE):$(IMAGE_TAG) || true
 	@echo "Docker images removed from minikube."
-
-test-reactjs:
-	@echo "Running examples for ReactJS Cypress worker..."
-	docker run --rm \
-		-v $(PWD)/reactjs-cypress/examples/inputs:/app/inputs \
-		$(IMAGE_PREFIX)$(REACT_IMAGE):$(IMAGE_TAG)
