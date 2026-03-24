@@ -1,21 +1,15 @@
-FROM node:22-bullseye-slim AS bootstrap-builder
-
-WORKDIR /build
-
-COPY ./worker-bootstrap .
-
-RUN npm ci && npm run build
-
-FROM cypress/browsers:22.20.0
+FROM cypress/browsers:node-22.21.0-chrome-141.0.7390.107-1-ff-144.0-edge-141.0.3537.92-1
 
 WORKDIR /app
 
-COPY ./reactjs-cypress/package*.json .
+COPY package*.json .
 
 RUN npm ci
 
-COPY ./reactjs-cypress .
+COPY trigger.ts .
+COPY cypress.config.ts .
+COPY index.html .
+COPY vite.config.ts .
+COPY tsconfig*.json .
 
-COPY --from=bootstrap-builder /build/dist/bootstrap.js /app/bootstrap/bootstrap.js
-
-CMD ["node", "/app/bootstrap/bootstrap.js"]
+CMD ["npm", "start"]

@@ -12,6 +12,7 @@
       "jest",
       "node"
     ],
+    "allowJs": true
   },
   "include": [
     "./*.ts"
