@@ -1,31 +1,42 @@
-FROM node:22-bullseye-slim AS bootstrap-builder
-
-WORKDIR /build
-
-COPY ./worker-bootstrap .
-
-RUN npm ci && npm run build
-
-FROM node:22-bullseye-slim
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y \
-    postgresql postgresql-contrib supervisor \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
+FROM node:lts-hydrogen
 
 WORKDIR /app
 
-COPY ./nest.js/package*.json .
+# ENV PATH=/usr/pgsql-9.2/bin:$PATH
 
-RUN npm ci
+# Install PostgreSQL and supervisord
+RUN apt update
+# RUN apt install -y postgresql supervisor
+# RUN find / -type f -name postgres
+# RUN postgres psql
 
-COPY ./nest.js .
+RUN apt install -y postgresql postgresql-contrib supervisor
+RUN echo | /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
 
-COPY ./nest.js/supervisord.conf /etc/supervisord.conf
+# Create and adjust permissions for PostgreSQL data directory
+RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql
 
-COPY --from=bootstrap-builder /build/dist/bootstrap.js /app/bootstrap/bootstrap.js
+# Copy supervisord configuration file into the container
+COPY supervisord.conf /etc/supervisord.conf
 
-CMD ["node", "/app/bootstrap/bootstrap.js"]
+# Set working directory for the Nest.js application
+WORKDIR /app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the rest of your application code
+COPY . .
+
+# RUN service postgresql start \
+#     && postgres psql -c "psql -c \"CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';\"" \
+#     && /usr/lib/postgresql/14/bin/postgres createdb test_db
+# Build your Nest.js application (adjust if needed)
+RUN npm run build
+
+
+# Expose ports for the Nest.js app and PostgreSQL
+EXPOSE 3000 5432
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
