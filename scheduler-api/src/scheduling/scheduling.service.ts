@@ -8,16 +8,13 @@ import { CreateSchedulingDto } from './dto/create-scheduling.dto';
 import { WorkerService } from 'src/worker/worker.service';
 import { AttemptService } from 'src/attempt/attempt.service';
 import { AssignmentService } from 'src/assignment/assignment.service';
+import { WorkerResponse, WorkerTestFile } from 'src/worker/worker.interfaces';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
-import { WorkerResponse } from 'src/worker/worker.interfaces';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { readFileAsString } from 'src/utils/template.utils';
 import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
-import { CreateWorkerFromDefinitionDto } from 'src/worker/dto/create-worker-from-definition.dto';
-import { WorkerDefinitionDto } from 'src/worker/dto/worker-definition.dto';
 import { plainToClass } from 'class-transformer';
-import { WorkerTestFile } from 'src/worker/worker.interfaces';
 import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
 import { SchedulerCreateJobPublisher } from './schuduler-create-job.publisher';
 import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.utils';
@@ -26,42 +23,12 @@ import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.uti
 export class SchedulingService {
   private readonly logger = new Logger(SchedulingService.name);
 
-  /**
-   * Map of worker types to their corresponding worker creation functions.
-   * This allows for dynamic worker creation based on the worker type specified in the assignment.
-   */
-  readonly workerMap = new Map<
-    WorkerType,
-    (
-      createWorkerData: CreateWorkerDto,
-      dependencies: string[],
-    ) => Promise<WorkerResponse>
-  >();
-
   constructor(
     private readonly workerService: WorkerService,
     private readonly attemptService: AttemptService,
     private readonly assignmentService: AssignmentService,
     private readonly schedulerCreateJobPublisher: SchedulerCreateJobPublisher,
-  ) {
-    this.workerMap.set(
-      WorkerType.NODE_DEFAULT,
-      workerService.createDefaultNodeWorkerAndWait.bind(workerService),
-    );
-    this.workerMap.set(
-      WorkerType.NODE_NESTJS,
-      workerService.createNestJsWorkerAndWait.bind(workerService),
-    );
-    this.workerMap.set(
-      WorkerType.NODE_GRPCJS,
-      workerService.createGrpcJsWorkerAndWait.bind(workerService),
-    );
-
-    this.workerMap.set(
-      WorkerType.NODE_NEXTJS_CYPRESS,
-      workerService.createNextJsCypressWorkerAndWait.bind(workerService),
-    );
-  }
+  ) { }
 
   private calculateScore(result: WorkerResponse) {
     return result.passes / (result.passes + result.failures || 1);
@@ -95,47 +62,19 @@ export class SchedulingService {
     console.log('Creating worker and waiting for result');
     console.log('Worker type:', assignment.workerType);
 
-    const createWorkerAndWait = this.workerMap.get(assignment?.workerType)!;
-    const workerPaths = this.getLegacyWorkerPaths(assignment.workerType);
-
-    const dependencies: string[] = [];
-
-    const testFiles: WorkerTestFile[] = [];
-
-    const filledTemplates = await Promise.all(
-      assignment.assignmentTemplates.map(async (templateRelation) => {
-        const templateDependencies =
-          templateRelation.template.dependencies ?? [];
-        if (templateDependencies.length > 0)
-          dependencies.push(...templateDependencies);
-
-        const content = await readFileAsString(
-          templateRelation.template.filePath,
-        );
-
-        const normalizedContent = normalizeTemplateImportPaths({
-          content,
-          srcPath: workerPaths.srcPath,
-          testPath: workerPaths.testPath,
-        });
-
-        testFiles.push({
-          templateId: templateRelation.template.id,
-          type: assignment.workerType,
-          content: normalizedContent,
-        });
-        return normalizedContent;
-      }),
+    const workerData = await this.prepareWorkerData(
+      assignment.workerType,
+      assignment.assignmentTemplates,
+      {
+        ...createSchedulingDto,
+      },
+      buildTemplateVariablesModule(assignment),
     );
 
-    createSchedulingDto.testFilesContent = filledTemplates;
-    createSchedulingDto.testFiles = testFiles;
-    createSchedulingDto.templateVariablesModuleContent =
-      buildTemplateVariablesModule(assignment);
-
-    const workerResult = await createWorkerAndWait(
-      createSchedulingDto,
-      dependencies,
+    const workerResult = await this.workerService.createSynchronousWorker(
+      assignment.workerType,
+      workerData,
+      workerData.dependencies ?? [],
     );
 
     console.log('Worker result:', workerResult);
@@ -205,14 +144,14 @@ export class SchedulingService {
       status: AttemptStatus.PENDING,
     });
 
-    const workerDefinitionDto = plainToClass(WorkerDefinitionDto, {
+    const workerData = plainToClass(CreateWorkerDto, {
       files: createSchedulingDto.files,
-      dependencies: [],
+      applicationFileContent: createSchedulingDto.applicationFileContent,
     });
 
     const message = plainToClass(CreateSchedulingJobMessageDto, {
       attemptId: newAttempt.id,
-      definition: workerDefinitionDto,
+      workerData,
     });
 
     this.schedulerCreateJobPublisher.publish(message);
@@ -247,22 +186,38 @@ export class SchedulingService {
       status: AttemptStatus.RUNNING,
     });
 
-    let testFilesContent: string[] = [];
     if (
       attempt.assignment.assignmentTemplates !== undefined &&
       attempt.assignment.assignmentTemplates.length === 0
     ) {
-      this.logger.warn(
+      this.logger.fatal(
         `No templates found for assignment ID ${attempt.assignmentId}`,
         `ATTEMPT_ID: ${attempt.id}`,
       );
-    } else {
-      testFilesContent = await this.assignmentService.getAssignmentTemplates(
-        attempt.assignment,
-      );
+      await this.attemptService.update({
+        id: attempt.id,
+        isAcceptable: false,
+        report: 'No test files available for execution.',
+        status: AttemptStatus.FAILED,
+      });
+      return;
     }
 
-    if (testFilesContent.length === 0) {
+    const templateVariablesModuleContent = buildTemplateVariablesModule(
+      attempt.assignment,
+    );
+
+    const workerData = await this.prepareWorkerData(
+      attempt.assignment.workerType,
+      attempt.assignment.assignmentTemplates,
+      {
+        ...payload.workerData,
+        initSqlScript: attempt.assignment.initSqlScript,
+      },
+      templateVariablesModuleContent,
+    );
+
+    if ((workerData.testFilesContent?.length ?? 0) === 0) {
       this.logger.fatal(
         `No test files content generated for attempt ID ${attempt.id}`,
       );
@@ -275,26 +230,10 @@ export class SchedulingService {
       return;
     }
 
-    const definitionWithTestFiles = {
-      ...payload.definition,
-      testFiles: this.buildTestFilesMap(
-        testFilesContent,
-        attempt.assignment.workerType,
-      ),
-    };
-
-    const createWorkerFromDefinitionDto = plainToClass(
-      CreateWorkerFromDefinitionDto,
-      {
-        type: attempt.assignment.workerType,
-        definition: definitionWithTestFiles,
-      },
-    );
-
     try {
-      const workerResult = await this.workerService.createWorkerFromDefinition(
-        attempt.id.toString(),
-        createWorkerFromDefinitionDto,
+      const workerResult = await this.workerService.createWorkerWithInitContainer(
+        attempt.assignment.workerType,
+        workerData,
       );
 
       this.logger.log(
@@ -346,53 +285,53 @@ export class SchedulingService {
     return maxAttempts <= currentAttemps;
   }
 
-  private getLegacyWorkerPaths(workerType: WorkerType): {
-    srcPath: string;
-    testPath: string;
-  } {
-    switch (workerType) {
-      case WorkerType.NODE_NESTJS:
-        return {
-          srcPath: '/app/src',
-          testPath: '/app/test',
-        };
-
-      case WorkerType.NODE_DEFAULT:
-      case WorkerType.NODE_GRPCJS:
-      default:
-        return {
-          srcPath: '/app',
-          testPath: '/app',
-        };
-    }
-  }
-
-  private getTestFileSuffixByWorkerType(workerType: WorkerType) {
-    switch (workerType) {
-      case WorkerType.NODE_REACTJS_CYPRESS:
-      case WorkerType.NODE_NEXTJS_CYPRESS:
-        return 'cy.ts';
-
-      case WorkerType.NODE_DEFAULT:
-      case WorkerType.NODE_NESTJS:
-      case WorkerType.NODE_GRPCJS:
-      default:
-        return 'spec.ts';
-    }
-  }
-
-  private buildTestFilesMap(
-    testFilesContent: string[],
+  private async prepareWorkerData(
     workerType: WorkerType,
-  ): Record<string, string> {
-    const suffix = this.getTestFileSuffixByWorkerType(workerType);
+    assignmentTemplates: any[],
+    baseWorkerData: CreateWorkerDto,
+    templateVariablesModuleContent?: string,
+  ): Promise<CreateWorkerDto> {
+    const strategy = this.workerService.getStrategy(workerType);
+    const { srcPath, testPath } = strategy.workerConfig;
 
-    return testFilesContent.reduce<Record<string, string>>(
-      (acc, testContent, index) => {
-        acc[`${index}-template.${suffix}`] = testContent;
-        return acc;
-      },
-      {},
+    const dependencies = [...(baseWorkerData.dependencies ?? [])];
+    const testFiles: WorkerTestFile[] = [];
+
+    const testFilesContent = await Promise.all(
+      assignmentTemplates.map(async (templateRelation) => {
+        const templateDependencies =
+          templateRelation.template.dependencies ?? [];
+        if (templateDependencies.length > 0)
+          dependencies.push(...templateDependencies);
+
+        const content = await readFileAsString(
+          templateRelation.template.filePath,
+        );
+
+        const normalizedContent = normalizeTemplateImportPaths({
+          content,
+          srcPath,
+          testPath,
+        });
+
+        testFiles.push({
+          templateId: templateRelation.template.id,
+          type: workerType,
+          content: normalizedContent,
+        });
+
+        return normalizedContent;
+      }),
     );
+
+    return {
+      ...baseWorkerData,
+      testFilesContent,
+      testFiles,
+      dependencies,
+      templateVariablesModuleContent:
+        templateVariablesModuleContent ??
+        baseWorkerData.templateVariablesModuleContent,
+    };
   }
 }
