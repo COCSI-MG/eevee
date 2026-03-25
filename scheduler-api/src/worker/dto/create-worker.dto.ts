@@ -1,9 +1,10 @@
 import { WorkerTestFile } from '../worker.interfaces';
 
 export class CreateWorkerDto {
-  testFilesContent: string[];
+  testFilesContent?: string[];
   testFiles?: WorkerTestFile[];
   templateVariablesModuleContent?: string;
-  applicationFileContent: string;
-  dependencies: string[]
+  applicationFileContent?: string;
+  files?: Record<string, string> | null;
+  dependencies?: string[];
 }
