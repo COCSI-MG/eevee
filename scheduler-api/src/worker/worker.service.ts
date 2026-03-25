@@ -15,7 +15,6 @@ import { NodeGrpcJsJestStrategy } from './strategies/node-grpcjs-jest.strategy';
 import { NodeNestJsStrategy } from './strategies/node-nestjs.strategy';
 import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.strategy';
 import { NodeReactJsCypressIsolatedLogStrategy } from './strategies/node-reactjs-cypress-isolated-log.strategy';
-import { NodeDefaultPostgresqlJestStrategy } from './strategies/node-default-postgresql-jest.strategy';
 
 @Injectable()
 export class WorkerService {
@@ -33,8 +32,6 @@ export class WorkerService {
     [WorkerType.NODE_NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(),
     [WorkerType.NODE_REACTJS_CYPRESS]:
       new NodeReactJsCypressIsolatedLogStrategy(),
-    [WorkerType.NODE_DEFAULT_POSTGRESQL]:
-      new NodeDefaultPostgresqlJestStrategy(),
   };
 
   getStrategy(workerType: WorkerType): WorkerExecutionStrategy {
@@ -126,7 +123,6 @@ export class WorkerService {
     const jobOptions: KubernetesJobOptions = strategy.buildJobOptions
       ? strategy.buildJobOptions(
           encodedDefinition,
-          createWorkerData.initSqlScript,
         )
       : {
           sharedEmptyDir: {

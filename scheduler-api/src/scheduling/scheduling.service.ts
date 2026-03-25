@@ -212,7 +212,6 @@ export class SchedulingService {
       attempt.assignment.assignmentTemplates,
       {
         ...payload.workerData,
-        initSqlScript: attempt.assignment.initSqlScript,
       },
       templateVariablesModuleContent,
     );
