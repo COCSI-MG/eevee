@@ -1,16 +1,29 @@
-import { WorkerExecutionStrategy } from './worker-execution-strategy';
+import {
+  WorkerExecutionStrategy,
+  WorkerConfig,
+} from './worker-execution-strategy';
 import { WorkerType } from '../enum/worker-type.enum';
 import { CreateWorkerDto } from '../dto/create-worker.dto';
 import {
   asShellCommand,
+  buildWorkerPayload,
   buildNpmInstallCommand,
   buildWriteFileCommand,
   normalizeTestFiles,
 } from './worker-strategy-helpers';
 import { parseJestLogResult } from './worker-log-parsers';
+import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFFIX } from '../worker.constants';
+import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
 
 export class NodeGrpcJsJestStrategy implements WorkerExecutionStrategy {
   readonly workerType = WorkerType.NODE_GRPCJS;
+
+  readonly workerConfig: WorkerConfig = {
+    jobPrefix: WORKER_JOB_PREFFIX[WorkerType.NODE_GRPCJS],
+    imageName: WORKER_IMAGE_NAMES[WorkerType.NODE_GRPCJS],
+    srcPath: '/app/workspace/src',
+    testPath: '/app/workspace/test',
+  };
 
   buildJobCommand(
     createWorkerData: CreateWorkerDto,
@@ -21,7 +34,7 @@ export class NodeGrpcJsJestStrategy implements WorkerExecutionStrategy {
     // Student entry for this image is /app/server.ts
     commands.push(
       buildWriteFileCommand(
-        createWorkerData.applicationFileContent,
+        createWorkerData.applicationFileContent ?? '',
         '/app/server.ts',
       ),
     );
@@ -39,7 +52,7 @@ export class NodeGrpcJsJestStrategy implements WorkerExecutionStrategy {
     );
 
     const normalizedTestFiles = normalizeTestFiles(
-      createWorkerData.testFilesContent,
+      createWorkerData.testFilesContent ?? [],
       createWorkerData.testFiles,
     );
 
@@ -61,4 +74,37 @@ export class NodeGrpcJsJestStrategy implements WorkerExecutionStrategy {
   }
 
   processLogResult = parseJestLogResult;
+
+  buildExecutionJobCommand(createWorkerData: CreateWorkerDto): string[] {
+    const commands: string[] = [];
+
+    commands.push(
+      buildWriteFileCommand(
+        createWorkerData.templateVariablesModuleContent ?? '',
+        '/app/template-variables.ts',
+      ),
+    );
+
+    const install = buildNpmInstallCommand(createWorkerData.dependencies ?? []);
+    if (install) commands.push(install);
+
+    commands.push('npm start');
+
+    return asShellCommand(commands);
+  }
+
+  buildWorkerPayload(
+    createWorkerData: CreateWorkerDto,
+    dependencies: string[],
+  ): WorkerJobPayload {
+    return buildWorkerPayload({
+      files: createWorkerData.files,
+      testFilesContent: createWorkerData.testFilesContent,
+      testFiles: createWorkerData.testFiles,
+      dependencies,
+      srcPath: this.workerConfig.srcPath,
+      testPath: this.workerConfig.testPath,
+      testFileSuffix: 'spec.ts',
+    });
+  }
 }
