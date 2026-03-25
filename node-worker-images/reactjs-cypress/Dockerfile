@@ -11,5 +11,3 @@ COPY cypress.config.ts .
 COPY index.html .
 COPY vite.config.ts .
 COPY tsconfig*.json .
-
-CMD ["npm", "start"]

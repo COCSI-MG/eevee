@@ -10,5 +10,3 @@ COPY trigger.ts .
 COPY jest.config.ts .
 COPY tsconfig.json .
 COPY babel.config.js .
-
-CMD ["npm", "start"]
