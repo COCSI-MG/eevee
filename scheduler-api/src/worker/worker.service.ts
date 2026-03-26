@@ -15,6 +15,8 @@ import { NodeGrpcJsJestStrategy } from './strategies/node-grpcjs-jest.strategy';
 import { NodeNestJsStrategy } from './strategies/node-nestjs.strategy';
 import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.strategy';
 import { NodeReactJsCypressIsolatedLogStrategy } from './strategies/node-reactjs-cypress-isolated-log.strategy';
+import { NodeDefaultPostgresqlJestStrategy } from './strategies/node-default-postgresql-jest.strategy';
+import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
 
 @Injectable()
 export class WorkerService {
@@ -110,15 +112,10 @@ export class WorkerService {
       testPath: workerPayload.testPath || testPath,
     };
 
-    const sharedMountPaths = [
+    const sharedMounts = buildSharedEmptyDirMounts(
       definitionWithPaths.srcPath,
       definitionWithPaths.testPath,
-    ].filter((path, index, arr) => arr.indexOf(path) === index);
-
-    const sharedMounts = sharedMountPaths.map((mountPath, index) => ({
-      mountPath,
-      subPath: index === 0 ? 'src' : 'test',
-    }));
+    );
 
     this.logger.debug(
       `Creating worker with jobName: ${jobName} and definition: ${JSON.stringify(definitionWithPaths)}`,
