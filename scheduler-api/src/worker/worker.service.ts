@@ -110,6 +110,16 @@ export class WorkerService {
       testPath: workerPayload.testPath || testPath,
     };
 
+    const sharedMountPaths = [
+      definitionWithPaths.srcPath,
+      definitionWithPaths.testPath,
+    ].filter((path, index, arr) => arr.indexOf(path) === index);
+
+    const sharedMounts = sharedMountPaths.map((mountPath, index) => ({
+      mountPath,
+      subPath: index === 0 ? 'src' : 'test',
+    }));
+
     this.logger.debug(
       `Creating worker with jobName: ${jobName} and definition: ${JSON.stringify(definitionWithPaths)}`,
     );
@@ -127,7 +137,7 @@ export class WorkerService {
       : {
           sharedEmptyDir: {
             volumeName: 'worker-app-volume',
-            mountPath: '/app/workspace',
+            mounts: sharedMounts,
           },
           initContainers: [
             {
