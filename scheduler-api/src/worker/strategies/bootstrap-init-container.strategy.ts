@@ -5,6 +5,7 @@ import { WorkerResponse } from '../worker.interfaces';
 import { CreateWorkerDto } from '../dto/create-worker.dto';
 import { WORKER_DEFINITION_B64_ENV_NAME } from '../worker.constants';
 import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
+import { buildSharedEmptyDirMounts } from 'src/worker/utils/shared-empty-dir.utils';
 
 /**
  * Abstract base strategy for workers that use the bootstrap init container
@@ -28,10 +29,15 @@ export abstract class BootstrapInitContainerStrategy
     encodedDefinition: string,
     _initSqlScript?: string,
   ): KubernetesJobOptions {
+    const sharedMounts = buildSharedEmptyDirMounts(
+      this.workerConfig.srcPath,
+      this.workerConfig.testPath,
+    );
+
     return {
       sharedEmptyDir: {
         volumeName: 'worker-app-volume',
-        mountPath: '/app/workspace',
+        mounts: sharedMounts,
       },
       initContainers: [
         {
