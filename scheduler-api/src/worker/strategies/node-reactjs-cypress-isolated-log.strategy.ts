@@ -14,8 +14,8 @@ export class NodeReactJsCypressIsolatedLogStrategy
   readonly workerConfig: WorkerConfig = {
     jobPrefix: WORKER_JOB_PREFFIX[WorkerType.NODE_REACTJS_CYPRESS],
     imageName: WORKER_IMAGE_NAMES[WorkerType.NODE_REACTJS_CYPRESS],
-    srcPath: '/app/workspace/src',
-    testPath: '/app/workspace/cypress/e2e',
+    srcPath: '/app/src',
+    testPath: '/app/cypress/e2e',
   };
 
   private readonly baseStrategy = new NodeNextJsCypressStrategy();

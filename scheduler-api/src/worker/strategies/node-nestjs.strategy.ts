@@ -18,8 +18,8 @@ export class NodeNestJsStrategy implements WorkerExecutionStrategy {
   readonly workerConfig: WorkerConfig = {
     jobPrefix: WORKER_JOB_PREFFIX[WorkerType.NODE_NESTJS],
     imageName: WORKER_IMAGE_NAMES[WorkerType.NODE_NESTJS],
-    srcPath: '/app/workspace/src',
-    testPath: '/app/workspace/test',
+    srcPath: '/app/src',
+    testPath: '/app/test',
   };
 
   buildJobCommand(
