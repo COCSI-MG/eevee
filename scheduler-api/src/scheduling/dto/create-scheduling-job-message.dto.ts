@@ -1,6 +1,6 @@
-import { WorkerDefinition } from "src/worker/worker-definition.type";
+import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 
 export class CreateSchedulingJobMessageDto {
     attemptId: number;
-    definition: WorkerDefinition;
+    workerData: CreateWorkerDto;
 }

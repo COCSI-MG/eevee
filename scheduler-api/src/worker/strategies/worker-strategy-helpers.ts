@@ -1,4 +1,5 @@
 import { WorkerTestFile } from '../worker.interfaces';
+import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
 
 export function normalizeTestFiles(
   testFilesContent: string[],
@@ -34,4 +35,45 @@ export function buildNpmInstallCommand(
 
 export function asShellCommand(commands: string[]): string[] {
   return ['/bin/sh', '-c', commands.join(' && ')];
+}
+
+type BuildWorkerPayloadArgs = {
+  files?: Record<string, string> | null;
+  testFilesContent?: string[];
+  testFiles?: WorkerTestFile[];
+  dependencies: string[];
+  srcPath: string;
+  testPath: string;
+  testFileSuffix: string;
+};
+
+export function buildWorkerPayload({
+  files,
+  testFilesContent,
+  testFiles,
+  dependencies,
+  srcPath,
+  testPath,
+  testFileSuffix,
+}: BuildWorkerPayloadArgs): WorkerJobPayload {
+  const normalizedTestFiles = normalizeTestFiles(
+    testFilesContent ?? [],
+    testFiles,
+  );
+
+  const testFilesMap = normalizedTestFiles.reduce<Record<string, string>>(
+    (acc, testFile, index) => {
+      acc[`${index}-template.${testFileSuffix}`] = testFile.content;
+      return acc;
+    },
+    {},
+  );
+
+  return {
+    files: files ?? null,
+    testFiles: testFilesMap,
+    srcPath,
+    testPath,
+    dependencies,
+  };
 }
