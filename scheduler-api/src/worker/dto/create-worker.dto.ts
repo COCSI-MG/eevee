@@ -7,4 +7,5 @@ export class CreateWorkerDto {
   applicationFileContent?: string;
   files?: Record<string, string> | null;
   dependencies?: string[];
+  initSqlScript?: string;
 }
