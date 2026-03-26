@@ -28,7 +28,7 @@ export class SchedulingService {
     private readonly attemptService: AttemptService,
     private readonly assignmentService: AssignmentService,
     private readonly schedulerCreateJobPublisher: SchedulerCreateJobPublisher,
-  ) { }
+  ) {}
 
   private calculateScore(result: WorkerResponse) {
     return result.passes / (result.passes + result.failures || 1);
@@ -230,10 +230,11 @@ export class SchedulingService {
     }
 
     try {
-      const workerResult = await this.workerService.createWorkerWithInitContainer(
-        attempt.assignment.workerType,
-        workerData,
-      );
+      const workerResult =
+        await this.workerService.createWorkerWithInitContainer(
+          attempt.assignment.workerType,
+          workerData,
+        );
 
       this.logger.log(
         `Worker result: ${JSON.stringify(workerResult)}`,
