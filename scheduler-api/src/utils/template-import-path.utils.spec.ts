@@ -20,7 +20,7 @@ describe('normalizeTemplateImportPaths', () => {
   });
 
   it('rewrites hardcoded /src prefixes to match runtime paths', () => {
-    const content = "import { start } from '/app/workspace/src/main';";
+    const content = "import { start } from '/app/src/main';";
 
     const output = normalizeTemplateImportPaths({
       content,
@@ -36,8 +36,8 @@ describe('normalizeTemplateImportPaths', () => {
 
     const output = normalizeTemplateImportPaths({
       content,
-      srcPath: '/app/workspace/src',
-      testPath: '/app/workspace/cypress/e2e',
+      srcPath: '/app/src',
+      testPath: '/app/cypress/e2e',
     });
 
     expect(output).toContain("import { Home } from '../../src/pages/home';");
@@ -64,7 +64,7 @@ describe('normalizeTemplateImportPaths', () => {
       testPath: '/workspace/tests',
     });
 
-    // path que o teste vai rodar é /app/workspace/tests, então o import relativo para chegar no app é ../src/app
+    // path que o teste vai rodar é /app/tests, então o import relativo para chegar no app é ../src/app
     expect(output).toContain("import app from '../src/app';");
   });
 
