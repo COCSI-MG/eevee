@@ -6,6 +6,7 @@ export const WORKER_JOB_PREFFIX = {
   [WorkerType.NODE_GRPCJS]: 'worker-node-grpcjs',
   [WorkerType.NODE_NEXTJS_CYPRESS]: 'worker-node-nextjs-cypress',
   [WorkerType.NODE_REACTJS_CYPRESS]: 'worker-react-cypress-default',
+  [WorkerType.NODE_DEFAULT_POSTGRESQL]: 'worker-node-default-pg',
 };
 
 export const WORKER_IMAGE_NAMES = {
@@ -15,6 +16,7 @@ export const WORKER_IMAGE_NAMES = {
   [WorkerType.NODE_NEXTJS_CYPRESS]:
     'docker.io/library/worker-node-nextjs-cypress-img:latest',
   [WorkerType.NODE_REACTJS_CYPRESS]: 'docker.io/library/worker-react-cypress-img:latest',
+  [WorkerType.NODE_DEFAULT_POSTGRESQL]: 'docker.io/library/worker-node-default-img:latest',
 };
 
 // CHARS USED TO IDENTIFY WORKER OUTPUT RESPONSES
