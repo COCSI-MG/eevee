@@ -21,6 +21,7 @@ export interface Template {
   workerType: WorkerType;
   templateContent: string;
   templateParams: TemplateParam[];
+  dependencies: string[];
 }
 
 export interface CreateTemplateRequest {
@@ -31,4 +32,5 @@ export interface CreateTemplateRequest {
   templateContent: string;
   params: string[];
   typedParams?: Array<{ name: string; type: TemplateParamType }>;
+  dependencies?: string[];
 }

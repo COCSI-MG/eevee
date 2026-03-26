@@ -10,6 +10,8 @@ export const TEMPLATE_FORM_VALIDATION_TEMPLATE_CONTENT_REQUIRED =
   "O conteúdo do template é obrigatório";
 export const TEMPLATE_FORM_VALIDATION_PARAM_NAME_REQUIRED =
   "O nome do parâmetro é obrigatório";
+export const TEMPLATE_FORM_VALIDATION_DEPENDENCY_NAME_REQUIRED =
+  "O nome da dependência é obrigatório";
 
 export const TEMPLATE_FORM_VALIDATION_MESSAGES = {
   titleRequired: TEMPLATE_FORM_VALIDATION_TITLE_REQUIRED,
@@ -17,6 +19,7 @@ export const TEMPLATE_FORM_VALIDATION_MESSAGES = {
   workerTypeRequired: TEMPLATE_FORM_VALIDATION_WORKER_TYPE_REQUIRED,
   templateContentRequired: TEMPLATE_FORM_VALIDATION_TEMPLATE_CONTENT_REQUIRED,
   paramNameRequired: TEMPLATE_FORM_VALIDATION_PARAM_NAME_REQUIRED,
+  dependencyNameRequired: TEMPLATE_FORM_VALIDATION_DEPENDENCY_NAME_REQUIRED,
 } as const;
 
 export const TEMPLATE_TOAST_SAVE_SUCCESS_TITLE = "Template salvo com sucesso";
@@ -55,6 +58,10 @@ export const TEMPLATE_FORM_PARAM_TYPES_TITLE = "Tipos dos parâmetros";
 export const TEMPLATE_FORM_PARAM_TYPES_HELP =
   "Define como o valor será convertido no módulo de variáveis.";
 export const TEMPLATE_FORM_PARAM_TYPE_PLACEHOLDER = "Tipo";
+export const TEMPLATE_FORM_DEPENDENCIES_LABEL = "Dependências";
+export const TEMPLATE_FORM_DEPENDENCIES_HELPER =
+  "Use vírgula para separar as dependências Exemplo: dep1, dep2, dep3";
+export const TEMPLATE_FORM_DEPENDENCIES_PLACEHOLDER = "Ex: dep1, dep2, dep3";
 export const TEMPLATE_FORM_CLEAR_BUTTON = "Limpar";
 export const TEMPLATE_FORM_SAVE_BUTTON = "Salvar Template";
 export const TEMPLATE_FORM_CODE_CARD_TITLE = "Código do Template *";
@@ -74,6 +81,9 @@ export const TEMPLATE_FORM_TEXT = {
   paramTypesTitle: TEMPLATE_FORM_PARAM_TYPES_TITLE,
   paramTypesHelp: TEMPLATE_FORM_PARAM_TYPES_HELP,
   paramTypePlaceholder: TEMPLATE_FORM_PARAM_TYPE_PLACEHOLDER,
+  dependenciesLabel: TEMPLATE_FORM_DEPENDENCIES_LABEL,
+  dependenciesHelper: TEMPLATE_FORM_DEPENDENCIES_HELPER,
+  dependenciesPlaceholder: TEMPLATE_FORM_DEPENDENCIES_PLACEHOLDER,
   clearButton: TEMPLATE_FORM_CLEAR_BUTTON,
   saveButton: TEMPLATE_FORM_SAVE_BUTTON,
   codeCardTitle: TEMPLATE_FORM_CODE_CARD_TITLE,

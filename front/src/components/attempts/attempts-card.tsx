@@ -28,10 +28,10 @@ export default function AttemptsCard() {
           Voltar
         </Button>
         <h1 className="text-3xl font-bold tracking-tight mb-2">
-          Tarefas da Turma
+          Resultados do Aluno
         </h1>
         <p className="text-muted-foreground mt-1">
-          Aqui você pode ver todas as tarefas atribuídas a esta turma.
+          Aqui você pode ver todas as tentativas para a realização da tarefa.
         </p>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
