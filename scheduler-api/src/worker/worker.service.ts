@@ -34,6 +34,8 @@ export class WorkerService {
     [WorkerType.NODE_NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(),
     [WorkerType.NODE_REACTJS_CYPRESS]:
       new NodeReactJsCypressIsolatedLogStrategy(),
+    [WorkerType.NODE_DEFAULT_POSTGRESQL]:
+      new NodeDefaultPostgresqlJestStrategy(),
   };
 
   getStrategy(workerType: WorkerType): WorkerExecutionStrategy {
@@ -128,9 +130,7 @@ export class WorkerService {
     // Delegate job options to the strategy when it implements buildJobOptions,
     // otherwise fall back to the default bootstrap init container setup.
     const jobOptions: KubernetesJobOptions = strategy.buildJobOptions
-      ? strategy.buildJobOptions(
-          encodedDefinition,
-        )
+      ? strategy.buildJobOptions(encodedDefinition)
       : {
           sharedEmptyDir: {
             volumeName: 'worker-app-volume',
