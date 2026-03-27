@@ -1,6 +1,7 @@
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SelectedTemplate } from "@/types/shared";
 import {
   ClipboardCheck,
   Settings,
@@ -12,12 +13,7 @@ import {
 interface AssignmentFormReviewProps {
   values: Partial<Assignment>;
   classes: { id: number; name: string }[];
-  selectedTemplates:
-    | {
-        templateId: number;
-        params: { templateParamId: number; value: string }[];
-      }[]
-    | null;
+  selectedTemplates: SelectedTemplate[] | null; 
 }
 
 const AssigmentReview = ({
@@ -84,7 +80,7 @@ const TemplateReview = ({
     <div>
       <h4 className="text-white font-medium mb-3 flex items-center gap-2">
         <Code className="w-4 h-4" />
-        Templates ({selectedTemplates ? selectedTemplates.length : 0})
+        Templates de teste adicionados ({selectedTemplates ? selectedTemplates.length : 0})
       </h4>
 
       {selectedTemplates?.length === 0 && (
@@ -95,7 +91,7 @@ const TemplateReview = ({
         {selectedTemplates?.map((template, index) => (
           <div key={index} className="bg-slate-700/30 p-4 rounded-lg">
             <h5 className="text-white font-medium mb-2">
-              Template ID: {template.templateId}
+              {template.name} 
             </h5>
             <div className="space-y-2">
               {template.params.map((param) => (
