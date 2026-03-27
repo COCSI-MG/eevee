@@ -41,12 +41,12 @@ type Action =
   | { type: "OPEN_PREVIEW_DIALOG"; payload: string }
   | { type: "CLOSE_PREVIEW_DIALOG" }
   | {
-      type: "ADD_SELECTED_TEMPLATE";
-      payload: {
-        templateId: number;
-        params: { templateParamId: number; value: string }[];
-      };
-    }
+    type: "ADD_SELECTED_TEMPLATE";
+    payload: {
+      templateId: number;
+      params: { templateParamId: number; value: string }[];
+    };
+  }
   | { type: "REMOVE_SELECTED_TEMPLATE"; payload: number }
   | { type: "OPEN_CONFIG_DIALOG"; payload: Template }
   | { type: "CLOSE_CONFIG_DIALOG" }
@@ -111,6 +111,7 @@ export default function TemplateCard({
     const list = templates ?? [];
     return list.filter((t) => !t.workerType || t.workerType === normalizedWorkerType);
   }, [templates, normalizedWorkerType]);
+
   const [state, dispatch] = React.useReducer(reducer, {
     previewTemplateDialog: null,
     selectedTemplates: selectedTemplates || [],
