@@ -447,6 +447,15 @@ export const WORKER_EXHIBITION_NODE_NESTJS = "Node NestJS + TypeORM";
 export const WORKER_EXHIBITION_NODE_GRPCJS = "GRPC using gRPCJS";
 export const WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS = "Next.js + Cypress";
 export const WORKER_EXHIBTION_REACTJS_CYPRESS = "React.js + Cypress";
+export const WORKER_EXHIBITION_NODE_DEFAULT_POSTGRESQL = "Node.js + PostgreSQL";
+
+export const DEFAULT_NODE_DEFAULT_POSTGRESQL_ASSIGNMENT_TEMPLATE = `// PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
+export function main() {
+  // YOUR CODE HERE
+  // Use the 'pg' package to connect to PostgreSQL at localhost:5432
+  // Database: postgres, User: postgres, Password: root
+  console.log('Hello, PostgreSQL!');
+}`;
 
 export const TEMPLATE_VARIABLES_IMPORTS = `import { vars } from './template-variables';
 
@@ -504,6 +513,7 @@ export const WorkerExibitionMap: Record<WorkerType, string> = {
   [WorkerType.NODE_GRPCJS]: WORKER_EXHIBITION_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS,
   [WorkerType.NODE_REACTJS_CYPRESS]: WORKER_EXHIBTION_REACTJS_CYPRESS,
+  [WorkerType.NODE_DEFAULT_POSTGRESQL]: WORKER_EXHIBITION_NODE_DEFAULT_POSTGRESQL,
 };
 
 export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
@@ -512,6 +522,7 @@ export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_REACTJS_CYPRESS]: DEFAULT_REACTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
+  [WorkerType.NODE_DEFAULT_POSTGRESQL]: DEFAULT_NODE_DEFAULT_POSTGRESQL_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
@@ -520,6 +531,7 @@ export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
   [WorkerType.NODE_REACTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
+  [WorkerType.NODE_DEFAULT_POSTGRESQL]: DEFAULT_VALIDATION_SCRIPT,
 };
 
 /**
@@ -533,4 +545,5 @@ export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
   [WorkerType.NODE_GRPCJS]: DEFAULT_TEMPLATE_CONTENT_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
   [WorkerType.NODE_REACTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
+  [WorkerType.NODE_DEFAULT_POSTGRESQL]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
 };

@@ -4,4 +4,5 @@ export enum WorkerType {
   NODE_GRPCJS = "node_grpcjs",
   NODE_NEXTJS_CYPRESS = "node_nextjs_cypress",
   NODE_REACTJS_CYPRESS = "node_reactjs_cypress",
+  NODE_DEFAULT_POSTGRESQL = "node_default_postgresql",
 }
