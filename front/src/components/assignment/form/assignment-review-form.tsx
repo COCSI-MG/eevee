@@ -5,6 +5,7 @@ import {
   ClipboardCheck,
   Settings,
   Code,
+  Database,
   Layers,
 } from "lucide-react";
 
@@ -153,6 +154,21 @@ export default function AssignmentFormReview({
                   </pre>
                 </div>
               </div>
+
+              {/* Init SQL Script */}
+              {values.initSqlScript && (
+                <div>
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <Database className="w-4 h-4" />
+                    Script SQL de Inicialização
+                  </h4>
+                  <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
+                    <pre className="text-blue-400 text-sm font-mono whitespace-pre-wrap">
+                      {values.initSqlScript}
+                    </pre>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
         </CardContent>
