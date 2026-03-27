@@ -159,6 +159,7 @@ export class AssignmentService {
       description: assignmentData.description,
       maxAttempts: assignmentData.maxAttempts,
       workerType: assignmentData.workerType,
+      initSqlScript: assignmentData.initSqlScript,
       createdById: user?.userId,
     });
 
