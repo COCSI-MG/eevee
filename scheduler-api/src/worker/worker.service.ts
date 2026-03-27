@@ -130,7 +130,10 @@ export class WorkerService {
     // Delegate job options to the strategy when it implements buildJobOptions,
     // otherwise fall back to the default bootstrap init container setup.
     const jobOptions: KubernetesJobOptions = strategy.buildJobOptions
-      ? strategy.buildJobOptions(encodedDefinition)
+      ? strategy.buildJobOptions(
+          encodedDefinition,
+          createWorkerData.initSqlScript,
+        )
       : {
           sharedEmptyDir: {
             volumeName: 'worker-app-volume',

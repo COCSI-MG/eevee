@@ -13,6 +13,7 @@ import {
   normalizeTestFiles,
 } from './worker-strategy-helpers';
 import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
+import { Logger } from '@nestjs/common/services/logger.service';
 
 /**
  * Strategy for NODE_DEFAULT_POSTGRESQL workers.
@@ -23,6 +24,8 @@ import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
  *    professor's `initSqlScript`.
  */
 export class NodeDefaultPostgresqlJestStrategy extends BootstrapInitContainerStrategy {
+  private logger = new Logger(NodeDefaultPostgresqlJestStrategy.name);
+
   readonly workerType = WorkerType.NODE_DEFAULT_POSTGRESQL;
 
   readonly workerConfig: WorkerConfig = {
@@ -112,6 +115,10 @@ export class NodeDefaultPostgresqlJestStrategy extends BootstrapInitContainerStr
     initSqlScript?: string,
   ): KubernetesJobOptions {
     const baseOptions = super.buildJobOptions(encodedDefinition, initSqlScript);
+
+    this.logger.debug(
+      `Building job options for NODE_DEFAULT_POSTGRESQL with initSqlScript: ${initSqlScript}`,
+    );
 
     baseOptions.initContainers!.push(
       {
