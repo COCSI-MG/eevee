@@ -41,10 +41,14 @@ export class NodeDefaultPostgresqlJestStrategy extends BootstrapInitContainerStr
       buildWriteFileCommand(
         createWorkerData.templateVariablesModuleContent ?? '',
         this.workerConfig.srcPath + '/template-variables.ts',
-      )
+      ),
     );
 
-    const install = buildNpmInstallCommand(createWorkerData.dependencies ?? []);
+    const dependencies = [
+      ...(createWorkerData.dependencies ?? []),
+      'pg', // Ensure 'pg' is included for Postgres connectivity in tests
+    ];
+    const install = buildNpmInstallCommand(dependencies);
     if (install) commands.push(install);
 
     commands.push('npm start');
@@ -94,7 +98,8 @@ export class NodeDefaultPostgresqlJestStrategy extends BootstrapInitContainerStr
       );
     });
 
-    const install = buildNpmInstallCommand(dependencies);
+    // Install dependencies including 'pg' for Postgres connectivity in tests
+    const install = buildNpmInstallCommand([...dependencies, 'pg', '--save']);
     if (install) commands.push(install);
 
     commands.push('npm start');
@@ -111,19 +116,27 @@ export class NodeDefaultPostgresqlJestStrategy extends BootstrapInitContainerStr
     baseOptions.initContainers!.push(
       {
         name: 'postgres-db',
-        image: 'postgres:16-alpine',
+        image: 'postgres:16',
         imagePullPolicy: 'IfNotPresent',
         restartPolicy: 'Always',
-        env: [{ name: 'POSTGRES_PASSWORD', value: 'root' }],
+        env: [
+          { name: 'POSTGRES_USER', value: 'postgres' },
+          { name: 'POSTGRES_PASSWORD', value: 'postgres' },
+          { name: 'POSTGRES_DB', value: 'eevee' },
+        ],
       },
       {
         name: 'seed-database',
-        image: 'postgres:16-alpine',
+        image: 'postgres:16',
         imagePullPolicy: 'IfNotPresent',
+        env: [
+          { name: 'PGPASSWORD', value: 'postgres' },
+          { name: 'POSTGRES_DB', value: 'eevee' },
+        ],
         command: [
           'sh',
           '-c',
-          `until pg_isready -h localhost -U postgres; do sleep 1; done && psql -h localhost -U postgres -c "${initSqlScript ?? ''}"`,
+          `until pg_isready -h localhost -U postgres -d "$POSTGRES_DB"; do sleep 1; done && psql -v ON_ERROR_STOP=1 -h localhost -U postgres -d "$POSTGRES_DB" -c "${initSqlScript ?? ''}"`,
         ],
       },
     );
