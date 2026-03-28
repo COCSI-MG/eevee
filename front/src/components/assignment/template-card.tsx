@@ -179,6 +179,7 @@ export default function TemplateCard({
       ...(prev || []),
       {
         templateId: templateDialog.id,
+        name: templateDialog.title,
         params,
       },
     ]);
