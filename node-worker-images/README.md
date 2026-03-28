@@ -35,6 +35,15 @@ Posteriormente é feito o merge entre os arquivos enviados pelo cliente e a estr
 - Suporta apenas Node.js como motor de execução
 - Só inicia a aplicação para um worker baseado em cypress (React.js + Cypress, por exemplo)
 
+### Utilizando banco de dados
+
+Atualmente, existe apenas um worker com Node.js + PostgreSQL, é preciso carregar a imagem do Postgres para o minikube. O scheduler-api espera uma imagem do postgres com a tag `postgres:16`, então é necessário criar um tag local com essa referência:
+
+```bash
+docker pull postgres:16
+minikube image load postgres:16
+```
+
 ## Imagens Disponíveis
 
 Atualmente, as imagens disponívels suportam apenas motores de execução baseados em Node.js. Cada imagem é otimizada para diferentes versões do Node.js, permitindo que os workers sejam executados com a versão apropriada conforme necessário.
