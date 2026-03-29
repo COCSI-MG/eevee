@@ -23,6 +23,7 @@ interface WorkspaceProps {
 
 export default function Workspace({ assignment, user }: WorkspaceProps) {
   const [activeFileContent, setActiveFileContent] = React.useState("");
+  const latestFileRequestIdRef = React.useRef(0);
 
   const { selectedItem, setSelectedItem, setFileTreeData } =
     useWorkspaceContext();
@@ -143,21 +144,34 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
   }, [assignment.id, getOrCreateFileTreeOnInit, user.id]);
 
   const handleFileSelect = async (node: FileNode) => {
-    if (!node.isFile) return;
+    if (node.isFile) {
+      const requestId = ++latestFileRequestIdRef.current;
 
-    setSelectedItem({
-      id: node.id,
-      type: "file",
-      path: node.path,
-    });
+      setSelectedItem({
+        id: node.id,
+        type: "file",
+        path: node.path,
+      });
 
-    const content = await fetchFileContent({
-      assignmentId: assignment.id,
-      userId: user.id,
-      filePath: node.path,
-    });
+      const content = await fetchFileContent({
+        assignmentId: assignment.id,
+        userId: user.id,
+        filePath: node.path,
+      });
 
-    setActiveFileContent(content || "");
+      if (requestId !== latestFileRequestIdRef.current) {
+        return;
+      }
+
+      setActiveFileContent(content || "");
+    } else {
+      latestFileRequestIdRef.current += 1;
+      setSelectedItem({
+        id: node.id,
+        type: "folder",
+        path: node.path,
+      });
+    }
   };
 
   const handleEditorChange = (value: string | undefined) => {
