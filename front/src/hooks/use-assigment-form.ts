@@ -87,10 +87,13 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
           if (!Number.isFinite(templateId)) return null;
 
           const templateParams = template?.templateParams ?? [];
+          const templateName =
+            template?.title ??
+            `Template #${templateId}`;
 
           return {
             templateId,
-            name: template.title,
+            name: templateName,
             params: templateParams.map((param: TemplateParam) => ({
               templateParamId: Number(param.id),
               value:

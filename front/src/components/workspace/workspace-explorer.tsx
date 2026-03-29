@@ -25,12 +25,17 @@ export default function WorkspaceExplorer({
   onFileSelect,
   onTreeChange,
   maxDepth = 5,
-  maxFiles = 50, 
+  maxFiles = 50,
 }: WorkspaceExplorerProps) {
   const [newItemName, setNewItemName] = useState("");
   const [newItemType, setNewItemType] = useState<"file" | "folder">("file");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameTargetPath, setRenameTargetPath] = useState("");
+  const [deleteTargetPath, setDeleteTargetPath] = useState("");
+  const [draggedNodePath, setDraggedNodePath] = useState("");
   const [error, setError] = useState("");
 
   const {
@@ -59,7 +64,7 @@ export default function WorkspaceExplorer({
   // Valida se pode criar novo item
   const canCreateItem = (
     targetPath: string,
-    itemType: "file" | "folder"
+    itemType: "file" | "folder",
   ): { valid: boolean; error?: string } => {
     // Verifica profundidade
     const newDepth = getPathDepth(targetPath) + 1;
@@ -89,10 +94,55 @@ export default function WorkspaceExplorer({
     return parts.slice(0, -1).join("/") || "";
   };
 
+  const getBaseName = (path: string) => {
+    const parts = path.split("/").filter(Boolean);
+    return parts[parts.length - 1] || "";
+  };
+
+  const findNodeByPath = (
+    node: FileNode,
+    targetPath: string,
+  ): FileNode | null => {
+    if (node.path === targetPath) {
+      return node;
+    }
+
+    if (!node.children?.length) {
+      return null;
+    }
+
+    for (const child of node.children) {
+      const found = findNodeByPath(child, targetPath);
+      if (found) {
+        return found;
+      }
+    }
+
+    return null;
+  };
+
+  const updateNodePaths = (
+    node: FileNode,
+    oldPath: string,
+    newPath: string,
+  ): FileNode => {
+    const updatedPath = node.path.startsWith(oldPath)
+      ? `${newPath}${node.path.slice(oldPath.length)}`
+      : node.path;
+
+    return {
+      ...node,
+      path: updatedPath,
+      children: node.children?.map((child) =>
+        updateNodePaths(child, oldPath, newPath),
+      ),
+    };
+  };
+
   const fileNameExistsInNode = (
     node: FileNode,
     targetPath: string,
-    name: string
+    name: string,
   ): boolean => {
     if (node.path === targetPath) {
       if (node.children) {
@@ -106,7 +156,53 @@ export default function WorkspaceExplorer({
       }
     }
     return false;
-  }
+  };
+
+  const renameItemInTree = (
+    node: FileNode,
+    targetPath: string,
+    newName: string,
+  ): FileNode => {
+    if (node.path === targetPath) {
+      const parentPath = getParentPath(targetPath);
+      const newPath = parentPath ? `${parentPath}/${newName}` : newName;
+
+      const renamedNode: FileNode = {
+        ...node,
+        id: newName,
+        path: newPath,
+      };
+
+      if (renamedNode.children?.length) {
+        renamedNode.children = renamedNode.children.map((child) =>
+          updateNodePaths(child, targetPath, newPath),
+        );
+      }
+
+      return renamedNode;
+    }
+
+    if (!node.children?.length) {
+      return node;
+    }
+
+    const updatedChildren = node.children.map((child) =>
+      renameItemInTree(child, targetPath, newName),
+    );
+
+    const hasChanges = updatedChildren.some(
+      (child, index) => child !== node.children![index],
+    );
+
+    if (!hasChanges) {
+      return node;
+    }
+
+    return {
+      ...node,
+      children: updatedChildren,
+    };
+  };
 
   const isFileNameValid = (name: string) => {
     if (!name || name.trim() === "") {
@@ -125,7 +221,7 @@ export default function WorkspaceExplorer({
   const addItemToTree = (
     node: FileNode,
     targetPath: string,
-    newItem: FileNode
+    newItem: FileNode,
   ): FileNode => {
     if (node.isFile) return node;
 
@@ -145,7 +241,7 @@ export default function WorkspaceExplorer({
       });
 
       const hasChanges = updatedChildren.some(
-        (child, index) => child !== node.children![index]
+        (child, index) => child !== node.children![index],
       );
 
       if (hasChanges) {
@@ -177,6 +273,124 @@ export default function WorkspaceExplorer({
     }
 
     return node;
+  };
+
+  const extractNodeFromTree = (
+    node: FileNode,
+    sourcePath: string,
+  ): { tree: FileNode; extracted: FileNode | null } => {
+    if (!node.children?.length) {
+      return { tree: node, extracted: null };
+    }
+
+    let extracted: FileNode | null = null;
+
+    const updatedChildren = node.children
+      .filter((child) => {
+        if (child.path === sourcePath) {
+          extracted = child;
+          return false;
+        }
+        return true;
+      })
+      .map((child) => {
+        const result = extractNodeFromTree(child, sourcePath);
+        if (result.extracted) {
+          extracted = result.extracted;
+        }
+        return result.tree;
+      });
+
+    const hasChanges =
+      !!extracted ||
+      updatedChildren.length !== node.children.length ||
+      updatedChildren.some((child, index) => child !== node.children![index]);
+
+    if (!hasChanges) {
+      return { tree: node, extracted: null };
+    }
+
+    return {
+      tree: {
+        ...node,
+        children: updatedChildren.length > 0 ? updatedChildren : undefined,
+      },
+      extracted,
+    };
+  };
+
+  const insertItemInFolder = (
+    node: FileNode,
+    targetFolderPath: string,
+    item: FileNode,
+  ): FileNode => {
+    if (node.isFile) {
+      return node;
+    }
+
+    if (node.path === targetFolderPath) {
+      const updatedChildren = node.children ? [...node.children, item] : [item];
+      return {
+        ...node,
+        children: updatedChildren,
+      };
+    }
+
+    if (!node.children?.length) {
+      return node;
+    }
+
+    const updatedChildren = node.children.map((child) =>
+      insertItemInFolder(child, targetFolderPath, item),
+    );
+
+    const hasChanges = updatedChildren.some(
+      (child, index) => child !== node.children![index],
+    );
+
+    if (!hasChanges) {
+      return node;
+    }
+
+    return {
+      ...node,
+      children: updatedChildren,
+    };
+  };
+
+  const moveItemInTree = (
+    tree: FileNode,
+    sourcePath: string,
+    targetFolderPath: string,
+  ): { movedTree: FileNode; oldPath: string; newPath: string } | null => {
+    if (sourcePath === targetFolderPath) return null;
+    if (targetFolderPath.startsWith(`${sourcePath}/`)) return null;
+
+    const { tree: treeWithoutSource, extracted } = extractNodeFromTree(
+      tree,
+      sourcePath,
+    );
+    if (!extracted) return null;
+
+    if (
+      fileNameExistsInNode(treeWithoutSource, targetFolderPath, extracted.id)
+    ) {
+      return null;
+    }
+
+    const oldPath = extracted.path;
+    const newPath = targetFolderPath
+      ? `${targetFolderPath}/${extracted.id}`
+      : extracted.id;
+
+    const movedNode = updateNodePaths(extracted, oldPath, newPath);
+    const movedTree = insertItemInFolder(
+      treeWithoutSource,
+      targetFolderPath,
+      movedNode,
+    );
+
+    return { movedTree, oldPath, newPath };
   };
 
   const handleCreateItem = () => {
@@ -228,16 +442,169 @@ export default function WorkspaceExplorer({
     setIsDialogOpen(false);
   };
 
-  const handleDeleteItem = () => {
+  const handleDeleteItem = (node?: FileNode) => {
+    if (!treeData) return;
+
+    const targetNode = node ?? findNodeByPath(treeData, selectedItem.path);
+    if (!targetNode) return;
+
+    setSelectedItem({
+      id: targetNode.id,
+      type: targetNode.isFile ? "file" : "folder",
+      path: targetNode.path,
+    });
+    setDeleteTargetPath(targetNode.path);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (!selectedItem || !treeData) return;
+  const handleRenameRequest = (node: FileNode) => {
+    setSelectedItem({
+      id: node.id,
+      type: node.isFile ? "file" : "folder",
+      path: node.path,
+    });
+    setRenameTargetPath(node.path);
+    setRenameValue(node.id);
+    setError("");
+    setIsRenameDialogOpen(true);
+  };
 
-    const updatedTree = removeItemFromTree(treeData, selectedItem.path);
+  const handleRename = () => {
+    if (!treeData || !renameTargetPath) return;
+    if (!isFileNameValid(renameValue)) return;
+
+    const targetNode = findNodeByPath(treeData, renameTargetPath);
+    if (!targetNode) return;
+
+    const trimmedName = renameValue.trim();
+    const parentPath = getParentPath(renameTargetPath);
+
+    if (
+      trimmedName !== targetNode.id &&
+      fileNameExistsInNode(treeData, parentPath, trimmedName)
+    ) {
+      setError("An item with this name already exists in the target location");
+      return;
+    }
+
+    const oldPath = targetNode.path;
+    const newPath = parentPath ? `${parentPath}/${trimmedName}` : trimmedName;
+    const updatedTree = renameItemInTree(
+      treeData,
+      renameTargetPath,
+      trimmedName,
+    );
+
     onTreeChange(updatedTree);
+
+    setSelectedItem((prev) => {
+      if (prev.path === oldPath) {
+        return {
+          id: trimmedName,
+          type: targetNode.isFile ? "file" : "folder",
+          path: newPath,
+        };
+      }
+
+      if (prev.path.startsWith(`${oldPath}/`)) {
+        const updatedPath = `${newPath}${prev.path.slice(oldPath.length)}`;
+        return {
+          ...prev,
+          id: getBaseName(updatedPath),
+          path: updatedPath,
+        };
+      }
+
+      return prev;
+    });
+
+    setRenameTargetPath("");
+    setRenameValue("");
+    setError("");
+    setIsRenameDialogOpen(false);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!treeData || !deleteTargetPath) return;
+
+    const updatedTree = removeItemFromTree(treeData, deleteTargetPath);
+    onTreeChange(updatedTree);
+
+    if (
+      selectedItem.path === deleteTargetPath ||
+      selectedItem.path.startsWith(`${deleteTargetPath}/`)
+    ) {
+      setSelectedItem({ id: "", type: "file", path: "" });
+    }
+
+    setDeleteTargetPath("");
     setIsDeleteDialogOpen(false);
+  };
+
+  const handleDragStart = (e: React.DragEvent, node: FileNode) => {
+    e.dataTransfer.setData("text/plain", node.path);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggedNodePath(node.path);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDragLeave = () => {
+    // visual feedback handled inside tree item component
+  };
+
+  const handleDrop = (e: React.DragEvent, targetNode: FileNode) => {
+    e.preventDefault();
+
+    if (!treeData) {
+      setDraggedNodePath("");
+      return;
+    }
+
+    const sourcePath = e.dataTransfer.getData("text/plain") || draggedNodePath;
+    if (!sourcePath) {
+      setDraggedNodePath("");
+      return;
+    }
+
+    const targetFolderPath = targetNode.isFile
+      ? getParentPath(targetNode.path)
+      : targetNode.path;
+
+    const moveResult = moveItemInTree(treeData, sourcePath, targetFolderPath);
+    if (!moveResult) {
+      setDraggedNodePath("");
+      return;
+    }
+
+    const { movedTree, oldPath, newPath } = moveResult;
+    onTreeChange(movedTree);
+
+    setSelectedItem((prev) => {
+      if (prev.path === oldPath) {
+        return {
+          ...prev,
+          path: newPath,
+          id: getBaseName(newPath),
+        };
+      }
+
+      if (prev.path.startsWith(`${oldPath}/`)) {
+        const updatedPath = `${newPath}${prev.path.slice(oldPath.length)}`;
+        return {
+          ...prev,
+          path: updatedPath,
+          id: getBaseName(updatedPath),
+        };
+      }
+
+      return prev;
+    });
+
+    setDraggedNodePath("");
   };
 
   // Calcula informações da árvore para display
@@ -249,6 +616,8 @@ export default function WorkspaceExplorer({
 
     return { fileCount, maxDepthReached };
   }, [treeData, countFiles, selectedItem.path]);
+
+  const hasSelection = Boolean(selectedItem.path);
 
   return (
     <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
@@ -313,8 +682,13 @@ export default function WorkspaceExplorer({
               variant="ghost"
               size="sm"
               className="h-7 w-7 p-0 text-gray-400 hover:text-red-400 hover:bg-gray-700"
-              onClick={handleDeleteItem}
-              title={`Delete ${selectedItem.id}`}
+              onClick={() => handleDeleteItem()}
+              title={
+                hasSelection
+                  ? `Delete ${selectedItem.id || "selected item"}`
+                  : "Select an item to delete"
+              }
+              disabled={!hasSelection}
             >
               <TrashIcon className="w-4 h-4" />
             </Button>
@@ -382,7 +756,8 @@ export default function WorkspaceExplorer({
                 <p className="text-gray-300">
                   Are you sure you want to delete{" "}
                   <span className="font-semibold text-white">
-                    &quot;{selectedItem.id}&quot;
+                    &quot;{selectedItem.id || getBaseName(deleteTargetPath)}
+                    &quot;
                   </span>
                   ?
                   {selectedItem.type === "folder" && (
@@ -409,6 +784,64 @@ export default function WorkspaceExplorer({
               </div>
             </DialogContent>
           </Dialog>
+
+          <Dialog
+            open={isRenameDialogOpen}
+            onOpenChange={(open) => {
+              setIsRenameDialogOpen(open);
+              if (!open) {
+                setRenameTargetPath("");
+                setRenameValue("");
+                setError("");
+              }
+            }}
+          >
+            <DialogContent className="bg-gray-800 border-gray-700">
+              <DialogHeader>
+                <DialogTitle className="text-white">Rename Item</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="rename-name" className="text-gray-300">
+                    New name
+                  </Label>
+                  <Input
+                    id="rename-name"
+                    value={renameValue}
+                    onChange={(e) => {
+                      setRenameValue(e.target.value);
+                      setError("");
+                    }}
+                    className="bg-gray-700 border-gray-600 text-white mt-1"
+                    onKeyDown={(e) => e.key === "Enter" && handleRename()}
+                  />
+                  {error && (
+                    <p className="text-red-400 text-sm mt-1">{error}</p>
+                  )}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsRenameDialogOpen(false);
+                      setRenameTargetPath("");
+                      setRenameValue("");
+                      setError("");
+                    }}
+                    className="border-gray-600 text-gray-300 hover:text-white"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleRename}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Rename
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -418,6 +851,12 @@ export default function WorkspaceExplorer({
           onFileSelect={onFileSelect}
           selectedItem={selectedItem}
           setSelectedItem={setSelectedItem}
+          onRenameRequest={handleRenameRequest}
+          onDeleteRequest={handleDeleteItem}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         />
       </div>
     </div>

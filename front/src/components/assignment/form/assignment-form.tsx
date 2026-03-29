@@ -8,10 +8,21 @@ import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ClipboardCheck, Code, Database, Layers, Save, Settings } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  Code,
+  Database,
+  Layers,
+  Save,
+  Settings,
+} from "lucide-react";
 import { useClasses } from "@/hooks/use-classes";
 import TemplateCard from "@/components/assignment/template-card";
-import AssignmentStepContainer, { StepDefinition } from "@/components/assignment/assignment-step-container";
+import AssignmentStepContainer, {
+  StepDefinition,
+} from "@/components/assignment/assignment-step-container";
 import { useAssignmentForm } from "@/hooks/use-assigment-form";
 import AssignmentFormReview from "@/components/assignment/form/assignment-review-form";
 import { AssignmentConfigForm } from "./assignment-config-form";
@@ -31,11 +42,31 @@ const validationSchema = Yup.object({
   classId: Yup.string().required("Class is required"),
 });
 
-const STEP_CONFIG: StepDefinition = { id: "config", title: "Configuração", icon: Settings };
-const STEP_TEMPLATES: StepDefinition = { id: "templates", title: "Templates", icon: Code };
-const STEP_BOILERPLATE: StepDefinition = { id: "boilerplate", title: "Boilerplate", icon: Layers };
-const STEP_INIT_SQL: StepDefinition = { id: "initSql", title: "Init SQL Script", icon: Database };
-const STEP_REVIEW: StepDefinition = { id: "review", title: "Revisão", icon: ClipboardCheck };
+const STEP_CONFIG: StepDefinition = {
+  id: "config",
+  title: "Configuração",
+  icon: Settings,
+};
+const STEP_TEMPLATES: StepDefinition = {
+  id: "templates",
+  title: "Templates",
+  icon: Code,
+};
+const STEP_BOILERPLATE: StepDefinition = {
+  id: "boilerplate",
+  title: "Boilerplate",
+  icon: Layers,
+};
+const STEP_INIT_SQL: StepDefinition = {
+  id: "initSql",
+  title: "Init SQL Script",
+  icon: Database,
+};
+const STEP_REVIEW: StepDefinition = {
+  id: "review",
+  title: "Revisão",
+  icon: ClipboardCheck,
+};
 
 function buildSteps(workerType: string): StepDefinition[] {
   const steps = [STEP_CONFIG, STEP_TEMPLATES, STEP_BOILERPLATE];
@@ -113,13 +144,13 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
             if (
               values.workerType &&
               Object.values(WorkerType).includes(
-                values.workerType as WorkerType
+                values.workerType as WorkerType,
               )
             ) {
               const safeWorkerType = values.workerType as WorkerType;
               setFieldValue(
                 "boilerplate",
-                WorkerDefaultTemplateMap[safeWorkerType]
+                WorkerDefaultTemplateMap[safeWorkerType],
               );
             }
           }, [values.workerType, setFieldValue]);
@@ -127,7 +158,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
           // eslint-disable-next-line react-hooks/rules-of-hooks
           const steps = useMemo(
             () => buildSteps(values.workerType),
-            [values.workerType]
+            [values.workerType],
           );
 
           const totalSteps = steps.length;

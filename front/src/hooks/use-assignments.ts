@@ -14,6 +14,8 @@ const useFetchAssignment = (id: number) => {
   return useQuery({
     queryKey: ['assignment', id],
     queryFn: () => AssignmentService.GetAssignmentById(id),
+    enabled: Number.isFinite(id) && id > 0,
+    refetchOnWindowFocus: false,
   })
 }
 
