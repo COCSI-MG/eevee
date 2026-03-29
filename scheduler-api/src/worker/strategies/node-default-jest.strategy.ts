@@ -9,14 +9,14 @@ import {
   normalizeTestFiles,
 } from './worker-strategy-helpers';
 import { parseJestLogResult } from './worker-log-parsers';
-import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFFIX } from '../worker.constants';
+import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFIX } from '../worker.constants';
 import { WorkerJobPayload } from '../worker-job-payload.type';
 
 export class NodeDefaultJestStrategy implements WorkerExecutionStrategy {
   readonly workerType = WorkerType.NODE_DEFAULT;
 
   readonly workerConfig: WorkerConfig = {
-    jobPrefix: WORKER_JOB_PREFFIX[WorkerType.NODE_DEFAULT],
+    jobPrefix: WORKER_JOB_PREFIX[WorkerType.NODE_DEFAULT],
     imageName: WORKER_IMAGE_NAMES[WorkerType.NODE_DEFAULT],
     srcPath: '/app/src',
     testPath: '/app/test',
