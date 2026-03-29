@@ -176,6 +176,13 @@ export class SchedulingService {
       return;
     }
 
+    if (attempt.status !== AttemptStatus.PENDING) {
+      this.logger.warn(
+        `Attempt with ID ${attemptId} has status ${attempt.status} and will not be processed`,
+      );
+      return;
+    }
+
     this.logger.log(
       `Found attempt: ${JSON.stringify(attempt)}`,
       `ATTEMPT_ID: ${attempt.id}`,
