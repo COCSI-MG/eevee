@@ -8,29 +8,96 @@ interface WorkspaceFileTreeProps {
   onFileSelect: (node: FileNode) => void;
   selectedItem: SelectedItem;
   setSelectedItem: (item: SelectedItem) => void;
+  onContextMenu?: (e: React.MouseEvent, node: FileNode) => void;
+  onRenameRequest?: (node: FileNode) => void;
+  onDeleteRequest?: (node: FileNode) => void;
+  onDragStart?: (e: React.DragEvent, node: FileNode) => void;
+  onDragOver?: (e: React.DragEvent, node: FileNode) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, node: FileNode) => void;
 }
 
 interface TreeNodeProps {
   node: FileNode;
   onFileSelect: (node: FileNode) => void;
+  setSelectedItem: (item: SelectedItem) => void;
   selectedPath: string;
   level?: number;
+  onContextMenu?: (e: React.MouseEvent, node: FileNode) => void;
+  onDragStart?: (e: React.DragEvent, node: FileNode) => void;
+  onDragOver?: (e: React.DragEvent, node: FileNode) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, node: FileNode) => void;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
   node,
   onFileSelect,
+  setSelectedItem,
   selectedPath,
   level = 0,
+  onContextMenu,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }) => {
   const [isOpen, setIsOpen] = React.useState(level === 0); // Raiz aberta por padrão
+  const [isDragOver, setIsDragOver] = React.useState(false);
   const isSelected = node.path === selectedPath;
 
   const handleClick = () => {
-    if (!node.isFile) {
+    if (node.isFile) {
+      setSelectedItem({ id: node.id, type: "file", path: node.path });
+      onFileSelect(node);
+    } else {
+      setSelectedItem({ id: node.id, type: "folder", path: node.path });
       setIsOpen(!isOpen);
     }
-    onFileSelect(node);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Select the item on right-click
+    setSelectedItem({
+      id: node.id,
+      type: node.isFile ? "file" : "folder",
+      path: node.path,
+    });
+    onContextMenu?.(e, node);
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    // Don't allow dragging the root node
+    if (level === 0) {
+      e.preventDefault();
+      return;
+    }
+    e.stopPropagation();
+    onDragStart?.(e, node);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!node.isFile) {
+      setIsDragOver(true);
+    }
+    onDragOver?.(e, node);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.stopPropagation();
+    setIsDragOver(false);
+    onDragLeave?.(e);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    onDrop?.(e, node);
   };
 
   return (
@@ -39,16 +106,25 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         className={cn(
           "flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-gray-700 transition-colors",
           isSelected && "bg-gray-700",
-          !node.isFile && "font-medium"
+          !node.isFile && "font-medium",
+          isDragOver &&
+            !node.isFile &&
+            "bg-blue-900/40 ring-1 ring-blue-500/50",
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         onClick={handleClick}
+        onContextMenu={handleContextMenu}
+        draggable={level > 0}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         {!node.isFile && (
           <ChevronRight
             className={cn(
               "w-4 h-4 transition-transform text-gray-400",
-              isOpen && "rotate-90"
+              isOpen && "rotate-90",
             )}
           />
         )}
@@ -58,7 +134,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           <Folder
             className={cn(
               "w-4 h-4",
-              isOpen ? "text-yellow-400" : "text-gray-400"
+              isOpen ? "text-yellow-400" : "text-gray-400",
             )}
           />
         )}
@@ -80,8 +156,14 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 key={child.id}
                 node={child}
                 onFileSelect={onFileSelect}
+                setSelectedItem={setSelectedItem}
                 selectedPath={selectedPath}
                 level={level + 1}
+                onContextMenu={onContextMenu}
+                onDragStart={onDragStart}
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
               />
             ))}
         </div>
@@ -94,7 +176,54 @@ export default function WorkspaceFileTree({
   treeData,
   onFileSelect,
   selectedItem,
+  setSelectedItem,
+  onContextMenu,
+  onRenameRequest,
+  onDeleteRequest,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
 }: WorkspaceFileTreeProps) {
+  const [contextMenu, setContextMenu] = React.useState<{
+    x: number;
+    y: number;
+    node: FileNode;
+  } | null>(null);
+  const contextMenuRef = React.useRef<HTMLDivElement | null>(null);
+
+  React.useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setContextMenu(null);
+      }
+    };
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (contextMenuRef.current && !contextMenuRef.current.contains(target)) {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleTreeContextMenu = (event: React.MouseEvent, node: FileNode) => {
+    onContextMenu?.(event, node);
+    setContextMenu({
+      x: event.clientX,
+      y: event.clientY,
+      node,
+    });
+  };
+
   if (!treeData) {
     return (
       <div className="flex items-center justify-center h-32 text-gray-500">
@@ -108,9 +237,44 @@ export default function WorkspaceFileTree({
       <TreeNode
         node={treeData}
         onFileSelect={onFileSelect}
+        setSelectedItem={setSelectedItem}
         selectedPath={selectedItem.path}
         level={0}
+        onContextMenu={handleTreeContextMenu}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
       />
+
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="fixed z-50 min-w-[120px] rounded-md border border-gray-700 bg-gray-800 py-1 shadow-lg"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+        >
+          <button
+            type="button"
+            className="block w-full px-3 py-1.5 text-left text-sm text-gray-200 hover:bg-gray-700"
+            onClick={() => {
+              onRenameRequest?.(contextMenu.node);
+              setContextMenu(null);
+            }}
+          >
+            Rename
+          </button>
+          <button
+            type="button"
+            className="block w-full px-3 py-1.5 text-left text-sm text-red-300 hover:bg-gray-700"
+            onClick={() => {
+              onDeleteRequest?.(contextMenu.node);
+              setContextMenu(null);
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
   );
 }
