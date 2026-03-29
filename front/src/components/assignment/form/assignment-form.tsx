@@ -40,7 +40,10 @@ const STEP_REVIEW: StepDefinition = { id: "review", title: "Revisão", icon: Cli
 function buildSteps(workerType: string): StepDefinition[] {
   const steps = [STEP_CONFIG, STEP_TEMPLATES, STEP_BOILERPLATE];
 
-  if (workerType === WorkerType.NODE_DEFAULT_POSTGRESQL) {
+  if (
+    workerType === WorkerType.NODE_DEFAULT_POSTGRESQL ||
+    workerType === WorkerType.NODE_NESTJS_POSTGRESQL
+  ) {
     steps.push(STEP_INIT_SQL);
   }
 
