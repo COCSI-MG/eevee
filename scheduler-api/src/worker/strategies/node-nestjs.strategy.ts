@@ -9,17 +9,17 @@ import {
   normalizeTestFiles,
 } from './worker-strategy-helpers';
 import { parseJestLogResult } from './worker-log-parsers';
-import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFFIX } from '../worker.constants';
+import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFIX } from '../worker.constants';
 import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
 
 export class NodeNestJsStrategy implements WorkerExecutionStrategy {
   readonly workerType = WorkerType.NODE_NESTJS;
 
   readonly workerConfig: WorkerConfig = {
-    jobPrefix: WORKER_JOB_PREFFIX[WorkerType.NODE_NESTJS],
+    jobPrefix: WORKER_JOB_PREFIX[WorkerType.NODE_NESTJS],
     imageName: WORKER_IMAGE_NAMES[WorkerType.NODE_NESTJS],
-    srcPath: '/app/workspace/src',
-    testPath: '/app/workspace/test',
+    srcPath: '/app/src',
+    testPath: '/app/test',
   };
 
   buildJobCommand(

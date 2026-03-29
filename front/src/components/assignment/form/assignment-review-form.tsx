@@ -1,22 +1,19 @@
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SelectedTemplate } from "@/types/shared";
 import {
   ClipboardCheck,
   Settings,
   Code,
+  Database,
   Layers,
 } from "lucide-react";
 
 interface AssignmentFormReviewProps {
   values: Partial<Assignment>;
   classes: { id: number; name: string }[];
-  selectedTemplates:
-    | {
-        templateId: number;
-        params: { templateParamId: number; value: string }[];
-      }[]
-    | null;
+  selectedTemplates: SelectedTemplate[] | null; 
 }
 
 const AssigmentReview = ({
@@ -83,7 +80,7 @@ const TemplateReview = ({
     <div>
       <h4 className="text-white font-medium mb-3 flex items-center gap-2">
         <Code className="w-4 h-4" />
-        Templates ({selectedTemplates ? selectedTemplates.length : 0})
+        Templates de teste adicionados ({selectedTemplates ? selectedTemplates.length : 0})
       </h4>
 
       {selectedTemplates?.length === 0 && (
@@ -94,7 +91,7 @@ const TemplateReview = ({
         {selectedTemplates?.map((template, index) => (
           <div key={index} className="bg-slate-700/30 p-4 rounded-lg">
             <h5 className="text-white font-medium mb-2">
-              Template ID: {template.templateId}
+              {template.name} 
             </h5>
             <div className="space-y-2">
               {template.params.map((param) => (
@@ -153,6 +150,21 @@ export default function AssignmentFormReview({
                   </pre>
                 </div>
               </div>
+
+              {/* Init SQL Script */}
+              {values.initSqlScript && (
+                <div>
+                  <h4 className="text-white font-medium mb-3 flex items-center gap-2">
+                    <Database className="w-4 h-4" />
+                    Script SQL de Inicialização
+                  </h4>
+                  <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
+                    <pre className="text-blue-400 text-sm font-mono whitespace-pre-wrap">
+                      {values.initSqlScript}
+                    </pre>
+                  </div>
+                </div>
+              )}
             </div>
           </ScrollArea>
         </CardContent>

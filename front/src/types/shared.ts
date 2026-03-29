@@ -17,6 +17,7 @@ export interface SelectedItem {
 
 export interface SelectedTemplate {
   templateId: number;
+  name: string;
   params: {
     templateParamId: number;
     value: string;

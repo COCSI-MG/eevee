@@ -24,7 +24,10 @@ export interface KubernetesJobInitContainer {
 
 export interface KubernetesJobSharedEmptyDir {
   volumeName: string;
-  mountPath: string;
+  mounts: {
+    mountPath: string;
+    subPath?: string;
+  }[];
 }
 
 export interface KubernetesJobOptions {

@@ -10,7 +10,7 @@ Os workers devem ser iniciados de forma singular, cada worker pode ter sua parti
 
 Quem é responsável por iniciar a aplicação e rodar os testes, é o próprio worker, a partir de um arquivo de trigger, como no [exemplo do trigger do node](./node/trigger.ts). O trigger é o ponto de entrada do worker, onde a aplicação é iniciada e os testes são executados. 
 
-O volume compartilhado, possui um mount em `/app/workspace`, onde os arquivos de source code e testes são criados, a partir da estrutura enviada pelo cliente, e o worker tem acesso a esses arquivos para iniciar a aplicação e rodar os testes.
+O volume compartilhado, possui um mount em `/app/src` e `/app/tests`, onde os arquivos de source code e testes são criados, a partir da estrutura enviada pelo cliente, e o worker tem acesso a esses arquivos para iniciar a aplicação e rodar os testes.
 
 ### Worker Bootstrap 
 
@@ -24,7 +24,7 @@ A estrutura enviada pelo cliente contém outras propriedades que são utilizados
 }
 ```
 
-O Worker Bootstrap percorre essa estrutura e cria os arquivos no caminho definido na estrutura do worker, por exemplo, o arquivo `src/index.js` seria criado no caminho `/app/workspace/src/index.js` dentro do container do worker.
+O Worker Bootstrap percorre essa estrutura e cria os arquivos no caminho definido na estrutura do worker, por exemplo, o arquivo `src/index.js` seria criado no caminho `/app/src/index.js` dentro do container do worker.
 
 Posteriormente é feito o merge entre os arquivos enviados pelo cliente e a estrutura base do worker, para que o worker consiga localizar os arquivos de source code e testes corretamente. Isso é responsabilidade do worker, saber onde os arquivos existem e como utilizá-los para iniciar a aplicação e rodar os testes.
 
@@ -35,9 +35,20 @@ Posteriormente é feito o merge entre os arquivos enviados pelo cliente e a estr
 - Suporta apenas Node.js como motor de execução
 - Só inicia a aplicação para um worker baseado em cypress (React.js + Cypress, por exemplo)
 
+### Utilizando banco de dados
+
+Atualmente, existe apenas um worker com Node.js + PostgreSQL, é preciso carregar a imagem do Postgres para o minikube. O scheduler-api espera uma imagem do postgres com a tag `postgres:16`, então é necessário criar um tag local com essa referência:
+
+```bash
+docker pull postgres:16
+minikube image load postgres:16
+```
+
 ## Imagens Disponíveis
 
 Atualmente, as imagens disponívels suportam apenas motores de execução baseados em Node.js. Cada imagem é otimizada para diferentes versões do Node.js, permitindo que os workers sejam executados com a versão apropriada conforme necessário.
+
+- [Worker Bootstrap](./worker-bootstrap/Dockerfile) - Imagem base para o processo de bootstrap dos workers. Esta imagem é responsável por preparar o ambiente de execução, criar os arquivos de source code e testes, e garantir que o worker tenha acesso a esses arquivos para iniciar a aplicação e rodar os testes.
 
 - [node](./node/Dockerfile) - Imagem base para execução de workers utilizando Node.js. Esta imagem pode ser personalizada para incluir bibliotecas ou ferramentas adicionais conforme necessário.
 
@@ -57,6 +68,16 @@ Execute o comando `make help` para ver a lista completa de comandos disponíveis
 
 ```bash
 make help
+```
+
+### Construindo a imagem do bootstrap do worker
+
+```bash
+make build-bootstrap
+```
+
+```bash
+make load-bootstrap
 ```
 
 ### Exemplo Construindo uma Imagem React.Js + Cypress

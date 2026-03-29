@@ -6,11 +6,72 @@ import { KubernetesJobOptions, KubernetesJobResult } from './kubernetes.interfac
 
 @Injectable()
 export class KubernetesService {
-  constructor() {}
+  constructor() { }
   private client = new Client1_13({
     config: config.fromKubeconfig(),
     version: '1.13',
   });
+
+  private appendConfigMapVolumesAndMounts(
+    configMaps: NonNullable<KubernetesJobOptions['configMap']>,
+    volumes: any[],
+    volumeMounts: any[],
+  ) {
+    configMaps.forEach((cm) => {
+      volumes.push({
+        name: cm.volumeName,
+        configMap: {
+          name: cm.name,
+        },
+      });
+
+      volumeMounts.push({
+        name: cm.volumeName,
+        mountPath: cm.mountPath,
+      });
+    });
+  }
+
+  private appendSharedEmptyDirVolumeAndMounts(
+    sharedEmptyDir: NonNullable<KubernetesJobOptions['sharedEmptyDir']>,
+    volumes: any[],
+    volumeMounts: any[],
+  ) {
+    volumes.push({
+      name: sharedEmptyDir.volumeName,
+      emptyDir: {},
+    });
+
+    sharedEmptyDir.mounts.forEach((mount) => {
+      volumeMounts.push({
+        name: sharedEmptyDir.volumeName,
+        mountPath: mount.mountPath,
+        ...(mount.subPath ? { subPath: mount.subPath } : {}),
+      });
+    });
+  }
+
+  private buildInitContainers(options?: KubernetesJobOptions) {
+    return (
+      options?.initContainers?.map((container) => ({
+        name: container.name,
+        image: container.image,
+        imagePullPolicy: container.imagePullPolicy || 'Never',
+        ...(container.restartPolicy ? { restartPolicy: container.restartPolicy } : {}),
+        ...(container.command?.length ? { command: container.command } : {}),
+        ...(container.env?.length ? { env: container.env } : {}),
+        ...(options?.sharedEmptyDir
+          ? {
+            volumeMounts: options.sharedEmptyDir.mounts.map((mount) => ({
+              name: options.sharedEmptyDir!.volumeName,
+              mountPath: mount.mountPath,
+              ...(mount.subPath ? { subPath: mount.subPath } : {}),
+            })),
+          }
+          : {}),
+      })) || []
+    );
+  }
 
   async checkIfJobExists(jobName: string): Promise<boolean> {
     try {
@@ -122,49 +183,22 @@ export class KubernetesService {
     const volumeMounts: any[] = [];
 
     if (options?.configMap) {
-      options.configMap.forEach((cm) => {
-        volumes.push({
-          name: cm.volumeName,
-          configMap: {
-            name: cm.name,
-          },
-        });
-        volumeMounts.push({
-          name: cm.volumeName,
-          mountPath: cm.mountPath,
-        });
-      });
+      this.appendConfigMapVolumesAndMounts(
+        options.configMap,
+        volumes,
+        volumeMounts,
+      );
     }
 
     if (options?.sharedEmptyDir) {
-      volumes.push({
-        name: options.sharedEmptyDir.volumeName,
-        emptyDir: {},
-      });
-      volumeMounts.push({
-        name: options.sharedEmptyDir.volumeName,
-        mountPath: options.sharedEmptyDir.mountPath,
-      });
+      this.appendSharedEmptyDirVolumeAndMounts(
+        options.sharedEmptyDir,
+        volumes,
+        volumeMounts,
+      );
     }
 
-    const initContainers =
-      options?.initContainers?.map((container) => ({
-        name: container.name,
-        image: container.image,
-        imagePullPolicy: container.imagePullPolicy || 'Never',
-        ...(container.command?.length ? { command: container.command } : {}),
-        ...(container.env?.length ? { env: container.env } : {}),
-        ...(options?.sharedEmptyDir
-          ? {
-              volumeMounts: [
-                {
-                  name: options.sharedEmptyDir.volumeName,
-                  mountPath: options.sharedEmptyDir.mountPath,
-                },
-              ],
-            }
-          : {}),
-      })) || [];
+    const initContainers = this.buildInitContainers(options);
 
     const jobManifest = {
       apiVersion: 'batch/v1',

@@ -10,17 +10,17 @@ import {
   normalizeTestFiles,
 } from './worker-strategy-helpers';
 import { parseCypressLogResult } from './worker-log-parsers';
-import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFFIX } from '../worker.constants';
+import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFIX } from '../worker.constants';
 import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
 
 export class NodeNextJsCypressStrategy implements WorkerExecutionStrategy {
   readonly workerType = WorkerType.NODE_NEXTJS_CYPRESS;
 
   readonly workerConfig: WorkerConfig = {
-    jobPrefix: WORKER_JOB_PREFFIX[WorkerType.NODE_NEXTJS_CYPRESS],
+    jobPrefix: WORKER_JOB_PREFIX[WorkerType.NODE_NEXTJS_CYPRESS],
     imageName: WORKER_IMAGE_NAMES[WorkerType.NODE_NEXTJS_CYPRESS],
-    srcPath: '/app/workspace/src',
-    testPath: '/app/workspace/cypress/e2e',
+    srcPath: '/app/src',
+    testPath: '/app/cypress/e2e',
   };
 
   buildJobCommand(

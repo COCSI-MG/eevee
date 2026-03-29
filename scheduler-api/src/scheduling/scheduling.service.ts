@@ -28,7 +28,7 @@ export class SchedulingService {
     private readonly attemptService: AttemptService,
     private readonly assignmentService: AssignmentService,
     private readonly schedulerCreateJobPublisher: SchedulerCreateJobPublisher,
-  ) { }
+  ) {}
 
   private calculateScore(result: WorkerResponse) {
     return result.passes / (result.passes + result.failures || 1);
@@ -176,6 +176,13 @@ export class SchedulingService {
       return;
     }
 
+    if (attempt.status !== AttemptStatus.PENDING) {
+      this.logger.warn(
+        `Attempt with ID ${attemptId} has status ${attempt.status} and will not be processed`,
+      );
+      return;
+    }
+
     this.logger.log(
       `Found attempt: ${JSON.stringify(attempt)}`,
       `ATTEMPT_ID: ${attempt.id}`,
@@ -212,6 +219,7 @@ export class SchedulingService {
       attempt.assignment.assignmentTemplates,
       {
         ...payload.workerData,
+        initSqlScript: attempt.assignment.initSqlScript,
       },
       templateVariablesModuleContent,
     );
@@ -230,10 +238,11 @@ export class SchedulingService {
     }
 
     try {
-      const workerResult = await this.workerService.createWorkerWithInitContainer(
-        attempt.assignment.workerType,
-        workerData,
-      );
+      const workerResult =
+        await this.workerService.createWorkerWithInitContainer(
+          attempt.assignment.workerType,
+          workerData,
+        );
 
       this.logger.log(
         `Worker result: ${JSON.stringify(workerResult)}`,

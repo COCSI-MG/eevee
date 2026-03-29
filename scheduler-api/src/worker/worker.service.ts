@@ -15,6 +15,9 @@ import { NodeGrpcJsJestStrategy } from './strategies/node-grpcjs-jest.strategy';
 import { NodeNestJsStrategy } from './strategies/node-nestjs.strategy';
 import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.strategy';
 import { NodeReactJsCypressIsolatedLogStrategy } from './strategies/node-reactjs-cypress-isolated-log.strategy';
+import { NodeDefaultPostgresqlJestStrategy } from './strategies/node-default-postgresql-jest.strategy';
+import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
+import { NodeNestJsPostgresqlJestStrategy } from './strategies/node-nestjs-postgresql-jest.strategy';
 
 @Injectable()
 export class WorkerService {
@@ -32,6 +35,9 @@ export class WorkerService {
     [WorkerType.NODE_NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(),
     [WorkerType.NODE_REACTJS_CYPRESS]:
       new NodeReactJsCypressIsolatedLogStrategy(),
+    [WorkerType.NODE_DEFAULT_POSTGRESQL]:
+      new NodeDefaultPostgresqlJestStrategy(),
+    [WorkerType.NODE_NESTJS_POSTGRESQL]: new NodeNestJsPostgresqlJestStrategy(), // Reuse NodeNestJsStrategy with Postgres support enabled
   };
 
   getStrategy(workerType: WorkerType): WorkerExecutionStrategy {
@@ -110,6 +116,11 @@ export class WorkerService {
       testPath: workerPayload.testPath || testPath,
     };
 
+    const sharedMounts = buildSharedEmptyDirMounts(
+      definitionWithPaths.srcPath,
+      definitionWithPaths.testPath,
+    );
+
     this.logger.debug(
       `Creating worker with jobName: ${jobName} and definition: ${JSON.stringify(definitionWithPaths)}`,
     );
@@ -120,28 +131,15 @@ export class WorkerService {
 
     // Delegate job options to the strategy when it implements buildJobOptions,
     // otherwise fall back to the default bootstrap init container setup.
-    const jobOptions: KubernetesJobOptions = strategy.buildJobOptions
-      ? strategy.buildJobOptions(
-          encodedDefinition,
-        )
-      : {
-          sharedEmptyDir: {
-            volumeName: 'worker-app-volume',
-            mountPath: '/app/workspace',
-          },
-          initContainers: [
-            {
-              name: 'eevee-worker-bootstrap',
-              image: 'eevee-worker-bootstrap',
-              env: [
-                {
-                  name: WORKER_DEFINITION_B64_ENV_NAME,
-                  value: encodedDefinition,
-                },
-              ],
-            },
-          ],
-        };
+    let jobOptions: KubernetesJobOptions;
+    if (strategy.buildJobOptions) {
+      jobOptions = strategy.buildJobOptions(
+        encodedDefinition,
+        createWorkerData.initSqlScript,
+      );
+    } else {
+      jobOptions = this.buildDefaultJobOptions(sharedMounts, encodedDefinition);
+    }
 
     this.logger.debug(
       `Job options for worker ${jobName}: ${JSON.stringify(jobOptions)}`,
@@ -168,5 +166,29 @@ export class WorkerService {
     const strategy = this.getStrategy(workerType);
     const { jobPrefix } = strategy.workerConfig;
     return `${jobPrefix}-${Date.now()}`;
+  }
+
+  private buildDefaultJobOptions(
+    sharedMounts: any,
+    encodedDefinition: string,
+  ): KubernetesJobOptions {
+    return {
+      sharedEmptyDir: {
+        volumeName: 'worker-app-volume',
+        mounts: sharedMounts,
+      },
+      initContainers: [
+        {
+          name: 'eevee-worker-bootstrap',
+          image: 'eevee-worker-bootstrap',
+          env: [
+            {
+              name: WORKER_DEFINITION_B64_ENV_NAME,
+              value: encodedDefinition,
+            },
+          ],
+        },
+      ],
+    };
   }
 }

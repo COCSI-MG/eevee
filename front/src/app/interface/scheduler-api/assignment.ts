@@ -33,6 +33,8 @@ export interface Assignment {
   boilerplate?: string;
   /** Backward-compatible alias (legacy name used by older frontend code). */
   validationScript?: string;
+  /** SQL script to initialize the database for PostgreSQL-backed workers. */
+  initSqlScript?: string;
   maxAttempts: number;
   workerType: string;
   workerDefinition: WorkerDefinition;
@@ -49,6 +51,7 @@ export interface CreateAssignmentRequest {
   description: string;
   boilerplate?: string;
   validationScript?: string;
+  initSqlScript?: string;
   templates: {
     templateId: number;
     params: AssignmentTemplateParam[];
@@ -65,6 +68,7 @@ export interface UpdateAssignmentRequest {
   description: string;
   boilerplate?: string;
   validationScript?: string;
+  initSqlScript?: string;
   maxAttempts: number;
   workerType: string;
   templates: {

@@ -83,3 +83,26 @@ Agora é necessário incluir a imagem no minikube
 ```
 minikube image load worker-node-nextjs-cypress-img:latest
 ```
+
+## Troubleshooting
+
+### Problema com DNS no minikube
+
+Pode surgir alguns problemas com resolucao de DNS no minikube. Aconteceu ao rodar um `npm install` dentro do minikube, onde o comando falhou por não conseguir resolver o nome do registry do npm.
+
+Direto pelo minikube:
+
+```bash
+minikube start --docker-opt dns=8.8.8.8 --docker-opt dns=1.1.1.1
+```
+
+Outra solução para isso é editar o configmap do coredns, adicionando a seguinte configuração:
+
+```bash
+kubectl -n kube-system edit configmap coredns
+```
+
+Altere de `forward . /etc/resolv.conf` para `forward . 8.8.8.8 1.1.1.1`, e depois disso, reinicie o coredns:
+
+```bash
+kubectl -n kube-system rollout restart deployment coredns

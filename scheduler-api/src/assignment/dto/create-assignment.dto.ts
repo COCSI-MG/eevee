@@ -76,6 +76,15 @@ export class CreateAssignmentDto {
   @IsString()
   boilerplate?: string;
 
+  @ApiProperty({
+    description:
+      'SQL script to initialize the database schema/seed data for PostgreSQL-backed workers.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  initSqlScript?: string;
+
   @ApiProperty({ type: [AssignmentTemplateDto] })
   @ValidateNested({ each: true })
   @Type(() => AssignmentTemplateDto)
