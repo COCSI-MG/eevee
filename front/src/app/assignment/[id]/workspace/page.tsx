@@ -26,7 +26,7 @@ export default function Page() {
   const { selectedItem } = useWorkspaceContext();
   const { mutateAsync: fetchFileContent } = useFetchFileContent();
 
-  const { data: assignmentData, isFetching: isFetchingAssignment } =
+  const { data: assignmentData, isLoading: isLoadingAssignment } =
     useFetchAssignment(Number(id));
 
   // Estado para controlar se o usuário aceitou o acordo
@@ -125,7 +125,7 @@ export default function Page() {
   };
 
   // Loading state
-  if (isFetchingAssignment) {
+  if (isLoadingAssignment && !assignmentData) {
     return <WorkspaceLoading />;
   }
 
