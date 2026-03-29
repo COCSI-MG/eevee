@@ -1,1 +1,23 @@
 examples/
+
+src/
+
+test/
+
+# Ignore node_modules and build artifacts
+node_modules/
+dist/
+
+# Ignore Dockerfile and supervisord configuration
+Dockerfile.old
+supervisord.conf
+
+# ignore old entrypoint script
+entrypoint.sh
+run_postgres.sh
+
+README.md
+
+.gitignore
+
+database.sqlite
