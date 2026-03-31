@@ -1,4 +1,11 @@
-import { LayoutDashboard, Users, GraduationCap, FileText, CodeSquareIcon } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Users,
+  GraduationCap,
+  FileText,
+  CodeSquareIcon,
+  FlaskConical,
+} from 'lucide-react';
 import { Route } from '@/app/routes';
 
 export const ADMIN_ROUTES = [
@@ -26,5 +33,10 @@ export const ADMIN_ROUTES = [
     href: Route.AdminTemplate,
     label: 'Templates',
     icon: CodeSquareIcon,
+  },
+  {
+    href: '/admin/attempts',
+    label: 'Tentativas de testes',
+    icon: FlaskConical,
   },
 ];
