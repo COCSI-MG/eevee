@@ -91,6 +91,7 @@ export class SchedulingService {
       fails: workerResult.failures,
       passes: workerResult.passes,
       status: AttemptStatus.COMPLETED,
+      receivedWork: workerData.files ?? undefined,
     });
 
     return result;
@@ -142,6 +143,7 @@ export class SchedulingService {
       fails: 0,
       passes: 0,
       status: AttemptStatus.PENDING,
+      receivedWork: createSchedulingDto.files ?? undefined,
     });
 
     const workerData = plainToClass(CreateWorkerDto, {
