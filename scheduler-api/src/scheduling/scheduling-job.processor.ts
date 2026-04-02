@@ -4,7 +4,7 @@ import { Logger } from '@nestjs/common';
 import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
 import { SchedulingService } from './scheduling.service';
 
-@Processor('scheduling-queue')
+@Processor('scheduling-queue', { concurrency: 5 })
 export class SchedulingJobProcessor extends WorkerHost {
   private readonly logger = new Logger(SchedulingJobProcessor.name);
 
