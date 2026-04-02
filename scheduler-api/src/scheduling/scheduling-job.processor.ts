@@ -5,8 +5,8 @@ import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-messa
 import { SchedulingService } from './scheduling.service';
 
 @Processor('scheduling-queue', { concurrency: 5 })
-export class SchedulingJobProcessor extends WorkerHost {
-  private readonly logger = new Logger(SchedulingJobProcessor.name);
+export class SchedulingJobConsumer extends WorkerHost {
+  private readonly logger = new Logger(SchedulingJobConsumer.name);
 
   constructor(private readonly schedulingService: SchedulingService) {
     super();
