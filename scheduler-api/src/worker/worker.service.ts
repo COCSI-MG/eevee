@@ -96,14 +96,13 @@ export class WorkerService {
    * The initialization container is responsible for writing the worker definition and any necessary files to a shared volume, which the main worker container can then access. This approach allows us to bypass Kubernetes' command length limitations and avoid issues with environment variable size limits.
    */
   async createWorkerWithInitContainer(
+    jobName: string,
     workerType: WorkerType,
     createWorkerData: CreateWorkerDto,
   ): Promise<WorkerResponse> {
     const strategy = this.getStrategy(workerType);
 
     const { imageName, srcPath, testPath } = strategy.workerConfig;
-
-    const jobName = this.getJobName(workerType);
 
     const workerPayload = strategy.buildWorkerPayload(
       createWorkerData,
