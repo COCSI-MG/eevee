@@ -10,8 +10,8 @@ type FileSaverJobData = {
 };
 
 @Processor('file-saver-queue')
-export class FileSaverProcessor extends WorkerHost {
-  private readonly logger = new Logger(FileSaverProcessor.name);
+export class FileSaverConsumer extends WorkerHost {
+  private readonly logger = new Logger(FileSaverConsumer.name);
 
   constructor(private readonly fileSaverService: FileSaverService) {
     super();
