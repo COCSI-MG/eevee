@@ -1,6 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
-import { ClientKafka } from '@nestjs/microservices/client/client-kafka';
+import { ClientKafka } from '@nestjs/microservices';
 import { SCHEDULER_CREATE_JOB } from './constants';
 
 @Injectable()

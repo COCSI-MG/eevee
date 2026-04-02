@@ -4,7 +4,7 @@ import { SchedulingController } from './scheduling.controller';
 import { WorkerModule } from 'src/worker/worker.module';
 import { AttemptModule } from 'src/attempt/attempt.module';
 import { AssignmentModule } from 'src/assignment/assignment.module';
-import { SchedulerCreateJobPublisher } from './schuduler-create-job.publisher';
+import { SchedulerCreateJobPublisher } from './scheduler-create-job.publisher';
 import { KafkaModule } from 'src/kafka/kafka.module';
 
 @Module({
