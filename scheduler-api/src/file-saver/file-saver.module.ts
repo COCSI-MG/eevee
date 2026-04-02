@@ -6,7 +6,7 @@ import { RequestContextModule } from 'src/request-context/request-context.module
 import { FileEntry } from './entities/file-saver.entity';
 import { SyncJob } from './entities/sync-job.entity';
 import { GithubModule } from 'src/github/github.module';
-import { KafkaModule } from 'src/kafka/kafka.module';
+import { BullMQModule } from 'src/bullmq/bullmq.module';
 
 @Module({
   controllers: [FileSaverController],
@@ -14,7 +14,7 @@ import { KafkaModule } from 'src/kafka/kafka.module';
     TypeOrmModule.forFeature([FileEntry, SyncJob]),
     RequestContextModule,
     GithubModule,
-    KafkaModule,
+    BullMQModule,
   ],
   providers: [FileSaverService],
   exports: [FileSaverService],
