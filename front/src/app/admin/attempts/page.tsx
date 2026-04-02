@@ -75,6 +75,7 @@ export default function AdminAttemptsPage() {
     onError: (error: unknown) => {
       const description =
         error instanceof Error ? error.message : "Nao foi possivel reexecutar a tentativa.";
+
       toast({
         title: "Erro ao reexecutar",
         description,
