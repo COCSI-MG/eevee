@@ -10,6 +10,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:worker:dev": "nest start --watch --entryFile main-worker",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
@@ -25,6 +26,7 @@
     "script:generate-jwt-key": "node -e \"console.log(require('crypto').randomBytes(60).toString('base64'))\""
   },
   "dependencies": {
+    "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.1.9",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^11.1.9",
@@ -37,6 +39,7 @@
     "@nestjs/swagger": "^11.0.3",
     "@nestjs/typeorm": "^11.0.0",
     "bcrypt": "^5.1.1",
+    "bullmq": "^5.72.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "kafkajs": "^2.2.4",
