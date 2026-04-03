@@ -107,6 +107,7 @@ export default function TemplatesTable({
                         options={{
                           readOnly: true,
                           hover: { enabled: false },
+                          minimap: { enabled: false },
                           links: false,
                         }}
                       />
