@@ -25,7 +25,7 @@ Pode copiar um arquivo `.env.example` dentro de `scheduler-api` e trocar os valo
 ```bash
 cd scheduler-api/
 npm install
-npm start:dev
+npm run start:dev 
 ```
 
 #### 2.1 Consumidor do Scheduler API
@@ -35,7 +35,7 @@ O consumidor é uma aplicação em NestJs que roda em segundo plano, e tem a fun
 Lembre-se de preencher os valores do REDIS_HOST e REDIS_PORT no .env do scheduler-api, para que o worker consiga se conectar ao Redis e consumir os jobs agendados. Se estiver usando o Docker, o host do Redis será localhost e a porta fixa será 6379.
 
 ```bash
-cd scheduler-api/ && npm run start:dev:worker
+cd scheduler-api/ && npm run start:worker:dev
 ```
 
 ## _Testando a infraestrutura_
