@@ -18,11 +18,11 @@ import { toast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { RefreshCcw } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_PAGE_SIZE = 5;
 
-export default function AdminAttemptsPage() {
+function AdminAttemptsPageContent() {
   const searchParams = useSearchParams();
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>("");
   const [userSearch, setUserSearch] = useState("");
@@ -289,5 +289,13 @@ export default function AdminAttemptsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function AdminAttemptsPage() {
+  return (
+    <Suspense fallback={<Loader />}>
+      <AdminAttemptsPageContent />
+    </Suspense>
   );
 }
