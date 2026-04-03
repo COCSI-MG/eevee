@@ -43,7 +43,6 @@
     "bullmq": "^5.72.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
-    "kafkajs": "^2.2.4",
     "kubernetes-client": "^9.0.0",
     "nestjs-cls": "^5.2.0",
     "passport-jwt": "^4.0.1",
