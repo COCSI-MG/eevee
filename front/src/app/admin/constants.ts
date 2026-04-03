@@ -35,7 +35,7 @@ export const ADMIN_ROUTES = [
     icon: CodeSquareIcon,
   },
   {
-    href: '/admin/attempts',
+    href: Route.AdminAttempts,
     label: 'Tentativas de testes',
     icon: FlaskConical,
   },
