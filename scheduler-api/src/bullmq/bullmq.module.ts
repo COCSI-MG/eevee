@@ -1,15 +1,12 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { SchedulingModule } from 'src/scheduling/scheduling.module'
-import { FileSaverModule } from 'src/file-saver/file-saver.module';
-import { SchedulingJobConsumer } from 'src/scheduling/scheduling-job.processor';
 
 @Module({
   imports: [
     BullModule.forRoot({
       connection: {
-        host: 'localhost',
-        port: 6379,
+        host: process.env.REDIS_HOST || 'localhost',
+        port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
       },
     }),
     BullModule.registerQueue(
