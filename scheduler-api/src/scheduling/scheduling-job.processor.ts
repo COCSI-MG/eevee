@@ -14,7 +14,7 @@ export class SchedulingJobConsumer extends WorkerHost {
 
   async process(job: Job<CreateSchedulingJobMessageDto>) {
     this.logger.debug(
-      `Received scheduling job ${job.name} with data: ${JSON.stringify(job.data)}`,
+      `Received scheduling job id=${job.id} name=${job.name} attemptId=${job.data?.attemptId}`,
     );
     await this.schedulingService.processJobAndWait(job.data);
   }
