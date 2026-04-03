@@ -8,16 +8,19 @@ import { CreateSchedulingDto } from './dto/create-scheduling.dto';
 import { WorkerService } from 'src/worker/worker.service';
 import { AttemptService } from 'src/attempt/attempt.service';
 import { AssignmentService } from 'src/assignment/assignment.service';
-import { WorkerResponse, WorkerTestFile } from 'src/worker/worker.interfaces';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
-import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
-import { readFileAsString } from 'src/utils/template.utils';
 import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
 import { plainToClass } from 'class-transformer';
-import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
-import { SchedulerCreateJobPublisher } from './scheduler-create-job.publisher';
-import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.utils';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+import { ScorePolicyService } from './score-policy.service';
+import { SchedulingAttemptTransitionService } from './scheduling-attempt-transition.service';
+import {
+  NoTemplatesForAssignmentError,
+  NoTestFilesGeneratedError,
+  SchedulingWorkerPreparationService,
+} from './scheduling-worker-preparation.service';
 
 @Injectable()
 export class SchedulingService {
@@ -27,16 +30,11 @@ export class SchedulingService {
     private readonly workerService: WorkerService,
     private readonly attemptService: AttemptService,
     private readonly assignmentService: AssignmentService,
-    private readonly schedulerCreateJobPublisher: SchedulerCreateJobPublisher,
+    private readonly scorePolicyService: ScorePolicyService,
+    private readonly schedulingWorkerPreparationService: SchedulingWorkerPreparationService,
+    private readonly schedulingAttemptTransitionService: SchedulingAttemptTransitionService,
+    @InjectQueue('scheduling-queue') private readonly schedulingQueue: Queue,
   ) {}
-
-  private calculateScore(result: WorkerResponse) {
-    return result.passes / (result.passes + result.failures || 1);
-  }
-
-  private checkIfResultIsAcceptable(score: number) {
-    return score >= 0.7;
-  }
 
   async createAndWait(createSchedulingDto: CreateSchedulingDto) {
     const assignment = await this.assignmentService.findOne(
@@ -44,8 +42,10 @@ export class SchedulingService {
     );
 
     if (!assignment) throw new BadRequestException('Assignment not found');
-
-    console.log('Assignment:', assignment);
+    this.logger.debug({
+      message: 'Assignment found',
+      assignmentId: assignment.id,
+    });
 
     const previousAttempts =
       await this.attemptService.findAllByAssignmentAndCurrentUser(
@@ -59,17 +59,29 @@ export class SchedulingService {
       throw new BadRequestException('Max attempts reached');
     }
 
-    console.log('Creating worker and waiting for result');
-    console.log('Worker type:', assignment.workerType);
+    this.logger.debug({
+      message: 'Creating worker and waiting for result',
+      workerType: assignment.workerType,
+    });
 
-    const workerData = await this.prepareWorkerData(
-      assignment.workerType,
-      assignment.assignmentTemplates,
-      {
-        ...createSchedulingDto,
-      },
-      buildTemplateVariablesModule(assignment),
-    );
+    let workerData: CreateWorkerDto;
+    try {
+      workerData = await this.schedulingWorkerPreparationService.prepare({
+        assignment,
+        baseWorkerData: {
+          ...createSchedulingDto,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof NoTemplatesForAssignmentError ||
+        error instanceof NoTestFilesGeneratedError
+      ) {
+        throw new BadRequestException('No test files available for execution.');
+      }
+
+      throw error;
+    }
 
     const workerResult = await this.workerService.createSynchronousWorker(
       assignment.workerType,
@@ -77,10 +89,13 @@ export class SchedulingService {
       workerData.dependencies ?? [],
     );
 
-    console.log('Worker result:', workerResult);
+    this.logger.debug({
+      message: 'Worker execution completed',
+      attemptCount: previousAttempts.length + 1,
+    });
 
-    const score = this.calculateScore(workerResult);
-    const isAcceptable = this.checkIfResultIsAcceptable(score);
+    const score = this.scorePolicyService.calculateScore(workerResult);
+    const isAcceptable = this.scorePolicyService.isAcceptable(score);
 
     const result = await this.attemptService.create({
       assignmentId: createSchedulingDto.assignmentId,
@@ -132,7 +147,7 @@ export class SchedulingService {
       throw new BadRequestException('Max attempts reached');
     }
 
-    this.logger.log('Sending scheduling job to Kafka');
+    this.logger.log('Sending scheduling job to BullMQ');
 
     const newAttempt = await this.attemptService.create({
       assignmentId: createSchedulingDto.assignmentId,
@@ -156,7 +171,7 @@ export class SchedulingService {
       workerData,
     });
 
-    this.schedulerCreateJobPublisher.publish(message);
+    await this.schedulingQueue.add('process-scheduling-job', message);
 
     this.logger.log(`Scheduling job created with attempt ID: ${newAttempt.id}`);
 
@@ -205,7 +220,7 @@ export class SchedulingService {
       workerData,
     });
 
-    this.schedulerCreateJobPublisher.publish(message);
+    await this.schedulingQueue.add('process-scheduling-job', message);
 
     this.logger.log(
       `Retry scheduling job created with attempt ID: ${newAttempt.id} from original attempt ID: ${originalAttempt.id}`,
@@ -219,7 +234,7 @@ export class SchedulingService {
    *
    * @param payload - The message containing the scheduling job details.
    */
-  async ProcessJobAndWait(payload: CreateSchedulingJobMessageDto) {
+  async processJobAndWait(payload: CreateSchedulingJobMessageDto) {
     const { attemptId } = payload;
     this.logger.log(`Processing scheduling job for attempt ID: ${attemptId}`);
 
@@ -243,58 +258,38 @@ export class SchedulingService {
       `ATTEMPT_ID: ${attempt.id}`,
     );
 
-    await this.attemptService.update({
-      id: attempt.id,
-      status: AttemptStatus.RUNNING,
-    });
+    await this.schedulingAttemptTransitionService.markRunning(attempt.id);
 
-    if (
-      attempt.assignment.assignmentTemplates !== undefined &&
-      attempt.assignment.assignmentTemplates.length === 0
-    ) {
-      this.logger.fatal(
-        `No templates found for assignment ID ${attempt.assignmentId}`,
-        `ATTEMPT_ID: ${attempt.id}`,
-      );
-      await this.attemptService.update({
-        id: attempt.id,
-        isAcceptable: false,
-        report: 'No test files available for execution.',
-        status: AttemptStatus.FAILED,
+    let workerData: CreateWorkerDto;
+    try {
+      workerData = await this.schedulingWorkerPreparationService.prepare({
+        assignment: attempt.assignment,
+        baseWorkerData: {
+          ...payload.workerData,
+        },
+        attemptId: attempt.id,
       });
-      return;
-    }
+    } catch (error) {
+      if (
+        error instanceof NoTemplatesForAssignmentError ||
+        error instanceof NoTestFilesGeneratedError
+      ) {
+        this.logger.fatal(error.message, `ATTEMPT_ID: ${attempt.id}`);
+        await this.schedulingAttemptTransitionService.markFailedNoTests(
+          attempt.id,
+        );
+        return;
+      }
 
-    const templateVariablesModuleContent = buildTemplateVariablesModule(
-      attempt.assignment,
-    );
-
-    const workerData = await this.prepareWorkerData(
-      attempt.assignment.workerType,
-      attempt.assignment.assignmentTemplates,
-      {
-        ...payload.workerData,
-        initSqlScript: attempt.assignment.initSqlScript,
-      },
-      templateVariablesModuleContent,
-    );
-
-    if ((workerData.testFilesContent?.length ?? 0) === 0) {
-      this.logger.fatal(
-        `No test files content generated for attempt ID ${attempt.id}`,
-      );
-      await this.attemptService.update({
-        id: attempt.id,
-        isAcceptable: false,
-        report: 'No test files available for execution.',
-        status: AttemptStatus.FAILED,
-      });
-      return;
+      throw error;
     }
 
     try {
+      const jobName = `attempt-${attempt.id}-worker`;
+
       const workerResult =
         await this.workerService.createWorkerWithInitContainer(
+          jobName,
           attempt.assignment.workerType,
           workerData,
         );
@@ -304,22 +299,21 @@ export class SchedulingService {
         `ATTEMPT_ID: ${attempt.id}`,
       );
 
-      const score = this.calculateScore(workerResult);
-      const isAcceptable = this.checkIfResultIsAcceptable(score);
+      const score = this.scorePolicyService.calculateScore(workerResult);
+      const isAcceptable = this.scorePolicyService.isAcceptable(score);
 
       this.logger.log(
         `Score: ${score}, Is Acceptable: ${isAcceptable}`,
         `ATTEMPT_ID: ${attempt.id}`,
       );
 
-      await this.attemptService.update({
-        id: attempt.id,
+      await this.schedulingAttemptTransitionService.markCompleted({
+        attemptId: attempt.id,
         isAcceptable,
         score,
         report: workerResult.completeTrace,
         fails: workerResult.failures,
         passes: workerResult.passes,
-        status: AttemptStatus.COMPLETED,
       });
 
       this.logger.log(
@@ -332,69 +326,16 @@ export class SchedulingService {
         `ATTEMPT_ID: ${attempt.id}`,
       );
 
-      await this.attemptService.update({
-        id: attempt.id,
-        isAcceptable: false,
-        score: 0,
-        report: `Worker creation failed: ${err.message}`,
-        fails: 0,
-        passes: 0,
-        status: AttemptStatus.FAILED,
-      });
+      await this.schedulingAttemptTransitionService.markFailedWorkerError(
+        attempt.id,
+        err.message,
+      );
+
+      throw err;
     }
   }
 
   private isUserReachedMaxAttempt(maxAttempts: number, currentAttemps: number) {
     return maxAttempts <= currentAttemps;
-  }
-
-  private async prepareWorkerData(
-    workerType: WorkerType,
-    assignmentTemplates: any[],
-    baseWorkerData: CreateWorkerDto,
-    templateVariablesModuleContent?: string,
-  ): Promise<CreateWorkerDto> {
-    const strategy = this.workerService.getStrategy(workerType);
-    const { srcPath, testPath } = strategy.workerConfig;
-
-    const dependencies = [...(baseWorkerData.dependencies ?? [])];
-    const testFiles: WorkerTestFile[] = [];
-
-    const testFilesContent = await Promise.all(
-      assignmentTemplates.map(async (templateRelation) => {
-        const templateDependencies =
-          templateRelation.template.dependencies ?? [];
-        if (templateDependencies.length > 0)
-          dependencies.push(...templateDependencies);
-
-        const content = await readFileAsString(
-          templateRelation.template.filePath,
-        );
-
-        const normalizedContent = normalizeTemplateImportPaths({
-          content,
-          srcPath,
-          testPath,
-        });
-
-        testFiles.push({
-          templateId: templateRelation.template.id,
-          type: workerType,
-          content: normalizedContent,
-        });
-
-        return normalizedContent;
-      }),
-    );
-
-    return {
-      ...baseWorkerData,
-      testFilesContent,
-      testFiles,
-      dependencies,
-      templateVariablesModuleContent:
-        templateVariablesModuleContent ??
-        baseWorkerData.templateVariablesModuleContent,
-    };
   }
 }

@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { WorkerModule } from './worker/worker.module';
 import { KubernetesModule } from './kubernetes/kubernetes.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { ClassModule } from './class/class.module';
 import { ConfigModule } from '@nestjs/config';
@@ -24,28 +23,19 @@ import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import { GithubModule } from './github/github.module';
 import { AssignmentUserSuspensionModule } from './assignment-user-suspension/assignment-user-suspension.module';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: ['scheduler-api/.env', '.env'],
     }),
     ClsModule.forRoot({
       global: true,
       middleware: { mount: true },
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.PG_HOST,
-      port: Number(process.env.PG_PORT),
-      username: process.env.PG_USERNAME,
-      password: process.env.PG_PASSWORD,
-      database: process.env.PG_DATABASE,
-      autoLoadEntities: true,
-      synchronize: true,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-    }),
+    DatabaseModule,
     NestScheduleModule.forRoot(),
     RequestContextModule,
     SchedulingModule,
@@ -67,7 +57,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     AssignmentUserSuspensionModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, RequestContextMiddleware],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

@@ -97,12 +97,18 @@ export default function TemplatesTable({
                   <div className="space-y-4">
                     <div className="bg-slate-900 border borde-slate-600 rounded-md p4 max-h-[50vh] overflow-y-auto">
                       <Editor
+                        path={`template-${template.id}.ts`}
                         defaultLanguage="typescript"
                         theme="vs-dark"
                         value={template.templateContent}
+                        keepCurrentModel={true}
                         height={"420px"}
+                        saveViewState={false}
                         options={{
                           readOnly: true,
+                          hover: { enabled: false },
+                          minimap: { enabled: false },
+                          links: false,
                         }}
                       />
                     </div>

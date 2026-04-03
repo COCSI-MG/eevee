@@ -13,8 +13,6 @@ import { FileSaverService } from './file-saver.service';
 import { UpdateFileEntryDto } from './dto/update-file-saver.dto';
 import { FileUploadDto } from './dto/file-operation.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { EventPattern, Payload } from '@nestjs/microservices';
-import { REMOTE_FILE_SAVER } from './constants';
 
 @Controller('file-saver')
 // @UseGuards(JwtAuthGuard)
@@ -46,17 +44,5 @@ export class FileSaverController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.fileSaverService.remove(+id);
-  }
-
-  @EventPattern(REMOTE_FILE_SAVER)
-  async handleRemoteFileSaveEvent(
-    @Payload()
-    data: {
-      jobId: number;
-      localFilePath: string;
-      gitRemoteFilePath: string;
-    },
-  ) {
-    await this.fileSaverService.uploadFileToGithubRepo(data);
   }
 }

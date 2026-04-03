@@ -1,12 +1,12 @@
 import {
-  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
   NotFoundException,
-  OnModuleInit,
 } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Queue } from 'bullmq';
 import { In, Repository } from 'typeorm';
 import { resolve } from 'node:path';
 import { existsSync } from 'fs';
@@ -20,11 +20,9 @@ import { Cron, Interval } from '@nestjs/schedule';
 import { readFile, rm } from 'node:fs/promises';
 import GithubService from 'src/github/github.service';
 import { ClsService } from 'nestjs-cls';
-import { ClientKafka } from '@nestjs/microservices';
-import { REMOTE_FILE_SAVER } from './constants';
 
 @Injectable()
-export class FileSaverService implements OnModuleInit {
+export class FileSaverService {
   private logger = new Logger(FileSaverService.name);
 
   constructor(
@@ -32,15 +30,11 @@ export class FileSaverService implements OnModuleInit {
     private fileEntryRepository: Repository<FileEntry>,
     @InjectRepository(SyncJob)
     private syncJobRepository: Repository<SyncJob>,
-    @Inject('KAFKA_CLIENT')
-    private readonly kafkaClient: ClientKafka,
+    @InjectQueue('file-saver-queue')
+    private readonly fileSaverQueue: Queue,
     private githubService: GithubService,
     private clsService: ClsService,
   ) {}
-
-  async onModuleInit() {
-    await this.kafkaClient.connect();
-  }
 
   async createFileEntry(
     createFileEntryDto: CreateFileEntryDto,
@@ -204,7 +198,7 @@ export class FileSaverService implements OnModuleInit {
       throw new Error('Max attempts reached');
     }
 
-    this.kafkaClient.emit(REMOTE_FILE_SAVER, {
+    await this.fileSaverQueue.add('save-file', {
       jobId: job.id,
       localFilePath: job.fileEntry.localTempPath,
       gitRemoteFilePath: job.fileEntry.filePath,
