@@ -25,12 +25,39 @@ Pode copiar um arquivo `.env.example` dentro de `scheduler-api` e trocar os valo
 ```bash
 cd scheduler-api/
 npm install
-npm start
+npm start:dev
+```
+
+#### 2.1 Consumidor do Scheduler API
+
+O consumidor é uma aplicação em NestJs que roda em segundo plano, e tem a função de consumir as mensagens da fila do Redis + BullMQ, e executar os jobs agendados.
+
+Lembre-se de preencher os valores do REDIS_HOST e REDIS_PORT no .env do scheduler-api, para que o worker consiga se conectar ao Redis e consumir os jobs agendados. Se estiver usando o Docker, o host do Redis será localhost e a porta fixa será 6379.
+
+```bash
+cd scheduler-api/ && npm run start:dev:worker
 ```
 
 ## _Testando a infraestrutura_
 
 É necessário primeiro executar o build de todas as imagens que serão usadas.
+
+### Utilizando Make
+
+O [Makefile](./node-worker-images/Makefile) tem a opção de rodar um build all, que irá construir todas as imagens necessárias para o projeto. Para isso, basta rodar o comando:
+
+```bash
+make build-all
+```
+
+### Banco de Dados
+
+Alguns Workers a nível de aplicação necessitam de um banco de dados para teste. Atualmente o [Node + PostgreSQL](./scheduler-api/src/worker/strategies/node-default-postgresql-jest.strategy.ts) espera uma versão 16 do PostgreSQL, precisamos carregar a imagem do PostgreSQL 16 no minikube para que o worker consiga rodar os testes.
+
+```
+docker pull postgres:16
+minikube image load postgres:16
+```
 
 ### Node Default Worker
 
