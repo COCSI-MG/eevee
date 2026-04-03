@@ -25,4 +25,4 @@ import { KubernetesModule } from './kubernetes/kubernetes.module';
   ],
   providers: [SchedulingJobConsumer],
 })
-export class WorkerModule {}
+export class QueueWorkerModule {}
