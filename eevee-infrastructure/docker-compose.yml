@@ -58,10 +58,6 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-networks:
-  broker-kafka:
-    driver: bridge
-
 volumes:
   redis-data:
   pgdata:
