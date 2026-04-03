@@ -1,7 +1,15 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { SchedulingService } from './scheduling.service';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import {
   Ctx,
   EventPattern,
@@ -40,6 +48,12 @@ export class SchedulingController {
     return await this.schedulingService.createSchedulingJobAsync(
       createSchedulingDto,
     );
+  }
+
+  @Post('retry/:attemptId')
+  @UseGuards(AdminGuard)
+  async retryAttempt(@Param('attemptId', ParseIntPipe) attemptId: number) {
+    return await this.schedulingService.retryAttemptFromAdmin(attemptId);
   }
 
   @EventPattern(SCHEDULER_CREATE_JOB)

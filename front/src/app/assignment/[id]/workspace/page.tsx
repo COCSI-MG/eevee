@@ -4,6 +4,7 @@ import { getFileTree } from "@/app/integration/filestash";
 import FileSaverService from "@/app/integration/scheduler-api/file-saver";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { Route } from "@/app/routes";
 import WorkspaceHeader from "@/components/workspace/header";
 import Workspace from "@/components/workspace/workspace";
 import WorkspaceAgreement from "@/components/workspace/workspace-agreement";
@@ -21,7 +22,7 @@ import { useState } from "react";
 
 export default function Page() {
   const { id } = useParams();
-  const { back } = useRouter();
+  const { back, push } = useRouter();
   const { user } = useAuthContext();
   const { selectedItem } = useWorkspaceContext();
   const { mutateAsync: fetchFileContent } = useFetchFileContent();
@@ -84,9 +85,20 @@ export default function Page() {
       toast({
         title: "Seu trabalho foi recebido com sucesso e está sendo processado",
         variant: "default",
+        duration: 5000,
       });
 
-      back();
+      if (user?.isAdmin) {
+        const params = new URLSearchParams({
+          assignmentId: String(assignmentData?.id ?? ""),
+          userSearch: user.email,
+          openLatest: "1",
+        });
+
+        push(`${Route.AdminAttempts}?${params.toString()}`);
+      } else {
+        back();
+      }
     },
   });
 

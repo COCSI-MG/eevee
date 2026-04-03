@@ -42,6 +42,9 @@ export class Attempt {
   @Column()
   fails: number;
 
+  @Column('jsonb', { nullable: true })
+  receivedWork?: Record<string, string>;
+
   @Column()
   report: string;
 

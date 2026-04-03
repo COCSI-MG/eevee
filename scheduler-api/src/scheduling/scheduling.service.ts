@@ -91,6 +91,7 @@ export class SchedulingService {
       fails: workerResult.failures,
       passes: workerResult.passes,
       status: AttemptStatus.COMPLETED,
+      receivedWork: workerData.files ?? undefined,
     });
 
     return result;
@@ -142,6 +143,7 @@ export class SchedulingService {
       fails: 0,
       passes: 0,
       status: AttemptStatus.PENDING,
+      receivedWork: createSchedulingDto.files ?? undefined,
     });
 
     const workerData = plainToClass(CreateWorkerDto, {
@@ -157,6 +159,59 @@ export class SchedulingService {
     this.schedulerCreateJobPublisher.publish(message);
 
     this.logger.log(`Scheduling job created with attempt ID: ${newAttempt.id}`);
+
+    return newAttempt;
+  }
+
+  async retryAttemptFromAdmin(attemptId: number) {
+    const originalAttempt = await this.attemptService.findOne(attemptId);
+    if (!originalAttempt) {
+      throw new BadRequestException('Attempt not found');
+    }
+
+    if (!originalAttempt.receivedWork) {
+      throw new BadRequestException(
+        'Attempt does not have stored submission files for retry',
+      );
+    }
+
+    const nextAttemptNumber = await this.attemptService.getNextAttemptNumber(
+      originalAttempt.assignmentId,
+      originalAttempt.userId,
+    );
+
+    const newAttempt = await this.attemptService.createForUser(
+      {
+        assignmentId: originalAttempt.assignmentId,
+        attempt: nextAttemptNumber,
+        isAcceptable: false,
+        score: 0,
+        report: '',
+        fails: 0,
+        passes: 0,
+        status: AttemptStatus.PENDING,
+        receivedWork: originalAttempt.receivedWork,
+      },
+      originalAttempt.userId,
+    );
+
+    const workerData = plainToClass(CreateWorkerDto, {
+      files: originalAttempt.receivedWork,
+      applicationFileContent: '',
+    });
+
+    const message = plainToClass(CreateSchedulingJobMessageDto, {
+      attemptId: newAttempt.id,
+      workerData,
+    });
+
+    this.schedulerCreateJobPublisher.publish(message);
+
+    this.logger.log(
+      `Retry scheduling job created with attempt ID: ${newAttempt.id} from original attempt ID: ${originalAttempt.id}`,
+    );
+
+    return newAttempt;
   }
 
   /**
