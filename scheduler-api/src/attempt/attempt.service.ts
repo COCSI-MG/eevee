@@ -187,7 +187,6 @@ export class AttemptService {
       .leftJoin('attempt.user', 'user')
       .leftJoin('attempt.assignment', 'assignment')
       .where('attempt.id = :id', { id })
-      .andWhere('user.isAdmin = :isAdmin', { isAdmin: false })
       .select([
         'attempt.id AS attempt_id',
         'attempt.attempt AS attempt_attempt',
