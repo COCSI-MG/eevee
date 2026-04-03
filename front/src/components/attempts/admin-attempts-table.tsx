@@ -75,19 +75,19 @@ export default function AdminAttemptsTable({
   return (
     <div className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4 md:p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-100">Historico de tentativas</h2>
+        <h2 className="text-lg font-semibold text-slate-100">Histórico de tentativas</h2>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-slate-800">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-900/80 hover:bg-slate-900/80">
-              <TableHead className="text-slate-300">Usuario</TableHead>
+              <TableHead className="text-slate-300">Usuário</TableHead>
               <TableHead className="text-slate-300">Status</TableHead>
               <TableHead className="text-slate-300">Score</TableHead>
               <TableHead className="text-slate-300">Tentativa</TableHead>
               <TableHead className="text-slate-300">Timestamp</TableHead>
-              <TableHead className="text-right text-slate-300">Acao</TableHead>
+              <TableHead className="text-right text-slate-300">Ação</TableHead>
             </TableRow>
           </TableHeader>
 
