@@ -16,7 +16,7 @@ import { readFileAsString } from 'src/utils/template.utils';
 import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
 import { plainToClass } from 'class-transformer';
 import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
-import { SchedulerCreateJobPublisher } from './schuduler-create-job.publisher';
+import { SchedulerCreateJobPublisher } from './scheduler-create-job.publisher';
 import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.utils';
 
 @Injectable()
