@@ -38,19 +38,28 @@ axiosClientWithAuth.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    if (error.status === 401) {
+    const status = error.response?.status ?? error.status;
+
+    if (status === 401) {
       AuthContext.clear();
       window.location.href = `/${Route.Login}`;
     }
 
-    if (error.status === 500) {
+    if (status === 500) {
       console.error('Server error:', error);
       return Promise.reject(new Error('Ocorreu um erro no servidor. Por favor, tente novamente mais tarde.'));
     }
 
+    if (!error.response) {
+      console.error('Network or no-response error:', error);
+      return Promise.reject(
+        new Error('Não foi possível conectar ao servidor. Por favor, verifique sua conexão e tente novamente.')
+      );
+    }
+
     console.error('Response error:', error);
 
-    if (error.response && error.response.data) {
+    if (error.response.data) {
       const { message } = error.response.data as { message?: string };
       if (message) {
         return Promise.reject(new Error(message));
