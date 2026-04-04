@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -29,7 +30,8 @@ import { DatabaseModule } from './database/database.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['scheduler-api/.env', '.env'],
+      // Compiled to dist/src/*.js — two levels up is the package root.
+      envFilePath: join(__dirname, '..', '..', '.env'),
     }),
     ClsModule.forRoot({
       global: true,
