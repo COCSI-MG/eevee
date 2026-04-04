@@ -36,6 +36,7 @@ export const AssignmentBoilerplateForm: React.FC<
           &quot;:
         </span>
         <Editor
+          path={"boilerplate.ts"}
           height={400}
           defaultLanguage="typescript"
           theme="vs-dark"
