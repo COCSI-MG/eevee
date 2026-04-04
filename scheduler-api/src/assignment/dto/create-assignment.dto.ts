@@ -69,12 +69,21 @@ export class CreateAssignmentDto {
 
   @ApiProperty({
     description:
-      'Boilerplate code provided by the teacher (stored as a server-side file). Prefer this field; validationScript is kept for backward compatibility.',
+      'Boilerplate code provided by the teacher. Persisted in assignment.boilerplateContent. Prefer this field; validationScript is kept for backward compatibility.',
     required: false,
   })
   @IsOptional()
   @IsString()
   boilerplate?: string;
+
+  @ApiProperty({
+    description:
+      'Boilerplate code content stored directly in the assignment.boilerplateContent database column.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  boilerplateContent?: string;
 
   @ApiProperty({
     description:

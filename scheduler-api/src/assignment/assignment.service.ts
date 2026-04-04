@@ -15,8 +15,6 @@ import { ClassService } from 'src/class/class.service';
 import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
 import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
 import { Template } from 'src/template/entities/template.entity';
-import { Attempt } from 'src/attempt/entities/attempt.entity';
-import { readFileAsString } from 'src/utils/template.utils';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
@@ -72,26 +70,7 @@ export class AssignmentService {
     }
   }
 
-  private getBoilerplatesDirAbsolutePath(): string {
-    return path.join(process.cwd(), 'assignments-upload', 'boilerplates');
-  }
-
-  private async writeBoilerplateFile(
-    assignmentId: number,
-    content: string,
-  ): Promise<string> {
-    const boilerplatesDir = this.getBoilerplatesDirAbsolutePath();
-    await fs.mkdir(boilerplatesDir, { recursive: true });
-
-    const fileName = `assignment_${assignmentId}.boilerplate.ts`;
-    const absolutePath = path.join(boilerplatesDir, fileName);
-    await fs.writeFile(absolutePath, content ?? '', 'utf-8');
-
-    // Store as a stable, portable relative path (POSIX-style)
-    return `boilerplates/${fileName}`;
-  }
-
-  private async readBoilerplateFileContent(
+  private async readLegacyBoilerplateFileContent(
     boilerplateFilePath?: string,
   ): Promise<string> {
     if (!boilerplateFilePath) return '';
@@ -108,17 +87,49 @@ export class AssignmentService {
     }
   }
 
+  private async resolveStoredBoilerplateContent(
+    assignment: Pick<Assignment, 'boilerplateContent' | 'boilerplateFilePath'>,
+  ): Promise<string> {
+    if (typeof assignment.boilerplateContent === 'string') {
+      return assignment.boilerplateContent;
+    }
+
+    return this.readLegacyBoilerplateFileContent(assignment.boilerplateFilePath);
+  }
+
+  private resolvePayloadBoilerplateContent(payload: {
+    boilerplateContent?: unknown;
+    boilerplate?: unknown;
+    validationScript?: unknown;
+  }): string | undefined {
+    if (typeof payload.boilerplateContent === 'string') {
+      return payload.boilerplateContent;
+    }
+
+    if (typeof payload.boilerplate === 'string') {
+      return payload.boilerplate;
+    }
+
+    if (typeof payload.validationScript === 'string') {
+      return payload.validationScript;
+    }
+
+    return undefined;
+  }
+
   private async attachBoilerplate(assignment: Assignment) {
-    const boilerplate = await this.readBoilerplateFileContent(
-      assignment.boilerplateFilePath,
+    const boilerplateContent = await this.resolveStoredBoilerplateContent(
+      assignment,
     );
 
     return {
       ...assignment,
+      // DB source of truth
+      boilerplateContent,
       // Preferred name
-      boilerplate,
+      boilerplate: boilerplateContent,
       // Backward compatible alias for older frontends
-      validationScript: boilerplate,
+      validationScript: boilerplateContent,
     };
   }
 
@@ -142,8 +153,13 @@ export class AssignmentService {
   }
 
   async create(createAssignmentDto: CreateAssignmentDto) {
-    const { templates, boilerplate, validationScript, ...assignmentData } =
-      createAssignmentDto;
+    const {
+      templates,
+      boilerplateContent,
+      boilerplate,
+      validationScript,
+      ...assignmentData
+    } = createAssignmentDto;
 
     const classExists = await this.classservice.findOne(
       createAssignmentDto.classId,
@@ -157,6 +173,12 @@ export class AssignmentService {
 
     const user = this.requestContextService.getUser();
 
+    const resolvedBoilerplateContent = this.resolvePayloadBoilerplateContent({
+      boilerplateContent,
+      boilerplate,
+      validationScript,
+    });
+
     const newAssignment = await this.assignmentRepository.save({
       classId: assignmentData.classId,
       title: assignmentData.title,
@@ -164,28 +186,9 @@ export class AssignmentService {
       maxAttempts: assignmentData.maxAttempts,
       workerType: assignmentData.workerType,
       initSqlScript: assignmentData.initSqlScript,
+      boilerplateContent: resolvedBoilerplateContent,
       createdById: user?.userId,
     });
-
-    const resolvedBoilerplate =
-      typeof boilerplate === 'string'
-        ? boilerplate
-        : typeof validationScript === 'string'
-          ? validationScript
-          : undefined;
-
-    if (typeof resolvedBoilerplate === 'string') {
-      const boilerplateFilePath = await this.writeBoilerplateFile(
-        newAssignment.id,
-        resolvedBoilerplate,
-      );
-
-      await this.assignmentRepository.update(newAssignment.id, {
-        boilerplateFilePath,
-      });
-
-      newAssignment.boilerplateFilePath = boilerplateFilePath;
-    }
 
     if (templates && templates.length > 0) {
       await this.assertTemplatesCompatibleWithWorkerType({
@@ -213,10 +216,10 @@ export class AssignmentService {
     return await this.attachBoilerplate(newAssignment);
   }
 
-  findAllUserAssignments() {
+  async findAllUserAssignments() {
     const user = this.requestContextService.getUser();
 
-    return this.assignmentRepository.find({
+    const assignments = await this.assignmentRepository.find({
       relations: [
         'assignmentAttempts',
         'class',
@@ -232,6 +235,8 @@ export class AssignmentService {
         },
       },
     });
+
+    return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
   }
 
   findAll() {
@@ -327,8 +332,13 @@ export class AssignmentService {
   }
 
   async update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
-    const { templates, boilerplate, validationScript, ...dataToUpdate } =
-      updateAssignmentDto;
+    const {
+      templates,
+      boilerplateContent,
+      boilerplate,
+      validationScript,
+      ...dataToUpdate
+    } = updateAssignmentDto;
 
     const assignment = await this.assignmentRepository.findOne({
       where: { id },
@@ -346,24 +356,18 @@ export class AssignmentService {
       assignment.createdById = user.userId;
     }
 
-    const resolvedBoilerplate =
-      typeof boilerplate === 'string'
-        ? boilerplate
-        : typeof validationScript === 'string'
-          ? validationScript
-          : undefined;
+    const resolvedBoilerplateContent = this.resolvePayloadBoilerplateContent({
+      boilerplateContent,
+      boilerplate,
+      validationScript,
+    });
 
-    if (typeof resolvedBoilerplate === 'string') {
-      const boilerplateFilePath = await this.writeBoilerplateFile(
-        assignment.id,
-        resolvedBoilerplate,
-      );
-
+    if (typeof resolvedBoilerplateContent === 'string') {
       await this.assignmentRepository.update(assignment.id, {
-        boilerplateFilePath,
+        boilerplateContent: resolvedBoilerplateContent,
       });
 
-      assignment.boilerplateFilePath = boilerplateFilePath;
+      assignment.boilerplateContent = resolvedBoilerplateContent;
     }
 
     if (Object.keys(dataToUpdate).length > 0)
@@ -435,10 +439,8 @@ export class AssignmentService {
   }
 
   async getAssignmentTemplates(assignment: Assignment) {
-    return Promise.all(
-      assignment.assignmentTemplates.map(async (templateRelation) => {
-        return await readFileAsString(templateRelation.template.filePath);
-      }),
+    return assignment.assignmentTemplates.map(
+      (templateRelation) => templateRelation.template.content ?? '',
     );
   }
 }
