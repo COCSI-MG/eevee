@@ -30,7 +30,7 @@ export class UpdateTemplateDto extends PartialType(CreateTemplateDto) {
   @IsOptional()
   @IsNotBlank()
   @IsString()
-  templateContent: string;
+  content: string;
 
   @IsOptional()
   @IsArray()
