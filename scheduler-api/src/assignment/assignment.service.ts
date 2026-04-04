@@ -8,7 +8,14 @@ import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
-import { DataSource, In, IsNull, Repository } from 'typeorm';
+import {
+  Brackets,
+  DataSource,
+  FindOneOptions,
+  In,
+  IsNull,
+  Repository,
+} from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
@@ -94,7 +101,9 @@ export class AssignmentService {
       return assignment.boilerplateContent;
     }
 
-    return this.readLegacyBoilerplateFileContent(assignment.boilerplateFilePath);
+    return this.readLegacyBoilerplateFileContent(
+      assignment.boilerplateFilePath,
+    );
   }
 
   private resolvePayloadBoilerplateContent(payload: {
@@ -118,9 +127,8 @@ export class AssignmentService {
   }
 
   private async attachBoilerplate(assignment: Assignment) {
-    const boilerplateContent = await this.resolveStoredBoilerplateContent(
-      assignment,
-    );
+    const boilerplateContent =
+      await this.resolveStoredBoilerplateContent(assignment);
 
     return {
       ...assignment,
@@ -133,7 +141,7 @@ export class AssignmentService {
     };
   }
 
-  private getTeacherVisibilityWhere(): any[] | undefined {
+  private getTeacherVisibilityWhere(): FindOneOptions<Assignment>['where'] {
     const user = this.requestContextService.getUser();
     if (!user?.isAdmin) return undefined;
     return [{ createdById: user.userId }, { createdById: IsNull() }];
@@ -233,6 +241,9 @@ export class AssignmentService {
             userId: user.userId,
           },
         },
+        assignmentAttempts: {
+          userId: user.userId,
+        },
       },
     });
 
@@ -258,7 +269,7 @@ export class AssignmentService {
   }
 
   async findAssignmentsByClass(classId: number) {
-    const user = this.requestContextService.getUser();
+    const user = this.requestContextService.getUser()!;
 
     if (!user.isAdmin) {
       const isUserInClass = await this.userClassRepository.findOne({
@@ -275,29 +286,36 @@ export class AssignmentService {
       }
     }
 
-    const assignments = await this.assignmentRepository.find({
-      relations: ['assignmentAttempts', 'suspensions'],
-      where: user.isAdmin
-        ? [
-            { classId, createdById: user.userId },
-            { classId, createdById: IsNull() },
-          ]
-        : { classId },
-    });
+    const query = this.assignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoinAndSelect(
+        'assignment.assignmentAttempts',
+        'assignmentAttempts',
+        'assignmentAttempts.userId = :userId',
+        { userId: user.userId },
+      )
+      .leftJoinAndSelect('assignment.suspensions', 'suspensions')
+      .where('assignment.classId = :classId', { classId });
 
-    return await Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
+    if (user?.isAdmin) {
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where('assignment.createdById = :userId', {
+            userId: user.userId,
+          }).orWhere('assignment.createdById IS NULL');
+        }),
+      );
+    }
+
+    const assignments = await query.getMany();
+
+    return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
   }
 
   async findOne(id: number) {
     const user = this.requestContextService.getUser();
 
-    let where: any = {
-      id,
-      class: {
-        userClasses: { userId: user.userId },
-      },
-    };
-
+    let where: FindOneOptions<Assignment>['where'];
     // Students can access assignments through class membership.
     // Teachers (isAdmin) are restricted to assignments they created.
     if (user.isAdmin) {
@@ -306,6 +324,17 @@ export class AssignmentService {
         { id, createdById: user.userId },
         { id, createdById: IsNull() },
       ];
+    } else {
+      // For students, ensure they have attempts for the assignment to prevent access to assignments they haven't interacted with.
+      where = {
+        id,
+        class: {
+          userClasses: { userId: user.userId },
+        },
+        assignmentAttempts: {
+          userId: user.userId,
+        },
+      };
     }
 
     const response = await this.assignmentRepository.findOne({
