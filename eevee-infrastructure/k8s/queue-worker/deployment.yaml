@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: queue-worker-deployment 
+  namespace: default
+  labels:
+    app: queue-worker
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: queue-worker 
+  template:
+    metadata:
+      labels:
+        app: queue-worker
+    spec:
+      serviceAccountName: worker-sa # <--- Adicione esta linha!
+      containers:
+      - name: queue-worker
+        # Aqui você colocaria a imagem Docker gerada pelo seu GitHub Actions
+        image: docker.io/library/scheduler-api:latest 
+        imagePullPolicy: IfNotPresent
+        args: ["start:worker:prod"]
+        env:
+        - name: PG_HOST 
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: DB_HOST
+        - name: PG_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: DB_PORT
+        - name: PG_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: DB_USERNAME
+        - name: PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: eevee-secrets
+              key: DB_PASSWORD
+        - name: PG_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: DB_DATABASE
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: REDIS_PORT
+        resources:
+          requests:
+            memory: "128Mi"
+          limits:
+            memory: "384Mi"
