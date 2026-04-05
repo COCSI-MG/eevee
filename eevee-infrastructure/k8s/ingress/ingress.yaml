@@ -1,0 +1,39 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eevee-ingress
+  namespace: default
+  annotations:
+    # Annotations para o NGINX Ingress Controller
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx # Especifica o IngressClass se necessário
+  tls:
+    - hosts:
+        - api.eeveecodelab.local
+        - frontend.eeveecodelab.local
+      secretName: eevee-tls-secret # O nome do Secret que contém os certificados TLS
+  rules:
+    # 1. Regra para a API NestJS
+    - host: "api.eeveecodelab.local"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: scheduler-api-service # O nome do Service da sua API!
+                port:
+                  number: 3010 
+
+    # 2. Regra para o Frontend Next.js
+    - host: "frontend.eeveecodelab.local"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eevee-front-service # O nome do Service do seu Next.js!
+                port:
+                  number: 3000
