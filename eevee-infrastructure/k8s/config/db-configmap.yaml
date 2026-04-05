@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eevee-config # Nome genérico, pois todos vão usar
+  namespace: default
+data:
+  DB_HOST: "postgres-service" # Nome do serviço do PostgreSQL
+  DB_PORT: "5432"
+  DB_USERNAME: "postgres"
+  DB_DATABASE: "eevee_db"
+  REDIS_HOST: "redis-service" # Nome do serviço do Redis
+  REDIS_PORT: "6379"
