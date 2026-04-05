@@ -1,4 +1,5 @@
 import {
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -14,6 +15,7 @@ import { ClassService } from 'src/class/class.service';
 import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
 import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
 import { Template } from 'src/template/entities/template.entity';
+import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { readFileAsString } from 'src/utils/template.utils';
 import { promises as fs } from 'fs';
 import * as path from 'path';
@@ -31,6 +33,8 @@ export class AssignmentService {
     private readonly templateRepository: Repository<Template>,
     @InjectRepository(UserClass)
     private readonly userClassRepository: Repository<UserClass>,
+    @InjectRepository(Attempt)
+    private readonly attemptRepository: Repository<Attempt>,
     private readonly classservice: ClassService,
     private dataSource: DataSource,
     private readonly requestContextService: RequestContextService,
@@ -413,6 +417,15 @@ export class AssignmentService {
       throw new NotFoundException('Assignment não encontrado!');
 
     this.assertTeacherOwnsAssignment(assignmentExists);
+
+    const attemptCount = await this.attemptRepository.count({
+      where: { assignmentId: id },
+    });
+    if (attemptCount > 0) {
+      throw new ConflictException(
+        'Não é possível excluir esta tarefa porque existem tentativas de estudantes registradas.',
+      );
+    }
 
     return this.dataSource.transaction(async (manager) => {
       await manager.delete(AssignmentTemplate, { assignmentId: id });

@@ -13,7 +13,7 @@ interface DeleteAlertDialogProps {
   open: boolean;
   onOpenChange?: (open: boolean) => void;
   resourceName: string;
-  onDelete: () => void;
+  onDelete: () => void | Promise<void>;
 }
 
 export default function DeleteAlertDialog({
@@ -36,7 +36,10 @@ export default function DeleteAlertDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <Button variant={"destructive"} onClick={onDelete}>
+          <Button
+            variant={"destructive"}
+            onClick={() => void Promise.resolve(onDelete())}
+          >
             Delete
           </Button>
         </AlertDialogFooter>
