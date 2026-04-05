@@ -189,10 +189,19 @@ export default function Login() {
                 )}
               </div>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col gap-3">
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Signing in...' : 'Sign in'}
               </Button>
+              <p className="text-sm text-center text-muted-foreground">
+                Nao tem uma conta?{' '}
+                <Link
+                  href="/register"
+                  className="text-primary hover:text-primary/90 underline underline-offset-4"
+                >
+                  Crie uma agora
+                </Link>
+              </p>
             </CardFooter>
           </form>
         </Card>
