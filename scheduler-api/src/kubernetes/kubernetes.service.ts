@@ -6,11 +6,14 @@ import { KubernetesJobOptions, KubernetesJobResult } from './kubernetes.interfac
 
 @Injectable()
 export class KubernetesService {
-  constructor() { }
   private client = new Client1_13({
-    config: config.fromKubeconfig(),
+    config: process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_SERVICE_PORT
+      ? config.getInCluster()
+      : config.fromKubeconfig(), 
     version: '1.13',
   });
+
+  constructor() { }
 
   private appendConfigMapVolumesAndMounts(
     configMaps: NonNullable<KubernetesJobOptions['configMap']>,
