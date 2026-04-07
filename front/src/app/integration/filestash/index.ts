@@ -3,9 +3,7 @@ import { FileStashSchema, FileStashValue } from "@/types/filestash-schema";
 import { FileNode } from "@/types/shared";
 
 // Instância singleton do FileStash
-const db = new FileStash<FileStashSchema>("eevee-workspace-db")
-  .setVersion(1)
-  .configureStore("assignments", { keyPath: "id" }); // Usa 'id' como keyPath
+let db: FileStash<FileStashSchema>;
 
 const assignmentWriteQueues = new Map<string, Promise<void>>();
 
@@ -35,6 +33,16 @@ const enqueueAssignmentWrite = async (
  * Inicializa o FileStash (abre a conexão)
  */
 export async function initStash() {
+  if (typeof window === "undefined") {
+    throw new Error("FileStash can only be initialized in a browser environment");
+  }
+
+  if (!db) {
+    db = new FileStash<FileStashSchema>("eevee-workspace-db")
+      .setVersion(1)
+      .configureStore("assignments", { keyPath: "id" }); // Usa 'id' como keyPath
+  }
+
   await db.open();
 }
 
