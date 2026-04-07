@@ -7,5 +7,5 @@ spec:
   selector:
     app: eevee-front
   ports:
-    - port: 3000 
+    - port: 80 
       targetPort: 3000 
