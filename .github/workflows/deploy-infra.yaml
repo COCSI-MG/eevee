@@ -1,0 +1,79 @@
+name: Deploy Infra
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${KUBE_CONFIG_DATA}" > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Apply shared config
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/config/db-configmap.yaml
+
+      - name: Apply application secrets
+        run: |
+          kubectl create secret generic eevee-secrets \
+            --from-literal=DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            --from-literal=JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply image pull secret
+        run: |
+          kubectl create secret docker-registry ghcr-auth \
+            --docker-server=${{ env.REGISTRY }} \
+            --docker-username='${{ github.actor }}' \
+            --docker-password='${{ secrets.GHCR_TOKEN }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply PostgreSQL manifests
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/postgres/pvc.yaml
+          kubectl apply -f eevee-infrastructure/k8s/postgres/service.yaml
+          kubectl apply -f eevee-infrastructure/k8s/postgres/deployment.yaml
+
+      - name: Apply Redis manifests
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/redis/service.yaml
+          kubectl apply -f eevee-infrastructure/k8s/redis/deployment.yaml
+
+      - name: Apply backend manifests
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/queue-worker/rbac.yaml
+          kubectl apply -f eevee-infrastructure/k8s/scheduler-api/service.yaml
+          kubectl apply -f eevee-infrastructure/k8s/scheduler-api/deployment.yaml
+
+      - name: Apply frontend manifests
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/front/service.yaml
+          kubectl apply -f eevee-infrastructure/k8s/front/deployment.yaml
+
+      - name: Apply ingress
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/ingress/ingress.yaml
+
+      - name: Check rollout status
+        run: |
+          kubectl rollout status deployment/postgres-deployment --timeout=120s
+          kubectl rollout status deployment/redis-deployment --timeout=120s
+          kubectl rollout status deployment/scheduler-api-deployment --timeout=120s
+          kubectl rollout status deployment/queue-worker-deployment --timeout=120s
+          kubectl rollout status deployment/eevee-front-deployment --timeout=120s

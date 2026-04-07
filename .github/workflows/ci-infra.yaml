@@ -1,0 +1,55 @@
+name: CI Infra
+
+on:
+  pull_request:
+    paths:
+      - 'eevee-infrastructure/**'
+      - '.github/workflows/ci-infra.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'eevee-infrastructure/**'
+      - '.github/workflows/ci-infra.yaml'
+
+jobs:
+  validate-infra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Validate shared config
+        run: |
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/config/db-configmap.yaml
+
+      - name: Validate PostgreSQL manifests
+        run: |
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/postgres/pvc.yaml
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/postgres/service.yaml
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/postgres/deployment.yaml
+
+      - name: Validate Redis manifests
+        run: |
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/redis/service.yaml
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/redis/deployment.yaml
+
+      - name: Validate backend manifests
+        run: |
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/scheduler-api/service.yaml
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/scheduler-api/deployment.yaml
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/queue-worker/rbac.yaml
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/queue-worker/deployment.yaml
+
+      - name: Validate frontend manifests
+        run: |
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/front/service.yaml
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/front/deployment.yaml
+
+      - name: Validate ingress
+        run: |
+          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/ingress/ingress.yaml
