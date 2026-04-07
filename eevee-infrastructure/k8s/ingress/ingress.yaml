@@ -5,17 +5,18 @@ metadata:
   namespace: default
   annotations:
     # Annotations para o NGINX Ingress Controller
+    cert-manager.io/cluster-issuer: "letsencrypt-production" 
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx # Especifica o IngressClass se necessário
   tls:
     - hosts:
-        - api.eeveecodelab.local
-        - frontend.eeveecodelab.local
+        - frontend.eeeveecodelab.online
+        - api.eeveecodelab.online
       secretName: eevee-tls-secret # O nome do Secret que contém os certificados TLS
   rules:
     # 1. Regra para a API NestJS
-    - host: "api.eeveecodelab.local"
+    - host: "api.eeveecodelab.online"
       http:
         paths:
           - path: /
@@ -24,10 +25,10 @@ spec:
               service:
                 name: scheduler-api-service # O nome do Service da sua API!
                 port:
-                  number: 3010 
+                  number: 3000 
 
     # 2. Regra para o Frontend Next.js
-    - host: "frontend.eeveecodelab.local"
+    - host: "frontend.eeveecodelab.online"
       http:
         paths:
           - path: /
@@ -36,4 +37,4 @@ spec:
               service:
                 name: eevee-front-service # O nome do Service do seu Next.js!
                 port:
-                  number: 3000
+                  number: 80 
