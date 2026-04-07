@@ -47,15 +47,6 @@ jobs:
                 echo "${KUBE_CONFIG_DATA}" > $HOME/.kube/config
                 chmod 600 $HOME/.kube/config
 
-            - name: Atualizar Secret para Pull da Imagem 
-              env:
-                KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
-              run: |
-                kubectl create secret docker-registry ghrc-auth \
-                  --docker-server=${{ env.REGISTRY }} \
-                  --docker-username=${{ github.actor }} \
-                  --docker-password=${{ secrets.GHRC_TOKEN }}
-
             - name: Atualiza imagem e reinicia o pod 
               env:
                 KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
