@@ -20,7 +20,7 @@ spec:
       containers:
       - name: queue-worker
         # Aqui você colocaria a imagem Docker gerada pelo seu GitHub Actions
-        image: docker.io/library/scheduler-api:latest 
+        image: ghcr.io/guilhermepereira25/scheduler-api:latest 
         imagePullPolicy: IfNotPresent
         args: ["start:worker:prod"]
         env:
@@ -64,3 +64,5 @@ spec:
             memory: "128Mi"
           limits:
             memory: "384Mi"
+    imagePullSecrets:
+    - name: ghcr-auth

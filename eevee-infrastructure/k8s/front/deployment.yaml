@@ -19,7 +19,7 @@ spec:
       containers:
       - name: eevee-front
         # Aqui você colocaria a imagem Docker gerada pelo seu GitHub Actions
-        image: docker.io/library/eevee-front:latest 
+        image: ghcr.io/guilhermepereira25/eevee-front:latest 
         imagePullPolicy: IfNotPresent 
         ports:
         - containerPort: 3000 # A porta onde o seu NestJS roda (exemplo)
@@ -28,3 +28,5 @@ spec:
             memory: "128Mi"
           limits:
             memory: "384Mi" # Limite seguro para não estourar a RAM
+      imagePullSecrets:
+      - name: ghcr-auth

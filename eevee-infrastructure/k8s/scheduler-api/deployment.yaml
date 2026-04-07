@@ -19,10 +19,10 @@ spec:
       containers:
       - name: scheduler-api
         # Aqui você colocaria a imagem Docker gerada pelo seu GitHub Actions
-        image: docker.io/library/scheduler-api:latest
+        image: ghcr.io/guilhermepereira25/scheduler-api:latest
         imagePullPolicy: IfNotPresent 
         ports:
-        - containerPort: 3010 # A porta onde o seu NestJS roda (exemplo)
+        - containerPort: 3000 # A porta onde o seu NestJS roda (exemplo)
         env:
         - name: PG_HOST 
           valueFrom:
@@ -60,7 +60,7 @@ spec:
               name: eevee-config
               key: REDIS_PORT
         - name: PORT 
-          value: "3010"
+          value: "3000"
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
@@ -71,3 +71,5 @@ spec:
             memory: "128Mi"
           limits:
             memory: "384Mi"
+      imagePullSecrets:
+      - name: ghcr-auth
