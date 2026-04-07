@@ -44,6 +44,19 @@ jobs:
             --docker-password='${{ secrets.GHCR_TOKEN }}' \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Cert-manager and Cloudflare Setup
+        run: |
+          # Instala o cert-manager
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.20.0/cert-manager.yaml
+          
+          kubectl wait --for=condition=Available deployment --all -n cert-manager --timeout=300s
+
+          kubectl create secret generic cloudflare-api-token-secret \
+            --from-literal=api-token='${{ secrets.CLOUDFLARE_API_TOKEN }}' \
+            --dry-run=client -o yaml | kubectl apply -f -n cert-manager
+
+          kubectl apply -f eevee-infrastructure/k8s/config/cluster-issuer.yaml
+
       - name: Apply PostgreSQL manifests
         run: |
           kubectl apply -f eevee-infrastructure/k8s/postgres/pvc.yaml
