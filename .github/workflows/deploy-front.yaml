@@ -1,0 +1,50 @@
+name: Deploy Scheduler API
+
+on:
+    push:
+        branches:
+        - main
+        paths:
+        - 'front/**'
+        - '.github/workflows/deploy-front.yaml'
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: guilhermepereira25/eevee-front # está hardcoded aqui, mas pode ser parametrizado depois, e alterar a org/user se necessário
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout do código
+              uses: actions/checkout@v3
+            
+            - name: Login no GitHub Container Registry
+              uses: docker/login-action@v2
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+            
+            - name: Build e Push da Imagem Docker
+              uses: docker/build-push-action@v3
+              with:
+                context: ./front
+                push: true
+                tags: |
+                    ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+                    ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+            - name: Configurar kubectl
+              uses: azure/setup-kubectl@v3
+              
+            - name: Deploy para Kubernetes
+              env:
+                KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+              run: |
+                mkdir -p $HOME/.kube
+                echo "${KUBE_CONFIG_DATA}" > $HOME/.kube/config
+                chmod 600 $HOME/.kube/config
+
+                kubectl set image deployment/eevee-front-deployment eevee-front=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -n default
