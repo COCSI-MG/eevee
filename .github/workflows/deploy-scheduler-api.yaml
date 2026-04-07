@@ -25,7 +25,7 @@ jobs:
               with:
                 registry: ${{ env.REGISTRY }}
                 username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
+                password: ${{ secrets.GHRC_TOKEN }}
             
             - name: Build e Push da Imagem Docker
               uses: docker/build-push-action@v3
@@ -38,8 +38,8 @@ jobs:
 
             - name: Configurar kubectl
               uses: azure/setup-kubectl@v3
-              
-            - name: Deploy para Kubernetes
+
+            - name: Atualiza Configuração do Kubernetes
               env:
                 KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
               run: |
@@ -47,4 +47,30 @@ jobs:
                 echo "${KUBE_CONFIG_DATA}" > $HOME/.kube/config
                 chmod 600 $HOME/.kube/config
 
+            - name: Atualizar Secret para Pull da Imagem 
+              env:
+                KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+              run: |
+                kubectl create secret docker-registry ghrc-auth \
+                  --docker-server=${{ env.REGISTRY }} \
+                  --docker-username=${{ github.actor }} \
+                  --docker-password=${{ secrets.GHRC_TOKEN }}
+              
+            - name: Atualiza secrets da aplicacao
+              env:
+                KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+              run: |
+                kubectl create secret generic eevee-secrets \
+                  --from-literal=DATABASE_URL=${{ secrets.DATABASE_URL }} \
+                  --from-literal=JWT_SECRET=${{ secrets.JWT_SECRET }} \
+                  --dry-run=client -o yaml | kubectl apply -f - -n default 
+
+            - name: Atualiza imagem e reinicia o pod
+              env:
+                KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+              run: |
                 kubectl set image deployment/scheduler-api-deployment scheduler-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -n default
+
+                kubectl rollout restart deployment/scheduler-api-deployment -n default
+
+                kubectl rollout restart deployment queue-worker-deployment -n default
