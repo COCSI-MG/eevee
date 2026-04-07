@@ -61,7 +61,7 @@ jobs:
                 KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
               run: |
                 kubectl create secret generic eevee-secrets \
-                  --from-literal=DATABASE_URL=${{ secrets.DATABASE_URL }} \
+                  --from-literal=DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
                   --from-literal=JWT_SECRET=${{ secrets.JWT_SECRET }} \
                   --dry-run=client -o yaml | kubectl apply -f - -n default 
 
