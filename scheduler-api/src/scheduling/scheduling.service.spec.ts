@@ -10,7 +10,10 @@ import { Queue } from 'bullmq';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { RequestContextService } from 'src/request-context/request-context.service';
-import { SchedulingPreviewRun } from './entities/scheduling-preview-run.entity';
+import {
+  SchedulingPreviewRun,
+  SchedulingPreviewRunStatus,
+} from './entities/scheduling-preview-run.entity';
 import { Repository } from 'typeorm';
 
 describe('SchedulingService', () => {
@@ -238,6 +241,84 @@ describe('SchedulingService', () => {
     expect(result).toEqual(
       expect.objectContaining({
         id: 99,
+      }),
+    );
+  });
+
+  it('does not start a preview worker when the run is no longer pending', async () => {
+    schedulingPreviewRunRepository.update.mockResolvedValue({
+      affected: 0,
+    } as never);
+
+    await (service as any).processPreviewRun(
+      77,
+      {
+        id: 10,
+        workerType: WorkerType.NODE_DEFAULT,
+      },
+      {
+        assignmentId: 10,
+        applicationFileContent: '',
+        files: { 'src/index.ts': 'content' },
+      },
+    );
+
+    expect(schedulingPreviewRunRepository.update).toHaveBeenCalledWith(
+      {
+        id: 77,
+        status: SchedulingPreviewRunStatus.PENDING,
+      },
+      expect.objectContaining({
+        status: SchedulingPreviewRunStatus.RUNNING,
+        jobName: 'preview-run-77-worker',
+      }),
+    );
+    expect(schedulingWorkerPreparationService.prepare).not.toHaveBeenCalled();
+    expect(workerService.createWorkerWithInitContainer).not.toHaveBeenCalled();
+  });
+
+  it('does not overwrite a cancelled preview run with completed status', async () => {
+    schedulingPreviewRunRepository.update
+      .mockResolvedValueOnce({
+        affected: 1,
+      } as never)
+      .mockResolvedValueOnce({
+        affected: 0,
+      } as never);
+    schedulingWorkerPreparationService.prepare.mockResolvedValue({
+      files: { 'index.ts': 'console.log(1);' },
+    });
+    workerService.createWorkerWithInitContainer.mockResolvedValue({
+      passes: 3,
+      failures: 1,
+      completeTrace: 'trace',
+    } as never);
+    scorePolicyService.calculateScore.mockReturnValue(0.75);
+    scorePolicyService.isAcceptable.mockReturnValue(false);
+
+    await (service as any).processPreviewRun(
+      78,
+      {
+        id: 10,
+        workerType: WorkerType.NODE_DEFAULT,
+        assignmentTemplates: [{}],
+      },
+      {
+        assignmentId: 10,
+        applicationFileContent: '',
+        files: { 'src/index.ts': 'content' },
+      },
+    );
+
+    expect(schedulingPreviewRunRepository.update).toHaveBeenNthCalledWith(
+      2,
+      {
+        id: 78,
+        status: SchedulingPreviewRunStatus.RUNNING,
+      },
+      expect.objectContaining({
+        status: SchedulingPreviewRunStatus.COMPLETED,
+        report: 'trace',
       }),
     );
   });

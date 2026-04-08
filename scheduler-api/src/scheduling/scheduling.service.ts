@@ -431,11 +431,25 @@ export class SchedulingService {
   ) {
     const jobName = `preview-run-${previewRunId}-worker`;
 
-    await this.schedulingPreviewRunRepository.update(previewRunId, {
-      status: SchedulingPreviewRunStatus.RUNNING,
-      jobName,
-      errorMessage: undefined,
-    });
+    const startPreviewRunResult =
+      await this.schedulingPreviewRunRepository.update(
+        {
+          id: previewRunId,
+          status: SchedulingPreviewRunStatus.PENDING,
+        },
+        {
+          status: SchedulingPreviewRunStatus.RUNNING,
+          jobName,
+          errorMessage: undefined,
+        },
+      );
+
+    if (!startPreviewRunResult.affected) {
+      this.logger.warn(
+        `Preview run ${previewRunId} was not started because it is no longer pending`,
+      );
+      return;
+    }
 
     try {
       const workerResult = await this.prepareAndRunWorker({
@@ -458,15 +472,21 @@ export class SchedulingService {
       const score = this.scorePolicyService.calculateScore(workerResult);
       const isAcceptable = this.scorePolicyService.isAcceptable(score);
 
-      await this.schedulingPreviewRunRepository.update(previewRunId, {
-        status: SchedulingPreviewRunStatus.COMPLETED,
-        isAcceptable,
-        score,
-        report: workerResult.completeTrace,
-        fails: workerResult.failures,
-        passes: workerResult.passes,
-        completedAt: new Date(),
-      });
+      await this.schedulingPreviewRunRepository.update(
+        {
+          id: previewRunId,
+          status: SchedulingPreviewRunStatus.RUNNING,
+        },
+        {
+          status: SchedulingPreviewRunStatus.COMPLETED,
+          isAcceptable,
+          score,
+          report: workerResult.completeTrace,
+          fails: workerResult.failures,
+          passes: workerResult.passes,
+          completedAt: new Date(),
+        },
+      );
     } catch (error) {
       const previewRun = await this.schedulingPreviewRunRepository.findOne({
         where: { id: previewRunId },
@@ -476,12 +496,18 @@ export class SchedulingService {
         return;
       }
 
-      await this.schedulingPreviewRunRepository.update(previewRunId, {
-        status: SchedulingPreviewRunStatus.FAILED,
-        errorMessage:
-          error instanceof Error ? error.message : 'Preview run failed',
-        completedAt: new Date(),
-      });
+      await this.schedulingPreviewRunRepository.update(
+        {
+          id: previewRunId,
+          status: SchedulingPreviewRunStatus.RUNNING,
+        },
+        {
+          status: SchedulingPreviewRunStatus.FAILED,
+          errorMessage:
+            error instanceof Error ? error.message : 'Preview run failed',
+          completedAt: new Date(),
+        },
+      );
     }
   }
 }
