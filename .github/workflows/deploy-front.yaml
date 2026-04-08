@@ -10,7 +10,7 @@ on:
 
 env:
     REGISTRY: ghcr.io
-    IMAGE_NAME: guilhermepereira25/eevee-front # está hardcoded aqui, mas pode ser parametrizado depois, e alterar a org/user se necessário
+
 
 jobs:
     build-and-deploy:
