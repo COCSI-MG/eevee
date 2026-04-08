@@ -19,7 +19,7 @@ async function bootstrap() {
       new RegExp(/eeveecodelab\.(local|site|com|online)$/),
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE, OPTIONS',
-    allowHeaders: 'Content-Type, Accept, Authorization',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
 
   const config = new DocumentBuilder()
