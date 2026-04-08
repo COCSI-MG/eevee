@@ -1,4 +1,4 @@
-name: Deploy Scheduler API
+name: Deploy Front
 
 on:
     push:
@@ -10,6 +10,7 @@ on:
 
 env:
     REGISTRY: ghcr.io
+    FRONT_IMAGE: ${{ vars.FRONT_IMAGE_NAME }}
 
 
 jobs:
@@ -25,7 +26,7 @@ jobs:
               with:
                 registry: ${{ env.REGISTRY }}
                 username: ${{ github.actor }}
-                password: ${{ secrets.GHRC_TOKEN }}
+                password: ${{ secrets.GHCR_TOKEN }}
             
             - name: Build e Push da Imagem Docker
               uses: docker/build-push-action@v3
@@ -33,8 +34,8 @@ jobs:
                 context: ./front
                 push: true
                 tags: |
-                    ${{ env.REGISTRY }}/${{ secrets.FRONT_IMAGE_NAME }}:latest
-                    ${{ env.REGISTRY }}/${{ secrets.FRONT_IMAGE_NAME }}:${{ github.sha }}
+                    ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:latest
+                    ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }}
 
             - name: Configurar kubectl
               uses: azure/setup-kubectl@v3
@@ -48,10 +49,8 @@ jobs:
                 chmod 600 $HOME/.kube/config
 
             - name: Atualiza imagem e reinicia o pod 
-              env:
-                KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
               run: |
-                kubectl set image deployment/eevee-front-deployment eevee-front=${{ env.REGISTRY }}/${{ secrets.FRONT_IMAGE_NAME }}:${{ github.sha }} -n default
+                kubectl set image deployment/eevee-front-deployment eevee-front=${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }} -n default
 
                 kubectl rollout restart deployment/eevee-front-deployment -n default
               
