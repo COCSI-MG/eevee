@@ -2,6 +2,7 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
@@ -28,6 +29,8 @@ import { Attempt } from 'src/attempt/entities/attempt.entity';
 
 @Injectable()
 export class AssignmentService {
+  private readonly logger = new Logger(AssignmentService.name);
+
   constructor(
     @InjectRepository(Assignment)
     private readonly assignmentRepository: Repository<Assignment>,
@@ -228,25 +231,26 @@ export class AssignmentService {
   async findAllUserAssignments() {
     const user = this.requestContextService.getUser();
 
-    const assignments = await this.assignmentRepository.find({
-      relations: [
-        'assignmentAttempts',
-        'class',
+    const query = this.assignmentRepository
+      .createQueryBuilder('assignment')
+      .innerJoin('assignment.class', 'class')
+      .innerJoin(
         'class.userClasses',
-        'class.userClasses.user',
-        'suspensions',
-      ],
-      where: {
-        class: {
-          userClasses: {
-            userId: user.userId,
-          },
-        },
-        assignmentAttempts: {
-          userId: user.userId,
-        },
-      },
-    });
+        'userClasses',
+        'userClasses.userId = :userId',
+        { userId: user.userId },
+      )
+      .leftJoinAndSelect(
+        'assignment.assignmentAttempts',
+        'assignmentAttempts',
+        'assignmentAttempts.userId = :userId',
+        { userId: user.userId },
+      )
+      .leftJoinAndSelect('assignment.suspensions', 'suspensions');
+
+    const assignments = await query.getMany();
+
+    this.logger.debug(assignments, 'Assignments fetched for user');
 
     return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
   }
