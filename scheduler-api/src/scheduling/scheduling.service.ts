@@ -21,6 +21,8 @@ import {
   NoTestFilesGeneratedError,
   SchedulingWorkerPreparationService,
 } from './scheduling-worker-preparation.service';
+import { WorkerResponse } from 'src/worker/worker.interfaces';
+import { Assignment } from 'src/assignment/entities/assignment.entity';
 
 @Injectable()
 export class SchedulingService {
@@ -47,69 +49,38 @@ export class SchedulingService {
       assignmentId: assignment.id,
     });
 
-    const previousAttempts =
-      await this.attemptService.findAllByAssignmentAndCurrentUser(
-        createSchedulingDto.assignmentId,
-      );
-
-    if (
-      assignment.maxAttempts &&
-      previousAttempts.length >= assignment.maxAttempts
-    ) {
-      throw new BadRequestException('Max attempts reached');
-    }
-
     this.logger.debug({
-      message: 'Creating worker and waiting for result',
+      message: 'Running worker synchronously for preview',
       workerType: assignment.workerType,
     });
 
-    let workerData: CreateWorkerDto;
-    try {
-      workerData = await this.schedulingWorkerPreparationService.prepare({
-        assignment,
-        baseWorkerData: {
-          ...createSchedulingDto,
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof NoTemplatesForAssignmentError ||
-        error instanceof NoTestFilesGeneratedError
-      ) {
-        throw new BadRequestException('No test files available for execution.');
-      }
-
-      throw error;
+    const workerResult = await this.prepareAndRunWorker({
+      assignment,
+      baseWorkerData: {
+        ...createSchedulingDto,
+      },
+      jobName: `preview-assignment-${assignment.id}-${Date.now()}`,
+    });
+    if (!workerResult) {
+      throw new BadRequestException('No test files available for execution.');
     }
-
-    const workerResult = await this.workerService.createSynchronousWorker(
-      assignment.workerType,
-      workerData,
-      workerData.dependencies ?? [],
-    );
 
     this.logger.debug({
       message: 'Worker execution completed',
-      attemptCount: previousAttempts.length + 1,
+      assignmentId: assignment.id,
     });
 
     const score = this.scorePolicyService.calculateScore(workerResult);
     const isAcceptable = this.scorePolicyService.isAcceptable(score);
 
-    const result = await this.attemptService.create({
+    return {
       assignmentId: createSchedulingDto.assignmentId,
-      attempt: previousAttempts.length + 1,
       isAcceptable,
       score,
       report: workerResult.completeTrace,
       fails: workerResult.failures,
       passes: workerResult.passes,
-      status: AttemptStatus.COMPLETED,
-      receivedWork: workerData.files ?? undefined,
-    });
-
-    return result;
+    };
   }
 
   async createSchedulingJobAsync(createSchedulingDto: CreateSchedulingDto) {
@@ -260,39 +231,18 @@ export class SchedulingService {
 
     await this.schedulingAttemptTransitionService.markRunning(attempt.id);
 
-    let workerData: CreateWorkerDto;
     try {
-      workerData = await this.schedulingWorkerPreparationService.prepare({
+      const workerResult = await this.prepareAndRunWorker({
         assignment: attempt.assignment,
         baseWorkerData: {
           ...payload.workerData,
         },
         attemptId: attempt.id,
+        jobName: `attempt-${attempt.id}-worker`,
       });
-    } catch (error) {
-      if (
-        error instanceof NoTemplatesForAssignmentError ||
-        error instanceof NoTestFilesGeneratedError
-      ) {
-        this.logger.fatal(error.message, `ATTEMPT_ID: ${attempt.id}`);
-        await this.schedulingAttemptTransitionService.markFailedNoTests(
-          attempt.id,
-        );
+      if (!workerResult) {
         return;
       }
-
-      throw error;
-    }
-
-    try {
-      const jobName = `attempt-${attempt.id}-worker`;
-
-      const workerResult =
-        await this.workerService.createWorkerWithInitContainer(
-          jobName,
-          attempt.assignment.workerType,
-          workerData,
-        );
 
       this.logger.log(
         `Worker result: ${JSON.stringify(workerResult)}`,
@@ -337,5 +287,50 @@ export class SchedulingService {
 
   private isUserReachedMaxAttempt(maxAttempts: number, currentAttemps: number) {
     return maxAttempts <= currentAttemps;
+  }
+
+  private async prepareAndRunWorker(params: {
+    assignment: Assignment;
+    baseWorkerData: CreateWorkerDto;
+    jobName: string;
+    attemptId?: number;
+  }): Promise<WorkerResponse | null> {
+    const { assignment, baseWorkerData, attemptId, jobName } = params;
+
+    let workerData: CreateWorkerDto;
+    try {
+      workerData = await this.schedulingWorkerPreparationService.prepare({
+        assignment,
+        baseWorkerData,
+        attemptId,
+      });
+    } catch (error) {
+      if (
+        error instanceof NoTemplatesForAssignmentError ||
+        error instanceof NoTestFilesGeneratedError
+      ) {
+        if (attemptId) {
+          this.logger.fatal(error.message, `ATTEMPT_ID: ${attemptId}`);
+          await this.schedulingAttemptTransitionService.markFailedNoTests(
+            attemptId,
+          );
+          return null;
+        }
+
+        throw new BadRequestException('No test files available for execution.');
+      }
+
+      throw error;
+    }
+
+    if (!workerData) {
+      return null;
+    }
+
+    return this.workerService.createWorkerWithInitContainer(
+      jobName,
+      assignment.workerType,
+      workerData,
+    );
   }
 }

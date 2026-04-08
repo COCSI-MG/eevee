@@ -7,12 +7,10 @@ export interface Scheduling {
 }
 
 export interface SchedulingResponse {
-  userId: number;
-  fails: number;
-  attempt: number;
+  assignmentId: number;
   isAcceptable: boolean;
   score: number;
   passes: number;
+  fails: number;
   report: string;
-  assignmentId: number;
 }
