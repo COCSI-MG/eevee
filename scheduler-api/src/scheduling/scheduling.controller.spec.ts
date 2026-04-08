@@ -6,7 +6,12 @@ describe('SchedulingController', () => {
   let schedulingService: jest.Mocked<
     Pick<
       SchedulingService,
-      'createAndWait' | 'createSchedulingJobAsync' | 'retryAttemptFromAdmin'
+      | 'createAndWait'
+      | 'createSchedulingJobAsync'
+      | 'retryAttemptFromAdmin'
+      | 'createPreviewRun'
+      | 'getPreviewRunForCurrentUser'
+      | 'cancelPreviewRun'
     >
   >;
 
@@ -15,6 +20,9 @@ describe('SchedulingController', () => {
       createAndWait: jest.fn(),
       createSchedulingJobAsync: jest.fn(),
       retryAttemptFromAdmin: jest.fn(),
+      createPreviewRun: jest.fn(),
+      getPreviewRunForCurrentUser: jest.fn(),
+      cancelPreviewRun: jest.fn(),
     };
 
     controller = new SchedulingController(
@@ -52,5 +60,29 @@ describe('SchedulingController', () => {
       applicationFileContent: '',
       files: {},
     });
+  });
+
+  it('routes preview creation to createPreviewRun', async () => {
+    schedulingService.createPreviewRun.mockResolvedValue({ id: 11 } as never);
+
+    await controller.createPreview({
+      assignmentId: 1,
+      applicationFileContent: '',
+      files: {},
+    });
+
+    expect(schedulingService.createPreviewRun).toHaveBeenCalledWith({
+      assignmentId: 1,
+      applicationFileContent: '',
+      files: {},
+    });
+  });
+
+  it('routes preview fetch to getPreviewRunForCurrentUser', async () => {
+    schedulingService.getPreviewRunForCurrentUser.mockResolvedValue({ id: 11 } as never);
+
+    await controller.getPreviewRun(11);
+
+    expect(schedulingService.getPreviewRunForCurrentUser).toHaveBeenCalledWith(11);
   });
 });

@@ -9,10 +9,18 @@ import { SchedulingAttemptTransitionService } from './scheduling-attempt-transit
 import { Queue } from 'bullmq';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
+import { RequestContextService } from 'src/request-context/request-context.service';
+import { SchedulingPreviewRun } from './entities/scheduling-preview-run.entity';
+import { Repository } from 'typeorm';
 
 describe('SchedulingService', () => {
   let service: SchedulingService;
-  let workerService: jest.Mocked<Pick<WorkerService, 'createWorkerWithInitContainer' | 'createSynchronousWorker'>>;
+  let workerService: jest.Mocked<
+    Pick<
+      WorkerService,
+      'createWorkerWithInitContainer' | 'createSynchronousWorker' | 'cancelWorkerJob'
+    >
+  >;
   let attemptService: jest.Mocked<
     Pick<
       AttemptService,
@@ -34,11 +42,16 @@ describe('SchedulingService', () => {
     >
   >;
   let schedulingQueue: jest.Mocked<Pick<Queue, 'add'>>;
+  let requestContextService: jest.Mocked<Pick<RequestContextService, 'getUser'>>;
+  let schedulingPreviewRunRepository: jest.Mocked<
+    Pick<Repository<SchedulingPreviewRun>, 'findOne' | 'save' | 'update'>
+  >;
 
   beforeEach(() => {
     workerService = {
       createWorkerWithInitContainer: jest.fn(),
       createSynchronousWorker: jest.fn(),
+      cancelWorkerJob: jest.fn(),
     };
 
     attemptService = {
@@ -74,6 +87,16 @@ describe('SchedulingService', () => {
       add: jest.fn(),
     };
 
+    requestContextService = {
+      getUser: jest.fn().mockReturnValue({ userId: 42, isAdmin: false }),
+    };
+
+    schedulingPreviewRunRepository = {
+      findOne: jest.fn(),
+      save: jest.fn(),
+      update: jest.fn(),
+    };
+
     service = new SchedulingService(
       workerService as unknown as WorkerService,
       attemptService as unknown as AttemptService,
@@ -81,6 +104,8 @@ describe('SchedulingService', () => {
       scorePolicyService as unknown as ScorePolicyService,
       schedulingWorkerPreparationService as unknown as SchedulingWorkerPreparationService,
       schedulingAttemptTransitionService as unknown as SchedulingAttemptTransitionService,
+      requestContextService as unknown as RequestContextService,
+      schedulingPreviewRunRepository as unknown as Repository<SchedulingPreviewRun>,
       schedulingQueue as unknown as Queue,
     );
   });
@@ -189,5 +214,31 @@ describe('SchedulingService', () => {
         files: {},
       }),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('returns existing preview run when one is already active', async () => {
+    assignmentService.findOne.mockResolvedValue({
+      id: 10,
+      workerType: WorkerType.NODE_DEFAULT,
+    } as never);
+    schedulingPreviewRunRepository.findOne.mockResolvedValue({
+      id: 99,
+      assignmentId: 10,
+      userId: 42,
+      status: 'running',
+    } as never);
+
+    const result = await service.createPreviewRun({
+      assignmentId: 10,
+      applicationFileContent: '',
+      files: { 'src/index.ts': 'content' },
+    });
+
+    expect(schedulingPreviewRunRepository.save).not.toHaveBeenCalled();
+    expect(result).toEqual(
+      expect.objectContaining({
+        id: 99,
+      }),
+    );
   });
 });

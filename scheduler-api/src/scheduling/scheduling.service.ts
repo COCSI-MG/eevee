@@ -14,6 +14,7 @@ import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-messa
 import { plainToClass } from 'class-transformer';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { InjectRepository } from '@nestjs/typeorm';
 import { ScorePolicyService } from './score-policy.service';
 import { SchedulingAttemptTransitionService } from './scheduling-attempt-transition.service';
 import {
@@ -23,6 +24,12 @@ import {
 } from './scheduling-worker-preparation.service';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
+import {
+  SchedulingPreviewRun,
+  SchedulingPreviewRunStatus,
+} from './entities/scheduling-preview-run.entity';
+import { Repository, In } from 'typeorm';
+import { RequestContextService } from 'src/request-context/request-context.service';
 
 @Injectable()
 export class SchedulingService {
@@ -35,6 +42,9 @@ export class SchedulingService {
     private readonly scorePolicyService: ScorePolicyService,
     private readonly schedulingWorkerPreparationService: SchedulingWorkerPreparationService,
     private readonly schedulingAttemptTransitionService: SchedulingAttemptTransitionService,
+    private readonly requestContextService: RequestContextService,
+    @InjectRepository(SchedulingPreviewRun)
+    private readonly schedulingPreviewRunRepository: Repository<SchedulingPreviewRun>,
     @InjectQueue('scheduling-queue') private readonly schedulingQueue: Queue,
   ) {}
 
@@ -147,6 +157,86 @@ export class SchedulingService {
     this.logger.log(`Scheduling job created with attempt ID: ${newAttempt.id}`);
 
     return newAttempt;
+  }
+
+  async createPreviewRun(createSchedulingDto: CreateSchedulingDto) {
+    const assignment = await this.assignmentService.findOne(
+      createSchedulingDto.assignmentId,
+    );
+    if (!assignment) {
+      throw new BadRequestException('Assignment not found');
+    }
+
+    const user = this.requestContextService.getUser();
+
+    const existingPreviewRun =
+      await this.schedulingPreviewRunRepository.findOne({
+        where: {
+          userId: user.userId,
+          assignmentId: createSchedulingDto.assignmentId,
+          status: In([
+            SchedulingPreviewRunStatus.PENDING,
+            SchedulingPreviewRunStatus.RUNNING,
+          ]),
+        },
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+
+    if (existingPreviewRun) {
+      return existingPreviewRun;
+    }
+
+    const previewRun = await this.schedulingPreviewRunRepository.save({
+      userId: user.userId,
+      assignmentId: createSchedulingDto.assignmentId,
+      status: SchedulingPreviewRunStatus.PENDING,
+      report: '',
+    });
+
+    void this.processPreviewRun(previewRun.id, assignment, createSchedulingDto);
+
+    return previewRun;
+  }
+
+  async getPreviewRunForCurrentUser(previewRunId: number) {
+    const user = this.requestContextService.getUser();
+
+    return this.schedulingPreviewRunRepository.findOne({
+      where: {
+        id: previewRunId,
+        userId: user.userId,
+      },
+    });
+  }
+
+  async cancelPreviewRun(previewRunId: number) {
+    const previewRun = await this.getPreviewRunForCurrentUser(previewRunId);
+    if (!previewRun) {
+      throw new BadRequestException('Preview run not found');
+    }
+
+    if (
+      ![
+        SchedulingPreviewRunStatus.PENDING,
+        SchedulingPreviewRunStatus.RUNNING,
+      ].includes(previewRun.status)
+    ) {
+      return previewRun;
+    }
+
+    if (previewRun.jobName) {
+      await this.workerService.cancelWorkerJob(previewRun.jobName);
+    }
+
+    await this.schedulingPreviewRunRepository.update(previewRun.id, {
+      status: SchedulingPreviewRunStatus.CANCELLED,
+      errorMessage: 'Preview run cancelled by user',
+      completedAt: new Date(),
+    });
+
+    return this.getPreviewRunForCurrentUser(previewRunId);
   }
 
   async retryAttemptFromAdmin(attemptId: number) {
@@ -332,5 +422,66 @@ export class SchedulingService {
       assignment.workerType,
       workerData,
     );
+  }
+
+  private async processPreviewRun(
+    previewRunId: number,
+    assignment: Assignment,
+    createSchedulingDto: CreateSchedulingDto,
+  ) {
+    const jobName = `preview-run-${previewRunId}-worker`;
+
+    await this.schedulingPreviewRunRepository.update(previewRunId, {
+      status: SchedulingPreviewRunStatus.RUNNING,
+      jobName,
+      errorMessage: undefined,
+    });
+
+    try {
+      const workerResult = await this.prepareAndRunWorker({
+        assignment,
+        baseWorkerData: {
+          ...createSchedulingDto,
+        },
+        jobName,
+      });
+
+      if (!workerResult) {
+        await this.schedulingPreviewRunRepository.update(previewRunId, {
+          status: SchedulingPreviewRunStatus.FAILED,
+          errorMessage: 'No test files available for execution.',
+          completedAt: new Date(),
+        });
+        return;
+      }
+
+      const score = this.scorePolicyService.calculateScore(workerResult);
+      const isAcceptable = this.scorePolicyService.isAcceptable(score);
+
+      await this.schedulingPreviewRunRepository.update(previewRunId, {
+        status: SchedulingPreviewRunStatus.COMPLETED,
+        isAcceptable,
+        score,
+        report: workerResult.completeTrace,
+        fails: workerResult.failures,
+        passes: workerResult.passes,
+        completedAt: new Date(),
+      });
+    } catch (error) {
+      const previewRun = await this.schedulingPreviewRunRepository.findOne({
+        where: { id: previewRunId },
+      });
+
+      if (previewRun?.status === SchedulingPreviewRunStatus.CANCELLED) {
+        return;
+      }
+
+      await this.schedulingPreviewRunRepository.update(previewRunId, {
+        status: SchedulingPreviewRunStatus.FAILED,
+        errorMessage:
+          error instanceof Error ? error.message : 'Preview run failed',
+        completedAt: new Date(),
+      });
+    }
   }
 }
