@@ -1,0 +1,84 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../scheduler-api
+  - ../../front
+  - ../../queue-worker
+  - ../../config
+  - ../../ingress
+
+images:
+  - name: scheduler-api
+    newName: ghcr.io/guilhermepereira25/scheduler-api
+  - name: eevee-front
+    newName: ghcr.io/guilhermepereira25/eevee-front
+
+configMapGenerator:
+  - name: cert-manager-settings
+    literals:
+      - acmeEmail=change-me@example.com
+      - cloudflareEmail=change-me@example.com
+  - name: ingress-settings
+    literals:
+      - apiHost=api.change-me.example.com
+      - frontHost=frontend.change-me.example.com
+      - frontWwwHost=www.change-me.example.com
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+replacements:
+  - source:
+      kind: ConfigMap
+      name: cert-manager-settings
+      fieldPath: data.acmeEmail
+    targets:
+      - select:
+          kind: ClusterIssuer
+          name: letsencrypt-production
+        fieldPaths:
+          - spec.acme.email
+  - source:
+      kind: ConfigMap
+      name: cert-manager-settings
+      fieldPath: data.cloudflareEmail
+    targets:
+      - select:
+          kind: ClusterIssuer
+          name: letsencrypt-production
+        fieldPaths:
+          - spec.acme.solvers.0.dns01.cloudflare.email
+  - source:
+      kind: ConfigMap
+      name: ingress-settings
+      fieldPath: data.apiHost
+    targets:
+      - select:
+          kind: Ingress
+          name: eevee-ingress
+        fieldPaths:
+          - spec.tls.0.hosts.0
+          - spec.rules.0.host
+  - source:
+      kind: ConfigMap
+      name: ingress-settings
+      fieldPath: data.frontHost
+    targets:
+      - select:
+          kind: Ingress
+          name: eevee-ingress
+        fieldPaths:
+          - spec.tls.0.hosts.1
+          - spec.rules.1.host
+  - source:
+      kind: ConfigMap
+      name: ingress-settings
+      fieldPath: data.frontWwwHost
+    targets:
+      - select:
+          kind: Ingress
+          name: eevee-ingress
+        fieldPaths:
+          - spec.tls.0.hosts.2
+          - spec.rules.2.host
