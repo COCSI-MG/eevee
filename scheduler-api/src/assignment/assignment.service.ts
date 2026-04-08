@@ -320,48 +320,55 @@ export class AssignmentService {
   async findOne(id: number) {
     const user = this.requestContextService.getUser();
 
-    let where: FindOneOptions<Assignment>['where'];
-    // Students can access assignments through class membership.
-    // Teachers (isAdmin) are restricted to assignments they created.
+    const query = this.assignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoinAndSelect('assignment.class', 'class')
+      .leftJoinAndSelect('assignment.assignmentParams', 'assignmentParams')
+      .leftJoinAndSelect(
+        'assignment.assignmentTemplates',
+        'assignmentTemplates',
+      )
+      .leftJoinAndSelect('assignmentTemplates.template', 'template')
+      .leftJoinAndSelect('template.templateParams', 'templateParams')
+      .leftJoinAndSelect('assignment.suspensions', 'suspensions')
+      .where('assignment.id = :id', { id })
+      .orderBy('assignmentAttempts.createdAt', 'DESC');
+
     if (user.isAdmin) {
-      // Teachers can see their own assignments, plus legacy ones (createdById IS NULL).
-      where = [
-        { id, createdById: user.userId },
-        { id, createdById: IsNull() },
-      ];
+      query
+        .leftJoinAndSelect('class.userClasses', 'userClasses')
+        .leftJoinAndSelect(
+          'assignment.assignmentAttempts',
+          'assignmentAttempts',
+        )
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where('assignment.createdById = :userId', {
+              userId: user.userId,
+            }).orWhere('assignment.createdById IS NULL');
+          }),
+        );
     } else {
-      // For students, ensure they have attempts for the assignment to prevent access to assignments they haven't interacted with.
-      where = {
-        id,
-        class: {
-          userClasses: { userId: user.userId },
-        },
-        assignmentAttempts: {
-          userId: user.userId,
-        },
-      };
+      query
+        .leftJoinAndSelect(
+          'assignment.assignmentAttempts',
+          'assignmentAttempts',
+          'assignmentAttempts.userId = :userId',
+          { userId: user.userId },
+        )
+        .innerJoinAndSelect(
+          'class.userClasses',
+          'userClasses',
+          'userClasses.userId = :userId',
+          { userId: user.userId },
+        );
     }
 
-    const response = await this.assignmentRepository.findOne({
-      relations: [
-        'assignmentAttempts',
-        'class',
-        'class.userClasses',
-        'assignmentParams',
-        'assignmentTemplates',
-        'assignmentTemplates.template',
-        'assignmentTemplates.template.templateParams',
-        'suspensions',
-      ],
-      where,
-      order: {
-        assignmentAttempts: {
-          createdAt: 'DESC',
-        },
-      },
-    });
+    const response = await query.getOne();
+    if (!response) {
+      return null;
+    }
 
-    if (!response) return response;
     return await this.attachBoilerplate(response);
   }
 
