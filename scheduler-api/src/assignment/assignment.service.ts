@@ -24,6 +24,7 @@ import { AssignmentParam } from 'src/assignment_params/entities/assignment_param
 import { Template } from 'src/template/entities/template.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { Attempt } from 'src/attempt/entities/attempt.entity';
 
 @Injectable()
 export class AssignmentService {
