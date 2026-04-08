@@ -15,6 +15,12 @@ on:
 jobs:
   validate-infra:
     runs-on: ubuntu-latest
+    env:
+      K8S_ACME_EMAIL: devnull@example.com
+      K8S_CLOUDFLARE_EMAIL: devnull@example.com
+      K8S_API_HOST: api.example.com
+      K8S_FRONT_HOST: frontend.example.com
+      K8S_FRONT_WWW_HOST: www.example.com
 
     steps:
       - name: Checkout
@@ -23,13 +29,12 @@ jobs:
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
 
+      - name: Setup kustomize
+        uses: imranismail/setup-kustomize@v2
+
       - name: Validate shared config
         run: |
           kubectl apply --dry-run=client -f eevee-infrastructure/k8s/config/db-configmap.yaml
-
-      - name: Validate certificate issuer
-        run: |
-          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/config/luster-issuer.yaml
 
       - name: Validate PostgreSQL manifests
         run: |
@@ -42,18 +47,19 @@ jobs:
           kubectl apply --dry-run=client -f eevee-infrastructure/k8s/redis/service.yaml
           kubectl apply --dry-run=client -f eevee-infrastructure/k8s/redis/deployment.yaml
 
-      - name: Validate backend manifests
+      - name: Validate rendered production overlay
         run: |
-          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/scheduler-api/service.yaml
-          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/scheduler-api/deployment.yaml
-          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/queue-worker/rbac.yaml
-          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/queue-worker/deployment.yaml
+          rm -rf /tmp/eevee-k8s
+          cp -R eevee-infrastructure/k8s /tmp/eevee-k8s
 
-      - name: Validate frontend manifests
-        run: |
-          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/front/service.yaml
-          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/front/deployment.yaml
+          sed -i "s|acmeEmail=change-me@example.com|acmeEmail=${K8S_ACME_EMAIL}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+          sed -i "s|cloudflareEmail=change-me@example.com|cloudflareEmail=${K8S_CLOUDFLARE_EMAIL}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+          sed -i "s|apiHost=api.change-me.example.com|apiHost=${K8S_API_HOST}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+          sed -i "s|frontHost=frontend.change-me.example.com|frontHost=${K8S_FRONT_HOST}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+          sed -i "s|frontWwwHost=www.change-me.example.com|frontWwwHost=${K8S_FRONT_WWW_HOST}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
 
-      - name: Validate ingress
-        run: |
-          kubectl apply --dry-run=client -f eevee-infrastructure/k8s/ingress/ingress.yaml
+          cd /tmp/eevee-k8s/overlays/prod
+          kustomize edit set image scheduler-api=ghcr.io/example/scheduler-api:test
+          kustomize edit set image eevee-front=ghcr.io/example/eevee-front:test
+
+          kubectl apply --dry-run=client -k /tmp/eevee-k8s/overlays/prod
