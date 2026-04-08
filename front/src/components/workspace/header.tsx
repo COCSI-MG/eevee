@@ -69,7 +69,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 
       <div className="flex items-center">
         <Button variant="ghost" size="sm" onClick={() => back()}>
-          Assigments
+          Voltar 
         </Button>
         <Button variant="ghost" size="sm">
           Ajuda
