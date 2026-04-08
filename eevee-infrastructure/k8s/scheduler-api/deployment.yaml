@@ -18,8 +18,7 @@ spec:
     spec:
       containers:
       - name: scheduler-api
-        # Aqui você colocaria a imagem Docker gerada pelo seu GitHub Actions
-        image: ghcr.io/guilhermepereira25/scheduler-api:latest
+        image: scheduler-api
         imagePullPolicy: IfNotPresent 
         ports:
         - containerPort: 3000 # A porta onde o seu NestJS roda (exemplo)
