@@ -9,6 +9,7 @@ import WorkspaceHeader from "@/components/workspace/header";
 import Workspace from "@/components/workspace/workspace";
 import WorkspaceAgreement from "@/components/workspace/workspace-agreement";
 import { WorkspaceLoading } from "@/components/workspace/workspace-loading";
+import { WorkspaceRunPreviewDialog } from "@/components/workspace/workspace-run-preview-dialog";
 import { useWorkspaceContext } from "@/components/workspace/workspace-provider";
 import { WorkspaceSuspension } from "@/components/workspace/workspace-suspension";
 import { useFetchAssignment } from "@/hooks/use-assignments";
@@ -16,13 +17,16 @@ import { useAuthContext } from "@/hooks/use-auth-context";
 import { useFetchFileContent } from "@/hooks/use-filestash";
 import { toast } from "@/hooks/use-toast";
 import { FileNode } from "@/types/shared";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
-import { SchedulingResponse } from "@/app/interface/scheduler-api/scheduling";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
+import {
+  SchedulingPreviewRun,
+  SchedulingResponse,
+} from "@/app/interface/scheduler-api/scheduling";
+
+const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
+const ACTIVE_PREVIEW_STATUSES = new Set(["pending", "running"]);
 
 export default function Page() {
   const { id } = useParams();
@@ -37,9 +41,75 @@ export default function Page() {
   // Estado para controlar se o usuário aceitou o acordo
   const [hasAcceptedAgreement, setHasAcceptedAgreement] =
     useState<boolean>(false);
-  const [lastRunResult, setLastRunResult] = useState<SchedulingResponse | null>(
-    null,
-  );
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewRunId, setPreviewRunId] = useState<number | null>(null);
+  const [hasPersistedCorrectionInProgress, setHasPersistedCorrectionInProgress] =
+    useState(false);
+
+  const correctionStorageKey = useMemo(() => {
+    if (!user?.id || !assignmentData?.id) {
+      return null;
+    }
+
+    return `workspace-correction-running:${user.id}:${assignmentData.id}`;
+  }, [assignmentData?.id, user?.id]);
+
+  const previewStorageKey = useMemo(() => {
+    if (!user?.id || !assignmentData?.id) {
+      return null;
+    }
+
+    return `workspace-preview-run:${user.id}:${assignmentData.id}`;
+  }, [assignmentData?.id, user?.id]);
+
+  const hasCorrectionInProgressFromBackend = useMemo(() => {
+    const latestAttempt = [...(assignmentData?.assignmentAttempts ?? [])].sort(
+      (a, b) => b.attempt - a.attempt,
+    )[0];
+
+    return latestAttempt
+      ? PROCESSING_ATTEMPT_STATUSES.has(latestAttempt.status)
+      : false;
+  }, [assignmentData?.assignmentAttempts]);
+
+  useEffect(() => {
+    if (!correctionStorageKey || typeof window === "undefined") {
+      return;
+    }
+
+    setHasPersistedCorrectionInProgress(
+      window.localStorage.getItem(correctionStorageKey) === "1",
+    );
+  }, [correctionStorageKey]);
+
+  useEffect(() => {
+    if (!correctionStorageKey || typeof window === "undefined") {
+      return;
+    }
+
+    if (hasCorrectionInProgressFromBackend) {
+      window.localStorage.setItem(correctionStorageKey, "1");
+      setHasPersistedCorrectionInProgress(true);
+      return;
+    }
+
+    window.localStorage.removeItem(correctionStorageKey);
+    setHasPersistedCorrectionInProgress(false);
+  }, [correctionStorageKey, hasCorrectionInProgressFromBackend]);
+
+  useEffect(() => {
+    if (!previewStorageKey || typeof window === "undefined") {
+      return;
+    }
+
+    const storedPreviewRunId = window.localStorage.getItem(previewStorageKey);
+    if (!storedPreviewRunId) {
+      return;
+    }
+
+    setPreviewRunId(Number(storedPreviewRunId));
+    setPreviewOpen(true);
+  }, [previewStorageKey]);
 
   const buildSchedulingPayload = async () => {
     if (!assignmentData?.id || !user?.id || !selectedItem.path) {
@@ -78,27 +148,72 @@ export default function Page() {
     };
   };
 
-  const { mutate: runAssignment, isPending: isRunningSync } = useMutation({
-    mutationKey: ["run-assignment-sync"],
-    mutationFn: async () => {
-      const payload = await buildSchedulingPayload();
-      return SchedulingService.createScheduling(payload);
-    },
-    onError: (error) => {
-      console.error("Error running assignment", error);
-      toast({
-        title: "Ocorreu um erro ao executar os testes",
-        variant: "destructive",
-      });
-    },
-    onSuccess: (data) => {
-      setLastRunResult(data);
-      toast({
-        title: "Execucao concluida",
-        description: "O resultado do run foi atualizado no workspace.",
-        variant: "default",
-      });
-    },
+  const {
+    data: previewRun,
+    isError: isPreviewRunError,
+    isFetching: isPreviewFetching,
+  } = useQuery<SchedulingPreviewRun>({
+    queryKey: ["preview-run", previewRunId],
+    queryFn: () => SchedulingService.getPreviewRun(previewRunId!),
+    enabled: previewRunId !== null,
+    refetchInterval: (query) =>
+      query.state.data &&
+      ACTIVE_PREVIEW_STATUSES.has(query.state.data.status)
+        ? 2000
+        : false,
+    refetchOnWindowFocus: true,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!previewStorageKey || typeof window === "undefined" || !previewRun) {
+      return;
+    }
+
+    if (ACTIVE_PREVIEW_STATUSES.has(previewRun.status)) {
+      window.localStorage.setItem(previewStorageKey, String(previewRun.id));
+      setPreviewOpen(true);
+      return;
+    }
+
+    window.localStorage.removeItem(previewStorageKey);
+
+    if (previewRun.status === "cancelled") {
+      setPreviewRunId(null);
+      setPreviewOpen(false);
+    }
+  }, [previewRun, previewStorageKey]);
+
+  const { mutate: runAssignment, isPending: isStartingPreviewRun } = useMutation(
+    {
+      mutationKey: ["run-assignment-preview"],
+      mutationFn: async () => {
+        const payload = await buildSchedulingPayload();
+        return SchedulingService.createPreviewRun(payload);
+      },
+      onMutate: () => {
+        setPreviewOpen(true);
+      },
+      onError: (error) => {
+        console.error("Error starting preview run", error);
+        toast({
+          title: "Ocorreu um erro ao iniciar o run",
+          variant: "destructive",
+        });
+      },
+      onSuccess: async (data) => {
+        setPreviewRunId(data.id);
+
+        if (previewStorageKey && typeof window !== "undefined") {
+          window.localStorage.setItem(previewStorageKey, String(data.id));
+        }
+      },
+    }
+  );
+
+  const { mutateAsync: cancelPreviewRun } = useMutation({
+    mutationKey: ["cancel-preview-run"],
+    mutationFn: async (runId: number) => SchedulingService.cancelPreviewRun(runId),
   });
 
   const { mutate: submitAssignment, isPending: isSubmittingCorrection } =
@@ -117,6 +232,11 @@ export default function Page() {
     },
     onSuccess: (data) => {
       console.log(data);
+
+      if (correctionStorageKey && typeof window !== "undefined") {
+        window.localStorage.setItem(correctionStorageKey, "1");
+        setHasPersistedCorrectionInProgress(true);
+      }
 
       toast({
         title: "Seu trabalho foi recebido com sucesso e está sendo processado",
@@ -137,6 +257,44 @@ export default function Page() {
       }
     },
   });
+
+  const isCorrectionInProgress =
+    isSubmittingCorrection ||
+    hasCorrectionInProgressFromBackend ||
+    hasPersistedCorrectionInProgress;
+
+  const previewResult: SchedulingResponse | null =
+    previewRun?.status === "completed"
+      ? {
+          assignmentId: previewRun.assignmentId,
+          isAcceptable: Boolean(previewRun.isAcceptable),
+          score: Number(previewRun.score ?? 0),
+          passes: Number(previewRun.passes ?? 0),
+          fails: Number(previewRun.fails ?? 0),
+          report: previewRun.report ?? "",
+        }
+      : null;
+
+  const previewError =
+    previewRun?.status === "failed" ? previewRun.errorMessage ?? "Preview failed" : null;
+
+  const previewLoading =
+    isStartingPreviewRun ||
+    isPreviewFetching ||
+    (previewRun ? ACTIVE_PREVIEW_STATUSES.has(previewRun.status) : false);
+
+  useEffect(() => {
+    if (!previewRunId || !isPreviewRunError) {
+      return;
+    }
+
+    if (previewStorageKey && typeof window !== "undefined") {
+      window.localStorage.removeItem(previewStorageKey);
+    }
+
+    setPreviewRunId(null);
+    setPreviewOpen(false);
+  }, [isPreviewRunError, previewRunId, previewStorageKey]);
 
   const { mutate: saveFileInServer, isPending: isSaving } = useMutation({
     mutationKey: ["save-file-in-saver"],
@@ -204,52 +362,33 @@ export default function Page() {
         onRunClick={() => runAssignment()}
         onSubmitClick={() => submitAssignment()}
         onSaveClick={() => saveFileInServer()}
-        isRunningSync={isRunningSync}
-        isSubmittingCorrection={isSubmittingCorrection}
+        isRunningSync={previewLoading}
+        isSubmittingCorrection={isCorrectionInProgress}
         isSaving={isSaving}
       />
 
-      {lastRunResult && (
-        <div className="border-b border-slate-700 bg-slate-950/60 px-4 py-3">
-          <Card className="border-slate-700 bg-slate-900 text-slate-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div className="flex items-center gap-3">
-                <CardTitle className="text-base">Last run result</CardTitle>
-                <Badge
-                  className={
-                    lastRunResult.isAcceptable
-                      ? "bg-green-600 text-white"
-                      : "bg-red-600 text-white"
-                  }
-                >
-                  {lastRunResult.isAcceptable ? "Accepted" : "Failed"}
-                </Badge>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setLastRunResult(null)}
-              >
-                Fechar preview
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid gap-2 text-sm md:grid-cols-3">
-                <p>Score: {lastRunResult.score}</p>
-                <p>Passes: {lastRunResult.passes}</p>
-                <p>Fails: {lastRunResult.fails}</p>
-              </div>
-              <div>
-                <p className="mb-2 text-sm font-medium text-slate-200">Report</p>
-                <pre className="max-h-64 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-300 whitespace-pre-wrap">
-                  {lastRunResult.report || "No report returned."}
-                </pre>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <WorkspaceRunPreviewDialog
+        open={previewOpen}
+        loading={previewLoading}
+        result={previewResult}
+        error={previewError}
+        onClose={async () => {
+          if (
+            previewRunId &&
+            previewRun &&
+            ACTIVE_PREVIEW_STATUSES.has(previewRun.status)
+          ) {
+            await cancelPreviewRun(previewRunId);
+          }
+
+          if (previewStorageKey && typeof window !== "undefined") {
+            window.localStorage.removeItem(previewStorageKey);
+          }
+
+          setPreviewOpen(false);
+          setPreviewRunId(null);
+        }}
+      />
 
       {assignmentData && user && (
         <Workspace assignment={assignmentData} user={user} />
