@@ -19,8 +19,7 @@ spec:
       serviceAccountName: worker-sa # <--- Adicione esta linha!
       containers:
       - name: queue-worker
-        # Aqui você colocaria a imagem Docker gerada pelo seu GitHub Actions
-        image: ghcr.io/guilhermepereira25/scheduler-api:latest 
+        image: scheduler-api
         imagePullPolicy: IfNotPresent
         args: ["start:worker:prod"]
         env:
@@ -64,5 +63,5 @@ spec:
             memory: "128Mi"
           limits:
             memory: "384Mi"
-    imagePullSecrets:
-    - name: ghcr-auth
+      imagePullSecrets:
+      - name: ghcr-auth
