@@ -11,12 +11,13 @@ spec:
   ingressClassName: nginx # Especifica o IngressClass se necessário
   tls:
     - hosts:
-        - frontend.eeeveecodelab.online
-        - api.eeveecodelab.online
-      secretName: eevee-tls-secret # O nome do Secret que contém os certificados TLS
+        - "api.change-me.example.com"
+        - "frontend.change-me.example.com"
+        - "www.change-me.example.com"
+      secretName: eevee-tls-secret
   rules:
     # 1. Regra para a API NestJS
-    - host: "api.eeveecodelab.online"
+    - host: "api.change-me.example.com"
       http:
         paths:
           - path: /
@@ -28,7 +29,18 @@ spec:
                   number: 3000 
 
     # 2. Regra para o Frontend Next.js
-    - host: "frontend.eeveecodelab.online"
+    - host: "frontend.change-me.example.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: eevee-front-service # O nome do Service do seu Next.js!
+                port:
+                  number: 80 
+
+    - host: "www.change-me.example.com"
       http:
         paths:
           - path: /
