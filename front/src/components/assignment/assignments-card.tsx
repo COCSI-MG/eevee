@@ -18,6 +18,8 @@ interface AssignmentsCardProps {
   data: Assignment[];
 }
 
+const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
+
 export default function AssignmentsCard({ data }: AssignmentsCardProps) {
   const { user } = useAuthContext();
   const { push } = useRouter();
@@ -42,7 +44,9 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     if (!assignment.assignmentAttempts?.length) {
       return null;
     }
-    const lastAttempt = assignment.assignmentAttempts[assignment.assignmentAttempts.length - 1];
+    const lastAttempt = [...assignment.assignmentAttempts].sort(
+      (a, b) => b.attempt - a.attempt,
+    )[0];
     return lastAttempt?.status;
   };
 
@@ -50,6 +54,10 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {data.map((assignment) => {
         const lastAttemptStatus = getLastAttemptStatus(assignment);
+
+        const isProcessing = lastAttemptStatus
+          ? PROCESSING_ATTEMPT_STATUSES.has(lastAttemptStatus)
+          : false;
 
         return (
           <Card
@@ -60,7 +68,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 "opacity-50": !isUserSuspendedFromAssignment(assignment),
               },
               {
-                "border border-green-600": lastAttemptStatus === "running",
+                "border border-green-600": isProcessing,
               },
               {
                 "border border-red-600": lastAttemptStatus === "failed",
@@ -89,7 +97,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                   </Badge>
                 )}
 
-              {lastAttemptStatus === "running" && (
+              {isProcessing && (
                   <Badge className="bg-green-600 text-white animate-pulse">
                     Em execução
                   </Badge>
@@ -125,11 +133,11 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 onClick={() => handleTry(assignment.id)}
                 disabled={
                   !isUserSuspendedFromAssignment(assignment) ||
-                  lastAttemptStatus === "running"
+                  isProcessing
                 }
               >
                 <Code className="h-4 w-4 mr-2" />
-                {lastAttemptStatus === "running"
+                {isProcessing
                   ? "Tarefa em execução..."
                   : "Iniciar"}
               </Button>
