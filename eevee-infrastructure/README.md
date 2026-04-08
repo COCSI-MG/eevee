@@ -31,7 +31,7 @@ ou só iniciar o minikube em uma máquina virtual
 minikube start
 ```
 
-### Executando o EEEVEE na infraestrutra do Kubernetes/Minikube
+### Executando o EEEVEE na infraestrutura do Kubernetes/Minikube
 
 Para executar o projeto, é necessário primeiro criar as dependências, como as imagens dos workers e o banco de dados. Depois disso, basta acessar a pasta [k8s](k8s) e executar o comando.
 
