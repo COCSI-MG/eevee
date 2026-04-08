@@ -33,6 +33,9 @@ jobs:
               with:
                 context: ./front
                 push: true
+                build-args: |
+                    NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+                    APP_ENV=${{ vars.APP_ENV }}
                 tags: |
                     ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:latest
                     ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }}

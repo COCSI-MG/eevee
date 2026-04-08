@@ -8,3 +8,5 @@ Exemplos:
   `cd eevee-infrastructure/k8s/overlays/prod && kustomize edit set image scheduler-api=ghcr.io/guilhermepereira25/scheduler-api:${GITHUB_SHA} && kustomize edit set image eevee-front=ghcr.io/guilhermepereira25/eevee-front:${GITHUB_SHA}`
 - Definir e-mails e hosts no CI:
   substitua `change-me@example.com`, `frontend.change-me.example.com`, `www.change-me.example.com` e `api.change-me.example.com` por secrets/vars do GitHub antes do `kubectl apply -k`
+- Definir variaveis de build do frontend no CI:
+  configure `NEXT_PUBLIC_API_URL` e `APP_ENV` em GitHub Actions `Repository variables`, porque esses valores sao embutidos no bundle durante o `docker build` do `front`
