@@ -22,7 +22,7 @@ jobs:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
         run: |
           mkdir -p "$HOME/.kube"
-          echo "${KUBE_CONFIG_DATA}" > "$HOME/.kube/config"
+          echo "${KUBE_CONFIG_DATA}" | base64 --decode > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"
 
       - name: Apply shared config
