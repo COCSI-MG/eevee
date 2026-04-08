@@ -16,6 +16,7 @@ spec:
       labels:
         app: scheduler-api
     spec:
+      serviceAccountName: worker-sa 
       containers:
       - name: scheduler-api
         image: scheduler-api

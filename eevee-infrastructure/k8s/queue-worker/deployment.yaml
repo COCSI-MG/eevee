@@ -16,7 +16,7 @@ spec:
       labels:
         app: queue-worker
     spec:
-      serviceAccountName: worker-sa # <--- Adicione esta linha!
+      serviceAccountName: worker-sa
       containers:
       - name: queue-worker
         image: scheduler-api
