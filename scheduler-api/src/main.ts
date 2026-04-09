@@ -16,7 +16,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       new RegExp(/localhost:\d+/),
-      new RegExp(/http(|s):\/\/eeveecodelab\.(local|site|com|online)$/),
+      new RegExp(/https?:\/\/([a-zA-Z0-9-]+\.)?eeveecodelab\.(local|site|com|online)$/),
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE, OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization',
