@@ -78,8 +78,8 @@ jobs:
 
       - name: Render and apply production overlay
         env:
-          SCHEDULER_API_IMAGE: ${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }}
-          FRONT_IMAGE: ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }}
+          SCHEDULER_API_IMAGE: ${{ env.REGISTRY }}/${{ vars.SCHEDULER_API_IMAGE }}:${{ github.sha }}
+          FRONT_IMAGE: ${{ env.REGISTRY }}/${{ vars.FRONT_IMAGE }}:${{ github.sha }}
           K8S_ACME_EMAIL: ${{ env.K8S_ACME_EMAIL }}
           K8S_CLOUDFLARE_EMAIL: ${{ env.K8S_CLOUDFLARE_EMAIL }}
           K8S_API_HOST: ${{ env.K8S_API_HOST }}
