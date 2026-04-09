@@ -12,7 +12,7 @@ import { JSX, useState } from "react";
 
 interface TableActionsProps {
   href?: string;
-  onDelete: () => void;
+  onDelete: () => void | Promise<void>;
   otherActions?: JSX.Element[];
 }
 
@@ -27,6 +27,15 @@ export default function TableActions({
   const handleDeleteClick = () => {
     setDropdownOpen(false); // Close dropdown first
     setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await Promise.resolve(onDelete());
+      setShowDeleteDialog(false);
+    } catch {
+      // Caller shows error toast; keep dialog open so the user can read it or cancel.
+    }
   };
 
   return (
@@ -67,7 +76,7 @@ export default function TableActions({
       <DeleteAlertDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        onDelete={onDelete}
+        onDelete={handleConfirmDelete}
         resourceName="item"
       />
     </>

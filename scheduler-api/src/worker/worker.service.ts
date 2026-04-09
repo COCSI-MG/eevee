@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { KubernetesService } from 'src/kubernetes/kubernetes.service';
-import {
-  WORKER_DEFINITION_B64_ENV_NAME,
-  WORKER_IMAGE_NAMES,
-  WORKER_JOB_PREFFIX,
-} from './worker.constants';
+import { WORKER_DEFINITION_B64_ENV_NAME } from './worker.constants';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { WorkerResponse } from './worker.interfaces';
 import { WorkerType } from './enum/worker-type.enum';
@@ -19,16 +15,15 @@ import { NodeGrpcJsJestStrategy } from './strategies/node-grpcjs-jest.strategy';
 import { NodeNestJsStrategy } from './strategies/node-nestjs.strategy';
 import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.strategy';
 import { NodeReactJsCypressIsolatedLogStrategy } from './strategies/node-reactjs-cypress-isolated-log.strategy';
-import { CreateWorkerFromDefinitionDto } from './dto/create-worker-from-definition.dto';
-import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.utils';
+import { NodeDefaultPostgresqlJestStrategy } from './strategies/node-default-postgresql-jest.strategy';
+import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
+import { NodeNestJsPostgresqlJestStrategy } from './strategies/node-nestjs-postgresql-jest.strategy';
 
 @Injectable()
 export class WorkerService {
   private readonly logger = new Logger(WorkerService.name);
 
   constructor(private readonly kubernetesService: KubernetesService) {}
-
-  private readonly DEFAULT_SRC_PATH = '/app/workspace/src';
 
   private readonly strategyByWorkerType: Record<
     WorkerType,
@@ -40,181 +35,90 @@ export class WorkerService {
     [WorkerType.NODE_NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(),
     [WorkerType.NODE_REACTJS_CYPRESS]:
       new NodeReactJsCypressIsolatedLogStrategy(),
+    [WorkerType.NODE_DEFAULT_POSTGRESQL]:
+      new NodeDefaultPostgresqlJestStrategy(),
+    [WorkerType.NODE_NESTJS_POSTGRESQL]: new NodeNestJsPostgresqlJestStrategy(), // Reuse NodeNestJsStrategy with Postgres support enabled
   };
 
-  private async createWorker(
-    jobName: string,
-    createJobFunction: () => Promise<KubernetesJobResult | void>,
-    processLogResult: (log: string) => WorkerResponse,
-    wait: boolean = false,
-  ) {
-    if (await this.kubernetesService.checkIfJobExists(jobName)) {
-      await this.kubernetesService.deleteJob(jobName);
-    }
-
-    const result: KubernetesJobResult | void = await createJobFunction();
-
-    if (!wait) return result;
-
-    const log = (<KubernetesJobResult>result).message;
-
-    return processLogResult(log);
-  }
-
-  private async defaultSynchronousWorkerOperations(
-    workerType: WorkerType,
-    createWorkerData: CreateWorkerDto,
-    dependencies: string[],
-  ) {
-    const jobName = `${WORKER_JOB_PREFFIX[workerType]}${Date.now()}`;
-
+  getStrategy(workerType: WorkerType): WorkerExecutionStrategy {
     const strategy = this.strategyByWorkerType[workerType];
     if (!strategy) {
       throw new Error(`Unsupported workerType: ${workerType}`);
     }
+    return strategy;
+  }
 
-    const createWorkerFunction = () =>
+  private async ensureJobDoesNotExist(jobName: string): Promise<void> {
+    if (await this.kubernetesService.checkIfJobExists(jobName)) {
+      await this.kubernetesService.deleteJob(jobName);
+    }
+  }
+
+  private async executeJobAndProcessResult(
+    jobName: string,
+    createJobFunction: () => Promise<KubernetesJobResult>,
+    processLogResult: (log: string) => WorkerResponse,
+  ): Promise<WorkerResponse> {
+    await this.ensureJobDoesNotExist(jobName);
+
+    const result = await createJobFunction();
+    return processLogResult(result.message);
+  }
+
+  /**
+   * @deprecated This method is deprecated in favor of `createWorkerWithInitContainer`, which uses an initialization container to set up the worker's environment. The old approach of passing all necessary data through environment variables and command arguments is prone to hitting Kubernetes limits on environment variable sizes and command lengths, especially for more complex worker definitions. The new init container strategy allows us to write the worker definition and any necessary files to a shared volume, which the main worker container can then access, thus bypassing these limitations.
+   */
+  async createSynchronousWorker(
+    workerType: WorkerType,
+    createWorkerData: CreateWorkerDto,
+    dependencies: string[],
+  ): Promise<WorkerResponse> {
+    const strategy = this.getStrategy(workerType);
+    const { imageName } = strategy.workerConfig;
+    const jobName = this.getJobName(workerType);
+
+    const createJobFunction = () =>
       this.kubernetesService.createAndWaitForJobCompletion(
         jobName,
-        WORKER_IMAGE_NAMES[workerType],
+        imageName,
         strategy.buildJobCommand(createWorkerData, dependencies),
       );
 
-    const result = await this.createWorker(
+    return this.executeJobAndProcessResult(
       jobName,
-      createWorkerFunction,
+      createJobFunction,
       strategy.processLogResult,
-      true,
     );
-
-    return <WorkerResponse>result;
   }
 
-  private getWorkerConstantsByType(type: WorkerType) {
-    switch (type) {
-      case WorkerType.NODE_DEFAULT:
-        return {
-          jobPrefix: WORKER_JOB_PREFFIX.node_default,
-          imageName: WORKER_IMAGE_NAMES.node_default,
-          srcPath: this.DEFAULT_SRC_PATH,
-          testPath: '/app/workspace/test',
-        };
-
-      case WorkerType.NODE_NESTJS:
-        return {
-          jobPrefix: WORKER_JOB_PREFFIX.node_nestjs,
-          imageName: WORKER_IMAGE_NAMES.node_nestjs,
-          srcPath: this.DEFAULT_SRC_PATH,
-          testPath: '/app/workspace/test',
-        };
-
-      case WorkerType.NODE_GRPCJS:
-        return {
-          jobPrefix: WORKER_JOB_PREFFIX.node_grpcjs,
-          imageName: WORKER_IMAGE_NAMES.node_grpcjs,
-          srcPath: this.DEFAULT_SRC_PATH,
-          testPath: '/app/workspace/test',
-        };
-
-      case WorkerType.NODE_NEXTJS_CYPRESS:
-        return {
-          jobPrefix: WORKER_JOB_PREFFIX.node_nextjs_cypress,
-          imageName: WORKER_IMAGE_NAMES.node_nextjs_cypress,
-          srcPath: this.DEFAULT_SRC_PATH,
-          testPath: '/app/workspace/cypress/e2e',
-        };
-
-      case WorkerType.NODE_REACTJS_CYPRESS:
-        return {
-          jobPrefix: WORKER_JOB_PREFFIX.node_reactjs_cypress,
-          imageName: WORKER_IMAGE_NAMES.node_reactjs_cypress,
-          srcPath: this.DEFAULT_SRC_PATH,
-          testPath: '/app/workspace/cypress/e2e',
-        };
-
-      default:
-        throw new Error(`Unsupported worker type: ${type}`);
-    }
-  }
-
-  async createGrpcJsWorkerAndWait(
+  /**
+   * Creates a worker with an initialization container.
+   * The initialization container is responsible for writing the worker definition and any necessary files to a shared volume, which the main worker container can then access. This approach allows us to bypass Kubernetes' command length limitations and avoid issues with environment variable size limits.
+   */
+  async createWorkerWithInitContainer(
+    jobName: string,
+    workerType: WorkerType,
     createWorkerData: CreateWorkerDto,
-    dependencies: string[],
-  ) {
-    return this.defaultSynchronousWorkerOperations(
-      WorkerType.NODE_GRPCJS,
-      createWorkerData,
-      dependencies,
-    );
-  }
-
-  async createDefaultNodeWorkerAndWait(
-    createWorkerData: CreateWorkerDto,
-    dependencies: string[],
-  ) {
-    return this.defaultSynchronousWorkerOperations(
-      WorkerType.NODE_DEFAULT,
-      createWorkerData,
-      dependencies,
-    );
-  }
-
-  async createNestJsWorkerAndWait(
-    createWorkerData: CreateWorkerDto,
-    dependencies: string[],
-  ) {
-    return this.defaultSynchronousWorkerOperations(
-      WorkerType.NODE_NESTJS,
-      createWorkerData,
-      dependencies,
-    );
-  }
-
-  async createNextJsCypressWorkerAndWait(
-    createWorkerData: CreateWorkerDto,
-    dependencies: string[],
-  ) {
-    return this.defaultSynchronousWorkerOperations(
-      WorkerType.NODE_NEXTJS_CYPRESS,
-      createWorkerData,
-      dependencies,
-    );
-  }
-
-  async createWorkerFromDefinition(
-    jobKey: string,
-    data: CreateWorkerFromDefinitionDto,
   ): Promise<WorkerResponse> {
-    const { definition, type } = data;
+    const strategy = this.getStrategy(workerType);
 
-    const workerConstants = this.getWorkerConstantsByType(type);
+    const { imageName, srcPath, testPath } = strategy.workerConfig;
+
+    const workerPayload = strategy.buildWorkerPayload(
+      createWorkerData,
+      createWorkerData.dependencies ?? [],
+    );
+
     const definitionWithPaths = {
-      ...definition,
-      srcPath: definition.srcPath || workerConstants.srcPath,
-      testPath: definition.testPath || workerConstants.testPath,
+      ...workerPayload,
+      srcPath: workerPayload.srcPath || srcPath,
+      testPath: workerPayload.testPath || testPath,
     };
 
-    const normalizedTestFiles = Object.fromEntries(
-      Object.entries(definitionWithPaths.testFiles ?? {}).map(
-        ([fileName, content]) => [
-          fileName,
-          normalizeTemplateImportPaths({
-            content,
-            srcPath: definitionWithPaths.srcPath,
-            testPath: definitionWithPaths.testPath,
-          }),
-        ],
-      ),
+    const sharedMounts = buildSharedEmptyDirMounts(
+      definitionWithPaths.srcPath,
+      definitionWithPaths.testPath,
     );
-
-    definitionWithPaths.testFiles = normalizedTestFiles;
-
-    const jobName = `${workerConstants.jobPrefix}-${jobKey}`;
-
-    const jobExists = await this.kubernetesService.checkIfJobExists(jobName);
-    if (jobExists) {
-      await this.kubernetesService.deleteJob(jobName);
-    }
 
     this.logger.debug(
       `Creating worker with jobName: ${jobName} and definition: ${JSON.stringify(definitionWithPaths)}`,
@@ -224,10 +128,57 @@ export class WorkerService {
     const encodedDefinition =
       Buffer.from(serializedDefinition).toString('base64');
 
-    const jobOptions: KubernetesJobOptions = {
+    // Delegate job options to the strategy when it implements buildJobOptions,
+    // otherwise fall back to the default bootstrap init container setup.
+    let jobOptions: KubernetesJobOptions;
+    if (strategy.buildJobOptions) {
+      jobOptions = strategy.buildJobOptions(
+        encodedDefinition,
+        createWorkerData.initSqlScript,
+      );
+    } else {
+      jobOptions = this.buildDefaultJobOptions(sharedMounts, encodedDefinition);
+    }
+
+    this.logger.debug(
+      `Job options for worker ${jobName}: ${JSON.stringify(jobOptions)}`,
+    );
+
+    const jobCommand = strategy.buildExecutionJobCommand(createWorkerData);
+
+    const createJobFunction = () =>
+      this.kubernetesService.createAndWaitForJobCompletion(
+        jobName,
+        imageName,
+        jobCommand,
+        jobOptions,
+      );
+
+    return this.executeJobAndProcessResult(
+      jobName,
+      createJobFunction,
+      strategy.processLogResult,
+    );
+  }
+
+  async cancelWorkerJob(jobName: string): Promise<void> {
+    await this.kubernetesService.deleteJob(jobName);
+  }
+
+  private getJobName(workerType: WorkerType): string {
+    const strategy = this.getStrategy(workerType);
+    const { jobPrefix } = strategy.workerConfig;
+    return `${jobPrefix}-${Date.now()}`;
+  }
+
+  private buildDefaultJobOptions(
+    sharedMounts: any,
+    encodedDefinition: string,
+  ): KubernetesJobOptions {
+    return {
       sharedEmptyDir: {
         volumeName: 'worker-app-volume',
-        mountPath: '/app/workspace', // Path inside the container where the shared volume will be mounted, all workers will read/write to this path
+        mounts: sharedMounts,
       },
       initContainers: [
         {
@@ -242,28 +193,5 @@ export class WorkerService {
         },
       ],
     };
-
-    this.logger.debug(
-      `Job options for worker ${jobName}: ${JSON.stringify(jobOptions)}`,
-    );
-
-    const createWorkerFunction = () =>
-      this.kubernetesService.createAndWaitForJobCompletion(
-        jobName,
-        workerConstants.imageName,
-        [],
-        jobOptions,
-      );
-
-    const strategy = this.strategyByWorkerType[type];
-
-    const result = await this.createWorker(
-      jobName,
-      createWorkerFunction,
-      strategy.processLogResult,
-      true,
-    );
-
-    return <WorkerResponse>result;
   }
 }

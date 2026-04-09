@@ -17,4 +17,5 @@ export class CreateAttemptDto extends OmitType(Attempt, [
   report: string;
   assignmentId: number;
   status: AttemptStatus;
+  receivedWork?: Record<string, string>;
 }

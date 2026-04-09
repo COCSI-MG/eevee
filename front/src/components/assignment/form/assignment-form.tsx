@@ -6,16 +6,28 @@ import * as Yup from "yup";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Save } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ClipboardCheck,
+  Code,
+  Database,
+  Layers,
+  Save,
+  Settings,
+} from "lucide-react";
 import { useClasses } from "@/hooks/use-classes";
 import TemplateCard from "@/components/assignment/template-card";
-import AssignmentStepContainer from "@/components/assignment/assignment-step-container";
+import AssignmentStepContainer, {
+  StepDefinition,
+} from "@/components/assignment/assignment-step-container";
 import { useAssignmentForm } from "@/hooks/use-assigment-form";
 import AssignmentFormReview from "@/components/assignment/form/assignment-review-form";
 import { AssignmentConfigForm } from "./assignment-config-form";
 import { AssignmentBoilerplateForm } from "./assignment-boilerplate-form";
+import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
 
 const validationSchema = Yup.object({
   title: Yup.string().required("Title is required"),
@@ -30,19 +42,50 @@ const validationSchema = Yup.object({
   classId: Yup.string().required("Class is required"),
 });
 
-enum AssignmentFormSteps {
-  Config = 1,
-  Templates,
-  Boilerplate,
-  Review,
+const STEP_CONFIG: StepDefinition = {
+  id: "config",
+  title: "Configuração",
+  icon: Settings,
+};
+const STEP_TEMPLATES: StepDefinition = {
+  id: "templates",
+  title: "Templates",
+  icon: Code,
+};
+const STEP_BOILERPLATE: StepDefinition = {
+  id: "boilerplate",
+  title: "Boilerplate",
+  icon: Layers,
+};
+const STEP_INIT_SQL: StepDefinition = {
+  id: "initSql",
+  title: "Init SQL Script",
+  icon: Database,
+};
+const STEP_REVIEW: StepDefinition = {
+  id: "review",
+  title: "Revisão",
+  icon: ClipboardCheck,
+};
+
+function buildSteps(workerType: string): StepDefinition[] {
+  const steps = [STEP_CONFIG, STEP_TEMPLATES, STEP_BOILERPLATE];
+
+  if (
+    workerType === WorkerType.NODE_DEFAULT_POSTGRESQL ||
+    workerType === WorkerType.NODE_NESTJS_POSTGRESQL
+  ) {
+    steps.push(STEP_INIT_SQL);
+  }
+
+  steps.push(STEP_REVIEW);
+  return steps;
 }
 
 export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   existingAssignmentId,
 }) => {
-  const [currentStep, setCurrentStep] = useState<AssignmentFormSteps>(
-    AssignmentFormSteps.Config
-  );
+  const [currentStep, setCurrentStep] = useState(1);
 
   const {
     existingAssignment,
@@ -60,18 +103,21 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     maxAttempts: existingAssignment?.maxAttempts ?? 1,
     workerType: existingAssignment?.workerType ?? WorkerType.NODE_DEFAULT,
     boilerplate:
+      existingAssignment?.boilerplateContent ??
       existingAssignment?.boilerplate ??
       WorkerDefaultTemplateMap[
         (existingAssignment?.workerType ||
           WorkerType.NODE_DEFAULT) as WorkerType
       ],
     classId: existingAssignment?.classId ?? 0,
+    initSqlScript: existingAssignment?.initSqlScript ?? "",
   };
 
   const handleSubmit = (values: typeof initialValues) => {
     return upsertAssignment({
       newAssignment: {
         ...values,
+        boilerplateContent: values.boilerplate,
         classId: Number(values.classId),
       } as Assignment,
       templates: selectedTemplates,
@@ -88,117 +134,146 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
   return (
     <div className="p-4 space-y-4 overflow-hidden">
-      <AssignmentStepContainer currentStep={currentStep} />
+      <Formik
+        initialValues={initialValues}
+        validationSchema={validationSchema}
+        onSubmit={handleSubmit}
+        enableReinitialize
+      >
+        {({ isSubmitting, values, setFieldValue, isValid }) => {
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          useEffect(() => {
+            if (
+              values.workerType &&
+              Object.values(WorkerType).includes(
+                values.workerType as WorkerType,
+              )
+            ) {
+              const safeWorkerType = values.workerType as WorkerType;
+              setFieldValue(
+                "boilerplate",
+                WorkerDefaultTemplateMap[safeWorkerType],
+              );
+            }
+          }, [values.workerType, setFieldValue]);
 
-      <div className="max-w-7xl mx-auto">
-        <Formik
-          initialValues={initialValues}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
-          enableReinitialize
-        >
-          {({ isSubmitting, values, setFieldValue, isValid }) => {
-            // eslint-disable-next-line react-hooks/rules-of-hooks
-            useEffect(() => {
-              if (
-                values.workerType &&
-                Object.values(WorkerType).includes(
-                  values.workerType as WorkerType
-                )
-              ) {
-                const safeWorkerType = values.workerType as WorkerType;
-                setFieldValue(
-                  "boilerplate",
-                  WorkerDefaultTemplateMap[safeWorkerType]
-                );
-              }
-            }, [values.workerType, setFieldValue]);
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const steps = useMemo(
+            () => buildSteps(values.workerType),
+            [values.workerType],
+          );
 
-            const stepValidations: { [key in AssignmentFormSteps]: boolean } = {
-              [AssignmentFormSteps.Config]: isValid,
-              [AssignmentFormSteps.Templates]: true,
-              [AssignmentFormSteps.Boilerplate]:
-                values.boilerplate?.trim() != "",
-              [AssignmentFormSteps.Review]: isValid,
-            };
+          const totalSteps = steps.length;
+          const currentStepDef = steps[currentStep - 1];
+          const isLastStep = currentStep === totalSteps;
 
-            const canProceedToNextStep = stepValidations[currentStep];
+          // Clamp currentStep if steps changed (e.g. user switched away from postgres)
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          useEffect(() => {
+            if (currentStep > totalSteps) {
+              setCurrentStep(totalSteps);
+            }
+          }, [totalSteps]);
 
-            return (
-              <Form className="w-full">
-                {currentStep === AssignmentFormSteps.Config && (
-                  <AssignmentConfigForm classes={classes || []} />
-                )}
-                {currentStep === AssignmentFormSteps.Templates && (
-                  <TemplateCard
-                    selectedTemplates={selectedTemplates}
-                    setSelectedTemplates={setSelectedTemplates}
-                    workerType={values.workerType as WorkerType}
-                  />
-                )}
-                {currentStep === AssignmentFormSteps.Boilerplate && (
-                  <AssignmentBoilerplateForm
-                    values={values}
-                    setFieldValue={setFieldValue}
-                  />
-                )}
-                {currentStep === AssignmentFormSteps.Review && (
-                  <AssignmentFormReview
-                    values={values}
-                    classes={classes!}
-                    selectedTemplates={selectedTemplates}
-                  />
-                )}
+          const stepValidations: Record<string, boolean> = {
+            config: isValid,
+            templates: true,
+            boilerplate: values.boilerplate?.trim() !== "",
+            initSql: true,
+            review: isValid,
+          };
 
-                <div className={"flex justify-between mt-8 mx-auto"}>
-                  <Button
-                    type="button"
-                    variant={"outline"}
-                    onClick={() => {
-                      if (currentStep > 1) {
-                        setCurrentStep(currentStep - 1);
-                      }
-                    }}
-                    disabled={currentStep === 1}
-                    className="border-slate-600 text-slate-200 hover:bg-slate-700 disabled:opacity-50"
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-2" />
-                    Anterior
-                  </Button>
+          const canProceedToNextStep =
+            currentStepDef && stepValidations[currentStepDef.id];
 
-                  <div className="flex gap-2">
-                    {AssignmentFormSteps.Review !== currentStep ? (
-                      <Button
-                        type="button"
-                        disabled={!canProceedToNextStep}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setCurrentStep(currentStep + 1);
-                        }}
-                      >
-                        Continuar
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    ) : (
-                      <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="bg-green-600 hover:bg-green-700 transition-colors"
-                      >
-                        <Save className="w-4 h-4 mr-2" />
-                        {existingAssignmentId
-                          ? "Update Assignment"
-                          : "Create Assignment"}
-                      </Button>
-                    )}
+          return (
+            <>
+              <AssignmentStepContainer
+                currentStep={currentStep}
+                steps={steps}
+              />
+              <div className="max-w-7xl mx-auto">
+                <Form className="w-full">
+                  {currentStepDef?.id === "config" && (
+                    <AssignmentConfigForm classes={classes || []} />
+                  )}
+                  {currentStepDef?.id === "templates" && (
+                    <TemplateCard
+                      selectedTemplates={selectedTemplates}
+                      setSelectedTemplates={setSelectedTemplates}
+                      workerType={values.workerType as WorkerType}
+                    />
+                  )}
+                  {currentStepDef?.id === "boilerplate" && (
+                    <AssignmentBoilerplateForm
+                      values={values}
+                      setFieldValue={setFieldValue}
+                    />
+                  )}
+                  {currentStepDef?.id === "initSql" && (
+                    <AssignmentInitSqlForm
+                      initSqlScript={values.initSqlScript}
+                      setFieldValue={setFieldValue}
+                    />
+                  )}
+                  {currentStepDef?.id === "review" && (
+                    <AssignmentFormReview
+                      values={values}
+                      classes={classes!}
+                      selectedTemplates={selectedTemplates}
+                    />
+                  )}
+
+                  <div className={"flex justify-between mt-8 mx-auto"}>
+                    <Button
+                      type="button"
+                      variant={"outline"}
+                      onClick={() => {
+                        if (currentStep > 1) {
+                          setCurrentStep(currentStep - 1);
+                        }
+                      }}
+                      disabled={currentStep === 1}
+                      className="border-slate-600 text-slate-200 hover:bg-slate-700 disabled:opacity-50"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-2" />
+                      Anterior
+                    </Button>
+
+                    <div className="flex gap-2">
+                      {!isLastStep ? (
+                        <Button
+                          type="button"
+                          disabled={!canProceedToNextStep}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setCurrentStep(currentStep + 1);
+                          }}
+                        >
+                          Continuar
+                          <ChevronRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      ) : (
+                        <Button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="bg-green-600 hover:bg-green-700 transition-colors"
+                        >
+                          <Save className="w-4 h-4 mr-2" />
+                          {existingAssignmentId
+                            ? "Update Assignment"
+                            : "Create Assignment"}
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Form>
-            );
-          }}
-        </Formik>
-      </div>
+                </Form>
+              </div>
+            </>
+          );
+        }}
+      </Formik>
     </div>
   );
 };

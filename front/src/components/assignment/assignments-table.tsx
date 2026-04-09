@@ -1,6 +1,8 @@
 "use client";
 
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 import { Code, UserCog } from "lucide-react";
 import {
   Table,
@@ -53,6 +55,8 @@ const ViewUserSuspensionComponent = ({
 export default function AssignmentsTable({
   assignments,
 }: AssignmentsTableProps) {
+  const queryClient = useQueryClient();
+
   return (
     <Table>
       <TableHeader>
@@ -90,8 +94,28 @@ export default function AssignmentsTable({
               <TableCell>
                 <TableActions
                   href={`${AppRoutes.AdminAssignments}/${assignment.id}`}
-                  onDelete={() => {
-                    AssignmentService.DeleteAssignment(assignment.id);
+                  onDelete={async () => {
+                    try {
+                      await AssignmentService.DeleteAssignment(assignment.id);
+                      toast({
+                        title: "Tarefa excluída",
+                        description: "A tarefa foi removida com sucesso.",
+                      });
+                      await queryClient.invalidateQueries({
+                        queryKey: ["adminAssignments"],
+                      });
+                    } catch (err) {
+                      const description =
+                        err instanceof Error
+                          ? err.message
+                          : "Não foi possível excluir a tarefa.";
+                      toast({
+                        variant: "destructive",
+                        title: "Não foi possível excluir",
+                        description,
+                      });
+                      throw err;
+                    }
                   }}
                   otherActions={[
                     <WorkspaceLinkComponent

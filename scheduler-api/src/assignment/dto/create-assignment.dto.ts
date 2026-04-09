@@ -11,7 +11,6 @@ import {
 } from 'class-validator';
 import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
 import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
-import { WorkerDefinitionDto } from 'src/worker/dto/worker-definition.dto';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 export class TemplateParamDto {
@@ -70,12 +69,30 @@ export class CreateAssignmentDto {
 
   @ApiProperty({
     description:
-      'Boilerplate code provided by the teacher (stored as a server-side file). Prefer this field; validationScript is kept for backward compatibility.',
+      'Boilerplate code provided by the teacher. Persisted in assignment.boilerplateContent. Prefer this field; validationScript is kept for backward compatibility.',
     required: false,
   })
   @IsOptional()
   @IsString()
   boilerplate?: string;
+
+  @ApiProperty({
+    description:
+      'Boilerplate code content stored directly in the assignment.boilerplateContent database column.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  boilerplateContent?: string;
+
+  @ApiProperty({
+    description:
+      'SQL script to initialize the database schema/seed data for PostgreSQL-backed workers.',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  initSqlScript?: string;
 
   @ApiProperty({ type: [AssignmentTemplateDto] })
   @ValidateNested({ each: true })

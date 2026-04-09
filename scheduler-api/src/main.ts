@@ -2,15 +2,24 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   app.enableVersioning({
     defaultVersion: '1',
     type: VersioningType.URI,
+  });
+
+  app.enableCors({
+    origin: [
+      new RegExp(/localhost:\d+/),
+      new RegExp(/http(|s):\/\/eeveecodelab\.(local|site|com|online)$/),
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE, OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
 
   const config = new DocumentBuilder()
@@ -23,21 +32,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  app.connectMicroservice({
-    transport: Transport.KAFKA,
-    options: {
-      client: {
-        brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
-      },
-      consumer: {
-        groupId:
-          process.env.KAFKA_CONSUMER_GROUP_ID ||
-          'scheduler-api-consumer-group' 
-      },
-    },
-  });
-
-  await app.startAllMicroservices();
   await app.listen(process.env.PORT || 3000);
 }
 

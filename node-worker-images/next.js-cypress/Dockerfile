@@ -12,5 +12,3 @@ COPY next-env.d.ts .
 COPY tsconfig.json .
 COPY tsconfig.trigger.json .
 COPY cypress.config.ts .
-
-CMD ["npm", "start"]

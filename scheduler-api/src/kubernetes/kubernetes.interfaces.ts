@@ -14,6 +14,7 @@ export interface KubernetesJobInitContainer {
   name: string;
   image: string;
   imagePullPolicy?: 'Never' | 'IfNotPresent' | 'Always';
+  restartPolicy?: 'Always';
   command?: string[];
   env?: {
     name: string;
@@ -23,11 +24,15 @@ export interface KubernetesJobInitContainer {
 
 export interface KubernetesJobSharedEmptyDir {
   volumeName: string;
-  mountPath: string;
+  mounts: {
+    mountPath: string;
+    subPath?: string;
+  }[];
 }
 
 export interface KubernetesJobOptions {
   configMap?: KubernetesJobConfigMap[];
   initContainers?: KubernetesJobInitContainer[];
   sharedEmptyDir?: KubernetesJobSharedEmptyDir;
+  command?: string[];
 }

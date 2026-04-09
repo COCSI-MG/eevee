@@ -1,20 +1,24 @@
 import { WorkerType } from './enum/worker-type.enum';
 
-export const WORKER_JOB_PREFFIX = {
+export const WORKER_JOB_PREFIX: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: 'worker-node-default',
   [WorkerType.NODE_NESTJS]: 'worker-node-nestjs',
   [WorkerType.NODE_GRPCJS]: 'worker-node-grpcjs',
   [WorkerType.NODE_NEXTJS_CYPRESS]: 'worker-node-nextjs-cypress',
   [WorkerType.NODE_REACTJS_CYPRESS]: 'worker-react-cypress-default',
+  [WorkerType.NODE_DEFAULT_POSTGRESQL]: 'worker-node-default-pg',
+  [WorkerType.NODE_NESTJS_POSTGRESQL]: 'worker-node-nestjs-pg',
 };
 
-export const WORKER_IMAGE_NAMES = {
+export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: 'docker.io/library/worker-node-default-img:latest',
-  [WorkerType.NODE_NESTJS]: 'docker.io/library/worker-node-nestjs-img:latest',
+  [WorkerType.NODE_NESTJS]: 'docker.io/library/worker-nestjs-default-img:latest',
   [WorkerType.NODE_GRPCJS]: 'docker.io/library/worker-node-grpcjs-img:latest',
   [WorkerType.NODE_NEXTJS_CYPRESS]:
     'docker.io/library/worker-node-nextjs-cypress-img:latest',
   [WorkerType.NODE_REACTJS_CYPRESS]: 'docker.io/library/worker-react-cypress-img:latest',
+  [WorkerType.NODE_DEFAULT_POSTGRESQL]: 'docker.io/library/worker-node-default-img:latest',
+  [WorkerType.NODE_NESTJS_POSTGRESQL]: 'docker.io/library/worker-nestjs-default-img:latest', // Reuse the same image as NODE_NESTJS since it includes Postgres support
 };
 
 // CHARS USED TO IDENTIFY WORKER OUTPUT RESPONSES

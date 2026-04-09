@@ -68,8 +68,14 @@ export class Assignment {
   })
   workerType: WorkerType;
 
+  @Column({ type: 'text', nullable: true })
+  initSqlScript?: string;
+
   @Column({ nullable: true })
   boilerplateFilePath?: string;
+
+  @Column({ type: 'text', nullable: true })
+  boilerplateContent?: string;
 
   @OneToMany(
     () => AssignmentUserSuspension,

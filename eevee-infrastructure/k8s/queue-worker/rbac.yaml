@@ -1,0 +1,40 @@
+# 1. Cria o usuário do sistema para o Worker
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: worker-sa
+  namespace: default
+
+---
+# 2. Cria a regra: Permite mexer apenas com Jobs e Pods
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: job-manager-role
+  namespace: default
+rules:
+  - apiGroups: ["batch", "extensions"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete", "patch"]
+  - apiGroups: [""]
+    resources: ["pods/log"] # Necessário para ler os logs do código do aluno depois
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"] # Necessário para ler os logs do código do aluno depois
+    verbs: ["get", "list", "watch"]
+
+---
+# 3. Entrega o crachá: Liga o usuário à regra
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: worker-job-manager-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: worker-sa
+    namespace: default
+roleRef:
+  kind: Role
+  name: job-manager-role
+  apiGroup: rbac.authorization.k8s.io

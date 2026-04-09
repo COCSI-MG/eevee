@@ -9,11 +9,12 @@ import { RequestContextModule } from 'src/request-context/request-context.module
 import { ClassModule } from 'src/class/class.module';
 import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
 import { Template } from 'src/template/entities/template.entity';
+import { Attempt } from 'src/attempt/entities/attempt.entity';
 
 @Module({
   controllers: [AssignmentController],
   imports: [TypeOrmModule.forFeature([Assignment]), TypeOrmModule.forFeature([UserClass]), TypeOrmModule.forFeature([AssignmentTemplate]), 
-  TypeOrmModule.forFeature([AssignmentParam]), TypeOrmModule.forFeature([Template]),
+  TypeOrmModule.forFeature([AssignmentParam]), TypeOrmModule.forFeature([Template]), TypeOrmModule.forFeature([Attempt]),
   RequestContextModule, ClassModule],
   providers: [AssignmentService],
   exports: [AssignmentService],

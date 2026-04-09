@@ -19,8 +19,9 @@ export interface Template {
   title: string;
   description: string;
   workerType: WorkerType;
-  templateContent: string;
+  content: string;
   templateParams: TemplateParam[];
+  dependencies: string[];
 }
 
 export interface CreateTemplateRequest {
@@ -28,7 +29,8 @@ export interface CreateTemplateRequest {
   title: string;
   description: string;
   workerType: WorkerType;
-  templateContent: string;
+  content: string;
   params: string[];
   typedParams?: Array<{ name: string; type: TemplateParamType }>;
+  dependencies?: string[];
 }

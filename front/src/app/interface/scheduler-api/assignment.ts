@@ -29,10 +29,14 @@ export interface Assignment {
   classId: number;
   title: string;
   description: string;
+  /** Source-of-truth starter code returned by backend. */
+  boilerplateContent?: string;
   /** Preferred name for the teacher-provided starter code shown in the student workspace. */
   boilerplate?: string;
   /** Backward-compatible alias (legacy name used by older frontend code). */
   validationScript?: string;
+  /** SQL script to initialize the database for PostgreSQL-backed workers. */
+  initSqlScript?: string;
   maxAttempts: number;
   workerType: string;
   workerDefinition: WorkerDefinition;
@@ -47,8 +51,10 @@ export interface CreateAssignmentRequest {
   classId: number;
   title: string;
   description: string;
+  boilerplateContent?: string;
   boilerplate?: string;
   validationScript?: string;
+  initSqlScript?: string;
   templates: {
     templateId: number;
     params: AssignmentTemplateParam[];
@@ -63,8 +69,10 @@ export interface UpdateAssignmentRequest {
   classId: number;
   title: string;
   description: string;
+  boilerplateContent?: string;
   boilerplate?: string;
   validationScript?: string;
+  initSqlScript?: string;
   maxAttempts: number;
   workerType: string;
   templates: {

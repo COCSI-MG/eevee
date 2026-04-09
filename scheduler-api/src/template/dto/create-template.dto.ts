@@ -43,7 +43,7 @@ export class CreateTemplateDto {
 
   @IsNotBlank()
   @IsString()
-  templateContent: string;
+  content: string;
 
   @IsNotEmpty()
   @IsEnum(WorkerType)

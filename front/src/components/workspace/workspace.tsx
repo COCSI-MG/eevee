@@ -23,6 +23,7 @@ interface WorkspaceProps {
 
 export default function Workspace({ assignment, user }: WorkspaceProps) {
   const [activeFileContent, setActiveFileContent] = React.useState("");
+  const latestFileRequestIdRef = React.useRef(0);
 
   const { selectedItem, setSelectedItem, setFileTreeData } =
     useWorkspaceContext();
@@ -77,10 +78,13 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
           !hasPath(fileTree, "src/App.tsx"));
 
       if (!fileTree || shouldRebuildReactWorkspaceTree) {
+        const assignmentBoilerplate =
+          assignment.boilerplateContent ?? assignment.boilerplate;
+
         // Create the correct file node based on assignment's worker type and boilerplate
         const defaultFileNode: FileNode = createDefaultFileNode(
           assignment.workerType as WorkerType,
-          assignment.boilerplate,
+          assignmentBoilerplate,
         );
         fileTree = defaultFileNode;
         shouldPersistInitialState = true;
@@ -101,8 +105,11 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
 
       const firstFile = findFirst(fileTree);
       if (firstFile) {
+        const assignmentBoilerplate =
+          assignment.boilerplateContent ?? assignment.boilerplate;
+
         const firstFileContent =
-          firstFile.content ?? assignment.boilerplate ?? "";
+          firstFile.content ?? assignmentBoilerplate ?? "";
 
         setSelectedItem({
           id: firstFile.id,
@@ -130,6 +137,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     },
     [
       setFileTreeData,
+      assignment.boilerplateContent,
       assignment.boilerplate,
       assignment.workerType,
       saveFileTreeAsync,
@@ -143,21 +151,34 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
   }, [assignment.id, getOrCreateFileTreeOnInit, user.id]);
 
   const handleFileSelect = async (node: FileNode) => {
-    if (!node.isFile) return;
+    if (node.isFile) {
+      const requestId = ++latestFileRequestIdRef.current;
 
-    setSelectedItem({
-      id: node.id,
-      type: "file",
-      path: node.path,
-    });
+      setSelectedItem({
+        id: node.id,
+        type: "file",
+        path: node.path,
+      });
 
-    const content = await fetchFileContent({
-      assignmentId: assignment.id,
-      userId: user.id,
-      filePath: node.path,
-    });
+      const content = await fetchFileContent({
+        assignmentId: assignment.id,
+        userId: user.id,
+        filePath: node.path,
+      });
 
-    setActiveFileContent(content || "");
+      if (requestId !== latestFileRequestIdRef.current) {
+        return;
+      }
+
+      setActiveFileContent(content || "");
+    } else {
+      latestFileRequestIdRef.current += 1;
+      setSelectedItem({
+        id: node.id,
+        type: "folder",
+        path: node.path,
+      });
+    }
   };
 
   const handleEditorChange = (value: string | undefined) => {
