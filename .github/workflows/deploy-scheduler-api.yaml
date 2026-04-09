@@ -10,7 +10,7 @@ on:
 
 env:
     REGISTRY: ghcr.io
-    SCHEDULER_API_IMAGE: ${{ vars.SCHEDULER_API_IMAGE_NAME }}
+    SCHEDULER_API_IMAGE: ${{ vars.SCHEDULER_API_IMAGE }}
 
 jobs:
     build-and-deploy:
