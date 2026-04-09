@@ -10,7 +10,7 @@ on:
 
 env:
     REGISTRY: ghcr.io
-    FRONT_IMAGE: ${{ vars.FRONT_IMAGE_NAME }}
+    FRONT_IMAGE: ${{ vars.FRONT_IMAGE }}
 
 
 jobs:
