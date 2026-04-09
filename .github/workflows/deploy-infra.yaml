@@ -5,8 +5,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  SCHEDULER_API_IMAGE: ${{ vars.SCHEDULER_API_IMAGE_NAME }}
-  FRONT_IMAGE: ${{ vars.FRONT_IMAGE_NAME }}
+  SCHEDULER_API_IMAGE: ${{ vars.SCHEDULER_API_IMAGE }}
+  FRONT_IMAGE: ${{ vars.FRONT_IMAGE }}
   K8S_ACME_EMAIL: ${{ vars.K8S_ACME_EMAIL }}
   K8S_CLOUDFLARE_EMAIL: ${{ vars.K8S_CLOUDFLARE_EMAIL }}
   K8S_API_HOST: ${{ vars.K8S_API_HOST }}
@@ -78,8 +78,8 @@ jobs:
 
       - name: Render and apply production overlay
         env:
-          SCHEDULER_API_IMAGE: ${{ env.REGISTRY }}/${{ vars.SCHEDULER_API_IMAGE }}:${{ github.sha }}
-          FRONT_IMAGE: ${{ env.REGISTRY }}/${{ vars.FRONT_IMAGE }}:${{ github.sha }}
+          SCHEDULER_API_IMAGE: ${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:latest
+          FRONT_IMAGE: ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:latest
           K8S_ACME_EMAIL: ${{ env.K8S_ACME_EMAIL }}
           K8S_CLOUDFLARE_EMAIL: ${{ env.K8S_CLOUDFLARE_EMAIL }}
           K8S_API_HOST: ${{ env.K8S_API_HOST }}
