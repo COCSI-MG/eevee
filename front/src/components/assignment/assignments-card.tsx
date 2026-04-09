@@ -7,12 +7,20 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useRouter } from "next/navigation";
 import { Route } from "@/app/routes";
 import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface AssignmentsCardProps {
   data: Assignment[];
@@ -23,6 +31,14 @@ const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
 export default function AssignmentsCard({ data }: AssignmentsCardProps) {
   const { user } = useAuthContext();
   const { push } = useRouter();
+  const [selectedDescriptionModal, setSelectedDescriptionModal] = useState<
+    number | null
+  >(null);
+
+  const shouldShowExpandButton = (description: string | undefined) => {
+    if (!description) return false;
+    return description.length > 80;
+  };
 
   const handleTry = (id: number) => {
     push(`/${Route.Assignment}/${id}/${Route.Workspace}`);
@@ -109,24 +125,39 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                   </Badge>
                 )}
             </CardTitle>
-            <CardDescription className="text-slate-400 line-clamp-2">
-              {assignment.description}
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col space-y-2 items-center justify-between">
-              {assignment.assignmentAttempts?.length > 0 && (
-                <Button
-                  className="w-full bg-green-700 hover:bg-green-800 text-white mb-2"
-                  onClick={() =>
-                    push(`/${Route.Assignment}/${assignment.id}/attempts`)
-                  }
-                  disabled={!isUserSuspendedFromAssignment(assignment)}
-                >
-                  <CodeSquare className="h-4 w-4 mr-2" />
-                  Visualizar Resultados
-                </Button>
-              )}
+            <div className="flex flex-col space-y-4">
+              <div className="space-y-2">
+                <CardDescription className="text-slate-400 line-clamp-2">
+                  {assignment.description}
+                </CardDescription>
+
+                {shouldShowExpandButton(assignment.description) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-400 hover:text-blue-300 h-auto p-0 w-fit"
+                    onClick={() => setSelectedDescriptionModal(assignment.id)}
+                  >
+                    Ver mais
+                  </Button>
+                )}
+              </div>
+
+              <div className="flex flex-col space-y-2 items-center justify-between">
+                {assignment.assignmentAttempts?.length > 0 && (
+                  <Button
+                    className="w-full bg-green-700 hover:bg-green-800 text-white"
+                    onClick={() =>
+                      push(`/${Route.Assignment}/${assignment.id}/attempts`)
+                    }
+                    disabled={!isUserSuspendedFromAssignment(assignment)}
+                  >
+                    <CodeSquare className="h-4 w-4 mr-2" />
+                    Visualizar Resultados
+                  </Button>
+                )}
 
               <Button
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-700 disabled:text-slate-400"
@@ -141,11 +172,30 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                   ? "Tarefa em execução..."
                   : "Iniciar"}
               </Button>
+              </div>
             </div>
           </CardContent>
           </Card>
         );
       })}
+
+      <Dialog
+        open={selectedDescriptionModal !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedDescriptionModal(null);
+        }}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {data.find((a) => a.id === selectedDescriptionModal)?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <DialogDescription className="text-slate-300 max-h-96 overflow-y-auto whitespace-pre-wrap">
+            {data.find((a) => a.id === selectedDescriptionModal)?.description}
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
