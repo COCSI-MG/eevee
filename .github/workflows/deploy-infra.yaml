@@ -57,11 +57,13 @@ jobs:
       - name: Cert-manager and Cloudflare Setup
         run: |
           kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.20.0/cert-manager.yaml
+
           kubectl wait --for=condition=Available deployment --all -n cert-manager --timeout=300s
 
           kubectl create secret generic cloudflare-api-token-secret \
+            -n cert-manager \
             --from-literal=api-token='${{ secrets.CLOUDFLARE_API_TOKEN }}' \
-            --dry-run=client -o yaml | kubectl apply -f -n cert-manager
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Apply PostgreSQL manifests
         run: |
