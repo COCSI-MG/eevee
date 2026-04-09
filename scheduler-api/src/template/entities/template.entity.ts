@@ -14,8 +14,11 @@ export class Template {
   @Column({ nullable: true })
   description?: string;
 
-  @Column()
-  filePath: string;
+  @Column({ type: 'varchar', nullable: true })
+  filePath: string | null;
+
+  @Column('text', { nullable: true })
+  content: string;
 
   @Column({
     type: 'enum',

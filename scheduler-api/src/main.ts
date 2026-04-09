@@ -4,12 +4,22 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule);
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   app.enableVersioning({
     defaultVersion: '1',
     type: VersioningType.URI,
+  });
+
+  app.enableCors({
+    origin: [
+      new RegExp(/localhost:\d+/),
+      new RegExp(/http(|s):\/\/eeveecodelab\.(local|site|com|online)$/),
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE, OPTIONS',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
   });
 
   const config = new DocumentBuilder()

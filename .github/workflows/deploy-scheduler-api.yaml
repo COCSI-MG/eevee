@@ -1,0 +1,56 @@
+name: Deploy Scheduler API
+
+on:
+    push:
+        branches:
+        - main
+        paths:
+        - 'scheduler-api/**'
+        - '.github/workflows/deploy-scheduler-api.yaml'
+
+env:
+    REGISTRY: ghcr.io
+    SCHEDULER_API_IMAGE: ${{ vars.SCHEDULER_API_IMAGE_NAME }}
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout do código
+              uses: actions/checkout@v3
+            
+            - name: Login no GitHub Container Registry
+              uses: docker/login-action@v2
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.GHCR_TOKEN }}
+            
+            - name: Build e Push da Imagem Docker
+              uses: docker/build-push-action@v3
+              with:
+                context: ./scheduler-api
+                push: true
+                tags: |
+                    ${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:latest
+                    ${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }}
+
+            - name: Configurar kubectl
+              uses: azure/setup-kubectl@v3
+
+            - name: Atualiza Configuração do Kubernetes
+              env:
+                KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+              run: |
+                mkdir -p $HOME/.kube
+                echo "${KUBE_CONFIG_DATA}" | base64 --decode > $HOME/.kube/config
+                chmod 600 $HOME/.kube/config
+
+            - name: Atualiza imagem do scheduler-api e reinicia workloads
+              run: |
+                kubectl set image deployment/scheduler-api-deployment scheduler-api=${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }} -n default
+                kubectl set image deployment/queue-worker-deployment queue-worker=${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }} -n default
+
+                kubectl rollout restart deployment/scheduler-api-deployment -n default
+                kubectl rollout restart deployment/queue-worker-deployment -n default

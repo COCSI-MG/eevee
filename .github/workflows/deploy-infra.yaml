@@ -1,0 +1,108 @@
+name: Deploy Infra
+
+on:
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  SCHEDULER_API_IMAGE: ${{ vars.SCHEDULER_API_IMAGE_NAME }}
+  FRONT_IMAGE: ${{ vars.FRONT_IMAGE_NAME }}
+  K8S_ACME_EMAIL: ${{ vars.K8S_ACME_EMAIL }}
+  K8S_CLOUDFLARE_EMAIL: ${{ vars.K8S_CLOUDFLARE_EMAIL }}
+  K8S_API_HOST: ${{ vars.K8S_API_HOST }}
+  K8S_FRONT_HOST: ${{ vars.K8S_FRONT_HOST }}
+  K8S_FRONT_WWW_HOST: ${{ vars.K8S_FRONT_WWW_HOST }}
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Setup kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+        run: |
+          mkdir -p "$HOME/.kube"
+          echo "${KUBE_CONFIG_DATA}" | base64 --decode > "$HOME/.kube/config"
+          chmod 600 "$HOME/.kube/config"
+
+      - name: Apply shared config
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/config/db-configmap.yaml
+
+      - name: Apply application secrets
+        run: |
+          kubectl create secret generic eevee-secrets \
+            --from-literal=DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+            --from-literal=JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply image pull secret
+        run: |
+          kubectl create secret docker-registry ghcr-auth \
+            --docker-server=${{ env.REGISTRY }} \
+            --docker-username='${{ github.actor }}' \
+            --docker-password='${{ secrets.GHCR_TOKEN }}' \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Cert-manager and Cloudflare Setup
+        run: |
+          kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.20.0/cert-manager.yaml
+          kubectl wait --for=condition=Available deployment --all -n cert-manager --timeout=300s
+
+          kubectl create secret generic cloudflare-api-token-secret \
+            --from-literal=api-token='${{ secrets.CLOUDFLARE_API_TOKEN }}' \
+            --dry-run=client -o yaml | kubectl apply -f -n cert-manager
+
+      - name: Apply PostgreSQL manifests
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/postgres/pvc.yaml
+          kubectl apply -f eevee-infrastructure/k8s/postgres/service.yaml
+          kubectl apply -f eevee-infrastructure/k8s/postgres/deployment.yaml
+
+      - name: Apply Redis manifests
+        run: |
+          kubectl apply -f eevee-infrastructure/k8s/redis/service.yaml
+          kubectl apply -f eevee-infrastructure/k8s/redis/deployment.yaml
+
+      - name: Render and apply production overlay
+        env:
+          SCHEDULER_API_IMAGE: ${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }}
+          FRONT_IMAGE: ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }}
+          K8S_ACME_EMAIL: ${{ env.K8S_ACME_EMAIL }}
+          K8S_CLOUDFLARE_EMAIL: ${{ env.K8S_CLOUDFLARE_EMAIL }}
+          K8S_API_HOST: ${{ env.K8S_API_HOST }}
+          K8S_FRONT_HOST: ${{ env.K8S_FRONT_HOST }}
+          K8S_FRONT_WWW_HOST: ${{ env.K8S_FRONT_WWW_HOST }}
+        run: |
+          rm -rf /tmp/eevee-k8s
+          cp -R eevee-infrastructure/k8s /tmp/eevee-k8s
+
+          sed -i "s|acmeEmail=change-me@example.com|acmeEmail=${K8S_ACME_EMAIL}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+          sed -i "s|cloudflareEmail=change-me@example.com|cloudflareEmail=${K8S_CLOUDFLARE_EMAIL}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+          sed -i "s|apiHost=api.change-me.example.com|apiHost=${K8S_API_HOST}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+          sed -i "s|frontHost=frontend.change-me.example.com|frontHost=${K8S_FRONT_HOST}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+          sed -i "s|frontWwwHost=www.change-me.example.com|frontWwwHost=${K8S_FRONT_WWW_HOST}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
+
+          cd /tmp/eevee-k8s/overlays/prod
+          kustomize edit set image scheduler-api=${SCHEDULER_API_IMAGE}
+          kustomize edit set image eevee-front=${FRONT_IMAGE}
+
+          kubectl apply -k /tmp/eevee-k8s/overlays/prod
+
+      - name: Check rollout status
+        run: |
+          kubectl rollout status deployment/postgres-deployment --timeout=120s
+          kubectl rollout status deployment/redis-deployment --timeout=120s
+          kubectl rollout status deployment/scheduler-api-deployment --timeout=120s
+          kubectl rollout status deployment/queue-worker-deployment --timeout=120s
+          kubectl rollout status deployment/eevee-front-deployment --timeout=120s

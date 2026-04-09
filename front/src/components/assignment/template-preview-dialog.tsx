@@ -29,7 +29,8 @@ export default function TemplatePreviewDialog({ template, open, onOpenChange }: 
             <h4 className="text-sm font-medium text-slate-300 mb-2">Conteúdo do Template</h4>
             <div className="bg-slate-900 border border-slate-600 rounded-md overflow-hidden">
               <Editor
-                value={template.templateContent}
+                path={`template-${template.id}.ts`}
+                value={template.content}
                 language="typescript"
                 theme="vs-dark"
                 height="300px"

@@ -32,6 +32,7 @@ export const AssignmentInitSqlForm: React.FC<AssignmentInitSqlFormProps> = ({
           campo para criar tabelas, inserir dados iniciais (seeds), etc.
         </span>
         <Editor
+          path={"init.sql"}
           height={400}
           defaultLanguage="sql"
           theme="vs-dark"

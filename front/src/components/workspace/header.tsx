@@ -2,7 +2,14 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Code, Info, Play, Save, Loader2 } from "lucide-react";
+import {
+  Code,
+  Info,
+  Play,
+  Save,
+  Loader2,
+  SendHorizonal,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -16,19 +23,24 @@ import { Assignment } from "@/app/interface/scheduler-api/assignment";
 interface WorkspaceHeaderProps {
   assignment: Pick<Assignment, "title" | "description">;
   onRunClick: () => void;
+  onSubmitClick: () => void;
   onSaveClick: () => void;
-  isRunning?: boolean;
+  isRunningSync?: boolean;
+  isSubmittingCorrection?: boolean;
   isSaving?: boolean;
 }
 
 const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   assignment,
   onRunClick,
+  onSubmitClick,
   onSaveClick,
-  isRunning = false,
+  isRunningSync = false,
+  isSubmittingCorrection = false,
   isSaving = false,
 }) => {
   const { back } = useRouter();
+  const isActionDisabled = isSaving || isRunningSync || isSubmittingCorrection;
 
   return (
     <header className="flex items-center justify-between p-3 border-b border-slate-700">
@@ -55,9 +67,9 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         </Dialog>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <Button variant="ghost" size="sm" onClick={() => back()}>
-          Assigments
+          Voltar 
         </Button>
         <Button variant="ghost" size="sm">
           Ajuda
@@ -68,28 +80,44 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             size={"sm"}
             className="bg-green-600 hover:bg-green-700 text-white"
             onClick={onRunClick}
-            disabled={isRunning || isSaving}
+            disabled={isActionDisabled}
           >
-            {isRunning ? (
+            {isRunningSync ? (
               <Loader2 className="w-4 h-4 mr-1 animate-spin" />
             ) : (
               <Play className="w-4 h-4 mr-1" />
             )}
-            {isRunning ? "Running..." : "Run"}
+            {isRunningSync ? "Running..." : "Run"}
+          </Button>
+
+          <Button
+            size={"sm"}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={onSubmitClick}
+            disabled={isActionDisabled}
+          >
+            {isSubmittingCorrection ? (
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            ) : (
+              <SendHorizonal className="w-4 h-4 mr-1" />
+            )}
+            {isSubmittingCorrection
+              ? "Enviando..."
+              : "Enviar para Correção"}
           </Button>
 
           <Button
             size={"sm"}
             variant={"outline"}
             onClick={onSaveClick}
-            disabled={isSaving || isRunning}
+            disabled={isSaving || isRunningSync || isSubmittingCorrection}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 mr-1 animate-spin" />
             ) : (
               <Save className="w-4 h-4 mr-1" />
             )}
-            {isSaving ? "Saving..." : "Save"}
+            {isSaving ? "Salvando..." : "Salvar"}
           </Button>
         </div>
       </div>

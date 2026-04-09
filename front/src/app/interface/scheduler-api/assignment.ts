@@ -29,6 +29,8 @@ export interface Assignment {
   classId: number;
   title: string;
   description: string;
+  /** Source-of-truth starter code returned by backend. */
+  boilerplateContent?: string;
   /** Preferred name for the teacher-provided starter code shown in the student workspace. */
   boilerplate?: string;
   /** Backward-compatible alias (legacy name used by older frontend code). */
@@ -49,6 +51,7 @@ export interface CreateAssignmentRequest {
   classId: number;
   title: string;
   description: string;
+  boilerplateContent?: string;
   boilerplate?: string;
   validationScript?: string;
   initSqlScript?: string;
@@ -66,6 +69,7 @@ export interface UpdateAssignmentRequest {
   classId: number;
   title: string;
   description: string;
+  boilerplateContent?: string;
   boilerplate?: string;
   validationScript?: string;
   initSqlScript?: string;

@@ -1,14 +1,30 @@
-FROM node:lts-hydrogen
-WORKDIR /app
+FROM node:24-alpine AS builder
 
-ADD src /app/src
-ADD package.json /app
-ADD package-lock.json /app
-ADD tsconfig.json /app
-ADD tsconfig.build.json /app
+WORKDIR /usr/app
+
+COPY package*.json ./
 
 RUN npm install
+
+COPY . /usr/app/
+
 RUN npm run build
 
-EXPOSE 3000
-CMD ["npm", "start:prod"]
+FROM node:24-alpine AS scheduler-api
+
+WORKDIR /usr/app
+
+RUN addgroup -S nodejs && \
+    adduser -S eevee -G nodejs
+
+COPY package*.json ./
+
+RUN npm ci --omit=dev
+
+COPY --from=builder --chown=eevee:nodejs /usr/app/dist ./dist
+
+USER eevee
+
+ENTRYPOINT [ "npm", "run" ]
+
+CMD [ "start:prod" ]
