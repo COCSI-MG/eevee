@@ -1,0 +1,30 @@
+name: Solicitação de Funcionalidade
+description: Use este modelo para solicitar uma nova funcionalidade ou melhoria na aplicação. Por favor, forneça o máximo de detalhes possível para nos ajudar a entender sua solicitação.
+title: "[Feature Request]: "
+labels: ["Feature 🚀"]
+type: feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Quanto mais detalhes fornecer melhor será para nós entender sua solicitação. Por favor, seja o mais específico possível!**  
+  - type: textarea
+    id: description 
+    attributes:
+      label: Descrição da Funcionalidade 
+      description: Um breve contexto/resumo da funcionalidade que você gostaria de ver implementada. 
+      placeholder: Descreva a funcionalidade que você gostaria de ver implementada!
+  - type: textarea
+    id: problem-solved
+    attributes:
+      label: Problema que será resolvido 
+      description: Qual problema essa funcionalidade resolveria? Por favor, seja o mais específico possível.
+      placeholder: Descreva o problema que essa funcionalidade resolveria!
+      required: false 
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solução Proposta 
+      description: Você tem alguma ideia de como essa funcionalidade poderia ser implementada? 
+      placeholder: Descreva como você imagina que essa funcionalidade poderia ser implementada!
+      required: false

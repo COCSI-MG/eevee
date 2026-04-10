@@ -1,0 +1,42 @@
+name: Reporte um Bug 
+description: Use este modelo para reportar um bug na aplicação. Por favor, forneça o máximo de detalhes possível para nos ajudar a resolver o problema rapidamente.
+title: "[Bug]: "
+labels: ["bug 🐞"]
+type: bug 
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Por favor, preencha as seguintes informações para nos ajudar a resolver o problema mais rapidamente. Quanto mais detalhes você fornecer, melhor!** 
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: O que aconteceu? 
+      description: O que deveria ter acontecido? O que aconteceu em vez disso? Por favor, seja o mais detalhado possível.
+      placeholder: Descreva o que você viu!
+      value: "Aconteceu um erro quando tentei usar a funcionalidade X. Em vez de Y, eu vi Z." 
+    validations:
+      required: true
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Quais navegadores você testou?
+      multiple: true
+      options:
+        - Firefox
+        - Chrome
+        - Safari
+        - Microsoft Edge
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs relevantes para o erro 
+      description: Por favor, cole quaisquer logs relevantes para o erro aqui. Isso nos ajudará a diagnosticar o problema mais rapidamente.
+      render: shell
+  - type: upload
+    id: screenshots
+    attributes:
+      label: Screenshots 
+      description: Se possível, por favor, envie uma captura de tela do erro. Isso nos ajudará a entender melhor o problema.
+    validations:
+      required: false
