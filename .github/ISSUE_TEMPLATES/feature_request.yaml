@@ -20,11 +20,13 @@ body:
       label: Problema que será resolvido 
       description: Qual problema essa funcionalidade resolveria? Por favor, seja o mais específico possível.
       placeholder: Descreva o problema que essa funcionalidade resolveria!
-      required: false 
+    validations:
+      required: false
   - type: textarea
     id: solution
     attributes:
       label: Solução Proposta 
       description: Você tem alguma ideia de como essa funcionalidade poderia ser implementada? 
       placeholder: Descreva como você imagina que essa funcionalidade poderia ser implementada!
+    validations:
       required: false
