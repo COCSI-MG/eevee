@@ -120,8 +120,6 @@ export class AttemptService {
         'attempt.score AS attempt_score',
         'attempt.passes AS attempt_passes',
         'attempt.fails AS attempt_fails',
-        'attempt.receivedWork AS attempt_receivedWork',
-        'attempt.report AS attempt_report',
         'attempt.createdAt AS attempt_createdAt',
         'user.id AS user_id',
         'user.name AS user_name',
@@ -151,8 +149,6 @@ export class AttemptService {
       score: Number(row.attempt_score),
       passes: Number(row.attempt_passes),
       fails: Number(row.attempt_fails),
-      receivedWork: row.attempt_receivedwork ?? row.attempt_receivedWork,
-      report: row.attempt_report,
       createdAt: row.attempt_createdat ?? row.attempt_createdAt,
       user: {
         id: Number(row.user_id),
