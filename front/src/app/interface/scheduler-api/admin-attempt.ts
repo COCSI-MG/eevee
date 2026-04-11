@@ -25,8 +25,10 @@ export interface AdminAttempt {
   };
 }
 
+export type AdminAttemptListItem = Omit<AdminAttempt, "report" | "receivedWork">;
+
 export interface AdminAttemptsListResponse {
-  data: AdminAttempt[];
+  data: AdminAttemptListItem[];
   meta: {
     total: number;
     page: number;

@@ -1,6 +1,7 @@
 "use client";
 
-import { AdminAttempt } from "@/app/interface/scheduler-api/admin-attempt";
+import { AdminAttemptListItem } from "@/app/interface/scheduler-api/admin-attempt";
+import { AdminAttemptExpandedRow } from "@/components/attempts/admin-attempt-expanded-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,7 @@ import { ChevronLeft, ChevronRight, Play, RefreshCcw } from "lucide-react";
 import { Fragment } from "react";
 
 interface AdminAttemptsTableProps {
-  attempts: AdminAttempt[];
+  attempts: AdminAttemptListItem[];
   page: number;
   total: number;
   totalPages: number;
@@ -102,7 +103,6 @@ export default function AdminAttemptsTable({
 
             {attempts.map((attempt) => {
               const isExpanded = expandedAttemptIds.has(attempt.id);
-              const fileEntries = Object.entries(attempt.receivedWork ?? {});
 
               return (
                 <Fragment key={attempt.id}>
@@ -148,43 +148,7 @@ export default function AdminAttemptsTable({
                   {isExpanded && (
                     <TableRow className="bg-slate-950/70">
                       <TableCell colSpan={6}>
-                        <div className="space-y-4 py-2">
-                          <div>
-                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                              Report
-                            </p>
-                            <pre className="max-h-64 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-200 whitespace-pre-wrap">
-                              {attempt.report || "Sem report para esta tentativa."}
-                            </pre>
-                          </div>
-
-                          <div>
-                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                              Arquivos enviados
-                            </p>
-                            {fileEntries.length === 0 ? (
-                              <div className="rounded-md border border-slate-800 bg-slate-950 p-3 text-xs text-slate-400">
-                                Esta tentativa nao possui arquivos armazenados.
-                              </div>
-                            ) : (
-                              <div className="space-y-3">
-                                {fileEntries.map(([filePath, content]) => (
-                                  <div
-                                    key={`${attempt.id}-${filePath}`}
-                                    className="rounded-md border border-slate-800 bg-slate-950"
-                                  >
-                                    <div className="border-b border-slate-800 px-3 py-2 text-xs font-medium text-slate-300">
-                                      {filePath}
-                                    </div>
-                                    <pre className="max-h-56 overflow-auto p-3 text-xs text-slate-200 whitespace-pre-wrap">
-                                      {content}
-                                    </pre>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        <AdminAttemptExpandedRow attemptId={attempt.id} />
                       </TableCell>
                     </TableRow>
                   )}
