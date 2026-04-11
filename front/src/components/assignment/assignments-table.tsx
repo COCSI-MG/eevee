@@ -22,6 +22,8 @@ interface AssignmentsTableProps {
   assignments: Array<Assignment>;
 }
 
+const ASSIGNMENT_DESCRIPTION_MAX_LENGTH = 100;
+
 const WorkspaceLinkComponent = ({ assignmentId }: { assignmentId: string }) => {
   return (
     <Link
@@ -85,11 +87,24 @@ export default function AssignmentsTable({
           </TableRow>
         )}
         {(assignments ?? []).map((assignment) => {
+          const description = assignment.description ?? "";
+
           return (
             <TableRow key={assignment.id}>
               <TableCell>{assignment.title}</TableCell>
               <TableCell>{assignment.class.name}</TableCell>
-              <TableCell>{assignment.description}</TableCell>
+              <TableCell
+                title={
+                  description.length > ASSIGNMENT_DESCRIPTION_MAX_LENGTH
+                    ? description
+                    : undefined
+                }
+                className="max-w-[24rem]"
+              >
+                {description.length > ASSIGNMENT_DESCRIPTION_MAX_LENGTH
+                  ? `${description.slice(0, ASSIGNMENT_DESCRIPTION_MAX_LENGTH)}...`
+                  : description}
+              </TableCell>
               <TableCell>{assignment.workerType}</TableCell>
               <TableCell>
                 <TableActions
