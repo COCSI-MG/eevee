@@ -161,6 +161,10 @@ export class WorkerService {
     );
   }
 
+  async cancelWorkerJob(jobName: string): Promise<void> {
+    await this.kubernetesService.deleteJob(jobName);
+  }
+
   private getJobName(workerType: WorkerType): string {
     const strategy = this.getStrategy(workerType);
     const { jobPrefix } = strategy.workerConfig;

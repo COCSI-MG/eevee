@@ -48,7 +48,7 @@ const upsertTemplateSchema = Yup.object().shape({
   workerType: Yup.string().required(
     TEMPLATE_FORM_VALIDATION_MESSAGES.workerTypeRequired
   ),
-  templateContent: Yup
+  content: Yup
     .string()
     .required(TEMPLATE_FORM_VALIDATION_MESSAGES.templateContentRequired),
   params: Yup.array().of(Yup.string()).optional(),
@@ -116,7 +116,7 @@ export default function TemplateForm() {
       title: "",
       description: "",
       workerType: WorkerType.NODE_DEFAULT,
-      templateContent: WorkerDefaultTemplateContentMap[WorkerType.NODE_DEFAULT],
+      content: WorkerDefaultTemplateContentMap[WorkerType.NODE_DEFAULT],
       params: [] as string[],
       dependencies: [] as string[],
     },
@@ -169,7 +169,7 @@ export default function TemplateForm() {
           title: template.title,
           description: template.description,
           workerType: template.workerType ?? WorkerType.NODE_DEFAULT,
-          templateContent: template.templateContent,
+          content: template.content,
           params: templateParamsInputAsArray,
           dependencies: template.dependencies ?? [],
         });
@@ -198,8 +198,8 @@ export default function TemplateForm() {
       WorkerDefaultTemplateContentMap[currentWorkerType] ??
       WorkerDefaultTemplateContentMap[WorkerType.NODE_DEFAULT];
 
-    if (formik.values.templateContent === previousDefault) {
-      formik.setFieldValue("templateContent", nextDefault);
+    if (formik.values.content === previousDefault) {
+      formik.setFieldValue("content", nextDefault);
     }
 
     setLastWorkerTypeForDefault(currentWorkerType);
@@ -483,10 +483,10 @@ export default function TemplateForm() {
                     <Editor
                       height="600px"
                       defaultLanguage="typescript"
-                      value={formik.values.templateContent}
+                      value={formik.values.content}
                       theme="vs-dark"
                       onChange={(value) =>
-                        formik.setFieldValue("templateContent", value || "")
+                        formik.setFieldValue("content", value || "")
                       }
                       className="bg-slate-700 border-slate-600 text-white"
                       options={{
@@ -522,10 +522,10 @@ export default function TemplateForm() {
                       }}
                     />
                   </div>
-                  {(formik.touched.templateContent || formik.submitCount > 0) &&
-                    formik.errors.templateContent && (
+                  {(formik.touched.content || formik.submitCount > 0) &&
+                    formik.errors.content && (
                     <div className="text-red-500">
-                      {formik.errors.templateContent}
+                      {formik.errors.content}
                     </div>
                   )}
                 </CardContent>

@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler-api-deployment
+  namespace: default
+  labels:
+    app: scheduler-api
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scheduler-api 
+  template:
+    metadata:
+      labels:
+        app: scheduler-api
+    spec:
+      serviceAccountName: worker-sa 
+      containers:
+      - name: scheduler-api
+        image: scheduler-api
+        imagePullPolicy: IfNotPresent 
+        ports:
+        - containerPort: 3000 # A porta onde o seu NestJS roda (exemplo)
+        env:
+        - name: PG_HOST 
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: DB_HOST
+        - name: PG_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: DB_PORT
+        - name: PG_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: DB_USERNAME
+        - name: PG_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: eevee-secrets
+              key: DB_PASSWORD
+        - name: PG_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: DB_DATABASE
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: eevee-config
+              key: REDIS_PORT
+        - name: PORT 
+          value: "3000"
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: eevee-secrets
+              key: JWT_SECRET
+        resources:
+          requests:
+            memory: "128Mi"
+          limits:
+            memory: "384Mi"
+      imagePullSecrets:
+      - name: ghcr-auth

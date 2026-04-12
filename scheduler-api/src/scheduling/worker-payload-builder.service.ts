@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { readFileAsString } from 'src/utils/template.utils';
 import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.utils';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
@@ -29,9 +28,7 @@ export class WorkerPayloadBuilderService {
         if (templateDependencies.length > 0)
           dependencies.push(...templateDependencies);
 
-        const content = await readFileAsString(
-          templateRelation.template.filePath,
-        );
+        const content = templateRelation.template.content ?? '';
 
         const normalizedContent = normalizeTemplateImportPaths({
           content,

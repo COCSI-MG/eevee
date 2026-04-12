@@ -39,8 +39,9 @@ export class AssignmentController {
   }
 
   @Get('me')
-  findAllMyAssignments() {
-    return instanceToPlain(this.assignmentService.findAllUserAssignments());
+  async findAllMyAssignments() {
+    const assignments = await this.assignmentService.findAllUserAssignments();
+    return instanceToPlain(assignments);
   }
 
   @Get(':id')

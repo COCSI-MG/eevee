@@ -13,7 +13,7 @@ export default function AttemptsCard() {
   const { id } = useParams();
   const { back } = useRouter();
 
-  const { data: assignmentAttempts, isFetching: isAssignmentAttemptsFetching } =
+  const { data: assingmentData, isFetching: isAssignmentAttemptsFetching } =
     useFetchAssignment(Number(id));
 
   if (isAssignmentAttemptsFetching) {
@@ -35,12 +35,12 @@ export default function AttemptsCard() {
         </p>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {assignmentAttempts?.assignmentAttempts.length === 0 ? (
+        {assingmentData === undefined || assingmentData?.assignmentAttempts === undefined || assingmentData?.assignmentAttempts.length === 0 ? (
           <div className="text-center text-gray-500">
             No attempts found for this assignment.
           </div>
         ) : (
-          assignmentAttempts?.assignmentAttempts
+          assingmentData?.assignmentAttempts
             .sort((a, b) => b.attempt - a.attempt)
             .map((attempt) => (
               <Card

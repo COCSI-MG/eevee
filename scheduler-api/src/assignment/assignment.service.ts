@@ -2,26 +2,35 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
-import { DataSource, In, IsNull, Repository } from 'typeorm';
+import {
+  Brackets,
+  DataSource,
+  FindOneOptions,
+  In,
+  IsNull,
+  Repository,
+} from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
 import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
 import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
 import { Template } from 'src/template/entities/template.entity';
-import { Attempt } from 'src/attempt/entities/attempt.entity';
-import { readFileAsString } from 'src/utils/template.utils';
 import { promises as fs } from 'fs';
 import * as path from 'path';
+import { Attempt } from 'src/attempt/entities/attempt.entity';
 
 @Injectable()
 export class AssignmentService {
+  private readonly logger = new Logger(AssignmentService.name);
+
   constructor(
     @InjectRepository(Assignment)
     private readonly assignmentRepository: Repository<Assignment>,
@@ -72,26 +81,7 @@ export class AssignmentService {
     }
   }
 
-  private getBoilerplatesDirAbsolutePath(): string {
-    return path.join(process.cwd(), 'assignments-upload', 'boilerplates');
-  }
-
-  private async writeBoilerplateFile(
-    assignmentId: number,
-    content: string,
-  ): Promise<string> {
-    const boilerplatesDir = this.getBoilerplatesDirAbsolutePath();
-    await fs.mkdir(boilerplatesDir, { recursive: true });
-
-    const fileName = `assignment_${assignmentId}.boilerplate.ts`;
-    const absolutePath = path.join(boilerplatesDir, fileName);
-    await fs.writeFile(absolutePath, content ?? '', 'utf-8');
-
-    // Store as a stable, portable relative path (POSIX-style)
-    return `boilerplates/${fileName}`;
-  }
-
-  private async readBoilerplateFileContent(
+  private async readLegacyBoilerplateFileContent(
     boilerplateFilePath?: string,
   ): Promise<string> {
     if (!boilerplateFilePath) return '';
@@ -108,21 +98,54 @@ export class AssignmentService {
     }
   }
 
-  private async attachBoilerplate(assignment: Assignment) {
-    const boilerplate = await this.readBoilerplateFileContent(
+  private async resolveStoredBoilerplateContent(
+    assignment: Pick<Assignment, 'boilerplateContent' | 'boilerplateFilePath'>,
+  ): Promise<string> {
+    if (typeof assignment.boilerplateContent === 'string') {
+      return assignment.boilerplateContent;
+    }
+
+    return this.readLegacyBoilerplateFileContent(
       assignment.boilerplateFilePath,
     );
+  }
+
+  private resolvePayloadBoilerplateContent(payload: {
+    boilerplateContent?: unknown;
+    boilerplate?: unknown;
+    validationScript?: unknown;
+  }): string | undefined {
+    if (typeof payload.boilerplateContent === 'string') {
+      return payload.boilerplateContent;
+    }
+
+    if (typeof payload.boilerplate === 'string') {
+      return payload.boilerplate;
+    }
+
+    if (typeof payload.validationScript === 'string') {
+      return payload.validationScript;
+    }
+
+    return undefined;
+  }
+
+  private async attachBoilerplate(assignment: Assignment) {
+    const boilerplateContent =
+      await this.resolveStoredBoilerplateContent(assignment);
 
     return {
       ...assignment,
+      // DB source of truth
+      boilerplateContent,
       // Preferred name
-      boilerplate,
+      boilerplate: boilerplateContent,
       // Backward compatible alias for older frontends
-      validationScript: boilerplate,
+      validationScript: boilerplateContent,
     };
   }
 
-  private getTeacherVisibilityWhere(): any[] | undefined {
+  private getTeacherVisibilityWhere(): FindOneOptions<Assignment>['where'] {
     const user = this.requestContextService.getUser();
     if (!user?.isAdmin) return undefined;
     return [{ createdById: user.userId }, { createdById: IsNull() }];
@@ -142,8 +165,13 @@ export class AssignmentService {
   }
 
   async create(createAssignmentDto: CreateAssignmentDto) {
-    const { templates, boilerplate, validationScript, ...assignmentData } =
-      createAssignmentDto;
+    const {
+      templates,
+      boilerplateContent,
+      boilerplate,
+      validationScript,
+      ...assignmentData
+    } = createAssignmentDto;
 
     const classExists = await this.classservice.findOne(
       createAssignmentDto.classId,
@@ -157,6 +185,12 @@ export class AssignmentService {
 
     const user = this.requestContextService.getUser();
 
+    const resolvedBoilerplateContent = this.resolvePayloadBoilerplateContent({
+      boilerplateContent,
+      boilerplate,
+      validationScript,
+    });
+
     const newAssignment = await this.assignmentRepository.save({
       classId: assignmentData.classId,
       title: assignmentData.title,
@@ -164,28 +198,9 @@ export class AssignmentService {
       maxAttempts: assignmentData.maxAttempts,
       workerType: assignmentData.workerType,
       initSqlScript: assignmentData.initSqlScript,
+      boilerplateContent: resolvedBoilerplateContent,
       createdById: user?.userId,
     });
-
-    const resolvedBoilerplate =
-      typeof boilerplate === 'string'
-        ? boilerplate
-        : typeof validationScript === 'string'
-          ? validationScript
-          : undefined;
-
-    if (typeof resolvedBoilerplate === 'string') {
-      const boilerplateFilePath = await this.writeBoilerplateFile(
-        newAssignment.id,
-        resolvedBoilerplate,
-      );
-
-      await this.assignmentRepository.update(newAssignment.id, {
-        boilerplateFilePath,
-      });
-
-      newAssignment.boilerplateFilePath = boilerplateFilePath;
-    }
 
     if (templates && templates.length > 0) {
       await this.assertTemplatesCompatibleWithWorkerType({
@@ -213,25 +228,31 @@ export class AssignmentService {
     return await this.attachBoilerplate(newAssignment);
   }
 
-  findAllUserAssignments() {
+  async findAllUserAssignments() {
     const user = this.requestContextService.getUser();
 
-    return this.assignmentRepository.find({
-      relations: [
-        'assignmentAttempts',
-        'class',
+    const query = this.assignmentRepository
+      .createQueryBuilder('assignment')
+      .innerJoin('assignment.class', 'class')
+      .innerJoin(
         'class.userClasses',
-        'class.userClasses.user',
-        'suspensions',
-      ],
-      where: {
-        class: {
-          userClasses: {
-            userId: user.userId,
-          },
-        },
-      },
-    });
+        'userClasses',
+        'userClasses.userId = :userId',
+        { userId: user.userId },
+      )
+      .leftJoinAndSelect(
+        'assignment.assignmentAttempts',
+        'assignmentAttempts',
+        'assignmentAttempts.userId = :userId',
+        { userId: user.userId },
+      )
+      .leftJoinAndSelect('assignment.suspensions', 'suspensions');
+
+    const assignments = await query.getMany();
+
+    this.logger.debug(assignments, 'Assignments fetched for user');
+
+    return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
   }
 
   findAll() {
@@ -253,7 +274,7 @@ export class AssignmentService {
   }
 
   async findAssignmentsByClass(classId: number) {
-    const user = this.requestContextService.getUser();
+    const user = this.requestContextService.getUser()!;
 
     if (!user.isAdmin) {
       const isUserInClass = await this.userClassRepository.findOne({
@@ -270,65 +291,95 @@ export class AssignmentService {
       }
     }
 
-    const assignments = await this.assignmentRepository.find({
-      relations: ['assignmentAttempts', 'suspensions'],
-      where: user.isAdmin
-        ? [
-            { classId, createdById: user.userId },
-            { classId, createdById: IsNull() },
-          ]
-        : { classId },
-    });
+    const query = this.assignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoinAndSelect(
+        'assignment.assignmentAttempts',
+        'assignmentAttempts',
+        'assignmentAttempts.userId = :userId',
+        { userId: user.userId },
+      )
+      .leftJoinAndSelect('assignment.suspensions', 'suspensions')
+      .where('assignment.classId = :classId', { classId });
 
-    return await Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
+    if (user?.isAdmin) {
+      query.andWhere(
+        new Brackets((qb) => {
+          qb.where('assignment.createdById = :userId', {
+            userId: user.userId,
+          }).orWhere('assignment.createdById IS NULL');
+        }),
+      );
+    }
+
+    const assignments = await query.getMany();
+
+    return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
   }
 
   async findOne(id: number) {
     const user = this.requestContextService.getUser();
 
-    let where: any = {
-      id,
-      class: {
-        userClasses: { userId: user.userId },
-      },
-    };
+    const query = this.assignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoinAndSelect('assignment.class', 'class')
+      .leftJoinAndSelect('assignment.assignmentParams', 'assignmentParams')
+      .leftJoinAndSelect(
+        'assignment.assignmentTemplates',
+        'assignmentTemplates',
+      )
+      .leftJoinAndSelect('assignmentTemplates.template', 'template')
+      .leftJoinAndSelect('template.templateParams', 'templateParams')
+      .leftJoinAndSelect('assignment.suspensions', 'suspensions')
+      .where('assignment.id = :id', { id })
+      .orderBy('assignmentAttempts.createdAt', 'DESC');
 
-    // Students can access assignments through class membership.
-    // Teachers (isAdmin) are restricted to assignments they created.
     if (user.isAdmin) {
-      // Teachers can see their own assignments, plus legacy ones (createdById IS NULL).
-      where = [
-        { id, createdById: user.userId },
-        { id, createdById: IsNull() },
-      ];
+      query
+        .leftJoinAndSelect('class.userClasses', 'userClasses')
+        .leftJoinAndSelect(
+          'assignment.assignmentAttempts',
+          'assignmentAttempts',
+        )
+        .andWhere(
+          new Brackets((qb) => {
+            qb.where('assignment.createdById = :userId', {
+              userId: user.userId,
+            }).orWhere('assignment.createdById IS NULL');
+          }),
+        );
+    } else {
+      query
+        .leftJoinAndSelect(
+          'assignment.assignmentAttempts',
+          'assignmentAttempts',
+          'assignmentAttempts.userId = :userId',
+          { userId: user.userId },
+        )
+        .innerJoinAndSelect(
+          'class.userClasses',
+          'userClasses',
+          'userClasses.userId = :userId',
+          { userId: user.userId },
+        );
     }
 
-    const response = await this.assignmentRepository.findOne({
-      relations: [
-        'assignmentAttempts',
-        'class',
-        'class.userClasses',
-        'assignmentParams',
-        'assignmentTemplates',
-        'assignmentTemplates.template',
-        'assignmentTemplates.template.templateParams',
-        'suspensions',
-      ],
-      where,
-      order: {
-        assignmentAttempts: {
-          createdAt: 'DESC',
-        },
-      },
-    });
+    const response = await query.getOne();
+    if (!response) {
+      return null;
+    }
 
-    if (!response) return response;
     return await this.attachBoilerplate(response);
   }
 
   async update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
-    const { templates, boilerplate, validationScript, ...dataToUpdate } =
-      updateAssignmentDto;
+    const {
+      templates,
+      boilerplateContent,
+      boilerplate,
+      validationScript,
+      ...dataToUpdate
+    } = updateAssignmentDto;
 
     const assignment = await this.assignmentRepository.findOne({
       where: { id },
@@ -346,24 +397,18 @@ export class AssignmentService {
       assignment.createdById = user.userId;
     }
 
-    const resolvedBoilerplate =
-      typeof boilerplate === 'string'
-        ? boilerplate
-        : typeof validationScript === 'string'
-          ? validationScript
-          : undefined;
+    const resolvedBoilerplateContent = this.resolvePayloadBoilerplateContent({
+      boilerplateContent,
+      boilerplate,
+      validationScript,
+    });
 
-    if (typeof resolvedBoilerplate === 'string') {
-      const boilerplateFilePath = await this.writeBoilerplateFile(
-        assignment.id,
-        resolvedBoilerplate,
-      );
-
+    if (typeof resolvedBoilerplateContent === 'string') {
       await this.assignmentRepository.update(assignment.id, {
-        boilerplateFilePath,
+        boilerplateContent: resolvedBoilerplateContent,
       });
 
-      assignment.boilerplateFilePath = boilerplateFilePath;
+      assignment.boilerplateContent = resolvedBoilerplateContent;
     }
 
     if (Object.keys(dataToUpdate).length > 0)
@@ -435,10 +480,8 @@ export class AssignmentService {
   }
 
   async getAssignmentTemplates(assignment: Assignment) {
-    return Promise.all(
-      assignment.assignmentTemplates.map(async (templateRelation) => {
-        return await readFileAsString(templateRelation.template.filePath);
-      }),
+    return assignment.assignmentTemplates.map(
+      (templateRelation) => templateRelation.template.content ?? '',
     );
   }
 }

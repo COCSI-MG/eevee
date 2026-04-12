@@ -103,6 +103,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     maxAttempts: existingAssignment?.maxAttempts ?? 1,
     workerType: existingAssignment?.workerType ?? WorkerType.NODE_DEFAULT,
     boilerplate:
+      existingAssignment?.boilerplateContent ??
       existingAssignment?.boilerplate ??
       WorkerDefaultTemplateMap[
         (existingAssignment?.workerType ||
@@ -116,6 +117,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     return upsertAssignment({
       newAssignment: {
         ...values,
+        boilerplateContent: values.boilerplate,
         classId: Number(values.classId),
       } as Assignment,
       templates: selectedTemplates,

@@ -100,7 +100,7 @@ export default function TemplatesTable({
                         path={`template-${template.id}.ts`}
                         defaultLanguage="typescript"
                         theme="vs-dark"
-                        value={template.templateContent}
+                        value={template.content}
                         keepCurrentModel={true}
                         height={"420px"}
                         saveViewState={false}

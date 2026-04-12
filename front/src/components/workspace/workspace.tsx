@@ -78,10 +78,13 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
           !hasPath(fileTree, "src/App.tsx"));
 
       if (!fileTree || shouldRebuildReactWorkspaceTree) {
+        const assignmentBoilerplate =
+          assignment.boilerplateContent ?? assignment.boilerplate;
+
         // Create the correct file node based on assignment's worker type and boilerplate
         const defaultFileNode: FileNode = createDefaultFileNode(
           assignment.workerType as WorkerType,
-          assignment.boilerplate,
+          assignmentBoilerplate,
         );
         fileTree = defaultFileNode;
         shouldPersistInitialState = true;
@@ -102,8 +105,11 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
 
       const firstFile = findFirst(fileTree);
       if (firstFile) {
+        const assignmentBoilerplate =
+          assignment.boilerplateContent ?? assignment.boilerplate;
+
         const firstFileContent =
-          firstFile.content ?? assignment.boilerplate ?? "";
+          firstFile.content ?? assignmentBoilerplate ?? "";
 
         setSelectedItem({
           id: firstFile.id,
@@ -131,6 +137,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     },
     [
       setFileTreeData,
+      assignment.boilerplateContent,
       assignment.boilerplate,
       assignment.workerType,
       saveFileTreeAsync,

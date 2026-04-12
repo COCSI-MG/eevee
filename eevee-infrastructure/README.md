@@ -31,6 +31,52 @@ ou só iniciar o minikube em uma máquina virtual
 minikube start
 ```
 
+### Executando o EEEVEE na infraestrutura do Kubernetes/Minikube
+
+Para executar o projeto, é necessário primeiro criar as dependências, como as imagens dos workers e o banco de dados. Depois disso, basta acessar a pasta [k8s](k8s) e executar o comando.
+
+```
+kubectl apply -f .
+```
+
+Para verificar se os pods estão rodando, basta executar o comando
+
+```
+kubectl get pods
+```
+
+#### Modificando o arquivo hosts
+
+Precisamos adicionar os domínios `api.eeveecodelab.local` e `frontend.eeveecodelab.local` no arquivo hosts do sistema para que o Ingress possa rotear as requisições corretamente. Adicione as seguintes linhas ao seu arquivo hosts. Se estiver usando Linux ou Mac, o arquivo hosts geralmente está localizado em `/etc/hosts`. Se estiver usando Windows, pesquisa ai, não era pra estar usando Windows uma hora dessa kkk, mas geralmente está localizado em `C:\Windows\System32\drivers\etc\hosts`. 
+
+Primeiro, precisamos descobrir o ip do minikube, para isso execute o comando
+
+```
+minikube ip
+```
+
+O output deve ser algo como `192.168.49.2`, então adicione as seguintes linhas ao seu arquivo hosts:
+
+```
+192.168.49.2 api.eeveecodelab.local
+192.168.49.2 frontend.eeveecodelab.local
+```
+
+#### Gerando certificados TLS para o Ingress
+
+Para gerar os certificados TLS para o Ingress, você pode usar o OpenSSL para criar um certificado autoassinado. Aqui está um exemplo de como fazer isso:
+
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt   -subj "/CN=*.eeveecodelab.local"
+```
+
+Depois de gerar os arquivos `tls.crt` e `tls.key`, você pode criar um Secret no Kubernetes para armazenar esses certificados:
+
+```bash
+kubectl create secret tls eevee-tls-secret --key tls.key --cert tls.crt
+```
+
+
 ### Criando as dependências
 
 É necessário primeiro executar o build de todas as imagens que serão usadas.
