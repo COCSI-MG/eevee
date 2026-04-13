@@ -147,7 +147,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
               values.workerType &&
               Object.values(WorkerType).includes(
                 values.workerType as WorkerType,
-              )
+              ) &&
+              values.boilerplate.trim() === ""
             ) {
               const safeWorkerType = values.workerType as WorkerType;
               setFieldValue(
@@ -155,7 +156,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                 WorkerDefaultTemplateMap[safeWorkerType],
               );
             }
-          }, [values.workerType, setFieldValue]);
+          }, [values.workerType, setFieldValue, values.boilerplate]);
 
           // eslint-disable-next-line react-hooks/rules-of-hooks
           const steps = useMemo(
