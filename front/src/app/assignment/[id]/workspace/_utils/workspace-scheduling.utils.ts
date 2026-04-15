@@ -1,0 +1,98 @@
+"use client";
+
+import { AssignmentAttempt } from "@/app/interface/scheduler-api/assignment-attempt";
+import {
+  Scheduling,
+  SchedulingPreviewRun,
+  SchedulingPreviewRunStatus,
+  SchedulingResponse,
+} from "@/app/interface/scheduler-api/scheduling";
+import { FileNode } from "@/types/shared";
+
+const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
+const ACTIVE_PREVIEW_RUN_STATUSES = new Set<SchedulingPreviewRunStatus>([
+  "pending",
+  "running",
+]);
+
+export function createWorkspaceStorageKey(
+  kind: "preview-run" | "correction-running",
+  userId: number,
+  assignmentId: number,
+): string {
+  return `workspace-${kind}:${userId}:${assignmentId}`;
+}
+
+export function isProcessingAttemptStatus(status: string): boolean {
+  return PROCESSING_ATTEMPT_STATUSES.has(status);
+}
+
+export function isActivePreviewRunStatus(
+  status: SchedulingPreviewRunStatus,
+): boolean {
+  return ACTIVE_PREVIEW_RUN_STATUSES.has(status);
+}
+
+export function getLatestAssignmentAttempt(
+  assignmentAttempts: AssignmentAttempt[] | undefined,
+): AssignmentAttempt | null {
+  if (!assignmentAttempts?.length) {
+    return null;
+  }
+
+  return [...assignmentAttempts].sort((a, b) => b.attempt - a.attempt)[0];
+}
+
+export function flattenFileTreeToSchedulingFiles(
+  node: FileNode,
+  acc: Record<string, string> = {},
+): Record<string, string> {
+  if (node.isFile) {
+    acc[node.path] = node.content ?? "";
+    return acc;
+  }
+
+  node.children?.forEach((child) => {
+    flattenFileTreeToSchedulingFiles(child, acc);
+  });
+
+  return acc;
+}
+
+export function buildSchedulingPayloadFromFileTree(
+  assignmentId: number,
+  fileTree: FileNode,
+): Scheduling {
+  return {
+    assignmentId,
+    applicationFileContent: undefined,
+    files: flattenFileTreeToSchedulingFiles(fileTree),
+  };
+}
+
+export function mapPreviewRunToResponse(
+  previewRun: SchedulingPreviewRun | null | undefined,
+): SchedulingResponse | null {
+  if (!previewRun || previewRun.status !== "completed") {
+    return null;
+  }
+
+  return {
+    assignmentId: previewRun.assignmentId,
+    isAcceptable: Boolean(previewRun.isAcceptable),
+    score: Number(previewRun.score ?? 0),
+    passes: Number(previewRun.passes ?? 0),
+    fails: Number(previewRun.fails ?? 0),
+    report: previewRun.report ?? "",
+  };
+}
+
+export function getPreviewRunError(
+  previewRun: SchedulingPreviewRun | null | undefined,
+): string | null {
+  if (!previewRun || previewRun.status !== "failed") {
+    return null;
+  }
+
+  return previewRun.errorMessage ?? "Preview failed";
+}

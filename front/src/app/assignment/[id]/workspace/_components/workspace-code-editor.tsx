@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { OnMount } from "@monaco-editor/react";
 import React from "react";
 import { editor, IDisposable } from "monaco-editor";
-import { useWorkspaceContext } from "./workspace-provider";
+import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { FileNode } from "@/types/shared";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
