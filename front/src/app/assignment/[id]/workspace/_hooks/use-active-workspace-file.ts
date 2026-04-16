@@ -1,18 +1,18 @@
 "use client";
 
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { User } from "@/app/interface/scheduler-api/user";
 import {
   useFetchFileContent,
   useUpdateFileContent,
 } from "@/hooks/use-filestash";
 import { FileNode, SelectedItem } from "@/types/shared";
 import React from "react";
+import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { getFileLanguage } from "../_utils/workspace.utils";
 
 interface UseActiveWorkspaceFileParams {
   assignment: Assignment;
-  user: Pick<User, "id" | "email" | "isAdmin">;
+  user: AuthSession;
   selectedItem: SelectedItem;
   selectItem: (item: SelectedItem) => void;
 }
@@ -64,7 +64,7 @@ export function useActiveWorkspaceFile({
 
         const content = await fetchFileContent({
           assignmentId: assignment.id,
-          userId: user.id,
+          userId: user.userId,
           filePath: node.path,
         });
 
@@ -83,7 +83,7 @@ export function useActiveWorkspaceFile({
         path: node.path,
       });
     },
-    [assignment.id, fetchFileContent, selectItem, user.id],
+    [assignment.id, fetchFileContent, selectItem, user.userId],
   );
 
   const handleEditorChange = React.useCallback(
@@ -91,7 +91,7 @@ export function useActiveWorkspaceFile({
       if (value !== undefined && activeFile?.path) {
         void updateFileContentAsync({
           assignmentId: assignment.id,
-          userId: user.id,
+          userId: user.userId,
           filePath: activeFile.path,
           content: value,
         });
@@ -99,7 +99,7 @@ export function useActiveWorkspaceFile({
         setActiveFileContent(value);
       }
     },
-    [activeFile?.path, assignment.id, updateFileContentAsync, user.id],
+    [activeFile?.path, assignment.id, updateFileContentAsync, user.userId],
   );
 
   return {

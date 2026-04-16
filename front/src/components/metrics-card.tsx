@@ -4,11 +4,11 @@ import { FileText, GraduationCap, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { useUsers } from "@/hooks/use-users";
-import { useEffect, useState } from "react";
 import { useClasses } from "@/hooks/use-classes";
 import { useQuery } from "@tanstack/react-query";
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
 import Link from "next/link";
+import QueryErrorState from "./admin/query-error-state";
 
 interface Metric {
   title: string;
@@ -22,24 +22,25 @@ interface Metric {
 }
 
 export function MetricsCard() {
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-
   const {
     data: users,
     isFetching: isFetchingUser,
-    isSuccess: isSuccessUsers,
+    isError: isUsersError,
+    refetch: refetchUsers,
   } = useUsers();
 
   const {
     data: classes,
     isFetching: isFetchingClasses,
-    isSuccess: isSuccessClasses,
+    isError: isClassesError,
+    refetch: refetchClasses,
   } = useClasses();
 
   const {
     data: assignments,
-    isSuccess: isSuccessAssignments,
     isFetching: isFetchingAssignments,
+    isError: isAssignmentsError,
+    refetch: refetchAssignments,
   } = useQuery({
     queryKey: ["adminAssignments"],
     queryFn: async () => {
@@ -51,46 +52,58 @@ export function MetricsCard() {
     },
   });
 
-  useEffect(() => {
-    if (isSuccessUsers && isSuccessClasses && isSuccessAssignments) {
-      setMetrics([
-        {
-          title: "Total Users",
-          value: users.length.toString(),
-          description: "Number of registered users",
-          icon: Users,
-          href: "/admin/users",
-        },
-        {
-          title: "Total Classes",
-          value: classes.length.toString(),
-          description: "Number of available classes",
-          icon: GraduationCap,
-          href: "/admin/classes",
-        },
-        {
-          title: "Total Assignments",
-          value: assignments.length.toString(),
-          description: "Number of assignments created",
-          icon: FileText,
-          href: "/admin/assignments",
-        },
-      ]);
-    }
-  }, [
-    users,
-    classes,
-    assignments,
-    isSuccessUsers,
-    isSuccessClasses,
-    isSuccessAssignments,
-  ]);
-
   if (isFetchingUser || isFetchingClasses || isFetchingAssignments) {
     return <div>Loading...</div>;
   }
 
-  return (metrics ?? []).map((metric, index) => (
+  if (isUsersError || isClassesError || isAssignmentsError) {
+    return (
+      <QueryErrorState
+        title="Não foi possível carregar as métricas"
+        description="Uma ou mais consultas do dashboard falharam. Tente novamente."
+        onRetry={() => {
+          void Promise.all([
+            refetchUsers(),
+            refetchClasses(),
+            refetchAssignments(),
+          ]);
+        }}
+        retryLabel="Tentar novamente"
+        isRetrying={isFetchingUser || isFetchingClasses || isFetchingAssignments}
+        className="md:col-span-3"
+      />
+    );
+  }
+
+  const usersCount = users?.length ?? 0;
+  const classesCount = classes?.length ?? 0;
+  const assignmentsCount = assignments?.length ?? 0;
+
+  const metrics: Metric[] = [
+    {
+      title: "Total Users",
+      value: usersCount.toString(),
+      description: "Number of registered users",
+      icon: Users,
+      href: "/admin/users",
+    },
+    {
+      title: "Total Classes",
+      value: classesCount.toString(),
+      description: "Number of available classes",
+      icon: GraduationCap,
+      href: "/admin/classes",
+    },
+    {
+      title: "Total Assignments",
+      value: assignmentsCount.toString(),
+      description: "Number of assignments created",
+      icon: FileText,
+      href: "/admin/assignments",
+    },
+  ];
+
+  return metrics.map((metric, index) => (
     <Card key={index} className="hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>

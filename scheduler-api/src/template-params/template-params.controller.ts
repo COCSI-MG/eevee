@@ -6,12 +6,15 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { TemplateParamsService } from './template-params.service';
 import { CreateTemplateParamDto } from './dto/create-template-param.dto';
 import { UpdateTemplateParamDto } from './dto/update-template-param.dto';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('template-params')
+@UseGuards(AdminGuard)
 export class TemplateParamsController {
   constructor(private readonly templateParamsService: TemplateParamsService) {}
 

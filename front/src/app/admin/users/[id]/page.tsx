@@ -22,6 +22,7 @@ import { UsersService } from "@/app/integration/scheduler-api/user";
 import { UpsertUser } from "@/app/interface/scheduler-api/user";
 import * as Yup from "yup";
 import { useFormik } from "formik";
+import QueryErrorState from "@/components/admin/query-error-state";
 
 const usersUpsertSchema = Yup.object().shape({
   name: Yup.string().required("Name is required"),
@@ -84,38 +85,71 @@ export default function UserEditPage() {
     },
   });
 
-  const { isFetching } = useQuery({
+  const {
+    isFetching,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ["adminUsers", id],
     enabled: !isNewUser,
     queryFn: async ({ queryKey }) => {
       const user = await UsersService.getUserById(Number(queryKey[1]));
-      if (user) {
-        formik.setValues({
-          name: user.name,
-          email: user.email,
-          password: "",
-          isAdmin: user.isAdmin,
-        });
+      if (!user) {
+        throw new Error("Não foi possível carregar o usuário.");
       }
+
+      formik.setValues({
+        name: user.name,
+        email: user.email,
+        password: "",
+        isAdmin: user.isAdmin,
+      });
+
       return user;
     },
   });
 
+  const header = (
+    <div className="flex items-center">
+      <Button variant="ghost" onClick={() => router.back()} className="mr-4">
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
+      <h1 className="text-3xl font-bold tracking-tight">
+        {isNewUser ? "Create User" : "Edit User"}
+      </h1>
+    </div>
+  );
+
+  if (!isNewUser && isError) {
+    return (
+      <div className="space-y-6">
+        {header}
+        <QueryErrorState
+          title="Não foi possível carregar o usuário"
+          description="Os dados deste usuário não puderam ser carregados. Tente novamente."
+          onRetry={() => {
+            void refetch();
+          }}
+          retryLabel="Tentar novamente"
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
+
   if (!isNewUser && isFetching) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-6">
+        {header}
+        <div>Loading...</div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
-        <Button variant="ghost" onClick={() => router.back()} className="mr-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {isNewUser ? "Create User" : "Edit User"}
-        </h1>
-      </div>
+      {header}
 
       <form onSubmit={formik.handleSubmit}>
         <Card>

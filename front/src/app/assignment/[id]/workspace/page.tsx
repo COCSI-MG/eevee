@@ -17,6 +17,7 @@ import { useState } from "react";
 export default function Page() {
   const { id } = useParams();
   const { user } = useAuthContext();
+  const userId = user?.userId;
   // Estado para controlar se o usuário aceitou o acordo
   const [hasAcceptedAgreement, setHasAcceptedAgreement] =
     useState<boolean>(false);
@@ -27,7 +28,7 @@ export default function Page() {
   // Correção
   const { isCorrectionInProgress, submitAssignment } = useWorkspaceCorrection({
     assignment: assignmentData,
-    user: user!,
+    user: user ?? undefined,
   });
 
   // Preview
@@ -37,22 +38,30 @@ export default function Page() {
     previewLoading,
     previewOpen,
     previewResult,
+    isCancellingPreviewRun,
+    showCancelledFeedback,
     runPreview,
   } = useWorkspacePreview({
     assignmentId: assignmentData?.id,
-    userId: user?.id,
+    userId,
   });
 
   const { isSaving, saveFileInServer } = useWorkspaceSaveFile({
     assignmentId: assignmentData?.id,
-    userId: user?.id,
+    userId,
   });
 
   const isUserSuspended = (assignmentData: {
     suspensions?: { userId: number }[];
   }) => {
-    return assignmentData?.suspensions?.some(
-      (suspension) => suspension.userId === user?.id,
+    if (!userId) {
+      return false;
+    }
+
+    return Boolean(
+      assignmentData?.suspensions?.some(
+        (suspension) => suspension.userId === userId,
+      ),
     );
   };
 
@@ -62,6 +71,10 @@ export default function Page() {
 
   // Loading state
   if (isLoadingAssignment && !assignmentData) {
+    return <WorkspaceLoading />;
+  }
+
+  if (!userId) {
     return <WorkspaceLoading />;
   }
 
@@ -100,6 +113,8 @@ export default function Page() {
       <WorkspaceRunPreviewDialog
         open={previewOpen}
         loading={previewLoading}
+        cancelling={isCancellingPreviewRun}
+        cancelled={showCancelledFeedback}
         result={previewResult}
         error={previewError}
         onClose={async () => {

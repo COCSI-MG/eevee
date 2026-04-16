@@ -1,8 +1,6 @@
 'use client';
 
-import { AuthContext } from '@/app/context/auth-context';
 import { Route } from '@/app/routes';
-// import { Route } from "@/app/routes";
 import axios, { AxiosError } from 'axios';
 
 export const axiosClient = axios.create({
@@ -10,6 +8,7 @@ export const axiosClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 export const axiosClientWithAuth = axios.create({
@@ -17,21 +16,8 @@ export const axiosClientWithAuth = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
-
-axiosClientWithAuth.interceptors.request.use(
-  (config) => {
-    const accessToken = localStorage.getItem('access_token');
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => {
-    console.error('Request error:', error);
-    return Promise.reject(error);
-  }
-);
 
 axiosClientWithAuth.interceptors.response.use(
   (response) => {
@@ -41,8 +27,9 @@ axiosClientWithAuth.interceptors.response.use(
     const status = error.response?.status ?? error.status;
 
     if (status === 401) {
-      AuthContext.clear();
-      window.location.href = `/${Route.Login}`;
+      if (typeof window !== 'undefined') {
+        window.location.href = `/${Route.Login}`;
+      }
     }
 
     if (status === 500) {

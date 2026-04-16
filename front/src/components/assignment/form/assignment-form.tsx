@@ -28,6 +28,7 @@ import AssignmentFormReview from "@/components/assignment/form/assignment-review
 import { AssignmentConfigForm } from "./assignment-config-form";
 import { AssignmentBoilerplateForm } from "./assignment-boilerplate-form";
 import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
+import QueryErrorState from "@/components/admin/query-error-state";
 
 const validationSchema = Yup.object({
   title: Yup.string().required("Title is required"),
@@ -89,13 +90,20 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
   const {
     existingAssignment,
-    isFetching,
+    isFetching: isFetchingAssignment,
+    isError: isAssignmentError,
+    refetch: refetchAssignment,
     selectedTemplates,
     setSelectedTemplates,
     upsertAssignment,
   } = useAssignmentForm(existingAssignmentId);
 
-  const { data: classes, isFetching: isFetchingClasses } = useClasses();
+  const {
+    data: classes,
+    isFetching: isFetchingClasses,
+    isError: isClassesError,
+    refetch: refetchClasses,
+  } = useClasses();
 
   const initialValues = {
     title: existingAssignment?.title ?? "",
@@ -124,7 +132,43 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     });
   };
 
-  if (existingAssignmentId && isFetching) {
+  if (existingAssignmentId && isAssignmentError) {
+    return (
+      <div className="p-6">
+        <div className="max-w-2xl mx-auto">
+          <QueryErrorState
+            title="Não foi possível carregar o assignment"
+            description="Não conseguimos carregar os dados deste assignment para edição."
+            onRetry={() => {
+              void refetchAssignment();
+            }}
+            retryLabel="Tentar novamente"
+            isRetrying={isFetchingAssignment}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isClassesError) {
+    return (
+      <div className="p-6">
+        <div className="max-w-2xl mx-auto">
+          <QueryErrorState
+            title="Não foi possível carregar as turmas"
+            description="As turmas necessárias para criar ou editar o assignment não puderam ser carregadas."
+            onRetry={() => {
+              void refetchClasses();
+            }}
+            retryLabel="Tentar novamente"
+            isRetrying={isFetchingClasses}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (existingAssignmentId && isFetchingAssignment) {
     return <div>Loading...</div>;
   }
 
@@ -220,7 +264,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                   {currentStepDef?.id === "review" && (
                     <AssignmentFormReview
                       values={values}
-                      classes={classes!}
+                      classes={classes ?? []}
                       selectedTemplates={selectedTemplates}
                     />
                   )}

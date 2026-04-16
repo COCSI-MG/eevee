@@ -28,13 +28,46 @@ export function useWorkspaceInitialization({
   selectItem,
 }: UseWorkspaceInitializationParams) {
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+  const workspaceAssignment = React.useMemo(
+    () =>
+      ({
+        id: assignment.id,
+        workerType: assignment.workerType,
+        boilerplate: assignment.boilerplate,
+        boilerplateContent: assignment.boilerplateContent,
+      }) as Assignment,
+    [
+      assignment.boilerplate,
+      assignment.boilerplateContent,
+      assignment.id,
+      assignment.workerType,
+    ],
+  );
+  const initializationKey = React.useMemo(() => {
+    if (!workspaceAssignment.id || !userId) {
+      return null;
+    }
+
+    return `${workspaceAssignment.id}:${userId}`;
+  }, [userId, workspaceAssignment.id]);
+  const initializedWorkspaceKeyRef = React.useRef<string | null>(null);
 
   const initializeWorkspace = React.useCallback(async () => {
-    let fileTree = await getFileTree(assignment.id, userId);
+    if (!initializationKey) {
+      return;
+    }
+
+    if (initializedWorkspaceKeyRef.current === initializationKey) {
+      return;
+    }
+
+    initializedWorkspaceKeyRef.current = initializationKey;
+
+    let fileTree = await getFileTree(workspaceAssignment.id, userId);
     let shouldPersistInitialState = false;
 
-    if (!fileTree || shouldRebuildWorkspaceTree(assignment, fileTree)) {
-      fileTree = createInitialWorkspaceTree(assignment);
+    if (!fileTree || shouldRebuildWorkspaceTree(workspaceAssignment, fileTree)) {
+      fileTree = createInitialWorkspaceTree(workspaceAssignment);
       shouldPersistInitialState = true;
     }
 
@@ -43,7 +76,7 @@ export function useWorkspaceInitialization({
     const firstFile = findFirstFile(fileTree);
     if (firstFile) {
       const firstFileContent =
-        firstFile.content ?? getAssignmentBoilerplate(assignment);
+        firstFile.content ?? getAssignmentBoilerplate(workspaceAssignment);
 
       selectItem({
         id: firstFile.id,
@@ -61,17 +94,18 @@ export function useWorkspaceInitialization({
 
     if (shouldPersistInitialState) {
       await saveFileTreeAsync({
-        assignmentId: assignment.id,
+        assignmentId: workspaceAssignment.id,
         userId,
         fileTree,
       });
     }
   }, [
-    assignment,
+    initializationKey,
     replaceFileTree,
     saveFileTreeAsync,
     selectItem,
     setActiveFileContent,
+    workspaceAssignment,
     userId,
   ]);
 

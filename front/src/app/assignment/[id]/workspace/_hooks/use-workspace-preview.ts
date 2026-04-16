@@ -23,9 +23,12 @@ export function useWorkspacePreview({
   assignmentId,
   userId,
 }: UseWorkspacePreviewParams) {
+  const CANCELLED_FEEDBACK_DELAY_MS = 1200;
   const { selectedItem } = useWorkspaceContext();
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [previewRunId, setPreviewRunId] = React.useState<number | null>(null);
+  const [showCancelledFeedback, setShowCancelledFeedback] =
+    React.useState(false);
 
   const previewStorageKey = React.useMemo(() => {
     if (!assignmentId || !userId) {
@@ -78,11 +81,11 @@ export function useWorkspacePreview({
 
     window.localStorage.removeItem(previewStorageKey);
 
-    if (previewRun.status === "cancelled") {
+    if (previewRun.status === "cancelled" && !showCancelledFeedback) {
       setPreviewRunId(null);
       setPreviewOpen(false);
     }
-  }, [previewRun, previewStorageKey]);
+  }, [previewRun, previewStorageKey, showCancelledFeedback]);
 
   React.useEffect(() => {
     if (!previewRunId || !isPreviewRunError) {
@@ -131,7 +134,10 @@ export function useWorkspacePreview({
     },
   });
 
-  const { mutateAsync: cancelPreviewRun } = useMutation({
+  const {
+    mutateAsync: cancelPreviewRun,
+    isPending: isCancellingPreviewRun,
+  } = useMutation({
     mutationKey: ["cancel-preview-run"],
     mutationFn: async (runId: number) => SchedulingService.cancelPreviewRun(runId),
   });
@@ -157,7 +163,24 @@ export function useWorkspacePreview({
       previewRun &&
       isActivePreviewRunStatus(previewRun.status)
     ) {
-      await cancelPreviewRun(previewRunId);
+      try {
+        await cancelPreviewRun(previewRunId);
+      } catch (error) {
+        console.error("Error cancelling preview run", error);
+        toast({
+          title: "Ocorreu um erro ao cancelar o run",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setShowCancelledFeedback(true);
+
+      await new Promise((resolve) =>
+        window.setTimeout(resolve, CANCELLED_FEEDBACK_DELAY_MS),
+      );
+
+      setShowCancelledFeedback(false);
     }
 
     if (previewStorageKey && typeof window !== "undefined") {
@@ -173,6 +196,8 @@ export function useWorkspacePreview({
     previewLoading,
     previewOpen,
     previewResult,
+    isCancellingPreviewRun,
+    showCancelledFeedback,
     closePreview,
     runPreview,
   };

@@ -2,7 +2,6 @@
 
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { User } from "@/app/interface/scheduler-api/user";
 import { Route } from "@/app/routes";
 import { useWorkspaceContext } from "@/app/assignment/[id]/workspace/_providers/workspace-provider";
 import {
@@ -16,10 +15,11 @@ import { toast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { AuthSession } from "@/app/interface/scheduler-api/auth";
 
 interface UseWorkspaceCorrectionParams {
   assignment?: Assignment;
-  user?: Pick<User, "id" | "email" | "isAdmin">;
+  user?: AuthSession;
 }
 
 export function useWorkspaceCorrection({
@@ -34,16 +34,16 @@ export function useWorkspaceCorrection({
   ] = React.useState(false);
 
   const correctionStorageKey = React.useMemo(() => {
-    if (!assignment?.id || !user?.id) {
+    if (!assignment?.id || !user?.userId) {
       return null;
     }
 
     return createWorkspaceStorageKey(
       "correction-running",
-      user.id,
+      user.userId,
       assignment.id,
     );
-  }, [assignment?.id, user?.id]);
+  }, [assignment?.id, user?.userId]);
 
   const hasCorrectionInProgressFromBackend = React.useMemo(() => {
     const latestAttempt = getLatestAssignmentAttempt(
@@ -84,11 +84,11 @@ export function useWorkspaceCorrection({
     useMutation({
       mutationKey: ["submit-assignment"],
       mutationFn: async () => {
-        if (!assignment?.id || !user?.id || !selectedItem.path) {
+        if (!assignment?.id || !user?.userId || !selectedItem.path) {
           throw new Error("Missing required data");
         }
 
-        const fileTree = await getFileTree(assignment.id, user.id);
+        const fileTree = await getFileTree(assignment.id, user.userId);
         if (!fileTree) {
           throw new Error("File tree not found");
         }

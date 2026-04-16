@@ -5,18 +5,19 @@ import WorkspaceCodeEditor from "./workspace-code-editor";
 import WorkspaceExplorer from "./workspace-explorer";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { User } from "@/app/interface/scheduler-api/user";
 import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
 import { useActiveWorkspaceFile } from "../_hooks/use-active-workspace-file";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
+import { AuthSession } from "@/app/interface/scheduler-api/auth";
 
 interface WorkspaceProps {
   assignment: Assignment;
-  user: Pick<User, "id" | "email" | "isAdmin">;
+  user: AuthSession;
 }
 
 export default function Workspace({ assignment, user }: WorkspaceProps) {
   const { replaceFileTree, selectedItem, selectItem } = useWorkspaceContext();
+  const userId = user.userId;
 
   const {
     activeFile,
@@ -37,7 +38,7 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
 
   useWorkspaceInitialization({
     assignment,
-    userId: user.id,
+    userId,
     setActiveFileContent,
     replaceFileTree,
     selectItem,

@@ -1,7 +1,7 @@
 "use client";
 
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { User } from "@/app/interface/scheduler-api/user";
+import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { FileNode } from "@/types/shared";
 import React from "react";
@@ -9,7 +9,7 @@ import { useWorkspaceContext } from "../_providers/workspace-provider";
 
 interface UseWorkspaceTreeActionsParams {
   assignment: Assignment;
-  user: Pick<User, "id" | "email" | "isAdmin">;
+  user: AuthSession;
 }
 
 export function useWorkspaceTreeActions({
@@ -21,17 +21,17 @@ export function useWorkspaceTreeActions({
 
   const handleTreeChange = React.useCallback(
     async (newTree: FileNode) => {
-      if (assignment.id && user.id) {
+      if (assignment.id && user.userId) {
         console.log("Saving updated file tree");
         replaceFileTree(newTree);
         await saveFileTreeAsync({
           assignmentId: assignment.id,
-          userId: user.id,
+          userId: user.userId,
           fileTree: newTree,
         });
       }
     },
-    [assignment.id, replaceFileTree, saveFileTreeAsync, user.id],
+    [assignment.id, replaceFileTree, saveFileTreeAsync, user.userId],
   );
 
   return {
