@@ -30,6 +30,7 @@ const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
 
 export default function AssignmentsCard({ data }: AssignmentsCardProps) {
   const { user } = useAuthContext();
+  const userId = user?.userId;
   const { push } = useRouter();
   const [selectedDescriptionModal, setSelectedDescriptionModal] = useState<
     number | null
@@ -44,16 +45,18 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     push(`/${Route.Assignment}/${id}/${Route.Workspace}`);
   };
 
-  const isUserSuspendedFromAssignment = (assignment: Assignment) => {
-    if ((assignment.suspensions?.length ?? 0) > 0) {
-      return assignment.suspensions?.some(
-        (suspension) => suspension.userId === user?.id,
-      )
-        ? false
-        : true;
+  const canAccessAssignment = (assignment: Assignment) => {
+    if (!userId) {
+      return false;
     }
 
-    return true;
+    if ((assignment.suspensions?.length ?? 0) === 0) {
+      return true;
+    }
+
+    return !assignment.suspensions?.some(
+      (suspension) => suspension.userId === userId,
+    );
   };
 
   const getLastAttemptStatus = (assignment: Assignment) => {
@@ -70,6 +73,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {data.map((assignment) => {
         const lastAttemptStatus = getLastAttemptStatus(assignment);
+        const canAccess = canAccessAssignment(assignment);
 
         const isProcessing = lastAttemptStatus
           ? PROCESSING_ATTEMPT_STATUSES.has(lastAttemptStatus)
@@ -81,7 +85,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
             className={cn(
               "overflow-hidden hover:shadow-md transition-shadow",
               {
-                "opacity-50": !isUserSuspendedFromAssignment(assignment),
+                "opacity-50": !canAccess,
               },
               {
                 "border border-green-600": isProcessing,
@@ -94,87 +98,82 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
               },
             )}
           >
-          <CardHeader>
-            <CardTitle className="text-white flex items-center justify-between space-x-2">
-              {assignment.title}
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between space-x-2 text-white">
+                {assignment.title}
 
-              {!isUserSuspendedFromAssignment(assignment) && (
-                <Badge
-                  variant={"destructive"}
-                  className="bg-red-900 text-red-300"
-                >
-                  Tarefa suspensa por quebra de conduta
-                </Badge>
-              )}
+                {!canAccess && (
+                  <Badge
+                    variant={"destructive"}
+                    className="bg-red-900 text-red-300"
+                  >
+                    Tarefa suspensa por quebra de conduta
+                  </Badge>
+                )}
 
-              {lastAttemptStatus === "failed" && (
+                {lastAttemptStatus === "failed" && (
                   <Badge className="bg-red-900 text-red-300 animate-pulse">
                     Tentativa com falha
                   </Badge>
                 )}
 
-              {isProcessing && (
+                {isProcessing && (
                   <Badge className="bg-green-600 text-white animate-pulse">
                     Em execução
                   </Badge>
                 )}
 
-              {lastAttemptStatus === "completed" && (
+                {lastAttemptStatus === "completed" && (
                   <Badge className="bg-yellow-600 text-white animate-pulse">
                     Resultados disponíveis
                   </Badge>
                 )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col space-y-4">
-              <div className="space-y-2">
-                <CardDescription className="text-slate-400 line-clamp-2">
-                  {assignment.description}
-                </CardDescription>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col space-y-4">
+                <div className="space-y-2">
+                  <CardDescription className="text-slate-400 line-clamp-2">
+                    {assignment.description}
+                  </CardDescription>
 
-                {shouldShowExpandButton(assignment.description) && (
+                  {shouldShowExpandButton(assignment.description) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-400 hover:text-blue-300 h-auto p-0 w-fit"
+                      onClick={() => setSelectedDescriptionModal(assignment.id)}
+                    >
+                      Ver mais
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex flex-col space-y-2 items-center justify-between">
+                  {assignment.assignmentAttempts?.length > 0 && (
+                    <Button
+                      className="w-full bg-green-700 hover:bg-green-800 text-white"
+                      onClick={() =>
+                        push(`/${Route.Assignment}/${assignment.id}/attempts`)
+                      }
+                      disabled={!canAccess}
+                    >
+                      <CodeSquare className="h-4 w-4 mr-2" />
+                      Visualizar Resultados
+                    </Button>
+                  )}
+
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-blue-400 hover:text-blue-300 h-auto p-0 w-fit"
-                    onClick={() => setSelectedDescriptionModal(assignment.id)}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-700 disabled:text-slate-400"
+                    onClick={() => handleTry(assignment.id)}
+                    disabled={!canAccess || isProcessing}
                   >
-                    Ver mais
+                    <Code className="h-4 w-4 mr-2" />
+                    {isProcessing ? "Tarefa em execução..." : "Iniciar"}
                   </Button>
-                )}
+                </div>
               </div>
-
-              <div className="flex flex-col space-y-2 items-center justify-between">
-                {assignment.assignmentAttempts?.length > 0 && (
-                  <Button
-                    className="w-full bg-green-700 hover:bg-green-800 text-white"
-                    onClick={() =>
-                      push(`/${Route.Assignment}/${assignment.id}/attempts`)
-                    }
-                    disabled={!isUserSuspendedFromAssignment(assignment)}
-                  >
-                    <CodeSquare className="h-4 w-4 mr-2" />
-                    Visualizar Resultados
-                  </Button>
-                )}
-
-              <Button
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-700 disabled:text-slate-400"
-                onClick={() => handleTry(assignment.id)}
-                disabled={
-                  !isUserSuspendedFromAssignment(assignment) ||
-                  isProcessing
-                }
-              >
-                <Code className="h-4 w-4 mr-2" />
-                {isProcessing
-                  ? "Tarefa em execução..."
-                  : "Iniciar"}
-              </Button>
-              </div>
-            </div>
-          </CardContent>
+            </CardContent>
           </Card>
         );
       })}

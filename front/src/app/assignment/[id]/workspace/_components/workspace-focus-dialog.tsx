@@ -4,7 +4,7 @@ import { useWindowFocus } from "@/hooks/use-window-focus";
 import { Checkbox } from "@radix-ui/react-checkbox";
 import { Label } from "@radix-ui/react-label";
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "../../../../../components/ui/button";
 
 export function WorkspaceFocusDialog({ id }: { id: string }) {
   const [checked, setChecked] = useState(true);

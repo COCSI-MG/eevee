@@ -15,6 +15,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useUsers } from "@/hooks/use-users";
 import { SelectedUser } from "@/types/shared";
 import { useMemo, useState } from "react";
+import QueryErrorState from "../admin/query-error-state";
 
 interface UsersCardContentProps {
   selectedUsers: Array<SelectedUser>;
@@ -27,13 +28,18 @@ export default function UsersCard({
   setSelectedUsers: setSelectedUsers,
   onUsersSelectionChange,
 }: UsersCardContentProps) {
-  const { data: users, isFetching: isUsersFetching, isSuccess } = useUsers();
+  const {
+    data: users,
+    isFetching: isUsersFetching,
+    isError: isUsersError,
+    refetch: refetchUsers,
+  } = useUsers();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [open, setOpen] = useState(false);
 
   const filteredUsers = useMemo(() => {
-    if (!isSuccess || !users) return [];
+    if (!users) return [];
 
     return users.filter(
       (user) =>
@@ -41,16 +47,14 @@ export default function UsersCard({
         (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-  }, [isSuccess, users, searchTerm]);
+  }, [users, searchTerm]);
 
   const handleUserSelect = (UserId: number) => {
-    if (isSuccess) {
-      const selectedUser = users.find((user) => user.id === UserId);
-      if (selectedUser) {
-        setSelectedUsers((prev) => [...prev, selectedUser]);
-        onUsersSelectionChange([...selectedUsers, selectedUser]);
-        setOpen(false);
-      }
+    const selectedUser = users?.find((user) => user.id === UserId);
+    if (selectedUser) {
+      setSelectedUsers((prev) => [...prev, selectedUser]);
+      onUsersSelectionChange([...selectedUsers, selectedUser]);
+      setOpen(false);
     }
   };
 
@@ -65,6 +69,20 @@ export default function UsersCard({
       <div className="flex items-center justify-center h-full">
         <p className="text-sm text-muted-foreground">Loading Users...</p>
       </div>
+    );
+  }
+
+  if (isUsersError) {
+    return (
+      <QueryErrorState
+        title="Não foi possível carregar os usuários"
+        description="A seleção de alunos não pôde ser carregada. Tente novamente."
+        onRetry={() => {
+          void refetchUsers();
+        }}
+        retryLabel="Tentar novamente"
+        isRetrying={isUsersFetching}
+      />
     );
   }
 

@@ -7,9 +7,38 @@ import AssignmentsTable from "@/components/assignment/assignments-table";
 import { Route } from "@/app/routes";
 import { useAdminAssignments } from "@/hooks/use-assignments";
 import Loader from "@/components/loader";
+import QueryErrorState from "@/components/admin/query-error-state";
 
 export default function AssignmentsAdminPage() {
-  const { data: assignments, isFetching } = useAdminAssignments();
+  const { data: assignments, isFetching, isError, refetch } =
+    useAdminAssignments();
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Assignments</h1>
+
+          <Link href={`/${Route.AdminAssignmentCreate}`}>
+            <Button variant={"outline"}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Assignment
+            </Button>
+          </Link>
+        </div>
+
+        <QueryErrorState
+          title="Não foi possível carregar os assignments"
+          description="A listagem de assignments falhou. Tente novamente."
+          onRetry={() => {
+            void refetch();
+          }}
+          retryLabel="Tentar novamente"
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
 
   if (isFetching) {
     return <Loader />;

@@ -7,7 +7,7 @@ interface WorkspaceFileTreeProps {
   treeData: FileNode | null;
   onFileSelect: (node: FileNode) => void;
   selectedItem: SelectedItem;
-  setSelectedItem: (item: SelectedItem) => void;
+  onSelectItem: (item: SelectedItem) => void;
   onContextMenu?: (e: React.MouseEvent, node: FileNode) => void;
   onRenameRequest?: (node: FileNode) => void;
   onDeleteRequest?: (node: FileNode) => void;
@@ -20,7 +20,7 @@ interface WorkspaceFileTreeProps {
 interface TreeNodeProps {
   node: FileNode;
   onFileSelect: (node: FileNode) => void;
-  setSelectedItem: (item: SelectedItem) => void;
+  onSelectItem: (item: SelectedItem) => void;
   selectedPath: string;
   level?: number;
   onContextMenu?: (e: React.MouseEvent, node: FileNode) => void;
@@ -33,7 +33,7 @@ interface TreeNodeProps {
 const TreeNode: React.FC<TreeNodeProps> = ({
   node,
   onFileSelect,
-  setSelectedItem,
+  onSelectItem,
   selectedPath,
   level = 0,
   onContextMenu,
@@ -48,10 +48,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
   const handleClick = () => {
     if (node.isFile) {
-      setSelectedItem({ id: node.id, type: "file", path: node.path });
+      onSelectItem({ id: node.id, type: "file", path: node.path });
       onFileSelect(node);
     } else {
-      setSelectedItem({ id: node.id, type: "folder", path: node.path });
+      onSelectItem({ id: node.id, type: "folder", path: node.path });
       setIsOpen(!isOpen);
     }
   };
@@ -60,7 +60,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     e.preventDefault();
     e.stopPropagation();
     // Select the item on right-click
-    setSelectedItem({
+    onSelectItem({
       id: node.id,
       type: node.isFile ? "file" : "folder",
       path: node.path,
@@ -143,7 +143,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 
       {!node.isFile && isOpen && node.children && (
         <div>
-          {node.children
+          {[...node.children]
             .sort((a, b) => {
               // Pastas primeiro, depois arquivos, ambos em ordem alfabética
               if (a.isFile === b.isFile) {
@@ -156,7 +156,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 key={child.id}
                 node={child}
                 onFileSelect={onFileSelect}
-                setSelectedItem={setSelectedItem}
+                onSelectItem={onSelectItem}
                 selectedPath={selectedPath}
                 level={level + 1}
                 onContextMenu={onContextMenu}
@@ -176,7 +176,7 @@ export default function WorkspaceFileTree({
   treeData,
   onFileSelect,
   selectedItem,
-  setSelectedItem,
+  onSelectItem,
   onContextMenu,
   onRenameRequest,
   onDeleteRequest,
@@ -237,7 +237,7 @@ export default function WorkspaceFileTree({
       <TreeNode
         node={treeData}
         onFileSelect={onFileSelect}
-        setSelectedItem={setSelectedItem}
+        onSelectItem={onSelectItem}
         selectedPath={selectedItem.path}
         level={0}
         onContextMenu={handleTreeContextMenu}

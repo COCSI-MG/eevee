@@ -8,13 +8,16 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  UseGuards,
 } from '@nestjs/common';
 import { FileSaverService } from './file-saver.service';
 import { UpdateFileEntryDto } from './dto/update-file-saver.dto';
 import { FileUploadDto } from './dto/file-operation.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('file-saver')
+@UseGuards(JwtAuthGuard) // Protect all routes with JWT authentication
 // @UseGuards(JwtAuthGuard)
 export class FileSaverController {
   constructor(private readonly fileSaverService: FileSaverService) {}

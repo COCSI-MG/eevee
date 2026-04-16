@@ -13,6 +13,7 @@ import { SchedulingService } from './scheduling.service';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('scheduling')
 @UseGuards(JwtAuthGuard)
@@ -20,6 +21,7 @@ export class SchedulingController {
   constructor(private readonly schedulingService: SchedulingService) {}
 
   @Post()
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async create(
     @Body()
     createSchedulingDto: CreateSchedulingDto,
@@ -28,6 +30,7 @@ export class SchedulingController {
   }
 
   @Post('wait')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async createAndWait(
     @Body()
     createSchedulingDto: CreateSchedulingDto,
@@ -36,6 +39,7 @@ export class SchedulingController {
   }
 
   @Post('await')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async createAsync(
     @Body()
     createSchedulingDto: CreateSchedulingDto,
@@ -46,6 +50,7 @@ export class SchedulingController {
   }
 
   @Post('preview')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async createPreview(
     @Body()
     createSchedulingDto: CreateSchedulingDto,
@@ -54,6 +59,7 @@ export class SchedulingController {
   }
 
   @Get('preview/:previewRunId')
+  @Throttle({ default: { limit: 120, ttl: 60000 } })
   async getPreviewRun(
     @Param('previewRunId', ParseIntPipe) previewRunId: number,
   ) {
@@ -68,6 +74,7 @@ export class SchedulingController {
   }
 
   @Delete('preview/:previewRunId')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   async cancelPreviewRun(
     @Param('previewRunId', ParseIntPipe) previewRunId: number,
   ) {

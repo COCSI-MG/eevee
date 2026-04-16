@@ -22,7 +22,7 @@ export default function UserAssignmentsCard() {
   const { user } = useAuthContext();
 
   const { data, isSuccess, isPending } = useQuery({
-    queryKey: ['my-assignments', user?.id],
+    queryKey: ['my-assignments', user?.userId],
     refetchOnWindowFocus: true,
     refetchInterval: (query) =>
       hasAssignmentsProcessingAttempt(query.state.data) ? 5000 : false,

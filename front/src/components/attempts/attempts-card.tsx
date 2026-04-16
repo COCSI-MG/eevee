@@ -13,8 +13,11 @@ export default function AttemptsCard() {
   const { id } = useParams();
   const { back } = useRouter();
 
-  const { data: assingmentData, isFetching: isAssignmentAttemptsFetching } =
-    useFetchAssignment(Number(id));
+  const {
+    data: assingmentData,
+    isError: isAssignmentAttemptsError,
+    isFetching: isAssignmentAttemptsFetching,
+  } = useFetchAssignment(Number(id));
 
   if (isAssignmentAttemptsFetching) {
     return <Loader />;
@@ -35,9 +38,15 @@ export default function AttemptsCard() {
         </p>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {assingmentData === undefined || assingmentData?.assignmentAttempts === undefined || assingmentData?.assignmentAttempts.length === 0 ? (
+        {isAssignmentAttemptsError ? (
+          <div className="text-center text-red-400">
+            Ocorreu um erro ao carregar as tentativas desta tarefa.
+          </div>
+        ) : assingmentData === undefined ||
+          assingmentData?.assignmentAttempts === undefined ||
+          assingmentData?.assignmentAttempts.length === 0 ? (
           <div className="text-center text-gray-500">
-            No attempts found for this assignment.
+            Nenhuma tentativa encontrada para esta tarefa.
           </div>
         ) : (
           assingmentData?.assignmentAttempts

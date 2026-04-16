@@ -1,0 +1,30 @@
+name: CI front
+
+on:
+    pull_request:
+        branches:
+            - develop
+            - main
+        paths:
+            - "front/**"
+            - ".github/workflows/ci-front.yaml"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+              working-directory: front
+        steps:
+            - uses: actions/checkout@v4
+            - name: Node.js Setup
+              uses: actions/setup-node@v4
+              with:
+                node-version: "22"
+                cache: "npm"
+                cache-dependency-path: front/package-lock.json
+            - run: npm ci
+            - name: Run lint
+              run: npm run lint
+            - name: Build
+              run: npm run build

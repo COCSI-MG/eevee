@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { AuthContext } from '../context/auth-context';
-import { Route } from '../routes';
 import { RegisterService } from '../integration/scheduler-api/register-service';
 import { RegisterRequest } from '../interface/scheduler-api/auth';
 import { ErrorMessage, Form, Formik, FormikHelpers } from 'formik';
@@ -22,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { EyeOff, Eye } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from '@/hooks/use-toast';
+import { useAuthContext } from '@/hooks/use-auth-context';
 
 const registerSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('Email is required'),
@@ -35,42 +35,24 @@ const registerSchema = Yup.object().shape({
 });
 
 export default function Register() {
-  const [registerData, setRegisterData] = useState<RegisterRequest>({
-    email: '',
-    name: '',
-    password: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const { replace } = useRouter();
+  const { setSession } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
 
-  const { push } = useRouter();
-
-  const {
-    mutate: register,
-    isSuccess,
-    isError,
-    error,
-    data,
-  } = useMutation({
-    mutationFn: () => RegisterService.register(registerData),
+  const { mutate: register, isPending } = useMutation({
+    mutationFn: (values: RegisterRequest) => RegisterService.register(values),
+    onSuccess: (session) => {
+      setSession(session);
+      replace(session.isAdmin ? '/admin' : '/classes');
+    },
+    onError: () => {
+      toast({
+        title: 'Register error',
+        description: 'Unable to create your account. Please try again.',
+        variant: 'destructive',
+      });
+    },
   });
-
-  useEffect(() => {
-    if (isError) {
-      console.error('Error register in:', error);
-    }
-    if (data && isSuccess) {
-      AuthContext.setAccessToken(data.token);
-      AuthContext.setIsAdmin(data.isAdmin);
-      if (data.isAdmin) {
-        setIsLoading(false);
-        push(Route.Admin);
-        return;
-      }
-      setIsLoading(false);
-      push(Route.Classes);
-    }
-  }, [isError, error, data, isSuccess, push]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
@@ -89,9 +71,7 @@ export default function Register() {
               values: RegisterRequest,
               { setSubmitting }: FormikHelpers<RegisterRequest>
             ) => {
-              setIsLoading(true);
-              setRegisterData(values);
-              register();
+              register(values);
               setSubmitting(false);
             }}
             validationSchema={registerSchema}
@@ -107,7 +87,7 @@ export default function Register() {
                       placeholder="Your name"
                       onChange={handleChange}
                       value={values.name}
-                      disabled={isLoading}
+                      disabled={isPending}
                     />
                     {errors.name && <ErrorMessage name="name" />}
                   </div>
@@ -119,7 +99,7 @@ export default function Register() {
                       placeholder="your-email@example.com"
                       onChange={handleChange}
                       value={values.email}
-                      disabled={isLoading}
+                      disabled={isPending}
                     />
                     {errors.email && <ErrorMessage name="email" />}
                   </div>
@@ -136,7 +116,7 @@ export default function Register() {
                         className={
                           errors.password ? 'border-destructive pr-10' : 'pr-10'
                         }
-                        disabled={isLoading}
+                        disabled={isPending}
                       />
                       <button
                         type="button"
@@ -158,14 +138,14 @@ export default function Register() {
                     <Button
                       type="submit"
                       className="w-full"
-                      disabled={isLoading}
+                      disabled={isPending}
                     >
-                      {isLoading ? 'Signing in...' : 'Sign in'}
+                      {isPending ? 'Signing in...' : 'Sign up'}
                     </Button>
                   </div>
                   <div className="flex-1 flex justify-end">
                     <Link
-                      href={Route.Login}
+                      href="/login"
                       className="text-sm text-blue-500 hover:text-blue-700 ml-4"
                     >
                       Already have an account?
