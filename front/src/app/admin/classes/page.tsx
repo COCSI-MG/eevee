@@ -9,9 +9,10 @@ import { AxiosError } from "axios";
 import { useClasses } from "@/hooks/use-classes";
 import Loader from "@/components/loader";
 import AdminClassesTable from "@/components/classes/admin-classes-table";
+import QueryErrorState from "@/components/admin/query-error-state";
 
 export default function ClassesPage() {
-  const { data: classes, refetch, isFetching } = useClasses();
+  const { data: classes, refetch, isFetching, isError } = useClasses();
 
   const handleDelete = async (id: number) => {
     try {
@@ -47,6 +48,32 @@ export default function ClassesPage() {
       });
     }
   };
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Classes</h1>
+          <Link href="/admin/classes/new">
+            <Button variant={"outline"}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Class
+            </Button>
+          </Link>
+        </div>
+
+        <QueryErrorState
+          title="Não foi possível carregar as turmas"
+          description="A listagem de turmas falhou. Tente novamente."
+          onRetry={() => {
+            void refetch();
+          }}
+          retryLabel="Tentar novamente"
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
 
   if (isFetching) {
     return <Loader />;

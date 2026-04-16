@@ -6,6 +6,7 @@ import { HashUtils } from 'src/utils/hash.utils';
 import { JwtPayload } from './jwt.interface';
 import { LoginResponseDto } from './dto/response/login-response.dto';
 import { RegisterRequestDto } from './dto/request/register-request.dto';
+import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -16,7 +17,7 @@ export class AuthService {
 
   async validateUserAndLogin(
     loginData: LoginRequestDto,
-  ): Promise<LoginResponseDto | undefined> {
+  ): Promise<{ session: LoginResponseDto; token: string } | undefined> {
     const { email, password } = loginData;
     const user = await this.userService.findByEmail(email);
     if (
@@ -28,16 +29,23 @@ export class AuthService {
         userId: user.id,
         isAdmin: user.isAdmin,
       };
+
+      const token = this.jwtService.sign(payload);
+
       return {
-        token: this.jwtService.sign(payload),
-        isAdmin: user.isAdmin,
+        token,
+        session: {
+          userId: user.id,
+          email: user.email,
+          isAdmin: user.isAdmin,
+        },
       };
     }
   }
 
   async registerUser(
     registerData: RegisterRequestDto,
-  ): Promise<LoginResponseDto | undefined> {
+  ): Promise<{ session: LoginResponseDto; token: string } | undefined> {
     const { email } = registerData;
     const user = await this.userService.findByEmail(email);
     if (!user) {
@@ -51,10 +59,25 @@ export class AuthService {
         userId: createdUser.id,
         isAdmin: false,
       };
+
+      const token = this.jwtService.sign(payload);
+
       return {
-        token: this.jwtService.sign(payload),
-        isAdmin: false,
+        token,
+        session: {
+          userId: createdUser.id,
+          email: createdUser.email,
+          isAdmin: false,
+        },
       };
     }
+  }
+
+  buildSession(payload: JwtPayload): AuthSessionResponseDto {
+    return {
+      userId: payload.userId,
+      email: payload.email,
+      isAdmin: payload.isAdmin,
+    };
   }
 }

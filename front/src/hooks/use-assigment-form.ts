@@ -15,12 +15,28 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
     SelectedTemplate[] | null
   >([]);
 
-  const { data: existingAssignment, isFetching } = useQuery({
+  const {
+    data: existingAssignment,
+    isFetching,
+    isError,
+    refetch,
+    error,
+  } = useQuery({
     queryKey: [`currentAssignment ${existingAssignmentId}`],
-    queryFn: () =>
-      AssignmentService.GetAssignmentById(Number(existingAssignmentId!)),
+    queryFn: async () => {
+      const assignment = await AssignmentService.GetAssignmentById(
+        Number(existingAssignmentId!),
+      );
+
+      if (!assignment) {
+        throw new Error("Não foi possível carregar o assignment.");
+      }
+
+      return assignment;
+    },
     enabled: !!existingAssignmentId,
     refetchOnMount: true,
+    retryOnMount: true,
   });
 
   const { mutateAsync: upsertAssignment } = useMutation({
@@ -111,6 +127,9 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
   return {
     existingAssignment,
     isFetching,
+    isError,
+    refetch,
+    error,
     selectedTemplates,
     setSelectedTemplates,
     upsertAssignment,

@@ -35,6 +35,7 @@ import {
   TemplateParamTypeLabelMap,
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
+import QueryErrorState from "../admin/query-error-state";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -144,43 +145,45 @@ export default function TemplateForm() {
     },
   });
 
-  const { isFetching: isFetchingTemplate, isError: isTemplateError } = useQuery(
-    {
-      queryKey: ["currentTemplate", id],
-      enabled: id !== "new",
-      queryFn: async () => {
-        const template = await TemplatesService.getTemplate(id);
-        if (!template) {
-          return;
-        }
+  const {
+    isFetching: isFetchingTemplate,
+    isError: isTemplateError,
+    refetch: refetchTemplate,
+  } = useQuery({
+    queryKey: ["currentTemplate", id],
+    enabled: id !== "new",
+    queryFn: async () => {
+      const template = await TemplatesService.getTemplate(id);
+      if (!template) {
+        throw new Error("Não foi possível carregar o template.");
+      }
 
-        const templateParamsInputAsArray = template.templateParams.map(
-          (t) => t.name
-        );
+      const templateParamsInputAsArray = template.templateParams.map(
+        (t) => t.name
+      );
 
-        const typesMap: Record<string, TemplateParamType> = {};
-        template.templateParams.forEach((p) => {
-          typesMap[p.name] = p.type ?? TemplateParamType.STRING;
-        });
-        setParamTypesByName(typesMap);
+      const typesMap: Record<string, TemplateParamType> = {};
+      template.templateParams.forEach((p) => {
+        typesMap[p.name] = p.type ?? TemplateParamType.STRING;
+      });
+      setParamTypesByName(typesMap);
 
-        formik.setValues({
-          id: template.id,
-          title: template.title,
-          description: template.description,
-          workerType: template.workerType ?? WorkerType.NODE_DEFAULT,
-          content: template.content,
-          params: templateParamsInputAsArray,
-          dependencies: template.dependencies ?? [],
-        });
+      formik.setValues({
+        id: template.id,
+        title: template.title,
+        description: template.description,
+        workerType: template.workerType ?? WorkerType.NODE_DEFAULT,
+        content: template.content,
+        params: templateParamsInputAsArray,
+        dependencies: template.dependencies ?? [],
+      });
 
-        setParamsInput(templateParamsInputAsArray.join(", "));
-        setDependenciesInput((template.dependencies ?? []).join(", "));
+      setParamsInput(templateParamsInputAsArray.join(", "));
+      setDependenciesInput((template.dependencies ?? []).join(", "));
 
-        return template;
-      },
-    }
-  );
+      return template;
+    },
+  });
 
   // Keep default template content in sync with workerType while the user hasn't edited it.
   const [lastWorkerTypeForDefault, setLastWorkerTypeForDefault] = useState<
@@ -251,18 +254,26 @@ export default function TemplateForm() {
     }));
   };
 
-  useEffect(() => {
-    if (isTemplateError) {
-      toast({
-        title: TEMPLATE_FORM_TOAST_MESSAGES.fetchErrorTitle,
-        description: TEMPLATE_FORM_TOAST_MESSAGES.fetchErrorDescription,
-        variant: "destructive",
-      });
-    }
-  }, [isTemplateError]);
-
   if (!isNewTemplate && isFetchingTemplate) {
     return <div className="p-6">{TEMPLATE_FORM_TEXT.loading}</div>;
+  }
+
+  if (!isNewTemplate && isTemplateError) {
+    return (
+      <div className="p-6">
+        <div className="max-w-2xl mx-auto">
+          <QueryErrorState
+            title={TEMPLATE_FORM_TOAST_MESSAGES.fetchErrorTitle}
+            description={TEMPLATE_FORM_TOAST_MESSAGES.fetchErrorDescription}
+            onRetry={() => {
+              void refetchTemplate();
+            }}
+            retryLabel="Tentar novamente"
+            isRetrying={isFetchingTemplate}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -21,6 +21,7 @@ import TemplateConfigDialog from "./template-config-dialog";
 import { SelectedTemplate } from "@/types/shared";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import QueryErrorState from "../admin/query-error-state";
 
 interface TemplateCardProps {
   selectedTemplates: SelectedTemplate[] | null;
@@ -103,6 +104,8 @@ export default function TemplateCard({
     data: templates,
     isSuccess: isSuccessTemplates,
     isFetching: isFetchingTemplates,
+    isError: isTemplatesError,
+    refetch: refetchTemplates,
   } = useTemplates(normalizedWorkerType);
 
   // why are we using reducer again?
@@ -222,6 +225,20 @@ export default function TemplateCard({
           </div>
         </CardContent>
       </Card>
+    );
+  }
+
+  if (isTemplatesError) {
+    return (
+      <QueryErrorState
+        title="Não foi possível carregar os templates"
+        description="Os templates desta atividade não puderam ser carregados. Tente novamente."
+        onRetry={() => {
+          void refetchTemplates();
+        }}
+        retryLabel="Tentar novamente"
+        isRetrying={isFetchingTemplates}
+      />
     );
   }
 

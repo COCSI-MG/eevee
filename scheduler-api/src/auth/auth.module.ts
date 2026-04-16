@@ -6,10 +6,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserModule } from 'src/user/user.module';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, JwtAuthGuard],
   imports: [
     JwtModule.registerAsync({
       imports: [ConfigModule],

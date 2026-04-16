@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { THROTTLER_SKIP } from '@nestjs/throttler/dist/throttler.constants';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -15,8 +16,14 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHealth()).toBe('Hello World!');
+    it('should return the current health status', () => {
+      expect(appController.getHealth()).toBe('All systems online!');
+    });
+
+    it('skips throttling for health checks', () => {
+      expect(
+        Reflect.getMetadata(THROTTLER_SKIP + 'default', AppController.prototype.getHealth),
+      ).toBe(true);
     });
   });
 });

@@ -1,5 +1,9 @@
 import { SchedulingController } from './scheduling.controller';
 import { SchedulingService } from './scheduling.service';
+import {
+  THROTTLER_LIMIT,
+  THROTTLER_TTL,
+} from '@nestjs/throttler/dist/throttler.constants';
 
 describe('SchedulingController', () => {
   let controller: SchedulingController;
@@ -84,5 +88,35 @@ describe('SchedulingController', () => {
     await controller.getPreviewRun(11);
 
     expect(schedulingService.getPreviewRunForCurrentUser).toHaveBeenCalledWith(11);
+  });
+
+  it('applies the moderate throttle to scheduling writes', () => {
+    expect(
+      Reflect.getMetadata(THROTTLER_LIMIT + 'default', SchedulingController.prototype.create),
+    ).toBe(30);
+    expect(
+      Reflect.getMetadata(THROTTLER_TTL + 'default', SchedulingController.prototype.create),
+    ).toBe(60000);
+    expect(
+      Reflect.getMetadata(THROTTLER_LIMIT + 'default', SchedulingController.prototype.createAndWait),
+    ).toBe(30);
+    expect(
+      Reflect.getMetadata(THROTTLER_LIMIT + 'default', SchedulingController.prototype.createAsync),
+    ).toBe(30);
+    expect(
+      Reflect.getMetadata(THROTTLER_LIMIT + 'default', SchedulingController.prototype.createPreview),
+    ).toBe(30);
+    expect(
+      Reflect.getMetadata(THROTTLER_LIMIT + 'default', SchedulingController.prototype.cancelPreviewRun),
+    ).toBe(30);
+  });
+
+  it('applies a higher throttle to preview polling', () => {
+    expect(
+      Reflect.getMetadata(THROTTLER_LIMIT + 'default', SchedulingController.prototype.getPreviewRun),
+    ).toBe(120);
+    expect(
+      Reflect.getMetadata(THROTTLER_TTL + 'default', SchedulingController.prototype.getPreviewRun),
+    ).toBe(60000);
   });
 });

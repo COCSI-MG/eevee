@@ -13,9 +13,10 @@ import {
   TEMPLATE_LIST_TEXT,
   TEMPLATE_LIST_TOAST_MESSAGES,
 } from "@/app/admin/templates/constants";
+import QueryErrorState from "@/components/admin/query-error-state";
 
 export default function TemplatePage() {
-  const { data: templates, refetch, isFetching } = useTemplates();
+  const { data: templates, refetch, isFetching, isError } = useTemplates();
 
   const handleDelete = async (id: number) => {
     try {
@@ -53,6 +54,34 @@ export default function TemplatePage() {
       });
     }
   };
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">
+            {TEMPLATE_LIST_TEXT.title}
+          </h1>
+          <Link href="/admin/templates/new">
+            <Button variant={"outline"}>
+              <Plus className="h-4 w-4 mr-2" />
+              {TEMPLATE_LIST_TEXT.addButton}
+            </Button>
+          </Link>
+        </div>
+
+        <QueryErrorState
+          title="Não foi possível carregar os templates"
+          description="A listagem de templates falhou. Tente novamente."
+          onRetry={() => {
+            void refetch();
+          }}
+          retryLabel="Tentar novamente"
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
 
   if (isFetching) {
     return <Loader />;

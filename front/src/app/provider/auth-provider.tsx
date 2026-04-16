@@ -1,107 +1,119 @@
 "use client";
 
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { AuthContext as AuthContextClass } from "../context/auth-context";
-import { User } from "../interface/scheduler-api/user";
-import React, { useEffect } from "react";
-import { Route } from "../routes";
+import { AuthService } from "../integration/scheduler-api/auth-service";
+import { AuthSession } from "../interface/scheduler-api/auth";
+
+const AUTH_ROUTES = new Set(["/login", "/register"]);
+
+const isAuthRoute = (pathname: string) => AUTH_ROUTES.has(pathname);
+const isProtectedRoute = (pathname: string) =>
+  pathname.startsWith("/classes") || pathname.startsWith("/assignment");
 
 export const AuthContext = React.createContext<
   | {
-      user: Pick<User, "id" | "email" | "isAdmin"> | null;
+      user: AuthSession | null;
       isAuthenticated: boolean;
-      checkTokenExpired: () => void;
-      logout: () => void;
+      refreshSession: () => Promise<void>;
+      setSession: (session: AuthSession | null) => void;
+      logout: () => Promise<void>;
     }
   | undefined
 >(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { push, back } = useRouter();
-  const pathName = usePathname();
-  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
-  const [user, setUser] = React.useState<Pick<
-    User,
-    "id" | "email" | "isAdmin"
-  > | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const [user, setUser] = useState<AuthSession | null>(null);
+  const [isHydrating, setIsHydrating] = useState(true);
+  const refreshRequestIdRef = useRef(0);
 
-  const clearAuthData = () => {
-    AuthContextClass.clear();
-    setUser(null);
-    setIsAuthenticated(false);
-  }
+  const setSession = useCallback((session: AuthSession | null) => {
+    refreshRequestIdRef.current += 1;
+    setUser(session);
+    setIsHydrating(false);
+  }, []);
 
-  const checkTokenExpired = React.useCallback(() => {
-    const token = AuthContextClass.getAccessToken();
-    if (!token) {
-      AuthContextClass.clear();
-      push("/login");
-      setIsAuthenticated(false);
-      return;
-    }
+  const refreshSession = useCallback(async () => {
+    const requestId = ++refreshRequestIdRef.current;
+
     try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      const expirationTime = payload.exp * 1000; // Convert to milliseconds
-      const currentTime = Date.now();
-      if (currentTime > expirationTime) {
-        AuthContextClass.clear();
-        push("/login");
-        setIsAuthenticated(false);
+      const session = await AuthService.me();
+
+      if (requestId !== refreshRequestIdRef.current) {
         return;
       }
 
-      setIsAuthenticated(true);
-      setUser({
-        id: payload.userId,
-        email: payload.email,
-        isAdmin: payload.isAdmin,
-      });
+      setSession(session);
     } catch (error) {
-      console.error("Error decoding token:", error);
+      if (requestId !== refreshRequestIdRef.current) {
+        return;
+      }
 
-      clearAuthData();
-      push("/login");
+      const status = (error as { response?: { status?: number } }).response?.status;
+      if (status !== 401) {
+        console.error("Error loading auth session:", error);
+      }
+      setSession(null);
     }
-  }, [push]);
-
-  const isAuthPathName = (pathName: string) => {
-    return pathName === Route.Login || pathName === "/register";
-  };
+  }, [setSession]);
 
   useEffect(() => {
-    if (isAuthenticated && isAuthPathName(pathName)) {
-      back();
-    }
-  }, [back, isAuthenticated, pathName]);
+    void refreshSession();
+  }, [refreshSession]);
 
-  React.useEffect(() => {
-    if (isAuthPathName(pathName)) {
+  useEffect(() => {
+    if (isHydrating) {
       return;
     }
-    checkTokenExpired();
-  }, [checkTokenExpired, pathName]);
 
-  useEffect(() => {
-    if (user?.isAdmin === false && pathName.startsWith("/admin")) {
-      push(`/${Route.Classes}`);
+    if (isAuthRoute(pathname) && user) {
+      router.replace(user.isAdmin ? "/admin" : "/classes");
+      return;
     }
-  }, [user, pathName, push]);
 
-  const logout = () => {
+    if (!user && (isProtectedRoute(pathname) || pathname.startsWith("/admin"))) {
+      router.replace("/login");
+      return;
+    }
+
+    if (pathname.startsWith("/admin") && user && !user.isAdmin) {
+      router.replace("/classes");
+    }
+  }, [isHydrating, pathname, router, user]);
+
+  const logout = useCallback(async () => {
     try {
-      clearAuthData();
-      push(`/${Route.Login}`);
-    } catch (err) {
-      console.error(err);
+      await AuthService.logout();
+    } catch (error) {
+      console.error("Error logging out:", error);
+    } finally {
+      setSession(null);
+      router.replace("/login");
     }
-  };
+  }, [router, setSession]);
+
+  const shouldHideContent =
+    (isHydrating &&
+      (isAuthRoute(pathname) ||
+        isProtectedRoute(pathname) ||
+        pathname.startsWith("/admin"))) ||
+    (isAuthRoute(pathname) && user) ||
+    (pathname.startsWith("/admin") && user && !user.isAdmin) ||
+    (!user && (isProtectedRoute(pathname) || pathname.startsWith("/admin")));
+
+  if (shouldHideContent) {
+    return null;
+  }
 
   return (
     <AuthContext.Provider
       value={{
-        isAuthenticated: isAuthenticated,
-        checkTokenExpired,
+        isAuthenticated: Boolean(user),
+        refreshSession,
         logout,
+        setSession,
         user,
       }}
     >
