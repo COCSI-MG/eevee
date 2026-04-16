@@ -25,6 +25,7 @@ import { useFormik } from "formik";
 import { SelectedUser } from "@/types/shared";
 import { AxiosError } from "axios";
 import * as Yup from "yup";
+import QueryErrorState from "@/components/admin/query-error-state";
 
 const classUpsertSchema = Yup.object().shape({
   id: Yup.number().optional(),
@@ -127,26 +128,29 @@ export default function ClassEditPage() {
     queryKey: ["class", id],
     queryFn: async ({ queryKey }) => {
       const classData = await ClassesService.getOne(Number(queryKey[1]));
-      if (classData) {
-        const studentsSelected = classData.userClasses.map(
-          (userClass) => userClass.userId
-        );
-
-        formik.setValues({
-          id: classData.id,
-          name: classData.name,
-          description: classData.description || "",
-          students: studentsSelected,
-        });
-
-        setSelectedUsers(
-          classData.userClasses.map((userClass) => ({
-            id: userClass.userId,
-            name: userClass.user.name,
-            email: userClass.user.email,
-          }))
-        );
+      if (!classData) {
+        throw new Error("Não foi possível carregar a turma.");
       }
+
+      const studentsSelected = classData.userClasses.map(
+        (userClass) => userClass.userId
+      );
+
+      formik.setValues({
+        id: classData.id,
+        name: classData.name,
+        description: classData.description || "",
+        students: studentsSelected,
+      });
+
+      setSelectedUsers(
+        classData.userClasses.map((userClass) => ({
+          id: userClass.userId,
+          name: userClass.user.name,
+          email: userClass.user.email,
+        }))
+      );
+
       return classData;
     },
     enabled: !isNewClass,
@@ -159,21 +163,47 @@ export default function ClassEditPage() {
     );
   };
 
+  const header = (
+    <div className="flex items-center">
+      <Button variant="ghost" onClick={() => router.back()} className="mr-4">
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
+      <h1 className="text-3xl font-bold tracking-tight">
+        {isNewClass ? "Create Class" : "Edit Class"}
+      </h1>
+    </div>
+  );
+
+  if (!isNewClass && classQuery.isError) {
+    return (
+      <div className="space-y-6">
+        {header}
+        <QueryErrorState
+          title="Não foi possível carregar a turma"
+          description="Os dados desta turma não puderam ser carregados. Tente novamente."
+          onRetry={() => {
+            void classQuery.refetch();
+          }}
+          retryLabel="Tentar novamente"
+          isRetrying={classQuery.isFetching}
+        />
+      </div>
+    );
+  }
+
   if (!isNewClass && classQuery.isFetching) {
-    return <div>Loading...</div>;
+    return (
+      <div className="space-y-6">
+        {header}
+        <div>Loading...</div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
-        <Button variant="ghost" onClick={() => router.back()} className="mr-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
-        <h1 className="text-3xl font-bold tracking-tight">
-          {isNewClass ? "Create Class" : "Edit Class"}
-        </h1>
-      </div>
+      {header}
 
       <form onSubmit={formik.handleSubmit}>
         <div className="grid gap-6 md:grid-cols-2">

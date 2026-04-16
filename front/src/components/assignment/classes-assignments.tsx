@@ -12,7 +12,7 @@ export default function ClassesAssignments() {
   const { id } = useParams();
   const { back } = useRouter();
 
-  const { data, isSuccess, isPending } = useQuery({
+  const { data, isError, isFetching } = useQuery({
     queryKey: ["assignments", id],
     refetchInterval: 5000,
     initialData: [],
@@ -20,7 +20,7 @@ export default function ClassesAssignments() {
       AssignmentService.GetAssignmentsByClassId(Number(queryKey[1])),
   });
 
-  if (isPending) {
+  if (isFetching && data.length === 0) {
     return <Loader />;
   }
 
@@ -39,7 +39,11 @@ export default function ClassesAssignments() {
         </p>
       </div>
 
-      {isSuccess && data.length > 0 ? (
+      {isError ? (
+        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+          Ocorreu um erro ao carregar as tarefas desta turma.
+        </div>
+      ) : data.length > 0 ? (
         <AssignmentsCard data={data} />
       ) : (
         <p>Nenhuma tarefa encontrada para esta turma.</p>

@@ -361,14 +361,16 @@ export class SchedulingService {
         `ATTEMPT_ID: ${attempt.id}`,
       );
     } catch (err) {
+      const errMessage = err instanceof Error ? err.message : 'Unknown error';
+
       this.logger.fatal(
-        `Worker creation failed for attempt ID ${attempt.id}: ${err.message}`,
+        `Worker creation failed for attempt ID ${attempt.id}: ${errMessage}`,
         `ATTEMPT_ID: ${attempt.id}`,
       );
 
       await this.schedulingAttemptTransitionService.markFailedWorkerError(
         attempt.id,
-        err.message,
+        errMessage,
       );
 
       throw err;

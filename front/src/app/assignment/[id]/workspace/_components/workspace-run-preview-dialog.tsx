@@ -12,24 +12,43 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, XCircle } from "lucide-react";
+import React from "react";
 
 interface WorkspaceRunPreviewDialogProps {
   open: boolean;
   loading: boolean;
+  cancelling?: boolean;
+  cancelled?: boolean;
   result: SchedulingResponse | null;
   error: string | null;
-  onClose: () => void;
+  onClose: () => void | Promise<void>;
 }
 
 export function WorkspaceRunPreviewDialog({
   open,
   loading,
+  cancelling = false,
+  cancelled = false,
   result,
   error,
   onClose,
 }: WorkspaceRunPreviewDialogProps) {
   const hasResult = Boolean(result);
   const showError = Boolean(error);
+  const isBusy = loading || cancelling || cancelled;
+
+  const handleOpenChange = React.useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        void onClose();
+      }
+    },
+    [onClose],
+  );
+
+  const handleClose = React.useCallback(() => {
+    void onClose();
+  }, [onClose]);
 
   const scoreValue =
     result && Number.isFinite(result.score)
@@ -39,13 +58,29 @@ export function WorkspaceRunPreviewDialog({
       : 0;
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogContent className="max-w-3xl border-slate-700 bg-slate-950 text-slate-100">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className="max-w-3xl border-slate-700 bg-slate-950 text-slate-100"
+        onEscapeKeyDown={(event) => {
+          if (isBusy) {
+            event.preventDefault();
+          }
+        }}
+        onPointerDownOutside={(event) => {
+          if (isBusy) {
+            event.preventDefault();
+          }
+        }}
+      >
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-xl">Run preview</DialogTitle>
           <DialogDescription className="text-slate-400">
-            {loading
-              ? "Executing tests synchronously. This preview closes only when you do."
+            {cancelling
+              ? "Cancelling the preview run."
+              : cancelled
+                ? "The preview run was cancelled."
+              : loading
+                ? "Executing tests synchronously. Closing this dialog cancels the active run."
               : hasResult
                 ? "The preview finished successfully."
                 : showError
@@ -54,14 +89,26 @@ export function WorkspaceRunPreviewDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {loading && (
+        {isBusy && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-sm text-slate-300">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Running checks...
+              {cancelled ? (
+                <XCircle className="h-4 w-4 text-slate-300" />
+              ) : (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+              {cancelling
+                ? "Cancelling run..."
+                : cancelled
+                  ? "Run cancelled."
+                  : "Running checks..."}
             </div>
             <p className="text-sm text-slate-400">
-              You can keep editing while the preview is running.
+              {cancelling
+                ? "Waiting for the backend to stop the job."
+                : cancelled
+                  ? "Returning to the editor."
+                : "Press cancel to stop the current run before returning to the editor."}
             </p>
           </div>
         )}
@@ -132,8 +179,14 @@ export function WorkspaceRunPreviewDialog({
         )}
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Close
+          <Button variant="outline" onClick={handleClose} disabled={cancelling || cancelled}>
+            {loading
+              ? "Cancel run"
+              : cancelling
+                ? "Cancelling..."
+                : cancelled
+                  ? "Cancelled"
+                  : "Close"}
           </Button>
         </div>
       </DialogContent>

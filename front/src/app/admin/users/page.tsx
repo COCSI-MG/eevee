@@ -9,9 +9,10 @@ import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
 import { UsersService } from "@/app/integration/scheduler-api/user";
+import QueryErrorState from "@/components/admin/query-error-state";
 
 export default function UsersPage() {
-  const { data: users, refetch, isFetching } = useUsers();
+  const { data: users, refetch, isFetching, isError } = useUsers();
 
   const handleDelete = async (id: number) => {
     try {
@@ -47,6 +48,32 @@ export default function UsersPage() {
       });
     }
   };
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+          <Link href="/admin/users/new">
+            <Button variant={"outline"}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add User
+            </Button>
+          </Link>
+        </div>
+
+        <QueryErrorState
+          title="Não foi possível carregar os usuários"
+          description="A listagem de usuários falhou. Tente novamente."
+          onRetry={() => {
+            void refetch();
+          }}
+          retryLabel="Tentar novamente"
+          isRetrying={isFetching}
+        />
+      </div>
+    );
+  }
 
   if (isFetching) {
     return <Loader />;

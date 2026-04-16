@@ -162,7 +162,7 @@ export class WorkerService {
   }
 
   async cancelWorkerJob(jobName: string): Promise<void> {
-    await this.kubernetesService.deleteJob(jobName);
+    await this.kubernetesService.deleteJobAndPods(jobName);
   }
 
   private getJobName(workerType: WorkerType): string {

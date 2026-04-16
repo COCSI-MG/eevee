@@ -1,13 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Route } from "./routes";
 
 export default function Home() {
   const { push } = useRouter();
 
   const handleLogin = () => {
-    push(Route.Login);
+    push('/login');
   };
 
   return (

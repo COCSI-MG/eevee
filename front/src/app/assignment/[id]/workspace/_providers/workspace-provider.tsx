@@ -10,9 +10,10 @@ import { WorkerType } from "@/app/interface/scheduler-api/worker";
 
 interface WorkspaceContextType {
   selectedItem: SelectedItem;
-  setSelectedItem: React.Dispatch<React.SetStateAction<SelectedItem>>;
   fileTreeData: FileNode;
-  setFileTreeData: React.Dispatch<React.SetStateAction<FileNode>>;
+  selectItem: (item: SelectedItem) => void;
+  clearSelection: () => void;
+  replaceFileTree: (fileTree: FileNode) => void;
 }
 
 const WorkspaceContext = React.createContext<WorkspaceContextType | undefined>(
@@ -40,12 +41,21 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   workerType,
   boilerplate,
 }) => {
+  const emptySelectedItem = React.useMemo<SelectedItem>(
+    () => ({
+      id: "",
+      type: "file",
+      path: "",
+    }),
+    [],
+  );
+
   const [selectedItem, setSelectedItem] = React.useState<SelectedItem>({
     id: "",
     type: "file",
     path: "",
   });
-  
+
   // Initialize with the correct file node based on worker type and boilerplate
   const initialFileNode = React.useMemo(() => {
     if (workerType) {
@@ -53,8 +63,20 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     }
     return DEFAULT_FILE_NODE;
   }, [workerType, boilerplate]);
-  
+
   const [treeData, setTreeData] = React.useState<FileNode>(initialFileNode);
+
+  const selectItem = React.useCallback((item: SelectedItem) => {
+    setSelectedItem(item);
+  }, []);
+
+  const clearSelection = React.useCallback(() => {
+    setSelectedItem(emptySelectedItem);
+  }, [emptySelectedItem]);
+
+  const replaceFileTree = React.useCallback((fileTree: FileNode) => {
+    setTreeData(fileTree);
+  }, []);
 
   useEffect(() => {
     const initializeStashFn = async () => {
@@ -71,9 +93,10 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   const value: WorkspaceContextType = {
     selectedItem,
-    setSelectedItem,
     fileTreeData: treeData,
-    setFileTreeData: setTreeData,
+    selectItem,
+    clearSelection,
+    replaceFileTree,
   };
 
   return (

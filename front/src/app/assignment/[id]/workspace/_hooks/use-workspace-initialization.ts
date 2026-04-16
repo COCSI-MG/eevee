@@ -1,0 +1,115 @@
+"use client";
+
+import { getFileTree } from "@/app/integration/filestash";
+import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { useSaveFileTree } from "@/hooks/use-filestash";
+import { FileNode, SelectedItem } from "@/types/shared";
+import React from "react";
+import {
+  createInitialWorkspaceTree,
+  findFirstFile,
+  getAssignmentBoilerplate,
+  shouldRebuildWorkspaceTree,
+} from "../_utils/workspace.utils";
+
+interface UseWorkspaceInitializationParams {
+  assignment: Assignment;
+  userId: number;
+  setActiveFileContent: React.Dispatch<React.SetStateAction<string>>;
+  replaceFileTree: (fileTree: FileNode) => void;
+  selectItem: (item: SelectedItem) => void;
+}
+
+export function useWorkspaceInitialization({
+  assignment,
+  userId,
+  setActiveFileContent,
+  replaceFileTree,
+  selectItem,
+}: UseWorkspaceInitializationParams) {
+  const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+  const workspaceAssignment = React.useMemo(
+    () =>
+      ({
+        id: assignment.id,
+        workerType: assignment.workerType,
+        boilerplate: assignment.boilerplate,
+        boilerplateContent: assignment.boilerplateContent,
+      }) as Assignment,
+    [
+      assignment.boilerplate,
+      assignment.boilerplateContent,
+      assignment.id,
+      assignment.workerType,
+    ],
+  );
+  const initializationKey = React.useMemo(() => {
+    if (!workspaceAssignment.id || !userId) {
+      return null;
+    }
+
+    return `${workspaceAssignment.id}:${userId}`;
+  }, [userId, workspaceAssignment.id]);
+  const initializedWorkspaceKeyRef = React.useRef<string | null>(null);
+
+  const initializeWorkspace = React.useCallback(async () => {
+    if (!initializationKey) {
+      return;
+    }
+
+    if (initializedWorkspaceKeyRef.current === initializationKey) {
+      return;
+    }
+
+    initializedWorkspaceKeyRef.current = initializationKey;
+
+    let fileTree = await getFileTree(workspaceAssignment.id, userId);
+    let shouldPersistInitialState = false;
+
+    if (!fileTree || shouldRebuildWorkspaceTree(workspaceAssignment, fileTree)) {
+      fileTree = createInitialWorkspaceTree(workspaceAssignment);
+      shouldPersistInitialState = true;
+    }
+
+    replaceFileTree(fileTree);
+
+    const firstFile = findFirstFile(fileTree);
+    if (firstFile) {
+      const firstFileContent =
+        firstFile.content ?? getAssignmentBoilerplate(workspaceAssignment);
+
+      selectItem({
+        id: firstFile.id,
+        type: "file",
+        path: firstFile.path,
+      });
+
+      setActiveFileContent(firstFileContent);
+
+      if (firstFile.content === undefined) {
+        firstFile.content = firstFileContent;
+        shouldPersistInitialState = true;
+      }
+    }
+
+    if (shouldPersistInitialState) {
+      await saveFileTreeAsync({
+        assignmentId: workspaceAssignment.id,
+        userId,
+        fileTree,
+      });
+    }
+  }, [
+    initializationKey,
+    replaceFileTree,
+    saveFileTreeAsync,
+    selectItem,
+    setActiveFileContent,
+    workspaceAssignment,
+    userId,
+  ]);
+
+  React.useEffect(() => {
+    void initializeWorkspace();
+  }, [initializeWorkspace]);
+}

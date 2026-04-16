@@ -25,6 +25,10 @@ import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import { GithubModule } from './github/github.module';
 import { AssignmentUserSuspensionModule } from './assignment-user-suspension/assignment-user-suspension.module';
 import { DatabaseModule } from './database/database.module';
+import { CookieParserMiddleware } from './auth/auth-cookie.middleware';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerBehindProxyGuard } from './auth/guards/throttler-behind-proxy.guard';
 
 @Module({
   imports: [
@@ -36,6 +40,14 @@ import { DatabaseModule } from './database/database.module';
     ClsModule.forRoot({
       global: true,
       middleware: { mount: true },
+    }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 30,
+        },
+      ],
     }),
     DatabaseModule,
     NestScheduleModule.forRoot(),
@@ -59,12 +71,19 @@ import { DatabaseModule } from './database/database.module';
     AssignmentUserSuspensionModule,
   ],
   controllers: [AppController],
-  providers: [AppService, RequestContextMiddleware],
+  providers: [
+    AppService,
+    RequestContextMiddleware,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerBehindProxyGuard,
+    },
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(RequestContextMiddleware)
+      .apply(CookieParserMiddleware, RequestContextMiddleware)
       .exclude(
         {
           path: 'auth/register',

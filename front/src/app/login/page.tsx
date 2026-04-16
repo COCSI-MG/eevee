@@ -2,7 +2,7 @@
 
 import type React from 'react';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Code } from 'lucide-react';
@@ -20,12 +20,11 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { LoginService } from '../integration/scheduler-api/login-service';
-import { AuthContext } from '../context/auth-context';
-import { Route } from '../routes';
+import { useAuthContext } from '@/hooks/use-auth-context';
 
 export default function Login() {
-  const { push } = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const { replace } = useRouter();
+  const { setSession } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -36,37 +35,20 @@ export default function Login() {
     password: '',
   });
 
-  const {
-    mutate: login,
-    isSuccess,
-    isError,
-    error,
-    data,
-  } = useMutation({
+  const { mutate: login, isPending } = useMutation({
     mutationFn: () => LoginService.login(formData.email, formData.password),
-  });
-
-  useEffect(() => {
-    console.log('Login effect', { isError, error, data, isSuccess });
-    if (isError) {
+    onSuccess: (session) => {
+      setSession(session);
+      replace(session.isAdmin ? '/admin' : '/classes');
+    },
+    onError: () => {
       toast({
         title: 'Login error',
         description: 'Invalid email or password. Please try again.',
         variant: 'destructive',
       });
-      setIsLoading(false);
-    }
-
-    if (data && isSuccess) {
-      AuthContext.setAccessToken(data.token);
-      AuthContext.setIsAdmin(data.isAdmin);
-      if (data.isAdmin) {
-        push('/admin');
-        return;
-      }
-      push(Route.Classes);
-    }
-  }, [isError, error, data, isSuccess, push]);
+    },
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -102,7 +84,6 @@ export default function Login() {
     if (!validateForm()) {
       return;
     }
-    setIsLoading(true);
     login();
   };
 
@@ -142,7 +123,7 @@ export default function Login() {
                   value={formData.email}
                   onChange={handleChange}
                   className={errors.email ? 'border-destructive' : ''}
-                  disabled={isLoading}
+                  disabled={isPending}
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive">{errors.email}</p>
@@ -170,7 +151,7 @@ export default function Login() {
                     className={
                       errors.password ? 'border-destructive pr-10' : 'pr-10'
                     }
-                    disabled={isLoading}
+                    disabled={isPending}
                   />
                   <button
                     type="button"
@@ -190,8 +171,8 @@ export default function Login() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-3">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Signing in...' : 'Sign in'}
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? 'Signing in...' : 'Sign in'}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
                 Nao tem uma conta?{' '}
