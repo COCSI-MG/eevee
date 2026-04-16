@@ -108,11 +108,39 @@ export class KubernetesService {
       const response = await this.client.apis.batch.v1
         .namespaces(DEFAULT_NAMESPACE)
         .jobs(jobName)
-        .delete();
+        .delete({
+          qs: {
+            propagationPolicy: 'Foreground',
+          },
+        });
       console.log('Job deleted:', response);
     } catch (err) {
       console.error('Error deleting job:', err);
     }
+  }
+
+  async deletePodsByJobName(jobName: string): Promise<void> {
+    try {
+      const pods = await this.getJobPods(jobName);
+
+      await Promise.all(
+        pods.map((pod) =>
+          this.client.api.v1
+            .namespaces(DEFAULT_NAMESPACE)
+            .pods(pod.metadata.name)
+            .delete(),
+        ),
+      );
+    } catch (err) {
+      console.error('Error deleting job pods:', err);
+    }
+  }
+
+  async deleteJobAndPods(jobName: string): Promise<void> {
+    await Promise.all([
+      this.deleteJob(jobName),
+      this.deletePodsByJobName(jobName),
+    ]);
   }
 
   async getJobPods(jobName: string) {
