@@ -15,11 +15,13 @@ import { Class } from "@/app/interface/scheduler-api/class";
 interface AdminClassesTableProps {
   classes: Array<Class> | undefined;
   handleDelete: (id: number) => void;
+  emptyMessage?: string;
 }
 
 export default function AdminClassesTable({
   classes,
   handleDelete,
+  emptyMessage = "No classes found.",
 }: AdminClassesTableProps) {
   return (
     <Table>
@@ -39,8 +41,8 @@ export default function AdminClassesTable({
       <TableBody>
         {(classes ?? []).length === 0 && (
           <TableRow key={0}>
-            <TableCell colSpan={3} className="text-center">
-              No classes found.
+            <TableCell colSpan={3} className="text-center text-muted-foreground">
+              {emptyMessage}
             </TableCell>
           </TableRow>
         )}

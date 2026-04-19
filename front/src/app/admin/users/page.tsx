@@ -10,9 +10,33 @@ import { AxiosError } from "axios";
 import Loader from "@/components/loader";
 import { UsersService } from "@/app/integration/scheduler-api/user";
 import QueryErrorState from "@/components/admin/query-error-state";
+import AdminListSearch from "@/components/admin/admin-list-search";
+import { matchesListSearch } from "@/lib/list-search";
+import { useMemo, useState } from "react";
 
 export default function UsersPage() {
   const { data: users, refetch, isFetching, isError } = useUsers();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredUsers = useMemo(() => {
+    return (users ?? []).filter((u) =>
+      matchesListSearch(searchQuery, [
+        u.name,
+        u.email,
+        u.isAdmin ? "Admin" : "User",
+      ])
+    );
+  }, [users, searchQuery]);
+
+  const usersEmptyMessage = useMemo(() => {
+    if ((users?.length ?? 0) === 0) {
+      return "No users found.";
+    }
+    if (searchQuery.trim() && filteredUsers.length === 0) {
+      return "No users match your search.";
+    }
+    return "No users found.";
+  }, [users?.length, searchQuery, filteredUsers.length]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -91,8 +115,19 @@ export default function UsersPage() {
         </Link>
       </div>
 
+      <AdminListSearch
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Filter by name, email, or role"
+        ariaLabel="Filter users by name, email, or role"
+        className="max-w-md"
+      />
       <div className="border rounded-md">
-        <UsersTable users={users} handleDelete={handleDelete} />
+        <UsersTable
+          users={filteredUsers}
+          handleDelete={handleDelete}
+          emptyMessage={usersEmptyMessage}
+        />
       </div>
     </div>
   );
