@@ -122,6 +122,7 @@ export const TEMPLATE_LIST_TOAST_MESSAGES = {
 
 export const TEMPLATE_TABLE_TITLE_HEADER = "Title";
 export const TEMPLATE_TABLE_DESCRIPTION_HEADER = "Description";
+export const TEMPLATE_TABLE_WORKER_TYPE_HEADER = "Worker Type";
 export const TEMPLATE_TABLE_CONTENT_HEADER = "Conteúdo";
 export const TEMPLATE_TABLE_ACTIONS_HEADER = "Actions";
 export const TEMPLATE_TABLE_EMPTY_TEXT = "No templates found.";
@@ -130,6 +131,7 @@ export const TEMPLATE_TABLE_VIEW_BUTTON = "Visualizar";
 export const TEMPLATE_TABLE_TEXT = {
   titleHeader: TEMPLATE_TABLE_TITLE_HEADER,
   descriptionHeader: TEMPLATE_TABLE_DESCRIPTION_HEADER,
+  workerTypeHeader: TEMPLATE_TABLE_WORKER_TYPE_HEADER,
   contentHeader: TEMPLATE_TABLE_CONTENT_HEADER,
   actionsHeader: TEMPLATE_TABLE_ACTIONS_HEADER,
   empty: TEMPLATE_TABLE_EMPTY_TEXT,
