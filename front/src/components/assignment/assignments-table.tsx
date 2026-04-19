@@ -20,6 +20,7 @@ import { Assignment } from "@/app/interface/scheduler-api/assignment";
 
 interface AssignmentsTableProps {
   assignments: Array<Assignment>;
+  emptyMessage?: string;
 }
 
 const ASSIGNMENT_DESCRIPTION_MAX_LENGTH = 100;
@@ -56,8 +57,10 @@ const ViewUserSuspensionComponent = ({
 
 export default function AssignmentsTable({
   assignments,
+  emptyMessage = "No Assignments found.",
 }: AssignmentsTableProps) {
   const queryClient = useQueryClient();
+  const list = assignments ?? [];
 
   return (
     <Table>
@@ -79,14 +82,14 @@ export default function AssignmentsTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {(assignments ?? []).length === 0 && (
+        {list.length === 0 && (
           <TableRow>
-            <TableCell colSpan={4} className="text-center">
-              No Assignments found.
+            <TableCell colSpan={5} className="text-center text-muted-foreground">
+              {emptyMessage}
             </TableCell>
           </TableRow>
         )}
-        {(assignments ?? []).map((assignment) => {
+        {list.map((assignment) => {
           const description = assignment.description ?? "";
 
           return (
