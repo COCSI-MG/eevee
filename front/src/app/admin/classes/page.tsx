@@ -10,9 +10,29 @@ import { useClasses } from "@/hooks/use-classes";
 import Loader from "@/components/loader";
 import AdminClassesTable from "@/components/classes/admin-classes-table";
 import QueryErrorState from "@/components/admin/query-error-state";
+import AdminListSearch from "@/components/admin/admin-list-search";
+import { matchesListSearch } from "@/lib/list-search";
+import { useMemo, useState } from "react";
 
 export default function ClassesPage() {
   const { data: classes, refetch, isFetching, isError } = useClasses();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredClasses = useMemo(() => {
+    return (classes ?? []).filter((cls) =>
+      matchesListSearch(searchQuery, [cls.name, cls.description ?? ""])
+    );
+  }, [classes, searchQuery]);
+
+  const classesEmptyMessage = useMemo(() => {
+    if ((classes?.length ?? 0) === 0) {
+      return "No classes found.";
+    }
+    if (searchQuery.trim() && filteredClasses.length === 0) {
+      return "No classes match your search.";
+    }
+    return "No classes found.";
+  }, [classes?.length, searchQuery, filteredClasses.length]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -90,8 +110,19 @@ export default function ClassesPage() {
           </Button>
         </Link>
       </div>
+      <AdminListSearch
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Filter by class name or description"
+        ariaLabel="Filter classes by name or description"
+        className="max-w-md"
+      />
       <div className="border rounded-md">
-        <AdminClassesTable classes={classes} handleDelete={handleDelete} />
+        <AdminClassesTable
+          classes={filteredClasses}
+          handleDelete={handleDelete}
+          emptyMessage={classesEmptyMessage}
+        />
       </div>
     </div>
   );
