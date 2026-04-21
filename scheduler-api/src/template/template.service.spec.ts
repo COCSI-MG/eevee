@@ -8,7 +8,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TemplateService } from './template.service';
 import { Template } from './entities/template.entity';
 import { TemplateParam } from 'src/template-params/entities/template-param.entity';
-import { AssignmentTemplate } from 'src/assignment-template/entities/assignment_template.entity';
+import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
 import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 

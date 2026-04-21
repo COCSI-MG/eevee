@@ -4,7 +4,7 @@ import { TemplateController } from './template.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Template } from './entities/template.entity';
 import { TemplateParam } from 'src/template-params/entities/template-param.entity';
-import { AssignmentTemplate } from 'src/assignment-template/entities/assignment_template.entity';
+import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
 
 @Module({
   controllers: [TemplateController],

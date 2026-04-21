@@ -1,4 +1,4 @@
-import { AssignmentParam } from 'src/assignment-params/entities/assignment_param.entity';
+import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
 import { Template } from 'src/template/entities/template.entity';
 import {
   Column,

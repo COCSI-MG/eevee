@@ -5,7 +5,7 @@ import { DataSource } from 'typeorm';
 import { AssignmentService } from './assignment.service';
 import { Assignment } from './entities/assignment.entity';
 import { AssignmentParam } from 'src/assignment-params/entities/assignment_param.entity';
-import { AssignmentTemplate } from 'src/assignment-template/entities/assignment_template.entity';
+import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { ClassService } from 'src/class/class.service';
 import { RequestContextService } from 'src/request-context/request-context.service';

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { AssignmentTemplateService } from './assignment_template.service';
-import { CreateAssignmentTemplateDto } from './dto/create-assignment_template.dto';
-import { UpdateAssignmentTemplateDto } from './dto/update-assignment_template.dto';
+import { AssignmentTemplateService } from './assignment-template.service';
+import { CreateAssignmentTemplateDto } from './dto/create-assignment-template.dto';
+import { UpdateAssignmentTemplateDto } from './dto/update-assignment-template.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('assignment-template')

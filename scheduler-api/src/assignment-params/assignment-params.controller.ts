@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { AssignmentParamsService } from './assignment_params.service';
-import { CreateAssignmentParamDto } from './dto/create-assignment_param.dto';
-import { UpdateAssignmentParamDto } from './dto/update-assignment_param.dto';
+import { AssignmentParamsService } from './assignment-params.service';
+import { CreateAssignmentParamDto } from './dto/create-assignment-param.dto';
+import { UpdateAssignmentParamDto } from './dto/update-assignment-param.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('assignment-params')
