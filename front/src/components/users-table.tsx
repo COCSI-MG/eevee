@@ -15,9 +15,16 @@ import { User } from "@/app/interface/scheduler-api/user";
 interface UsersTableProps {
   users: User[] | undefined;
   handleDelete: (id: number) => void;
+  emptyMessage?: string;
 }
 
-export default function UsersTable({ users, handleDelete }: UsersTableProps) {
+export default function UsersTable({
+  users,
+  handleDelete,
+  emptyMessage = "No users found.",
+}: UsersTableProps) {
+  const rows = users ?? [];
+
   return (
     <Table>
       <TableHeader>
@@ -35,7 +42,14 @@ export default function UsersTable({ users, handleDelete }: UsersTableProps) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {(users ?? []).map((user) => {
+        {rows.length === 0 && (
+          <TableRow>
+            <TableCell colSpan={4} className="text-center text-muted-foreground">
+              {emptyMessage}
+            </TableCell>
+          </TableRow>
+        )}
+        {rows.map((user) => {
           return (
             <TableRow key={user.id}>
               <TableCell className="font-medium">{user.name}</TableCell>

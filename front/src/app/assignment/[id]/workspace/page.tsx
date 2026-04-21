@@ -11,6 +11,8 @@ import { useWorkspacePreview } from "@/app/assignment/[id]/workspace/_hooks/use-
 import { useWorkspaceSaveFile } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-save-file";
 import { useFetchAssignment } from "@/hooks/use-assignments";
 import { useAuthContext } from "@/hooks/use-auth-context";
+import { toast } from "@/hooks/use-toast";
+import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 
@@ -21,9 +23,54 @@ export default function Page() {
   // Estado para controlar se o usuário aceitou o acordo
   const [hasAcceptedAgreement, setHasAcceptedAgreement] =
     useState<boolean>(false);
+  const [resetWorkspaceAction, setResetWorkspaceAction] = useState<
+    ((assignment?: Assignment) => Promise<void>) | null
+  >(null);
+  const [isResettingWorkspace, setIsResettingWorkspace] =
+    useState<boolean>(false);
+  const [isRefreshingAssignmentForClear, setIsRefreshingAssignmentForClear] =
+    useState<boolean>(false);
 
-  const { data: assignmentData, isLoading: isLoadingAssignment } =
+  const handleResetWorkspaceReady = (
+    resetAction: ((assignment?: Assignment) => Promise<void>) | null,
+  ) => {
+    setResetWorkspaceAction(() => resetAction);
+  };
+
+  const {
+    data: assignmentData,
+    isLoading: isLoadingAssignment,
+    refetch: refetchAssignment,
+  } =
     useFetchAssignment(Number(id));
+
+  const handleClearWorkspace = async () => {
+    if (!resetWorkspaceAction || !assignmentData) {
+      return;
+    }
+
+    setIsRefreshingAssignmentForClear(true);
+    try {
+      const { data: freshAssignment } = await refetchAssignment({
+        throwOnError: true,
+      });
+
+      if (!freshAssignment) {
+        throw new Error("Assignment data is empty after refetch");
+      }
+
+      await resetWorkspaceAction(freshAssignment);
+    } catch (error) {
+      console.error("Error refetching assignment before workspace reset:", error);
+      toast({
+        title: "Falha ao limpar workspace",
+        description: "Não foi possível buscar a versão mais recente da atividade.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshingAssignmentForClear(false);
+    }
+  };
 
   // Correção
   const { isCorrectionInProgress, submitAssignment } = useWorkspaceCorrection({
@@ -105,9 +152,12 @@ export default function Page() {
         onRunClick={() => runPreview()}
         onSubmitClick={() => submitAssignment()}
         onSaveClick={() => saveFileInServer()}
+        onClearClick={handleClearWorkspace}
         isRunningSync={previewLoading}
         isSubmittingCorrection={isCorrectionInProgress}
         isSaving={isSaving}
+        isClearing={isResettingWorkspace || isRefreshingAssignmentForClear}
+        canClear={Boolean(resetWorkspaceAction)}
       />
 
       <WorkspaceRunPreviewDialog
@@ -123,7 +173,12 @@ export default function Page() {
       />
 
       {assignmentData && user && (
-        <Workspace assignment={assignmentData} user={user} />
+        <Workspace
+          assignment={assignmentData}
+          user={user}
+          onResetWorkspaceReady={handleResetWorkspaceReady}
+          onResettingChange={setIsResettingWorkspace}
+        />
       )}
     </div>
   );

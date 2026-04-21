@@ -22,7 +22,10 @@ import dynamic from "next/dynamic";
 import TableActions from "../table/table-actions";
 import React from "react";
 import { Template } from "@/app/interface/scheduler-api/template";
-import { TEMPLATE_TABLE_TEXT } from "@/app/admin/templates/constants";
+import {
+  TEMPLATE_TABLE_TEXT,
+  WorkerTypeLabelMap,
+} from "@/app/admin/templates/constants";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -31,12 +34,17 @@ const Editor = dynamic(() => import("@monaco-editor/react"), {
 interface TemplatesTableProps {
   templates: Template[] | undefined;
   handleDelete: (id: number) => void;
+  emptyMessage?: string;
 }
 
 export default function TemplatesTable({
   templates,
   handleDelete,
+  emptyMessage,
 }: TemplatesTableProps) {
+  const list = templates ?? [];
+  const emptyText = emptyMessage ?? TEMPLATE_TABLE_TEXT.empty;
+
   return (
     <Table>
       <TableHeader>
@@ -53,6 +61,11 @@ export default function TemplatesTable({
           </TableHead>
           <TableHead className="cursor-pointer">
             <div className="flex items-center">
+              {TEMPLATE_TABLE_TEXT.workerTypeHeader}
+            </div>
+          </TableHead>
+          <TableHead className="cursor-pointer">
+            <div className="flex items-center">
               {TEMPLATE_TABLE_TEXT.contentHeader}
             </div>
           </TableHead>
@@ -64,17 +77,20 @@ export default function TemplatesTable({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {(templates ?? []).length === 0 && (
+        {list.length === 0 && (
           <TableRow>
-            <TableCell colSpan={4} className="text-center py-4">
-              {TEMPLATE_TABLE_TEXT.empty}
+            <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+              {emptyText}
             </TableCell>
           </TableRow>
         )}
-        {(templates ?? []).map((template) => (
+        {list.map((template) => (
           <TableRow key={template.id}>
             <TableCell className="font-medium">{template.title}</TableCell>
             <TableCell>{template.description}</TableCell>
+            <TableCell>
+              {WorkerTypeLabelMap[template.workerType] ?? template.workerType}
+            </TableCell>
             <TableCell>
               <Dialog>
                 <DialogTrigger asChild>

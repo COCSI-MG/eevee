@@ -372,8 +372,6 @@ export class SchedulingService {
         attempt.id,
         errMessage,
       );
-
-      throw err;
     }
   }
 

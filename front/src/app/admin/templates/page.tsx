@@ -14,9 +14,33 @@ import {
   TEMPLATE_LIST_TOAST_MESSAGES,
 } from "@/app/admin/templates/constants";
 import QueryErrorState from "@/components/admin/query-error-state";
+import AdminListSearch from "@/components/admin/admin-list-search";
+import { matchesListSearch } from "@/lib/list-search";
+import { useMemo, useState } from "react";
 
 export default function TemplatePage() {
   const { data: templates, refetch, isFetching, isError } = useTemplates();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredTemplates = useMemo(() => {
+    return (templates ?? []).filter((t) =>
+      matchesListSearch(searchQuery, [
+        t.title,
+        t.description,
+        t.workerType,
+      ])
+    );
+  }, [templates, searchQuery]);
+
+  const templatesEmptyMessage = useMemo(() => {
+    if ((templates?.length ?? 0) === 0) {
+      return undefined;
+    }
+    if (searchQuery.trim() && filteredTemplates.length === 0) {
+      return "No templates match your search.";
+    }
+    return undefined;
+  }, [templates?.length, searchQuery, filteredTemplates.length]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -101,8 +125,19 @@ export default function TemplatePage() {
         </Link>
       </div>
 
+      <AdminListSearch
+        value={searchQuery}
+        onChange={setSearchQuery}
+        placeholder="Filter by title, description, or worker type"
+        ariaLabel="Filter templates by title, description, or worker type"
+        className="max-w-md"
+      />
       <div className="border rounded-md">
-        <TemplatesTable templates={templates} handleDelete={handleDelete} />
+        <TemplatesTable
+          templates={filteredTemplates}
+          handleDelete={handleDelete}
+          emptyMessage={templatesEmptyMessage}
+        />
       </div>
     </div>
   );

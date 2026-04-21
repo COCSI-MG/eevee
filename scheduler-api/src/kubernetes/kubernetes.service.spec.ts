@@ -1,3 +1,11 @@
+jest.mock('kubernetes-client', () => ({
+  Client1_13: jest.fn().mockImplementation(() => ({})),
+  config: {
+    fromKubeconfig: jest.fn(() => ({})),
+    getInCluster: jest.fn(() => ({})),
+  },
+}));
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { KubernetesService } from './kubernetes.service';
 import { DEFAULT_NAMESPACE } from './kubernetes.constants';
@@ -11,6 +19,11 @@ describe('KubernetesService', () => {
     }).compile();
 
     service = module.get<KubernetesService>(KubernetesService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {

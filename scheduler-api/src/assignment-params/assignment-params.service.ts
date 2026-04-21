@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAssignmentParamDto } from './dto/create-assignment_param.dto';
-import { UpdateAssignmentParamDto } from './dto/update-assignment_param.dto';
+import { CreateAssignmentParamDto } from './dto/create-assignment-param.dto';
+import { UpdateAssignmentParamDto } from './dto/update-assignment-param.dto';
 
 @Injectable()
 export class AssignmentParamsService {
