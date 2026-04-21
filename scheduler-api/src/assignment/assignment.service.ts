@@ -20,8 +20,8 @@ import {
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
-import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
-import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
+import { AssignmentTemplate } from 'src/assignment-template/entities/assignment_template.entity';
+import { AssignmentParam } from 'src/assignment-params/entities/assignment_param.entity';
 import { Template } from 'src/template/entities/template.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
