@@ -9,13 +9,23 @@ import { useWorkspaceInitialization } from "../_hooks/use-workspace-initializati
 import { useActiveWorkspaceFile } from "../_hooks/use-active-workspace-file";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
+import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
 
 interface WorkspaceProps {
   assignment: Assignment;
   user: AuthSession;
+  onResetWorkspaceReady?: (
+    resetWorkspace: ((assignment?: Assignment) => Promise<void>) | null,
+  ) => void;
+  onResettingChange?: (isResetting: boolean) => void;
 }
 
-export default function Workspace({ assignment, user }: WorkspaceProps) {
+export default function Workspace({
+  assignment,
+  user,
+  onResetWorkspaceReady,
+  onResettingChange,
+}: WorkspaceProps) {
   const { replaceFileTree, selectedItem, selectItem } = useWorkspaceContext();
   const userId = user.userId;
 
@@ -36,6 +46,14 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     user,
   });
 
+  const { isResetting, resetWorkspace } = useWorkspaceReset({
+    assignment,
+    userId,
+    setActiveFileContent,
+    replaceFileTree,
+    selectItem,
+  });
+
   useWorkspaceInitialization({
     assignment,
     userId,
@@ -43,6 +61,18 @@ export default function Workspace({ assignment, user }: WorkspaceProps) {
     replaceFileTree,
     selectItem,
   });
+
+  React.useEffect(() => {
+    onResetWorkspaceReady?.(resetWorkspace);
+
+    return () => {
+      onResetWorkspaceReady?.(null);
+    };
+  }, [onResetWorkspaceReady, resetWorkspace]);
+
+  React.useEffect(() => {
+    onResettingChange?.(isResetting);
+  }, [isResetting, onResettingChange]);
 
   return (
     <div className="flex flex-1 min-h-0">
