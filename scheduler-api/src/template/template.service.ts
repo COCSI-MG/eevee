@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Template } from './entities/template.entity';
 import { In, Repository } from 'typeorm';
 import { TemplateParam } from 'src/template-params/entities/template-param.entity';
-import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
+import { AssignmentTemplate } from 'src/assignment-template/entities/assignment_template.entity';
 import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 

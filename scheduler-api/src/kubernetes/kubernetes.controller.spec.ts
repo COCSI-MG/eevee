@@ -8,7 +8,12 @@ describe('KubernetesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [KubernetesController],
-      providers: [KubernetesService],
+      providers: [
+        {
+          provide: KubernetesService,
+          useValue: {},
+        },
+      ],
     }).compile();
 
     controller = module.get<KubernetesController>(KubernetesController);
