@@ -2,20 +2,18 @@ import { FileStash } from "../../../../packages/filestash/src";
 import { FileStashSchema, FileStashValue } from "@/types/filestash-schema";
 import { FileNode } from "@/types/shared";
 
-// Instância singleton do FileStash
 let db: FileStash<FileStashSchema>;
+let stashReadyPromise: Promise<void> | null = null;
 
 const assignmentWriteQueues = new Map<string, Promise<void>>();
 
 const enqueueAssignmentWrite = async (
   key: string,
-  operation: () => Promise<void>
+  operation: () => Promise<void>,
 ): Promise<void> => {
   const lastOperation = assignmentWriteQueues.get(key) ?? Promise.resolve();
 
-  const nextOperation = lastOperation
-    .catch(() => undefined)
-    .then(operation);
+  const nextOperation = lastOperation.catch(() => undefined).then(operation);
 
   assignmentWriteQueues.set(
     key,
@@ -23,15 +21,12 @@ const enqueueAssignmentWrite = async (
       if (assignmentWriteQueues.get(key) === nextOperation) {
         assignmentWriteQueues.delete(key);
       }
-    })
+    }),
   );
 
   await nextOperation;
 };
 
-/**
- * Inicializa o FileStash (abre a conexão)
- */
 export async function initStash() {
   if (typeof window === "undefined") {
     throw new Error("FileStash can only be initialized in a browser environment");
@@ -40,27 +35,34 @@ export async function initStash() {
   if (!db) {
     db = new FileStash<FileStashSchema>("eevee-workspace-db")
       .setVersion(1)
-      .configureStore("assignments", { keyPath: "id" }); // Usa 'id' como keyPath
+      .configureStore("assignments", { keyPath: "id" });
   }
 
   await db.open();
 }
 
-/**
- * Gera a chave única para um assignment/usuário
- */
+export async function ensureStashReady() {
+  if (!stashReadyPromise) {
+    stashReadyPromise = initStash().catch((error) => {
+      stashReadyPromise = null;
+      throw error;
+    });
+  }
+
+  await stashReadyPromise;
+}
+
 export const getAssignmentKey = (assignmentId: number, userId: number) => {
   return `assignment-${assignmentId}-user-${userId}`;
 };
 
-/**
- * Salva a árvore completa de arquivos para um assignment
- */
 export const saveFileTree = async (
   assignmentId: number,
   userId: number,
-  fileTree: FileNode
+  fileTree: FileNode,
 ): Promise<void> => {
+  await ensureStashReady();
+
   const key = getAssignmentKey(assignmentId, userId);
 
   await enqueueAssignmentWrite(key, async () => {
@@ -76,27 +78,25 @@ export const saveFileTree = async (
   });
 };
 
-/**
- * Busca a árvore completa de arquivos de um assignment
- */
 export const getFileTree = async (
   assignmentId: number,
-  userId: number
+  userId: number,
 ): Promise<FileNode | null> => {
+  await ensureStashReady();
+
   const key = getAssignmentKey(assignmentId, userId);
   const data = await db.get("assignments", key);
   return data?.fileTree || null;
 };
 
-/**
- * Atualiza o conteúdo de um arquivo específico na árvore
- */
 export const updateFileContent = async (
   assignmentId: number,
   userId: number,
   filePath: string,
-  content: string
+  content: string,
 ): Promise<void> => {
+  await ensureStashReady();
+
   const key = getAssignmentKey(assignmentId, userId);
 
   await enqueueAssignmentWrite(key, async () => {
@@ -105,11 +105,10 @@ export const updateFileContent = async (
 
     if (!fileTree) {
       throw new Error(
-        "File tree not found. Initialize it first with saveFileTree()"
+        "File tree not found. Initialize it first with saveFileTree()",
       );
     }
 
-    // Função recursiva para encontrar e atualizar o arquivo
     const updateNode = (node: FileNode): boolean => {
       if (node.path === filePath && node.isFile) {
         node.content = content;
@@ -125,6 +124,7 @@ export const updateFileContent = async (
           }
         }
       }
+
       return false;
     };
 
@@ -147,46 +147,46 @@ export const updateFileContent = async (
   });
 };
 
-/**
- * Busca o conteúdo de um arquivo específico
- */
 export const getFileContent = async (
   assignmentId: number,
   userId: number,
-  filePath: string
+  filePath: string,
 ): Promise<string | null> => {
+  await ensureStashReady();
+
   const fileTree = await getFileTree(assignmentId, userId);
 
   if (!fileTree) return null;
 
-  // Função recursiva para encontrar o arquivo
   const findNode = (node: FileNode): string | null => {
     if (node.path === filePath && node.isFile) {
       return node.content || null;
     }
+
     if (node.children) {
       for (const child of node.children) {
         const found = findNode(child);
         if (found !== null) return found;
       }
     }
+
     return null;
   };
 
   return findNode(fileTree);
 };
 
-/**
- * Remove um assignment do IndexedDB
- */
 export async function deleteAssignment(assignmentId: number, userId: number) {
+  await ensureStashReady();
+
   const key = getAssignmentKey(assignmentId, userId);
   await db.delete("assignments", key);
 }
 
-/**
- * Fecha a conexão com o IndexedDB
- */
 export function closeStash() {
-  db.close();
+  if (db) {
+    db.close();
+  }
+
+  stashReadyPromise = null;
 }
