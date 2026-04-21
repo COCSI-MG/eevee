@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AssignmentParamsService } from './assignment_params.service';
+import { AssignmentParamsService } from './assignment-params.service';
 
 describe('AssignmentParamsService', () => {
   let service: AssignmentParamsService;

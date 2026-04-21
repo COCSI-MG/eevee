@@ -1,6 +1,6 @@
 import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
-import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
-import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
+import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
+import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
 import { User } from 'src/user/entities/user.entity';

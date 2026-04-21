@@ -35,4 +35,5 @@ export interface KubernetesJobOptions {
   initContainers?: KubernetesJobInitContainer[];
   sharedEmptyDir?: KubernetesJobSharedEmptyDir;
   command?: string[];
+  backoffLimit?: number;
 }

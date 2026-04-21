@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AssignmentParamsService } from './assignment_params.service';
-import { AssignmentParamsController } from './assignment_params.controller';
+import { AssignmentParamsService } from './assignment-params.service';
+import { AssignmentParamsController } from './assignment-params.controller';
 
 @Module({
   controllers: [AssignmentParamsController],
