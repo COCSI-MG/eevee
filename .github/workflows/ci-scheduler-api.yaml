@@ -24,5 +24,7 @@ jobs:
                 cache: "npm"
                 cache-dependency-path: scheduler-api/package-lock.json
             - run: npm ci
+            - name: Tests
+              run: npm test
             - name: Build
               run: npm run build
