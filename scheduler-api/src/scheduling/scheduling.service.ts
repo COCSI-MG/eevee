@@ -23,6 +23,7 @@ import {
   SchedulingWorkerPreparationService,
 } from './scheduling-worker-preparation.service';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
+import { AiReportService } from 'src/ai-report/ai-report.abstract';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import {
   SchedulingPreviewRun,
@@ -43,6 +44,7 @@ export class SchedulingService {
     private readonly schedulingWorkerPreparationService: SchedulingWorkerPreparationService,
     private readonly schedulingAttemptTransitionService: SchedulingAttemptTransitionService,
     private readonly requestContextService: RequestContextService,
+    private readonly aiReportService: AiReportService,
     @InjectRepository(SchedulingPreviewRun)
     private readonly schedulingPreviewRunRepository: Repository<SchedulingPreviewRun>,
     @InjectQueue('scheduling-queue') private readonly schedulingQueue: Queue,
@@ -347,6 +349,12 @@ export class SchedulingService {
         `ATTEMPT_ID: ${attempt.id}`,
       );
 
+      const refinedReport = await this.generateRefinedReport(
+        workerResult.completeTrace,
+        attempt.assignment?.description ?? '',
+        payload.workerData.files ?? undefined,
+      );
+
       await this.schedulingAttemptTransitionService.markCompleted({
         attemptId: attempt.id,
         isAcceptable,
@@ -354,6 +362,7 @@ export class SchedulingService {
         report: workerResult.completeTrace,
         fails: workerResult.failures,
         passes: workerResult.passes,
+        refinedReport,
       });
 
       this.logger.log(
@@ -424,6 +433,19 @@ export class SchedulingService {
       assignment.workerType,
       workerData,
     );
+  }
+
+  private async generateRefinedReport(
+    rawReport: string,
+    assignmentDescription: string,
+    files?: Record<string, string>,
+  ): Promise<string | undefined> {
+    try {
+      return await this.aiReportService.refineReport(rawReport, assignmentDescription, files);
+    } catch (error) {
+      this.logger.error(`AI report generation failed: ${error instanceof Error ? error.message : error}`);
+      return undefined;
+    }
   }
 
   private async processPreviewRun(

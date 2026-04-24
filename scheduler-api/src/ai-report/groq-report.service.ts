@@ -18,7 +18,7 @@ export class GroqReportService implements AiReportService {
       : null;
   }
 
-  async refineReport(rawReport: string, assignmentDescription: string, resolucao?: string): Promise<string> {
+  async refineReport(rawReport: string, assignmentDescription: string, files?: Record<string, string>): Promise<string> {
     if (this.hasAllTestsPassed(rawReport)) {
       return 'Parabéns! Seu exercício está correto e passou em todos os testes!';
     }
@@ -136,7 +136,13 @@ export class GroqReportService implements AiReportService {
           ${contextBlock}
 
           RESOLUÇÃO DO ALUNO:
-          ${resolucao ? resolucao : 'Nenhuma resolução fornecida.'}
+          ${
+            files && Object.keys(files).length > 0
+              ? Object.entries(files)
+                  .map(([path, content]) => `// ${path}\n${content}`)
+                  .join('\n\n')
+              : 'Nenhuma resolução fornecida.'
+          }
 
           RELATÓRIO BRUTO DE TESTES:
           """
