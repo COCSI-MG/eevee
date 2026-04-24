@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
 import { AiReportService } from './ai-report.abstract';
+import { hasAllTestsPassed, parseRawReport } from './jest-report-parser';
 
 @Injectable()
 export class GroqReportService implements AiReportService {
@@ -18,19 +19,38 @@ export class GroqReportService implements AiReportService {
       : null;
   }
 
-  async refineReport(rawReport: string, assignmentDescription: string, files?: Record<string, string>): Promise<string> {
-    if (this.hasAllTestsPassed(rawReport)) {
+  async refineReport(
+    rawReport: string,
+    assignmentDescription: string,
+    files?: Record<string, string>,
+  ): Promise<string> {
+    if (hasAllTestsPassed(rawReport)) {
       return 'Parabéns! Seu exercício está correto e passou em todos os testes!';
     }
 
-    const filteredReport = this.parseRawReport(rawReport);
-    if (this.client) {
-      try {
-        const contextBlock = assignmentDescription
-          ? `Descrição da tarefa:\n${assignmentDescription}\n\n`
-          : '';
+    console.log('Raw Report:', rawReport);
 
-        const prompt = `
+    const filteredReport = parseRawReport(rawReport);
+
+    console.log('Filtered Report:', filteredReport);
+
+    if (!this.client) {
+      return filteredReport;
+    }
+
+    try {
+      const contextBlock = assignmentDescription
+        ? `Descrição da tarefa:\n${assignmentDescription}\n\n`
+        : '';
+
+      const resolucaoBlock =
+        files && Object.keys(files).length > 0
+          ? Object.entries(files)
+              .map(([path, content]) => `// ${path}\n${content}`)
+              .join('\n\n')
+          : 'Nenhuma resolução fornecida.';
+
+      const prompt = `
           Você é um assistente educacional que ajuda alunos a entender erros em exercícios de programação.
 
           Sua tarefa é analisar:
@@ -136,13 +156,7 @@ export class GroqReportService implements AiReportService {
           ${contextBlock}
 
           RESOLUÇÃO DO ALUNO:
-          ${
-            files && Object.keys(files).length > 0
-              ? Object.entries(files)
-                  .map(([path, content]) => `// ${path}\n${content}`)
-                  .join('\n\n')
-              : 'Nenhuma resolução fornecida.'
-          }
+          ${resolucaoBlock}
 
           RELATÓRIO BRUTO DE TESTES:
           """
@@ -152,127 +166,17 @@ export class GroqReportService implements AiReportService {
           Agora gere o feedback seguindo EXATAMENTE o formato acima.
           `;
 
-        const response = await this.client.chat.completions.create({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          temperature: 0.3,
-          max_tokens: 512,
-        });
+      const response = await this.client.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: 512,
+      });
 
-        return (
-          response.choices?.[0]?.message?.content?.trim() ||
-          filteredReport
-        );
-      } catch (error: any) {
-        this.logger.warn(`Groq API error, using fallback parser: ${error.message}`);
-      }
+      return response.choices?.[0]?.message?.content?.trim() || filteredReport;
+    } catch (error: any) {
+      this.logger.warn(`Groq API error, using fallback parser: ${error.message}`);
+      return filteredReport;
     }
-
-    return filteredReport;
   }
-
-
-  private hasAllTestsPassed(report: string): boolean {
-    if (!report || !report.trim().length) {
-      return false;
-    }
-
-    const hasFail = report.includes('FAIL ');
-    const hasFailed = report.toLowerCase().includes('failed');
-    const hasErrors = /error TS\d+:/.test(report);
-    const hasFailedTests = report.includes('●');
-
-    return !hasFail && !hasFailed && !hasErrors && !hasFailedTests;
-  }
-
-  private parseRawReport(report: string): string {
-    const lines = report.split('\n');
-    const parts: string[] = [];
-
-    const failures = this.extractFailures(lines);
-    if (failures.length > 0) {
-      parts.push('\nTestes que falharam:');
-      failures.forEach((f) => parts.push(`\n${f}`));
-    }
-
-    const passes = this.extractPasses(lines);
-    if (passes.length > 0) {
-      parts.push('\nTestes que passaram:');
-      passes.forEach((p) => parts.push(`• ${p}`));
-    }
-
-    const summary = this.extractSummary(lines);
-    if (summary) parts.push(`\nResumo: ${summary}`);
-
-    if (!parts.length) {
-      return 'Não foi possível processar o resultado automaticamente.';
-    }
-
-    return parts.join('\n');
-  }
-
-  private extractSummary(lines: string[]): string | null {
-    const summary = lines.find(
-      (l) => l.includes('Tests:') && (l.includes('failed') || l.includes('total'))
-    );
-
-    return summary ? summary.trim() : null;
-  }
-
-  private formatFailure(block: string[]): string {
-    return block
-      .join('\n')
-      .replace(/\s+Expected:/g, '\nExpected:')
-      .replace(/\s+Received:/g, '\nReceived:')
-      .trim();
-  }
-
-  private extractFailures(lines: string[]): string[] {
-      const failures: string[] = [];
-      let current: string[] = [];
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-
-        if (trimmed.startsWith('●')) {
-          if (current.length) {
-            failures.push(this.formatFailure(current));
-            current = [];
-          }
-          current.push(trimmed);
-          continue;
-        }
-
-        if (current.length) {
-          if (
-            trimmed.startsWith('✓') ||
-            trimmed.startsWith('●') ||
-            line.includes('Test Suites:') ||
-            line.includes('Tests:')
-          ) {
-            failures.push(this.formatFailure(current));
-            current = [];
-          } else {
-            current.push(line);
-          }
-        }
-      }
-
-      if (current.length) {
-        failures.push(this.formatFailure(current));
-      }
-
-      return failures;
-    }
-
-    private extractPasses(lines: string[]): string[] {
-      return lines
-        .filter((l) => l.trim().startsWith('✓'))
-        .map((l) => l.trim());
-    }
 }
