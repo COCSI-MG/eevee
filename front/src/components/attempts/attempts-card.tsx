@@ -24,10 +24,10 @@ export default function AttemptsCard() {
   const {
     data: assingmentData,
     isError: isAssignmentAttemptsError,
-    isFetching: isAssignmentAttemptsFetching,
+    isLoading: isAssignmentAttemptsLoading,
   } = useFetchAssignment(Number(id));
 
-  if (isAssignmentAttemptsFetching) {
+  if (isAssignmentAttemptsLoading) {
     return <Loader />;
   }
 
