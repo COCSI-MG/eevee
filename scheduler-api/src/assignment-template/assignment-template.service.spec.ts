@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AssignmentTemplateService } from './assignment_template.service';
+import { AssignmentTemplateService } from './assignment-template.service';
 
 describe('AssignmentTemplateService', () => {
   let service: AssignmentTemplateService;

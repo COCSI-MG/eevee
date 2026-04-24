@@ -4,10 +4,10 @@ import { AssignmentController } from './assignment.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
-import { AssignmentTemplate } from 'src/assignment_template/entities/assignment_template.entity';
+import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
 import { RequestContextModule } from 'src/request-context/request-context.module';
 import { ClassModule } from 'src/class/class.module';
-import { AssignmentParam } from 'src/assignment_params/entities/assignment_param.entity';
+import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
 import { Template } from 'src/template/entities/template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 

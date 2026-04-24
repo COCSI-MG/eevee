@@ -3,12 +3,22 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Code,
   Info,
   Play,
   Save,
   Loader2,
   SendHorizonal,
+  RotateCcw,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -25,9 +35,12 @@ interface WorkspaceHeaderProps {
   onRunClick: () => void;
   onSubmitClick: () => void;
   onSaveClick: () => void;
+  onClearClick: () => void | Promise<void>;
   isRunningSync?: boolean;
   isSubmittingCorrection?: boolean;
   isSaving?: boolean;
+  isClearing?: boolean;
+  canClear?: boolean;
 }
 
 const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
@@ -35,17 +48,30 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   onRunClick,
   onSubmitClick,
   onSaveClick,
+  onClearClick,
   isRunningSync = false,
   isSubmittingCorrection = false,
   isSaving = false,
+  isClearing = false,
+  canClear = true,
 }) => {
   const { back } = useRouter();
-  const isActionDisabled = isSaving || isRunningSync || isSubmittingCorrection;
+  const [isClearDialogOpen, setIsClearDialogOpen] = React.useState(false);
+  const isActionDisabled =
+    isSaving || isRunningSync || isSubmittingCorrection || isClearing;
+
+  const handleClearClick = async () => {
+    await Promise.resolve(onClearClick());
+    setIsClearDialogOpen(false);
+  };
 
   return (
     <header className="flex items-center justify-between p-3 border-b border-slate-700">
       <div className="flex items-center gap-4">
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => back()}>
+        <div
+          className="flex items-center space-x-2 cursor-pointer"
+          onClick={() => back()}
+        >
           <Code className="h-5 w-5" />
           <span className="font-bold text-lg">EEVEE</span>
         </div>
@@ -81,13 +107,60 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 
       <div className="flex items-center">
         <Button variant="ghost" size="sm" onClick={() => back()}>
-          Voltar 
+          Voltar
         </Button>
         <Button variant="ghost" size="sm">
           Ajuda
         </Button>
 
         <div className="flex items-center gap-2 ml-4">
+          <AlertDialog
+            open={isClearDialogOpen}
+            onOpenChange={setIsClearDialogOpen}
+          >
+            <Button
+              size={"sm"}
+              variant={"outline"}
+              onClick={() => setIsClearDialogOpen(true)}
+              disabled={isActionDisabled || !canClear}
+            >
+              {isClearing ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <RotateCcw className="w-4 h-4 mr-1" />
+              )}
+              {isClearing ? "Limpando..." : "Limpar"}
+            </Button>
+
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Limpar workspace?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Você vai perder todo conteúdo do trabalho até aqui. O
+                  workspace será recriado com o boilerplate inicial da
+                  atividade.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isClearing}>
+                  Cancelar
+                </AlertDialogCancel>
+                <Button
+                  variant={"destructive"}
+                  onClick={() => void handleClearClick()}
+                  disabled={isClearing}
+                >
+                  {isClearing ? (
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <RotateCcw className="w-4 h-4 mr-1" />
+                  )}
+                  Confirmar limpeza
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           <Button
             size={"sm"}
             className="bg-green-600 hover:bg-green-700 text-white"
@@ -113,9 +186,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             ) : (
               <SendHorizonal className="w-4 h-4 mr-1" />
             )}
-            {isSubmittingCorrection
-              ? "Enviando..."
-              : "Enviar para Correção"}
+            {isSubmittingCorrection ? "Enviando..." : "Enviar para Correção"}
           </Button>
 
           <Button

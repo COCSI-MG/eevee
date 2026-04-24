@@ -255,7 +255,7 @@ export class KubernetesService {
             restartPolicy: 'Never',
           },
         },
-        backoffLimit: 4,
+        backoffLimit: options?.backoffLimit ?? 0,
       },
     };
 

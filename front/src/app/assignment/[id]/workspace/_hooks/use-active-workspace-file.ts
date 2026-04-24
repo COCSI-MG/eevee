@@ -1,14 +1,12 @@
 "use client";
 
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import {
-  useFetchFileContent,
-  useUpdateFileContent,
-} from "@/hooks/use-filestash";
+import { useSaveFileTree } from "@/hooks/use-filestash";
 import { FileNode, SelectedItem } from "@/types/shared";
 import React from "react";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { getFileLanguage } from "../_utils/workspace.utils";
+import { useWorkspaceContext } from "../_providers/workspace-provider";
 
 interface UseActiveWorkspaceFileParams {
   assignment: Assignment;
@@ -23,11 +21,42 @@ export function useActiveWorkspaceFile({
   selectedItem,
   selectItem,
 }: UseActiveWorkspaceFileParams) {
+  const { fileTreeData, replaceFileTree } = useWorkspaceContext();
   const [activeFileContent, setActiveFileContent] = React.useState("");
-  const latestFileRequestIdRef = React.useRef(0);
+  const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
 
-  const { mutateAsync: updateFileContentAsync } = useUpdateFileContent();
-  const { mutateAsync: fetchFileContent } = useFetchFileContent();
+  const buildUpdatedTree = React.useCallback(
+    (node: FileNode, filePath: string, content: string): FileNode => {
+      if (node.path === filePath && node.isFile) {
+        return {
+          ...node,
+          content,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+
+      if (!node.children?.length) {
+        return node;
+      }
+
+      const updatedChildren = node.children.map((child) =>
+        buildUpdatedTree(child, filePath, content),
+      );
+      const hasChanges = updatedChildren.some(
+        (child, index) => child !== node.children![index],
+      );
+
+      if (!hasChanges) {
+        return node;
+      }
+
+      return {
+        ...node,
+        children: updatedChildren,
+      };
+    },
+    [],
+  );
 
   const activeFile = React.useMemo(() => {
     if (
@@ -52,54 +81,57 @@ export function useActiveWorkspaceFile({
   ]);
 
   const handleFileSelect = React.useCallback(
-    async (node: FileNode) => {
+    (node: FileNode) => {
       if (node.isFile) {
-        const requestId = ++latestFileRequestIdRef.current;
-
         selectItem({
           id: node.id,
           type: "file",
           path: node.path,
         });
 
-        const content = await fetchFileContent({
-          assignmentId: assignment.id,
-          userId: user.userId,
-          filePath: node.path,
-        });
-
-        if (requestId !== latestFileRequestIdRef.current) {
-          return;
-        }
-
-        setActiveFileContent(content || "");
+        setActiveFileContent(node.content || "");
         return;
       }
 
-      latestFileRequestIdRef.current += 1;
       selectItem({
         id: node.id,
         type: "folder",
         path: node.path,
       });
     },
-    [assignment.id, fetchFileContent, selectItem, user.userId],
+    [selectItem],
   );
 
   const handleEditorChange = React.useCallback(
     (value: string | undefined) => {
-      if (value !== undefined && activeFile?.path) {
-        void updateFileContentAsync({
-          assignmentId: assignment.id,
-          userId: user.userId,
-          filePath: activeFile.path,
-          content: value,
-        });
-
-        setActiveFileContent(value);
+      if (value === undefined || !activeFile?.path) {
+        return;
       }
+
+      setActiveFileContent(value);
+
+      const updatedTree = buildUpdatedTree(fileTreeData, activeFile.path, value);
+      if (updatedTree === fileTreeData) {
+        return;
+      }
+
+      replaceFileTree(updatedTree);
+
+      void saveFileTreeAsync({
+        assignmentId: assignment.id,
+        userId: user.userId,
+        fileTree: updatedTree,
+      });
     },
-    [activeFile?.path, assignment.id, updateFileContentAsync, user.userId],
+    [
+      activeFile?.path,
+      assignment.id,
+      buildUpdatedTree,
+      fileTreeData,
+      replaceFileTree,
+      saveFileTreeAsync,
+      user.userId,
+    ],
   );
 
   return {

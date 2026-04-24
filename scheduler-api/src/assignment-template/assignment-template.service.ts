@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAssignmentTemplateDto } from './dto/create-assignment_template.dto';
-import { UpdateAssignmentTemplateDto } from './dto/update-assignment_template.dto';
+import { CreateAssignmentTemplateDto } from './dto/create-assignment-template.dto';
+import { UpdateAssignmentTemplateDto } from './dto/update-assignment-template.dto';
 
 @Injectable()
 export class AssignmentTemplateService {

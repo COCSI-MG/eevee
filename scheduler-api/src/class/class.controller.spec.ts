@@ -4,11 +4,31 @@ import { ClassService } from './class.service';
 
 describe('ClassController', () => {
   let controller: ClassController;
+  let classService: {
+    createOrReplace: jest.Mock;
+    findAll: jest.Mock;
+    findAllByUser: jest.Mock;
+    findOne: jest.Mock;
+    remove: jest.Mock;
+  };
 
   beforeEach(async () => {
+    classService = {
+      createOrReplace: jest.fn(),
+      findAll: jest.fn(),
+      findAllByUser: jest.fn(),
+      findOne: jest.fn(),
+      remove: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ClassController],
-      providers: [ClassService],
+      providers: [
+        {
+          provide: ClassService,
+          useValue: classService,
+        },
+      ],
     }).compile();
 
     controller = module.get<ClassController>(ClassController);
@@ -16,5 +36,24 @@ describe('ClassController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('delegates create to createOrReplace', async () => {
+    const dto = { name: 'Turma 1', students: [1, 2] } as any;
+    classService.createOrReplace.mockResolvedValue({ id: 5 });
+
+    await expect(controller.create(dto)).resolves.toEqual({ id: 5 });
+    expect(classService.createOrReplace).toHaveBeenCalledWith(dto);
+  });
+
+  it('delegates update using the route id', async () => {
+    const dto = { name: 'Turma Atualizada' } as any;
+    classService.createOrReplace.mockResolvedValue({ id: 9 });
+
+    await expect(controller.update('9', dto)).resolves.toEqual({ id: 9 });
+    expect(classService.createOrReplace).toHaveBeenCalledWith({
+      ...dto,
+      id: 9,
+    });
   });
 });

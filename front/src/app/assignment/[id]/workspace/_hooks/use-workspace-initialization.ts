@@ -63,10 +63,21 @@ export function useWorkspaceInitialization({
 
     initializedWorkspaceKeyRef.current = initializationKey;
 
-    let fileTree = await getFileTree(workspaceAssignment.id, userId);
+    let fileTree: FileNode | null = null;
     let shouldPersistInitialState = false;
 
-    if (!fileTree || shouldRebuildWorkspaceTree(workspaceAssignment, fileTree)) {
+    try {
+      fileTree = await getFileTree(workspaceAssignment.id, userId);
+    } catch (error) {
+      initializedWorkspaceKeyRef.current = null;
+      console.error("Error loading workspace tree from Filestash:", error);
+      return;
+    }
+
+    if (
+      !fileTree ||
+      shouldRebuildWorkspaceTree(workspaceAssignment, fileTree)
+    ) {
       fileTree = createInitialWorkspaceTree(workspaceAssignment);
       shouldPersistInitialState = true;
     }

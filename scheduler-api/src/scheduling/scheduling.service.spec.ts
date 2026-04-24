@@ -111,6 +111,15 @@ describe('SchedulingService', () => {
       schedulingPreviewRunRepository as unknown as Repository<SchedulingPreviewRun>,
       schedulingQueue as unknown as Queue,
     );
+
+    jest.spyOn((service as any).logger, 'debug').mockImplementation(() => {});
+    jest.spyOn((service as any).logger, 'log').mockImplementation(() => {});
+    jest.spyOn((service as any).logger, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('runs sync preview with init container and does not persist attempt', async () => {
@@ -321,5 +330,38 @@ describe('SchedulingService', () => {
         report: 'trace',
       }),
     );
+  });
+
+  it('marks attempt as failed worker error without rethrowing', async () => {
+    attemptService.findOne.mockResolvedValue({
+      id: 31,
+      assignment: {
+        id: 10,
+        workerType: WorkerType.NODE_DEFAULT,
+        assignmentTemplates: [{}],
+      },
+      status: AttemptStatus.PENDING,
+    } as never);
+
+    schedulingWorkerPreparationService.prepare.mockRejectedValue(
+      new Error('worker crash'),
+    );
+
+    await expect(
+      service.processJobAndWait({
+        attemptId: 31,
+        workerData: {
+          applicationFileContent: '',
+          files: { 'src/index.ts': 'content' },
+        },
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(schedulingAttemptTransitionService.markRunning).toHaveBeenCalledWith(
+      31,
+    );
+    expect(
+      schedulingAttemptTransitionService.markFailedWorkerError,
+    ).toHaveBeenCalledWith(31, 'worker crash');
   });
 });
