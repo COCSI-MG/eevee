@@ -6,9 +6,11 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateOrUpdateUserDto } from './dto/request/create-or-update-user.dto';
+import { ListUsersQueryDto } from './dto/request/list-users.query.dto';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserResponseDto } from './dto/response/user-response.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
@@ -30,6 +32,11 @@ export class UserController {
   @ApiOkResponse({ type: [UserResponseDto] })
   findAll() {
     return instanceToPlain(this.userService.findAll());
+  }
+
+  @Get('paginated')
+  findAllPaginated(@Query() query: ListUsersQueryDto) {
+    return this.userService.findAllPaginated(query);
   }
 
   @Get(':id')

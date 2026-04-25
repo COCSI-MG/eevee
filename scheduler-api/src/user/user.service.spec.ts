@@ -10,6 +10,7 @@ describe('UserService', () => {
     upsert: jest.Mock;
     findOne: jest.Mock;
     delete: jest.Mock;
+    createQueryBuilder: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -17,6 +18,7 @@ describe('UserService', () => {
       upsert: jest.fn(),
       findOne: jest.fn(),
       delete: jest.fn(),
+      createQueryBuilder: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -138,5 +140,53 @@ describe('UserService', () => {
     await service.remove(7);
 
     expect(userRepository.delete).toHaveBeenCalledWith({ id: 7 });
+  });
+
+  const makeQueryBuilder = () => {
+    const qb: Record<string, jest.Mock> = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      clone: jest.fn(),
+      getManyAndCount: jest.fn(),
+    };
+    qb.clone.mockReturnValue(qb);
+    return qb;
+  };
+
+  describe('findAllPaginated', () => {
+    it('returns paginated users with default page size and search filter', async () => {
+      const qb = makeQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([
+        [{ id: 1, name: 'Alice', email: 'a@x.com', isAdmin: false, userClasses: [] }],
+        23,
+      ]);
+      userRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findAllPaginated({ page: 2, pageSize: 10, search: 'ali' });
+
+      expect(qb.skip).toHaveBeenCalledWith(10);
+      expect(qb.take).toHaveBeenCalledWith(10);
+      expect(qb.andWhere).toHaveBeenCalled(); // brackets call
+      expect(result).toEqual({
+        data: [{ id: 1, name: 'Alice', email: 'a@x.com', isAdmin: false, userClasses: [] }],
+        meta: { total: 23, page: 2, pageSize: 10, totalPages: 3 },
+      });
+    });
+
+    it('falls back to page=1 pageSize=10 when no params provided', async () => {
+      const qb = makeQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      userRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findAllPaginated({});
+
+      expect(qb.skip).toHaveBeenCalledWith(0);
+      expect(qb.take).toHaveBeenCalledWith(10);
+      expect(result.meta).toEqual({ total: 0, page: 1, pageSize: 10, totalPages: 1 });
+    });
   });
 });
