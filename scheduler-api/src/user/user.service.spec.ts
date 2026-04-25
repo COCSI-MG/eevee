@@ -188,5 +188,15 @@ describe('UserService', () => {
       expect(qb.take).toHaveBeenCalledWith(10);
       expect(result.meta).toEqual({ total: 0, page: 1, pageSize: 10, totalPages: 1 });
     });
+
+    it('skips the search clause when no search is provided', async () => {
+      const qb = makeQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      userRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findAllPaginated({ page: 1, pageSize: 10 });
+
+      expect(qb.andWhere).not.toHaveBeenCalled();
+    });
   });
 });
