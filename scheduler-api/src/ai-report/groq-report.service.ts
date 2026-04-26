@@ -42,7 +42,6 @@ export class GroqReportService implements AiReportService {
       return 'Parabéns! Seu exercício está correto e passou em todos os testes.';
     }
 
-
     const filteredReport = isCypress
       ? parseCypressRawReport(rawReport)
       : parseRawReport(rawReport);
@@ -137,7 +136,6 @@ export class GroqReportService implements AiReportService {
             Exemplos proibidos:
             - "Altere o teste"
             - "Use outro framework"
-            - "Implemente uma arquitetura diferente"
 
           8. Seja direto, sem enrolação.
 
