@@ -15,6 +15,7 @@ import {
   SchedulingPreviewRunStatus,
 } from './entities/scheduling-preview-run.entity';
 import { Repository } from 'typeorm';
+import { AiReportService } from 'src/ai-report/ai-report.abstract';
 
 describe('SchedulingService', () => {
   let service: SchedulingService;
@@ -49,6 +50,7 @@ describe('SchedulingService', () => {
   let schedulingPreviewRunRepository: jest.Mocked<
     Pick<Repository<SchedulingPreviewRun>, 'findOne' | 'save' | 'update'>
   >;
+  let aiReportService: jest.Mocked<Pick<AiReportService, 'refineReport'>>;
 
   beforeEach(() => {
     workerService = {
@@ -100,6 +102,10 @@ describe('SchedulingService', () => {
       update: jest.fn(),
     };
 
+    aiReportService = {
+      refineReport: jest.fn().mockResolvedValue(''),
+    };
+
     service = new SchedulingService(
       workerService as unknown as WorkerService,
       attemptService as unknown as AttemptService,
@@ -108,6 +114,7 @@ describe('SchedulingService', () => {
       schedulingWorkerPreparationService as unknown as SchedulingWorkerPreparationService,
       schedulingAttemptTransitionService as unknown as SchedulingAttemptTransitionService,
       requestContextService as unknown as RequestContextService,
+      aiReportService as unknown as AiReportService,
       schedulingPreviewRunRepository as unknown as Repository<SchedulingPreviewRun>,
       schedulingQueue as unknown as Queue,
     );
