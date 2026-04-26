@@ -6,7 +6,11 @@ export function hasAllTestsPassed(report: string): boolean {
   const hasErrors = /error TS\d+:/i.test(report);
   const hasFailedTests = report.includes('●');
 
-  return !hasFail && !hasFailed && !hasErrors && !hasFailedTests;
+  const hasPassedSuite = report.includes('PASS ');
+  const hasPassedTests = /\b[1-9]\d*\s+passed\b/i.test(report);
+  const hasPositiveResult = hasPassedSuite || hasPassedTests;
+
+  return hasPositiveResult && !hasFail && !hasFailed && !hasErrors && !hasFailedTests;
 }
 
 export function parseRawReport(report: string): string {
