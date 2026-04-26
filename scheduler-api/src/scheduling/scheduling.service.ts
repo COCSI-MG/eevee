@@ -23,6 +23,7 @@ import {
   SchedulingWorkerPreparationService,
 } from './scheduling-worker-preparation.service';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { AiReportService } from 'src/ai-report/ai-report.abstract';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import {
@@ -353,6 +354,7 @@ export class SchedulingService {
         workerResult.completeTrace,
         attempt.assignment?.description ?? '',
         payload.workerData.files ?? undefined,
+        attempt.assignment?.workerType,
       );
 
       await this.schedulingAttemptTransitionService.markCompleted({
@@ -437,9 +439,10 @@ export class SchedulingService {
     rawReport: string,
     assignmentDescription: string,
     files?: Record<string, string>,
+    workerType?: WorkerType,
   ): Promise<string | undefined> {
     try {
-      return await this.aiReportService.refineReport(rawReport, assignmentDescription, files);
+      return await this.aiReportService.refineReport(rawReport, assignmentDescription, files, workerType);
     } catch (error) {
       this.logger.error(`AI report generation failed: ${error instanceof Error ? error.message : error}`);
       return undefined;

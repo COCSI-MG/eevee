@@ -2,6 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
 import { AiReportService } from './ai-report.abstract';
 import { hasAllTestsPassed, parseRawReport } from './jest-report-parser';
+import { hasAllCypressTestsPassed, parseCypressRawReport } from './cypress-report-parser';
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
+
+const CYPRESS_WORKER_TYPES = new Set<WorkerType>([
+  WorkerType.NODE_REACTJS_CYPRESS,
+  WorkerType.NODE_NEXTJS_CYPRESS,
+]);
 
 @Injectable()
 export class GroqReportService implements AiReportService {
@@ -23,16 +30,23 @@ export class GroqReportService implements AiReportService {
     rawReport: string,
     assignmentDescription: string,
     files?: Record<string, string>,
+    workerType?: WorkerType,
   ): Promise<string> {
-    if (hasAllTestsPassed(rawReport)) {
-      return 'Parabéns! Seu exercício está correto e passou em todos os testes!';
+    const isCypress = workerType ? CYPRESS_WORKER_TYPES.has(workerType) : false;
+
+    const allPassed = isCypress
+      ? hasAllCypressTestsPassed(rawReport)
+      : hasAllTestsPassed(rawReport);
+
+    if (allPassed) {
+      return 'Parabéns! Seu exercício está correto e passou em todos os testes.';
     }
 
-    console.log('Raw Report:', rawReport);
 
-    const filteredReport = parseRawReport(rawReport);
+    const filteredReport = isCypress
+      ? parseCypressRawReport(rawReport)
+      : parseRawReport(rawReport);
 
-    console.log('Filtered Report:', filteredReport);
 
     if (!this.client) {
       return filteredReport;
@@ -69,7 +83,7 @@ export class GroqReportService implements AiReportService {
             - NÃO diga "o teste falhou"
             - Explique exatamente POR QUE falhou
 
-          3. NÃO copie o nome do teste como está no Jest.
+          3. NÃO copie o nome do teste como está no relatório.
             - Reescreva em linguagem simples
             Exemplo:
             "deve criar uma nova tarefa (POST /tasks)"
@@ -158,7 +172,7 @@ export class GroqReportService implements AiReportService {
           RESOLUÇÃO DO ALUNO:
           ${resolucaoBlock}
 
-          RELATÓRIO BRUTO DE TESTES:
+          RELATÓRIO DE TESTES:
           """
           ${filteredReport}
           """
