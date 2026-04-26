@@ -6,12 +6,15 @@ import * as path from 'path';
 
 function checkupDependencies() {
   const directoryPath = __dirname;
-  const appModulePath = path.join(directoryPath, 'src', 'app.module.ts');
-  if (!fs.existsSync(appModulePath)) {
-    console.error('src/app.module.ts does not exist.');
-    throw new Error('Missing app.module.ts');
+  const srcFolder = path.join(directoryPath, 'src');
+  const hasSrcFiles =
+    fs.existsSync(srcFolder) &&
+    fs.readdirSync(srcFolder).some((f) => f.endsWith('.ts'));
+  if (!hasSrcFiles) {
+    console.error('No TypeScript files found in src/.');
+    throw new Error('No TypeScript files in src/');
   } else {
-    console.log('src/app.module.ts exists.');
+    console.log('src/ folder has TypeScript files.');
   }
 
   const testFolder = path.join(directoryPath, 'test');
