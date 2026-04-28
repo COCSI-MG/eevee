@@ -6,8 +6,8 @@ import {
   Param,
   Delete,
   UseGuards,
-  Put,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { AssignmentService } from './assignment.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
@@ -15,6 +15,7 @@ import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { instanceToPlain } from 'class-transformer';
+import { ListAssignmentsQueryDto } from './dto/list-assignments.query.dto';
 
 @Controller('assignment')
 @UseGuards(JwtAuthGuard)
@@ -42,6 +43,12 @@ export class AssignmentController {
   async findAllMyAssignments() {
     const assignments = await this.assignmentService.findAllUserAssignments();
     return instanceToPlain(assignments);
+  }
+
+  @Get('paginated')
+  @UseGuards(AdminGuard)
+  findAllPaginated(@Query() query: ListAssignmentsQueryDto) {
+    return this.assignmentService.findAllPaginated(query);
   }
 
   @Get(':id')

@@ -26,6 +26,12 @@ import { Template } from 'src/template/entities/template.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { ListAssignmentsQueryDto } from './dto/list-assignments.query.dto';
+import {
+  PaginatedResult,
+  buildPaginationMeta,
+  buildPaginationParams,
+} from 'src/common/pagination/pagination';
 
 @Injectable()
 export class AssignmentService {
@@ -271,6 +277,48 @@ export class AssignmentService {
       .then((assignments) =>
         Promise.all(assignments.map((a) => this.attachBoilerplate(a))),
       );
+  }
+
+  async findAllPaginated(
+    query: ListAssignmentsQueryDto,
+  ): Promise<PaginatedResult<Assignment>> {
+    const { page, pageSize, skip } = buildPaginationParams(query);
+    const visibilityWhere = this.getTeacherVisibilityWhere();
+
+    const qb = this.assignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoinAndSelect('assignment.assignmentAttempts', 'assignmentAttempts')
+      .leftJoinAndSelect('assignment.class', 'class')
+      .leftJoinAndSelect('class.userClasses', 'userClasses')
+      .leftJoinAndSelect('assignment.suspensions', 'suspensions')
+      .orderBy('assignment.id', 'DESC');
+
+    if (visibilityWhere) {
+      qb.where(visibilityWhere as any);
+    }
+
+    const search = query.search?.trim();
+    if (search) {
+      qb.andWhere(
+        new Brackets((expr) => {
+          expr
+            .where('LOWER(assignment.title) LIKE LOWER(:search)', {
+              search: `%${search}%`,
+            })
+            .orWhere('LOWER(class.name) LIKE LOWER(:search)', {
+              search: `%${search}%`,
+            })
+            .orWhere('LOWER(assignment.workerType) LIKE LOWER(:search)', {
+              search: `%${search}%`,
+            });
+        }),
+      );
+    }
+
+    const [rows, total] = await qb.clone().skip(skip).take(pageSize).getManyAndCount();
+    const data = await Promise.all(rows.map((assignment) => this.attachBoilerplate(assignment)));
+
+    return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
   async findAssignmentsByClass(classId: number) {

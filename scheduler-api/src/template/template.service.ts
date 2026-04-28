@@ -8,11 +8,17 @@ import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Template } from './entities/template.entity';
-import { In, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 import { TemplateParam } from 'src/template-params/entities/template-param.entity';
 import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
 import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { ListTemplatesQueryDto } from './dto/list-templates.query.dto';
+import {
+  PaginatedResult,
+  buildPaginationMeta,
+  buildPaginationParams,
+} from 'src/common/pagination/pagination';
 
 @Injectable()
 export class TemplateService {
@@ -57,6 +63,44 @@ export class TemplateService {
       ...(workerType ? { where: { workerType } } : {}),
     });
     return templates;
+  }
+
+  async findAllPaginated(
+    query: ListTemplatesQueryDto,
+  ): Promise<PaginatedResult<Template>> {
+    const { page, pageSize, skip } = buildPaginationParams(query);
+
+    const qb = this.templateRepository
+      .createQueryBuilder('template')
+      .orderBy('template.id', 'DESC');
+
+    if (query.workerType) {
+      qb.andWhere('template.workerType = :workerType', {
+        workerType: query.workerType,
+      });
+    }
+
+    const search = query.search?.trim();
+    if (search) {
+      qb.andWhere(
+        new Brackets((expr) => {
+          expr
+            .where('LOWER(template.title) LIKE LOWER(:search)', {
+              search: `%${search}%`,
+            })
+            .orWhere('LOWER(template.description) LIKE LOWER(:search)', {
+              search: `%${search}%`,
+            })
+            .orWhere('LOWER(template.workerType) LIKE LOWER(:search)', {
+              search: `%${search}%`,
+            });
+        }),
+      );
+    }
+
+    const [data, total] = await qb.clone().skip(skip).take(pageSize).getManyAndCount();
+
+    return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
   async findOne(id: number) {
