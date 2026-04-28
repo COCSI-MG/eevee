@@ -28,6 +28,7 @@ export function useWorkspaceInitialization({
   selectItem,
 }: UseWorkspaceInitializationParams) {
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+
   const workspaceAssignment = React.useMemo(
     () =>
       ({
@@ -43,6 +44,7 @@ export function useWorkspaceInitialization({
       assignment.workerType,
     ],
   );
+
   const initializationKey = React.useMemo(() => {
     if (!workspaceAssignment.id || !userId) {
       return null;
@@ -50,6 +52,7 @@ export function useWorkspaceInitialization({
 
     return `${workspaceAssignment.id}:${userId}`;
   }, [userId, workspaceAssignment.id]);
+
   const initializedWorkspaceKeyRef = React.useRef<string | null>(null);
 
   const initializeWorkspace = React.useCallback(async () => {
