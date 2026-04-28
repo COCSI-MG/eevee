@@ -4,39 +4,33 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UsersTable from "@/components/users-table";
-import { useUsers } from "@/hooks/use-users";
+import { usePaginatedUsers } from "@/hooks/use-paginated-users";
+import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
 import { UsersService } from "@/app/integration/scheduler-api/user";
 import QueryErrorState from "@/components/admin/query-error-state";
 import AdminListSearch from "@/components/admin/admin-list-search";
-import { matchesListSearch } from "@/lib/list-search";
-import { useMemo, useState } from "react";
+import AdminPagination from "@/components/admin/admin-pagination";
+import { useMemo } from "react";
 
 export default function UsersPage() {
-  const { data: users, refetch, isFetching, isError } = useUsers();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredUsers = useMemo(() => {
-    return (users ?? []).filter((u) =>
-      matchesListSearch(searchQuery, [
-        u.name,
-        u.email,
-        u.isAdmin ? "Admin" : "User",
-      ])
-    );
-  }, [users, searchQuery]);
+  const { page, search, debouncedSearch, setPage, setSearch } =
+    usePaginatedSearch();
+  const { data, refetch, isFetching, isError } = usePaginatedUsers({
+    page,
+    search: debouncedSearch,
+  });
+  const users = data?.data ?? [];
+  const meta = data?.meta;
 
   const usersEmptyMessage = useMemo(() => {
-    if ((users?.length ?? 0) === 0) {
-      return "No users found.";
-    }
-    if (searchQuery.trim() && filteredUsers.length === 0) {
-      return "No users match your search.";
+    if (!meta || meta.total === 0) {
+      return debouncedSearch.trim() ? "No users match your search." : "No users found.";
     }
     return "No users found.";
-  }, [users?.length, searchQuery, filteredUsers.length]);
+  }, [meta, debouncedSearch]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -99,7 +93,7 @@ export default function UsersPage() {
     );
   }
 
-  if (isFetching) {
+  if (isFetching && !data) {
     return <Loader />;
   }
 
@@ -116,19 +110,30 @@ export default function UsersPage() {
       </div>
 
       <AdminListSearch
-        value={searchQuery}
-        onChange={setSearchQuery}
-        placeholder="Filter by name, email, or role"
-        ariaLabel="Filter users by name, email, or role"
+        value={search}
+        onChange={setSearch}
+        placeholder="Filter by name or email"
+        ariaLabel="Filter users by name or email"
         className="max-w-md"
       />
       <div className="border rounded-md">
         <UsersTable
-          users={filteredUsers}
+          users={users}
           handleDelete={handleDelete}
           emptyMessage={usersEmptyMessage}
         />
       </div>
+
+      {meta && (
+        <AdminPagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          pageSize={meta.pageSize}
+          total={meta.total}
+          onPageChange={setPage}
+          itemLabel={{ singular: "usuário", plural: "usuários" }}
+        />
+      )}
     </div>
   );
 }
