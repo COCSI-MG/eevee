@@ -2,12 +2,19 @@ import { ForbiddenException, Injectable, UnprocessableEntityException, UseGuards
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Class } from './entities/class.entity';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { ClassHelper } from './class.helper';
 import { UserClassService } from 'src/user-class/user-class.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { BaseClassDto } from './dto/base-class.dto';
+import { ListClassesQueryDto } from './dto/request/list-classes.query.dto';
+import {
+  PaginatedResult,
+  buildPaginationMeta,
+  buildPaginationParams,
+} from 'src/common/pagination/pagination';
+import { ClassResponseDto } from './dto/response/class-response.dto';
 
 @Injectable()
 @UseGuards(JwtAuthGuard)
@@ -110,6 +117,33 @@ export class ClassService {
         relations: ['userClasses', 'userClasses.user', 'userClasses.class'],
       })
     ).map(ClassHelper.toResponseDto);
+  }
+
+  async findAllPaginated(query: ListClassesQueryDto): Promise<PaginatedResult<ClassResponseDto>> {
+    const { page, pageSize, skip } = buildPaginationParams(query);
+
+    const qb = this.classRepository
+      .createQueryBuilder('class')
+      .leftJoinAndSelect('class.userClasses', 'userClasses')
+      .leftJoinAndSelect('userClasses.user', 'user')
+      .leftJoinAndSelect('userClasses.class', 'innerClass')
+      .orderBy('class.id', 'DESC');
+
+    const search = query.search?.trim();
+    if (search) {
+      qb.andWhere(
+        new Brackets((expr) => {
+          expr
+            .where('LOWER(class.name) LIKE LOWER(:search)', { search: `%${search}%` })
+            .orWhere('LOWER(class.description) LIKE LOWER(:search)', { search: `%${search}%` });
+        }),
+      );
+    }
+
+    const [rows, total] = await qb.clone().skip(skip).take(pageSize).getManyAndCount();
+    const data = rows.map(ClassHelper.toResponseDto);
+
+    return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
   async findAllByUser(userId: number) {

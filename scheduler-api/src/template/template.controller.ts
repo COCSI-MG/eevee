@@ -5,6 +5,7 @@ import { UpdateTemplateDto } from './dto/update-template.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { ListTemplatesQueryDto } from './dto/list-templates.query.dto';
 
 @Controller('template')
 @UseGuards(JwtAuthGuard)
@@ -20,6 +21,11 @@ export class TemplateController {
   @Get()
   findAll(@Query('workerType') workerType?: WorkerType) {
     return this.templateService.findAll(workerType);
+  }
+
+  @Get('paginated')
+  findAllPaginated(@Query() query: ListTemplatesQueryDto) {
+    return this.templateService.findAllPaginated(query);
   }
 
   @Get(':id')

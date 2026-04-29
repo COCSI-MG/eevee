@@ -21,6 +21,7 @@ describe('TemplateService', () => {
     findOne: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
+    createQueryBuilder: jest.fn(),
   });
 
   const setup = async () => {
@@ -246,5 +247,43 @@ describe('TemplateService', () => {
     await expect(service.remove(10)).rejects.toBeInstanceOf(NotFoundException);
 
     expect(templateRepository.delete).not.toHaveBeenCalled();
+  });
+
+  describe('findAllPaginated', () => {
+    const makeQueryBuilder = () => {
+      const qb: Record<string, jest.Mock> = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        clone: jest.fn(),
+        getManyAndCount: jest.fn(),
+      };
+      qb.clone.mockReturnValue(qb);
+      return qb;
+    };
+
+    it('filters by workerType and search and paginates', async () => {
+      const { service, templateRepository } = await setup();
+      const qb = makeQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([
+        [{ id: 5, title: 'Foo', description: 'Bar', workerType: 'worker-a' }],
+        1,
+      ]);
+      templateRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findAllPaginated({
+        workerType: 'worker-a' as any,
+        search: 'foo',
+        page: 1,
+        pageSize: 10,
+      } as any);
+
+      expect(qb.skip).toHaveBeenCalledWith(0);
+      expect(qb.take).toHaveBeenCalledWith(10);
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
+    });
   });
 });
