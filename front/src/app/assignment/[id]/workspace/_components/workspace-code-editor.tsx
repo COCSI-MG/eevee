@@ -40,6 +40,7 @@ export default function WorkspaceCodeEditor({
   const treeRef = React.useRef<FileNode | null>(null);
   const currentFilePathRef = React.useRef("");
   const importCompletionDisposableRef = React.useRef<IDisposable[]>([]);
+  const contextMenuDisposableRef = React.useRef<IDisposable | null>(null);
   const importCompletionRegisteredRef = React.useRef(false);
   const monacoLanguage = getMonacoLanguage(file?.language);
 
@@ -50,6 +51,18 @@ export default function WorkspaceCodeEditor({
   React.useEffect(() => {
     currentFilePathRef.current = file?.path || "";
   }, [file?.path]);
+
+  React.useEffect(() => {
+    return () => {
+      importCompletionDisposableRef.current.forEach((disposable) =>
+        disposable.dispose(),
+      );
+      importCompletionDisposableRef.current = [];
+      contextMenuDisposableRef.current?.dispose();
+      contextMenuDisposableRef.current = null;
+      importCompletionRegisteredRef.current = false;
+    };
+  }, []);
 
   React.useEffect(() => {
     const handleResume = () => {
@@ -189,8 +202,14 @@ export default function WorkspaceCodeEditor({
         comments: false,
         strings: false,
       },
-      contextmenu: true,
+      contextmenu: false,
       selectionHighlight: true,
+    });
+
+    contextMenuDisposableRef.current?.dispose();
+    contextMenuDisposableRef.current = editor.onContextMenu((event) => {
+      event.event.preventDefault();
+      event.event.stopPropagation();
     });
 
     const importLinePattern =
@@ -282,6 +301,7 @@ export default function WorkspaceCodeEditor({
           options={{
             readOnly: false,
             automaticLayout: true,
+            contextmenu: false,
           }}
         />
       </div>
