@@ -20,9 +20,11 @@ describe('AssignmentService', () => {
     save: jest.fn(),
     find: jest.fn(),
     findOne: jest.fn(),
+    findAndCount: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
     count: jest.fn(),
+    createQueryBuilder: jest.fn(),
   });
 
   const setup = async () => {
@@ -327,5 +329,56 @@ describe('AssignmentService', () => {
       where: { assignmentId: 55 },
     });
     expect(dataSource.transaction).not.toHaveBeenCalled();
+  });
+
+  describe('findAllPaginated', () => {
+    const makeQueryBuilder = () => {
+      const qb: Record<string, jest.Mock> = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        clone: jest.fn(),
+        getManyAndCount: jest.fn(),
+      };
+      qb.clone.mockReturnValue(qb);
+      return qb;
+    };
+
+    it('paginates assignments with search across title, class.name and workerType', async () => {
+      const { service, assignmentRepository, requestContextService } = await setup();
+      const qb = makeQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([
+        [
+          {
+            id: 1,
+            title: 'Assignment One',
+            class: { id: 2, name: 'Math' },
+            workerType: 'worker-a',
+            assignmentAttempts: [],
+            suspensions: [],
+          },
+        ],
+        1,
+      ]);
+      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
+      requestContextService.getUser.mockReturnValue({ userId: 10, isAdmin: true });
+      jest
+        .spyOn(service as any, 'attachBoilerplate')
+        .mockImplementation(async (assignment) => assignment);
+
+      const result = await service.findAllPaginated({
+        search: 'one',
+        page: 1,
+        pageSize: 10,
+      } as any);
+
+      expect(qb.skip).toHaveBeenCalledWith(0);
+      expect(qb.take).toHaveBeenCalledWith(10);
+      expect(result.meta).toEqual({ total: 1, page: 1, pageSize: 10, totalPages: 1 });
+    });
   });
 });

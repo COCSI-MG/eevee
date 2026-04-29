@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import TemplatesTable from "@/components/template/templates-table";
-import { useTemplates } from "@/hooks/use-templates";
+import { usePaginatedTemplates } from "@/hooks/use-paginated-templates";
+import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
@@ -15,32 +16,25 @@ import {
 } from "@/app/admin/templates/constants";
 import QueryErrorState from "@/components/admin/query-error-state";
 import AdminListSearch from "@/components/admin/admin-list-search";
-import { matchesListSearch } from "@/lib/list-search";
-import { useMemo, useState } from "react";
+import AdminPagination from "@/components/admin/admin-pagination";
+import { useMemo } from "react";
 
 export default function TemplatePage() {
-  const { data: templates, refetch, isFetching, isError } = useTemplates();
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredTemplates = useMemo(() => {
-    return (templates ?? []).filter((t) =>
-      matchesListSearch(searchQuery, [
-        t.title,
-        t.description,
-        t.workerType,
-      ])
-    );
-  }, [templates, searchQuery]);
+  const { page, search, debouncedSearch, setPage, setSearch } =
+    usePaginatedSearch();
+  const { data, refetch, isFetching, isError } = usePaginatedTemplates({
+    page,
+    search: debouncedSearch,
+  });
+  const templates = data?.data ?? [];
+  const meta = data?.meta;
 
   const templatesEmptyMessage = useMemo(() => {
-    if ((templates?.length ?? 0) === 0) {
-      return undefined;
-    }
-    if (searchQuery.trim() && filteredTemplates.length === 0) {
-      return "No templates match your search.";
+    if (!meta || meta.total === 0) {
+      return debouncedSearch.trim() ? "No templates match your search." : undefined;
     }
     return undefined;
-  }, [templates?.length, searchQuery, filteredTemplates.length]);
+  }, [meta, debouncedSearch]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -107,7 +101,7 @@ export default function TemplatePage() {
     );
   }
 
-  if (isFetching) {
+  if (isFetching && !data) {
     return <Loader />;
   }
 
@@ -126,19 +120,30 @@ export default function TemplatePage() {
       </div>
 
       <AdminListSearch
-        value={searchQuery}
-        onChange={setSearchQuery}
+        value={search}
+        onChange={setSearch}
         placeholder="Filter by title, description, or worker type"
         ariaLabel="Filter templates by title, description, or worker type"
         className="max-w-md"
       />
       <div className="border rounded-md">
         <TemplatesTable
-          templates={filteredTemplates}
+          templates={templates}
           handleDelete={handleDelete}
           emptyMessage={templatesEmptyMessage}
         />
       </div>
+
+      {meta && (
+        <AdminPagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          pageSize={meta.pageSize}
+          total={meta.total}
+          onPageChange={setPage}
+          itemLabel={{ singular: "template", plural: "templates" }}
+        />
+      )}
     </div>
   );
 }
