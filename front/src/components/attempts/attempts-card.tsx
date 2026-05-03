@@ -16,6 +16,39 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
+import { useAttemptFeedback } from "@/hooks/use-attempt-feedback";
+import { AssignmentAttempt } from "@/app/interface/scheduler-api/assignment-attempt";
+
+function AttemptFeedbackDialog({ attempt }: { attempt: AssignmentAttempt }) {
+  const { isOpen, handleOpenChange, feedback, isGenerating } =
+    useAttemptFeedback(attempt);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="mt-2 w-full text-xs">
+          Ver feedback
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Feedback — {attempt.attempt}ª Tentativa</DialogTitle>
+        </DialogHeader>
+        <ScrollArea className="max-h-96 pr-2">
+          {isGenerating ? (
+            <p className="text-sm text-muted-foreground animate-pulse">
+              Gerando feedback...
+            </p>
+          ) : (
+            <p className="text-sm whitespace-pre-wrap leading-relaxed">
+              {feedback}
+            </p>
+          )}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function AttemptsCard() {
   const { id } = useParams();
@@ -120,30 +153,8 @@ export default function AttemptsCard() {
                     <p className="text-sm text-white">
                       Falhas: {attempt.fails}
                     </p>
-                    {(attempt.refinedReport || attempt.report) && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="mt-2 w-full text-xs"
-                          >
-                            Ver feedback
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-lg">
-                          <DialogHeader>
-                            <DialogTitle>
-                              Feedback — {attempt.attempt}ª Tentativa
-                            </DialogTitle>
-                          </DialogHeader>
-                          <ScrollArea className="max-h-96 pr-2">
-                            <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                              {attempt.refinedReport || attempt.report}
-                            </p>
-                          </ScrollArea>
-                        </DialogContent>
-                      </Dialog>
+                    {attempt.report && (
+                      <AttemptFeedbackDialog attempt={attempt} />
                     )}
                   </div>
                 </CardContent>

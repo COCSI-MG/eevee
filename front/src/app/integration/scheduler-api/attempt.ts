@@ -29,4 +29,17 @@ export class AttemptAdminService {
     const response = await axiosClientWithAuth.post(`/scheduling/retry/${id}`);
     return response.data;
   }
+
+  static async requestFeedback(attemptId: number): Promise<void> {
+    await axiosClientWithAuth.post(`/scheduling/attempt/${attemptId}/feedback`);
+  }
+
+  static async getFeedback(
+    attemptId: number,
+  ): Promise<{ refinedReport: string | null }> {
+    const response = await axiosClientWithAuth.get<{
+      refinedReport: string | null;
+    }>(`/scheduling/attempt/${attemptId}/feedback`);
+    return response.data;
+  }
 }

@@ -86,4 +86,16 @@ export class SchedulingController {
   async retryAttempt(@Param('attemptId', ParseIntPipe) attemptId: number) {
     return await this.schedulingService.retryAttemptFromAdmin(attemptId);
   }
+
+  @Post('attempt/:id/feedback')
+  async requestFeedback(@Param('id', ParseIntPipe) id: number) {
+    await this.schedulingService.requestAiFeedback(id);
+    return { status: 'ok' };
+  }
+
+  @Get('attempt/:id/feedback')
+  async getFeedback(@Param('id', ParseIntPipe) id: number) {
+    const refinedReport = await this.schedulingService.getAiFeedback(id);
+    return { refinedReport };
+  }
 }

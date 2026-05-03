@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateAttemptDto } from './dto/create-applicant-attempt.dto';
 import { Brackets, LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -276,6 +276,18 @@ export class AttemptService {
         milliseconds: 1000 * 60 * 5, // 5 minutes cache
       },
     });
+  }
+
+  async findRefinedReport(id: number, userId: number): Promise<string | null> {
+    const attempt = await this.attemptRepository
+      .createQueryBuilder('attempt')
+      .select(['attempt.id', 'attempt.refinedReport'])
+      .where('attempt.id = :id', { id })
+      .andWhere('attempt.userId = :userId', { userId })
+      .getOne();
+
+    if (!attempt) throw new NotFoundException('Attempt not found');
+    return attempt.refinedReport ?? null;
   }
 
   update(updateAttemptDto: UpdateApplicantAttemptDto) {
