@@ -13,6 +13,8 @@ export function useClipboardGuard({
   useEffect(() => {
     const preventClipboardAction = (event: ClipboardEvent) => {
       event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
 
       if (CLIPBOARD_ACTIONS.has(event.type as ClipboardAction)) {
         onClipboardAttempt(event.type as ClipboardAction);
