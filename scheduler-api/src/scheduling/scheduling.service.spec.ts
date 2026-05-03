@@ -1,4 +1,4 @@
-import { BadRequestException, UnprocessableEntityException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { SchedulingService } from './scheduling.service';
 import { WorkerService } from 'src/worker/worker.service';
 import { AttemptService } from 'src/attempt/attempt.service';
@@ -34,6 +34,8 @@ describe('SchedulingService', () => {
       | 'findOne'
       | 'createForUser'
       | 'getNextAttemptNumber'
+      | 'findRefinedReport'
+      | 'update'
     >
   >;
   let assignmentService: jest.Mocked<Pick<AssignmentService, 'findOne'>>;
@@ -51,6 +53,7 @@ describe('SchedulingService', () => {
     Pick<Repository<SchedulingPreviewRun>, 'findOne' | 'save' | 'update'>
   >;
   let aiReportService: jest.Mocked<Pick<AiReportService, 'refineReport'>>;
+  let aiReportQueue: jest.Mocked<Pick<Queue, 'add'>>;
 
   beforeEach(() => {
     workerService = {
@@ -66,6 +69,8 @@ describe('SchedulingService', () => {
       findOne: jest.fn(),
       createForUser: jest.fn(),
       getNextAttemptNumber: jest.fn(),
+      findRefinedReport: jest.fn(),
+      update: jest.fn(),
     };
 
     assignmentService = {
@@ -106,6 +111,10 @@ describe('SchedulingService', () => {
       refineReport: jest.fn().mockResolvedValue(''),
     };
 
+    aiReportQueue = {
+      add: jest.fn(),
+    };
+
     service = new SchedulingService(
       workerService as unknown as WorkerService,
       attemptService as unknown as AttemptService,
@@ -117,6 +126,7 @@ describe('SchedulingService', () => {
       aiReportService as unknown as AiReportService,
       schedulingPreviewRunRepository as unknown as Repository<SchedulingPreviewRun>,
       schedulingQueue as unknown as Queue,
+      aiReportQueue as unknown as Queue,
     );
 
     jest.spyOn((service as any).logger, 'debug').mockImplementation(() => {});
@@ -337,6 +347,97 @@ describe('SchedulingService', () => {
         report: 'trace',
       }),
     );
+  });
+
+  it('throws NotFoundException for requestAiFeedback when attempt not found', async () => {
+    attemptService.findOne.mockResolvedValue(null);
+
+    await expect(service.requestAiFeedback(99)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(aiReportQueue.add).not.toHaveBeenCalled();
+  });
+
+  it('throws BadRequestException for requestAiFeedback when attempt is not completed', async () => {
+    attemptService.findOne.mockResolvedValue({
+      id: 1,
+      userId: 42,
+      status: AttemptStatus.RUNNING,
+    } as never);
+
+    await expect(service.requestAiFeedback(1)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(aiReportQueue.add).not.toHaveBeenCalled();
+  });
+
+  it('returns without queuing for requestAiFeedback when refinedReport already exists', async () => {
+    attemptService.findOne.mockResolvedValue({
+      id: 1,
+      userId: 42,
+      status: AttemptStatus.COMPLETED,
+      refinedReport: 'existing feedback',
+    } as never);
+
+    await service.requestAiFeedback(1);
+
+    expect(aiReportQueue.add).not.toHaveBeenCalled();
+  });
+
+  it('queues AI report job for requestAiFeedback when attempt is completed without refinedReport', async () => {
+    attemptService.findOne.mockResolvedValue({
+      id: 1,
+      userId: 42,
+      status: AttemptStatus.COMPLETED,
+      refinedReport: null,
+    } as never);
+
+    await service.requestAiFeedback(1);
+
+    expect(aiReportQueue.add).toHaveBeenCalledWith(
+      'process-ai-report-job',
+      { attemptId: 1 },
+      { jobId: 'ai-report-1' },
+    );
+  });
+
+  it('generates and saves refinedReport in processAiReportJob', async () => {
+    attemptService.findOne.mockResolvedValue({
+      id: 10,
+      status: AttemptStatus.COMPLETED,
+      refinedReport: null,
+      report: 'raw report',
+      assignment: { description: 'desc' },
+      receivedWork: { 'index.ts': 'code' },
+    } as never);
+    aiReportService.refineReport.mockResolvedValue('refined feedback');
+
+    await service.processAiReportJob(10);
+
+    expect(aiReportService.refineReport).toHaveBeenCalledWith(
+      'raw report',
+      'desc',
+      { 'index.ts': 'code' },
+      undefined,
+    );
+    expect(attemptService.update).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 10, refinedReport: 'refined feedback' }),
+    );
+  });
+
+  it('does not save when AI generation fails in processAiReportJob', async () => {
+    attemptService.findOne.mockResolvedValue({
+      id: 10,
+      status: AttemptStatus.COMPLETED,
+      refinedReport: null,
+      report: 'raw report',
+      assignment: { description: 'desc' },
+    } as never);
+    aiReportService.refineReport.mockRejectedValue(new Error('AI error'));
+
+    await service.processAiReportJob(10);
+
+    expect(attemptService.update).not.toHaveBeenCalled();
   });
 
   it('marks attempt as failed worker error without rethrowing', async () => {
