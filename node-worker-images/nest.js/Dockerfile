@@ -1,4 +1,4 @@
-FROM node:lts-hydrogen
+FROM node:22-bullseye-slim
 
 WORKDIR /app
 

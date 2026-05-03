@@ -2,18 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { Client1_13 } from 'kubernetes-client';
 import { config } from 'kubernetes-client';
 import { DEFAULT_NAMESPACE, K8S_JOB_STATUS } from './kubernetes.constants';
-import { KubernetesJobOptions, KubernetesJobResult } from './kubernetes.interfaces';
+import {
+  KubernetesJobOptions,
+  KubernetesJobResult,
+} from './kubernetes.interfaces';
 
 @Injectable()
 export class KubernetesService {
   private client = new Client1_13({
-    config: process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_SERVICE_PORT
-      ? config.getInCluster()
-      : config.fromKubeconfig(), 
+    config:
+      process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_SERVICE_PORT
+        ? config.getInCluster()
+        : config.fromKubeconfig(),
     version: '1.13',
   });
 
-  constructor() { }
+  constructor() {}
 
   private appendConfigMapVolumesAndMounts(
     configMaps: NonNullable<KubernetesJobOptions['configMap']>,
@@ -60,17 +64,19 @@ export class KubernetesService {
         name: container.name,
         image: container.image,
         imagePullPolicy: container.imagePullPolicy || 'Never',
-        ...(container.restartPolicy ? { restartPolicy: container.restartPolicy } : {}),
+        ...(container.restartPolicy
+          ? { restartPolicy: container.restartPolicy }
+          : {}),
         ...(container.command?.length ? { command: container.command } : {}),
         ...(container.env?.length ? { env: container.env } : {}),
         ...(options?.sharedEmptyDir
           ? {
-            volumeMounts: options.sharedEmptyDir.mounts.map((mount) => ({
-              name: options.sharedEmptyDir!.volumeName,
-              mountPath: mount.mountPath,
-              ...(mount.subPath ? { subPath: mount.subPath } : {}),
-            })),
-          }
+              volumeMounts: options.sharedEmptyDir.mounts.map((mount) => ({
+                name: options.sharedEmptyDir!.volumeName,
+                mountPath: mount.mountPath,
+                ...(mount.subPath ? { subPath: mount.subPath } : {}),
+              })),
+            }
           : {}),
       })) || []
     );
@@ -158,7 +164,7 @@ export class KubernetesService {
     // This regex matches common ANSI escape codes.
     // It covers sequences like: ESC [ ... m
     // where ESC is \x1B (or \u001b)
-    if (!text) return "";
+    if (!text) return '';
 
     return text.replace(/\x1b\[.*?m/g, '');
   }
@@ -238,10 +244,11 @@ export class KubernetesService {
         name: jobName,
       },
       spec: {
-        restartPolicy: 'Never', // 
+        restartPolicy: 'Never', //
         template: {
           spec: {
             ...(initContainers.length ? { initContainers } : {}),
+            automountServiceAccountToken: false, // security best practice
             containers: [
               {
                 name: jobName,
