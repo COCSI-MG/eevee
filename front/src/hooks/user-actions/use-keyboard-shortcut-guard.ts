@@ -35,6 +35,8 @@ export function useKeyboardShortcutGuard({
       const key = event.key.toLowerCase();
 
       event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
 
       if (key in CLIPBOARD_SHORTCUTS) {
         onClipboardShortcut(CLIPBOARD_SHORTCUTS[key]);
@@ -46,10 +48,10 @@ export function useKeyboardShortcutGuard({
       return false;
     };
 
-    document.addEventListener("keydown", preventKeyboardShortcuts);
+    document.addEventListener("keydown", preventKeyboardShortcuts, true);
 
     return () => {
-      document.removeEventListener("keydown", preventKeyboardShortcuts);
+      document.removeEventListener("keydown", preventKeyboardShortcuts, true);
     };
   }, [onClipboardShortcut]);
 }

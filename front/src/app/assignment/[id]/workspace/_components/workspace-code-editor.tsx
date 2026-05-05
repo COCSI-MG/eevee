@@ -11,6 +11,25 @@ const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
 });
 
+const BLOCKED_EDITOR_DRAG_EVENTS = [
+  "dragstart",
+  "dragenter",
+  "dragover",
+  "drop",
+] as const;
+
+function blockEditorDragAction(event: DragEvent) {
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "none";
+  }
+
+  return false;
+}
+
 function getMonacoLanguage(language: string | undefined): string {
   const normalized = (language || "").trim().toLowerCase();
 
@@ -41,6 +60,7 @@ export default function WorkspaceCodeEditor({
   const currentFilePathRef = React.useRef("");
   const importCompletionDisposableRef = React.useRef<IDisposable[]>([]);
   const contextMenuDisposableRef = React.useRef<IDisposable | null>(null);
+  const editorDragGuardCleanupRef = React.useRef<(() => void) | null>(null);
   const importCompletionRegisteredRef = React.useRef(false);
   const monacoLanguage = getMonacoLanguage(file?.language);
 
@@ -60,6 +80,8 @@ export default function WorkspaceCodeEditor({
       importCompletionDisposableRef.current = [];
       contextMenuDisposableRef.current?.dispose();
       contextMenuDisposableRef.current = null;
+      editorDragGuardCleanupRef.current?.();
+      editorDragGuardCleanupRef.current = null;
       importCompletionRegisteredRef.current = false;
     };
   }, []);
@@ -161,6 +183,28 @@ export default function WorkspaceCodeEditor({
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+    editorDragGuardCleanupRef.current?.();
+
+    const editorDomNode = editor.getDomNode();
+    if (editorDomNode) {
+      BLOCKED_EDITOR_DRAG_EVENTS.forEach((eventName) => {
+        editorDomNode.addEventListener(
+          eventName,
+          blockEditorDragAction,
+          true,
+        );
+      });
+
+      editorDragGuardCleanupRef.current = () => {
+        BLOCKED_EDITOR_DRAG_EVENTS.forEach((eventName) => {
+          editorDomNode.removeEventListener(
+            eventName,
+            blockEditorDragAction,
+            true,
+          );
+        });
+      };
+    }
 
     // Configurar TypeScript para suportar JSX/TSX
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
@@ -202,6 +246,8 @@ export default function WorkspaceCodeEditor({
         comments: false,
         strings: false,
       },
+      dragAndDrop: false,
+      dropIntoEditor: { enabled: false },
       contextmenu: false,
       selectionHighlight: true,
     });
@@ -301,6 +347,8 @@ export default function WorkspaceCodeEditor({
           options={{
             readOnly: false,
             automaticLayout: true,
+            dragAndDrop: false,
+            dropIntoEditor: { enabled: false },
             contextmenu: false,
           }}
         />

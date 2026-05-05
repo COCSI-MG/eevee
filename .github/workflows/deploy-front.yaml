@@ -54,6 +54,3 @@ jobs:
             - name: Atualiza imagem e reinicia o pod 
               run: |
                 kubectl set image deployment/eevee-front-deployment eevee-front=${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }} -n default
-
-                kubectl rollout restart deployment/eevee-front-deployment -n default
-              
