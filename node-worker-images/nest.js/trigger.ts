@@ -3,6 +3,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as fs from 'fs';
 import * as path from 'path';
+import { spawn } from 'child_process';
+
+const SAFE_TEST_ENV = {
+  PATH: process.env.PATH ?? '',
+  NODE_ENV: 'test',
+  CI: 'true',
+  PORT: process.env.PORT ?? '3000',
+};
 
 function checkupDependencies() {
   const directoryPath = __dirname;
@@ -32,27 +40,40 @@ function checkupDependencies() {
   }
 }
 
-function applyTests() {
-  const { exec } = require('child_process');
-  exec('npm run test:e2e', (err: any, stdout: any, stderr: any) => {
-    if (err) {
-      console.error(`exec error: ${err}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-    console.log(`stderr: ${stderr}`);
+function applyTests(): Promise<number> {
+  return new Promise((resolve) => {
+    const child = spawn('npm run test:e2e', {
+      cwd: __dirname,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: SAFE_TEST_ENV,
+    });
 
-    console.log('Tests run!');
+    child.stdout.on('data', (chunk: Buffer) => {
+      process.stdout.write(chunk.toString());
+    });
+
+    child.stderr.on('data', (chunk: Buffer) => {
+      process.stderr.write(chunk.toString());
+    });
+
+    child.on('close', (code: number | null) => {
+      console.log('Tests run!');
+      resolve(code ?? 1);
+    });
   });
 }
 
-function main() {
+async function main() {
   console.log('Checking dependencies...');
   checkupDependencies();
   console.log('Dependencies checked!');
 
   console.log('Running tests...');
-  applyTests();
+  const exitCode = await applyTests();
+  process.exit(exitCode);
 }
 
-main();
+main().catch((error) => {
+  console.error('Error executing trigger:', error);
+  process.exit(1);
+});

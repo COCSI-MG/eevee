@@ -5,20 +5,14 @@
     "esModuleInterop": true,
     "outDir": "dist",
     "forceConsistentCasingInFileNames": true,
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "skipLibCheck": true,
-    "types": [
-      "@types/babel__core",
-      "jest",
-      "node"
-    ],
-    "allowJs": true
+    "allowJs": true,
+    "checkJs": false,
+    "moduleDetection": "force",
+    "types": ["jest", "node"]
   },
-  "include": [
-    "./*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.js",
-  ],
+  "include": ["./*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules"]
 }

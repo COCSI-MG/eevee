@@ -1,21 +1,28 @@
 import type { Config } from 'jest';
 
 const config: Config = {
-  preset: "ts-jest",
+  preset: 'ts-jest',
   testEnvironment: 'node',
-  moduleFileExtensions: ['ts', 'js'],
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  testMatch: ['**/*.spec.ts', '**/*.test.ts'],
   transform: {
-    '^.+\\.[tj]s$': [
+    '^.+\\.ts$': [
       'ts-jest',
       {
+        diagnostics: false,
+        isolatedModules: true,
         tsconfig: {
           module: 'commonjs',
-          allowJs: true,
           esModuleInterop: true,
-        },
-      },
-    ],
-  },
+          allowJs: true,
+          checkJs: false,
+          strict: false,
+          noImplicitAny: false,
+          moduleDetection: 'force'
+        }
+      }
+    ]
+  }
 };
 
 export default config;

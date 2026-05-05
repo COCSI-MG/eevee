@@ -51,6 +51,3 @@ jobs:
               run: |
                 kubectl set image deployment/scheduler-api-deployment scheduler-api=${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }} -n default
                 kubectl set image deployment/queue-worker-deployment queue-worker=${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }} -n default
-
-                kubectl rollout restart deployment/scheduler-api-deployment -n default
-                kubectl rollout restart deployment/queue-worker-deployment -n default
