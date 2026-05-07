@@ -20,6 +20,13 @@ const WORKSPACE_CYPRESS_E2E_PATH = `${WORKSPACE_WORKDIR}/cypress/e2e`;
 const TEST_OUTPUT_START_MARKER = "EEVEE_TEST_OUTPUT_START";
 const TEST_OUTPUT_END_MARKER = "EEVEE_TEST_OUTPUT_END";
 const CYPRESS_RESULTS_PATH = "cypress-results.json";
+const SAFE_TEST_ENV = {
+  PATH: process.env.PATH ?? "",
+  HOME: process.env.HOME ?? "/tmp",
+  NODE_ENV: "test",
+  CI: "true",
+  PORT: process.env.PORT ?? "3000",
+};
 
 function resolveRuntimeWorkdir() {
   if (fs.existsSync(WORKSPACE_WORKDIR)) {
@@ -68,6 +75,7 @@ function runNpmTest(): Promise<{ exitCode: number; completeTrace: string }> {
     const child = spawn("npm", ["test"], {
       cwd: RUNTIME_WORKDIR,
       stdio: ["ignore", "pipe", "pipe"],
+      env: SAFE_TEST_ENV,
     });
 
     child.stdout.on("data", (chunk: Buffer) => {

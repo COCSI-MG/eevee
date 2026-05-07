@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import TemplatesTable from "@/components/template/templates-table";
-import { useTemplates } from "@/hooks/use-templates";
+import { usePaginatedTemplates } from "@/hooks/use-paginated-templates";
+import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
@@ -14,9 +15,26 @@ import {
   TEMPLATE_LIST_TOAST_MESSAGES,
 } from "@/app/admin/templates/constants";
 import QueryErrorState from "@/components/admin/query-error-state";
+import AdminListSearch from "@/components/admin/admin-list-search";
+import AdminPagination from "@/components/admin/admin-pagination";
+import { useMemo } from "react";
 
 export default function TemplatePage() {
-  const { data: templates, refetch, isFetching, isError } = useTemplates();
+  const { page, search, debouncedSearch, setPage, setSearch } =
+    usePaginatedSearch();
+  const { data, refetch, isFetching, isError } = usePaginatedTemplates({
+    page,
+    search: debouncedSearch,
+  });
+  const templates = data?.data ?? [];
+  const meta = data?.meta;
+
+  const templatesEmptyMessage = useMemo(() => {
+    if (!meta || meta.total === 0) {
+      return debouncedSearch.trim() ? "No templates match your search." : undefined;
+    }
+    return undefined;
+  }, [meta, debouncedSearch]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -83,7 +101,7 @@ export default function TemplatePage() {
     );
   }
 
-  if (isFetching) {
+  if (isFetching && !data) {
     return <Loader />;
   }
 
@@ -101,9 +119,31 @@ export default function TemplatePage() {
         </Link>
       </div>
 
+      <AdminListSearch
+        value={search}
+        onChange={setSearch}
+        placeholder="Filter by title, description, or worker type"
+        ariaLabel="Filter templates by title, description, or worker type"
+        className="max-w-md"
+      />
       <div className="border rounded-md">
-        <TemplatesTable templates={templates} handleDelete={handleDelete} />
+        <TemplatesTable
+          templates={templates}
+          handleDelete={handleDelete}
+          emptyMessage={templatesEmptyMessage}
+        />
       </div>
+
+      {meta && (
+        <AdminPagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          pageSize={meta.pageSize}
+          total={meta.total}
+          onPageChange={setPage}
+          itemLabel={{ singular: "template", plural: "templates" }}
+        />
+      )}
     </div>
   );
 }

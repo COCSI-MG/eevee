@@ -6,11 +6,13 @@ import {
   Param,
   Delete,
   UseGuards,
-  Patch
+  Patch,
+  Query,
 } from '@nestjs/common';
 import { ClassService } from './class.service';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
 import { ClassResponseDto } from './dto/response/class-response.dto';
+import { ListClassesQueryDto } from './dto/request/list-classes.query.dto';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { instanceToPlain } from 'class-transformer';
@@ -39,6 +41,12 @@ export class ClassController {
   @ApiOkResponse({ type: [ClassResponseDto] })
   findAllByUser(@Param('userId') userId: string) {
     return instanceToPlain(this.classService.findAllByUser(+userId));
+  }
+
+  @Get('paginated')
+  @UseGuards(AdminGuard)
+  findAllPaginated(@Query() query: ListClassesQueryDto) {
+    return this.classService.findAllPaginated(query);
   }
 
   @Get(':id')

@@ -2,6 +2,7 @@
 
 import { AdminAttemptListItem } from "@/app/interface/scheduler-api/admin-attempt";
 import { AdminAttemptExpandedRow } from "@/components/attempts/admin-attempt-expanded-row";
+import AdminPagination from "@/components/admin/admin-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronLeft, ChevronRight, Play, RefreshCcw } from "lucide-react";
+import { Play, RefreshCcw } from "lucide-react";
 import { Fragment } from "react";
 
 interface AdminAttemptsTableProps {
@@ -70,9 +71,6 @@ export default function AdminAttemptsTable({
   onRetry,
   onPageChange,
 }: AdminAttemptsTableProps) {
-  const startIndex = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endIndex = Math.min(page * pageSize, total);
-
   return (
     <div className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4 md:p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -159,32 +157,15 @@ export default function AdminAttemptsTable({
         </Table>
       </div>
 
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-slate-400">
-          Mostrando {startIndex}-{endIndex} de {total} tentativas
-        </p>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="rounded-md border border-slate-700 bg-slate-900 px-3 py-1 text-sm text-slate-100">
-            {page} / {Math.max(1, totalPages)}
-          </span>
-          <Button
-            variant="outline"
-            className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
+      <AdminPagination
+        page={page}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        total={total}
+        onPageChange={onPageChange}
+        itemLabel={{ singular: "tentativa", plural: "tentativas" }}
+        className="mt-5 text-slate-100 [&_p]:text-slate-400 [&_span]:border-slate-700 [&_span]:bg-slate-900"
+      />
     </div>
   );
 }

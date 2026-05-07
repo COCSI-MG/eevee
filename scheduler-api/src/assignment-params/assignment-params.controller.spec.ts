@@ -1,24 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
-import { AssignmentTemplateController } from './assignment_template.controller';
-import { AssignmentTemplateService } from './assignment_template.service';
+import { AssignmentParamsController } from './assignment-params.controller';
+import { AssignmentParamsService } from './assignment-params.service';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 
-describe('AssignmentTemplateController', () => {
-  let controller: AssignmentTemplateController;
+describe('AssignmentParamsController', () => {
+  let controller: AssignmentParamsController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AssignmentTemplateController],
+      controllers: [AssignmentParamsController],
       providers: [
         {
-          provide: AssignmentTemplateService,
+          provide: AssignmentParamsService,
           useValue: {},
         },
       ],
     }).compile();
 
-    controller = module.get<AssignmentTemplateController>(AssignmentTemplateController);
+    controller = module.get<AssignmentParamsController>(AssignmentParamsController);
   });
 
   it('should be defined', () => {
@@ -27,7 +27,7 @@ describe('AssignmentTemplateController', () => {
 
   it('requires admin access', () => {
     expect(
-      Reflect.getMetadata(GUARDS_METADATA, AssignmentTemplateController),
+      Reflect.getMetadata(GUARDS_METADATA, AssignmentParamsController),
     ).toContain(AdminGuard);
   });
 });

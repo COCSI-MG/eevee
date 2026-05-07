@@ -1,5 +1,12 @@
 import { Class, UpsertClass } from "@/app/interface/scheduler-api/class";
+import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
+
+interface ListPaginatedClassesParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
 
 export class ClassesService {
   static async listClasses(): Promise<Class[]> {
@@ -30,5 +37,15 @@ export class ClassesService {
 
   static async remove(id: number): Promise<void> {
     return await axiosClientWithAuth.delete(`/class/${id}`);
+  }
+
+  static async listPaginated(
+    params: ListPaginatedClassesParams,
+  ): Promise<PaginatedResponse<Class>> {
+    const response = await axiosClientWithAuth.get<PaginatedResponse<Class>>(
+      "/class/paginated",
+      { params },
+    );
+    return response.data;
   }
 }

@@ -4,15 +4,33 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import UsersTable from "@/components/users-table";
-import { useUsers } from "@/hooks/use-users";
+import { usePaginatedUsers } from "@/hooks/use-paginated-users";
+import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
 import { UsersService } from "@/app/integration/scheduler-api/user";
 import QueryErrorState from "@/components/admin/query-error-state";
+import AdminListSearch from "@/components/admin/admin-list-search";
+import AdminPagination from "@/components/admin/admin-pagination";
+import { useMemo } from "react";
 
 export default function UsersPage() {
-  const { data: users, refetch, isFetching, isError } = useUsers();
+  const { page, search, debouncedSearch, setPage, setSearch } =
+    usePaginatedSearch();
+  const { data, refetch, isFetching, isError } = usePaginatedUsers({
+    page,
+    search: debouncedSearch,
+  });
+  const users = data?.data ?? [];
+  const meta = data?.meta;
+
+  const usersEmptyMessage = useMemo(() => {
+    if (!meta || meta.total === 0) {
+      return debouncedSearch.trim() ? "No users match your search." : "No users found.";
+    }
+    return "No users found.";
+  }, [meta, debouncedSearch]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -75,7 +93,7 @@ export default function UsersPage() {
     );
   }
 
-  if (isFetching) {
+  if (isFetching && !data) {
     return <Loader />;
   }
 
@@ -91,9 +109,31 @@ export default function UsersPage() {
         </Link>
       </div>
 
+      <AdminListSearch
+        value={search}
+        onChange={setSearch}
+        placeholder="Filter by name or email"
+        ariaLabel="Filter users by name or email"
+        className="max-w-md"
+      />
       <div className="border rounded-md">
-        <UsersTable users={users} handleDelete={handleDelete} />
+        <UsersTable
+          users={users}
+          handleDelete={handleDelete}
+          emptyMessage={usersEmptyMessage}
+        />
       </div>
+
+      {meta && (
+        <AdminPagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          pageSize={meta.pageSize}
+          total={meta.total}
+          onPageChange={setPage}
+          itemLabel={{ singular: "usuário", plural: "usuários" }}
+        />
+      )}
     </div>
   );
 }

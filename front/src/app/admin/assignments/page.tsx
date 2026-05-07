@@ -5,13 +5,31 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AssignmentsTable from "@/components/assignment/assignments-table";
 import { Route } from "@/app/routes";
-import { useAdminAssignments } from "@/hooks/use-assignments";
+import { usePaginatedAssignments } from "@/hooks/use-paginated-assignments";
+import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import Loader from "@/components/loader";
 import QueryErrorState from "@/components/admin/query-error-state";
+import AdminListSearch from "@/components/admin/admin-list-search";
+import AdminPagination from "@/components/admin/admin-pagination";
+import { useMemo } from "react";
 
 export default function AssignmentsAdminPage() {
-  const { data: assignments, isFetching, isError, refetch } =
-    useAdminAssignments();
+  const { page, search, debouncedSearch, setPage, setSearch } =
+    usePaginatedSearch();
+  const { data, isFetching, isError, refetch } = usePaginatedAssignments({
+    page,
+    search: debouncedSearch,
+  });
+
+  const assignments = data?.data ?? [];
+  const meta = data?.meta;
+
+  const assignmentsEmptyMessage = useMemo(() => {
+    if (!meta || meta.total === 0) {
+      return debouncedSearch.trim() ? "No assignments match your search." : "No Assignments found.";
+    }
+    return "No Assignments found.";
+  }, [meta, debouncedSearch]);
 
   if (isError) {
     return (
@@ -40,7 +58,7 @@ export default function AssignmentsAdminPage() {
     );
   }
 
-  if (isFetching) {
+  if (isFetching && !data) {
     return <Loader />;
   }
 
@@ -56,9 +74,30 @@ export default function AssignmentsAdminPage() {
           </Button>
         </Link>
       </div>
+      <AdminListSearch
+        value={search}
+        onChange={setSearch}
+        placeholder="Filter by title, class, or worker type"
+        ariaLabel="Filter assignments by title, class, or worker type"
+        className="max-w-md"
+      />
       <div className="border rounded-md">
-        <AssignmentsTable assignments={assignments} />
+        <AssignmentsTable
+          assignments={assignments}
+          emptyMessage={assignmentsEmptyMessage}
+        />
       </div>
+
+      {meta && (
+        <AdminPagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          pageSize={meta.pageSize}
+          total={meta.total}
+          onPageChange={setPage}
+          itemLabel={{ singular: "assignment", plural: "assignments" }}
+        />
+      )}
     </div>
   );
 }

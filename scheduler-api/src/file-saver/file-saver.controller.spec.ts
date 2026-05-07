@@ -8,7 +8,17 @@ describe('FileSaverController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [FileSaverController],
-      providers: [FileSaverService],
+      providers: [
+        {
+          provide: FileSaverService,
+          useValue: {
+            uploadFile: jest.fn(),
+            findOne: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<FileSaverController>(FileSaverController);

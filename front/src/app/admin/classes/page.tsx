@@ -6,13 +6,31 @@ import { Button } from "@/components/ui/button";
 import { ClassesService } from "@/app/integration/scheduler-api/classes";
 import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
-import { useClasses } from "@/hooks/use-classes";
+import { usePaginatedClasses } from "@/hooks/use-paginated-classes";
+import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import Loader from "@/components/loader";
 import AdminClassesTable from "@/components/classes/admin-classes-table";
 import QueryErrorState from "@/components/admin/query-error-state";
+import AdminListSearch from "@/components/admin/admin-list-search";
+import AdminPagination from "@/components/admin/admin-pagination";
+import { useMemo } from "react";
 
 export default function ClassesPage() {
-  const { data: classes, refetch, isFetching, isError } = useClasses();
+  const { page, search, debouncedSearch, setPage, setSearch } =
+    usePaginatedSearch();
+  const { data, refetch, isFetching, isError } = usePaginatedClasses({
+    page,
+    search: debouncedSearch,
+  });
+  const classes = data?.data ?? [];
+  const meta = data?.meta;
+
+  const classesEmptyMessage = useMemo(() => {
+    if (!meta || meta.total === 0) {
+      return debouncedSearch.trim() ? "No classes match your search." : "No classes found.";
+    }
+    return "No classes found.";
+  }, [meta, debouncedSearch]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -75,7 +93,7 @@ export default function ClassesPage() {
     );
   }
 
-  if (isFetching) {
+  if (isFetching && !data) {
     return <Loader />;
   }
 
@@ -90,9 +108,31 @@ export default function ClassesPage() {
           </Button>
         </Link>
       </div>
+      <AdminListSearch
+        value={search}
+        onChange={setSearch}
+        placeholder="Filter by class name or description"
+        ariaLabel="Filter classes by name or description"
+        className="max-w-md"
+      />
       <div className="border rounded-md">
-        <AdminClassesTable classes={classes} handleDelete={handleDelete} />
+        <AdminClassesTable
+          classes={classes}
+          handleDelete={handleDelete}
+          emptyMessage={classesEmptyMessage}
+        />
       </div>
+
+      {meta && (
+        <AdminPagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          pageSize={meta.pageSize}
+          total={meta.total}
+          onPageChange={setPage}
+          itemLabel={{ singular: "turma", plural: "turmas" }}
+        />
+      )}
     </div>
   );
 }

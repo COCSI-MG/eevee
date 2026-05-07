@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AssignmentTemplateService } from './assignment_template.service';
-import { AssignmentTemplateController } from './assignment_template.controller';
+import { AssignmentTemplateService } from './assignment-template.service';
+import { AssignmentTemplateController } from './assignment-template.controller';
 
 @Module({
   controllers: [AssignmentTemplateController],

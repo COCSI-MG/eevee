@@ -3,6 +3,13 @@ import {
   Assignment,
   CreateAssignmentRequest,
 } from "@/app/interface/scheduler-api/assignment";
+import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
+
+interface ListPaginatedAssignmentsParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
 
 export class AssignmentService {
   static async GetMyAssignments() {
@@ -48,5 +55,14 @@ export class AssignmentService {
       `/assignment/class/${classId}`
     );
     return <Assignment[]>response.data;
+  }
+
+  static async listPaginated(params: ListPaginatedAssignmentsParams) {
+    const response = await axiosClientWithAuth.get<
+      PaginatedResponse<Assignment>
+    >("/assignment/paginated", {
+      params,
+    });
+    return response.data;
   }
 }

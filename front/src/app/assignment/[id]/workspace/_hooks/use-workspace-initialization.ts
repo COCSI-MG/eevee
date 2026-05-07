@@ -28,6 +28,7 @@ export function useWorkspaceInitialization({
   selectItem,
 }: UseWorkspaceInitializationParams) {
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+
   const workspaceAssignment = React.useMemo(
     () =>
       ({
@@ -43,6 +44,7 @@ export function useWorkspaceInitialization({
       assignment.workerType,
     ],
   );
+
   const initializationKey = React.useMemo(() => {
     if (!workspaceAssignment.id || !userId) {
       return null;
@@ -50,6 +52,7 @@ export function useWorkspaceInitialization({
 
     return `${workspaceAssignment.id}:${userId}`;
   }, [userId, workspaceAssignment.id]);
+
   const initializedWorkspaceKeyRef = React.useRef<string | null>(null);
 
   const initializeWorkspace = React.useCallback(async () => {
@@ -63,10 +66,21 @@ export function useWorkspaceInitialization({
 
     initializedWorkspaceKeyRef.current = initializationKey;
 
-    let fileTree = await getFileTree(workspaceAssignment.id, userId);
+    let fileTree: FileNode | null = null;
     let shouldPersistInitialState = false;
 
-    if (!fileTree || shouldRebuildWorkspaceTree(workspaceAssignment, fileTree)) {
+    try {
+      fileTree = await getFileTree(workspaceAssignment.id, userId);
+    } catch (error) {
+      initializedWorkspaceKeyRef.current = null;
+      console.error("Error loading workspace tree from Filestash:", error);
+      return;
+    }
+
+    if (
+      !fileTree ||
+      shouldRebuildWorkspaceTree(workspaceAssignment, fileTree)
+    ) {
       fileTree = createInitialWorkspaceTree(workspaceAssignment);
       shouldPersistInitialState = true;
     }
