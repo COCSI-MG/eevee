@@ -144,8 +144,8 @@ export default function AssignmentFormReview({
                   <Layers className="w-4 h-4" />
                   Código Boilerplate
                 </h4>
-                <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
-                  <pre className="text-green-400 text-sm font-mono whitespace-pre-wrap">
+                <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-auto">
+                  <pre className="text-green-400 text-sm font-mono whitespace-pre">
                     {values.boilerplate}
                   </pre>
                 </div>
@@ -158,8 +158,8 @@ export default function AssignmentFormReview({
                     <Database className="w-4 h-4" />
                     Script SQL de Inicialização
                   </h4>
-                  <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-y-auto">
-                    <pre className="text-blue-400 text-sm font-mono whitespace-pre-wrap">
+                  <div className="bg-slate-900 border border-slate-600 rounded-lg p-4 max-h-[300px] overflow-auto">
+                    <pre className="text-blue-400 text-sm font-mono whitespace-pre">
                       {values.initSqlScript}
                     </pre>
                   </div>
