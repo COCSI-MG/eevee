@@ -51,7 +51,7 @@ export default function TemplateConfigDialog({
         </DialogHeader>
 
         {configTemplateDialog && (
-          <div className="flex-1 overflow-y-auto px-1">
+          <div className="flex-1 overflow-auto px-1 min-w-0">
             <div className="space-y-6 pb-6">
               <p className="text-slate-300">
                 {configTemplateDialog.description}
@@ -69,7 +69,7 @@ export default function TemplateConfigDialog({
                       <span className="text-red-400 ml-1">*</span>
                     </Label>
                     <div className="relative">
-                      <div className="border border-slate-600 rounded-md overflow-hidden">
+                      <div className="border border-slate-600 rounded-md overflow-auto min-w-0">
                         <Editor
                           value={paramsValues[param.id] || ""}
                           onChange={(value) => {
