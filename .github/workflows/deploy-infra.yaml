@@ -44,6 +44,7 @@ jobs:
           kubectl create secret generic eevee-secrets \
             --from-literal=DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
             --from-literal=JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+            --from-literal=GROQ_API_KEY='${{ secrets.GROQ_API_KEY }}' \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Apply image pull secret

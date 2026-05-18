@@ -12,6 +12,7 @@ import { SchedulingWorkerPreparationService } from './scheduling-worker-preparat
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SchedulingPreviewRun } from './entities/scheduling-preview-run.entity';
 import { RequestContextModule } from 'src/request-context/request-context.module';
+import { AiReportModule } from 'src/ai-report/ai-report.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RequestContextModule } from 'src/request-context/request-context.module
     BullMQModule,
     RequestContextModule,
     TypeOrmModule.forFeature([SchedulingPreviewRun]),
+    AiReportModule,
   ],
   controllers: [SchedulingController],
   providers: [

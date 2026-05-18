@@ -77,7 +77,8 @@ export function parseCypressLogResultFromTestEnvelope(
   log: string,
 ): WorkerResponse {
   const isolatedTestOutput = extractTestOutput(log);
-  return parseCypressLogResult(isolatedTestOutput);
+  const { passes, failures } = parseCypressLogResult(isolatedTestOutput);
+  return { passes, failures, completeTrace: log };
 }
 
 export interface ParsedWorkerResult extends WorkerResponse {

@@ -29,6 +29,7 @@ export class SchedulingAttemptTransitionService {
     report: string;
     fails: number;
     passes: number;
+    refinedReport?: string;
   }) {
     await this.attemptService.update({
       id: params.attemptId,
@@ -37,6 +38,7 @@ export class SchedulingAttemptTransitionService {
       report: params.report,
       fails: params.fails,
       passes: params.passes,
+      refinedReport: params.refinedReport,
       status: AttemptStatus.COMPLETED,
     });
   }
