@@ -22,3 +22,7 @@ down:
 	@echo Stopping all services
 	minikube stop
 	cd eevee-infrastructure && docker compose down
+
+up-queue-worker:
+	@echo Starting queue worker 
+	cd scheduler-api && npm run start:worker:dev
