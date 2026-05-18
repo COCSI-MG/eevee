@@ -3,6 +3,7 @@ import { Editor } from '@monaco-editor/react';
 import { Separator } from '../ui/separator';
 import { Code } from 'lucide-react';
 import { Template } from '@/app/interface/scheduler-api/template';
+import { readOnlyMonacoOptions } from '@/lib/monaco-options';
 
 interface TemplatePreviewDialogProps {
   template: Template | null;
@@ -15,7 +16,7 @@ export default function TemplatePreviewDialog({ template, open, onOpenChange }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-800 border-slate-700 w-[90vw] max-w-3xl max-h-[80vh] overflow-y-auto mx-4">
+      <DialogContent className="bg-slate-800 border-slate-700 w-[90vw] max-w-3xl max-h-[80vh] overflow-auto mx-4">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             <Code className="w-5 h-5" />
@@ -27,14 +28,14 @@ export default function TemplatePreviewDialog({ template, open, onOpenChange }: 
           <Separator className="bg-slate-600" />
           <div>
             <h4 className="text-sm font-medium text-slate-300 mb-2">Conteúdo do Template</h4>
-            <div className="bg-slate-900 border border-slate-600 rounded-md overflow-hidden">
+            <div className="bg-slate-900 border border-slate-600 rounded-md overflow-auto min-w-0">
               <Editor
                 path={`template-${template.id}.ts`}
                 value={template.content}
                 language="typescript"
                 theme="vs-dark"
                 height="300px"
-                options={{ readOnly: true, minimap: { enabled: false }, scrollBeyondLastLine: false }}
+                options={readOnlyMonacoOptions}
               />
             </div>
           </div>

@@ -8,5 +8,7 @@ export interface AssignmentAttempt {
   passes: number;
   fails: number;
   report: string;
+  refinedReport?: string;
   status: string;
+  createdAt?: string;
 }

@@ -26,6 +26,7 @@ import {
   TEMPLATE_TABLE_TEXT,
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
+import { readOnlyMonacoOptions } from "@/lib/monaco-options";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -111,7 +112,7 @@ export default function TemplatesTable({
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="bg-slate-900 border borde-slate-600 rounded-md p4 max-h-[50vh] overflow-y-auto">
+                    <div className="bg-slate-900 border border-slate-600 rounded-md p-4 max-h-[50vh] overflow-auto min-w-0">
                       <Editor
                         path={`template-${template.id}.ts`}
                         defaultLanguage="typescript"
@@ -121,9 +122,8 @@ export default function TemplatesTable({
                         height={"420px"}
                         saveViewState={false}
                         options={{
-                          readOnly: true,
+                          ...readOnlyMonacoOptions,
                           hover: { enabled: false },
-                          minimap: { enabled: false },
                           links: false,
                         }}
                       />

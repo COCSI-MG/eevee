@@ -14,6 +14,7 @@ import { UpdateAssignmentUserSuspensionDto } from './dto/update-assignment-user-
 import { ClsService } from 'nestjs-cls';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RemoveAssignmentUserSuspensionDto } from './dto/remove-assignment-user-suspension.dto';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 
 @Controller('assignment-user-suspension')
 @UseGuards(JwtAuthGuard)
@@ -58,6 +59,7 @@ export class AssignmentUserSuspensionController {
   }
 
   @Post('remove-suspension')
+  @UseGuards(AdminGuard)
   removeSuspensionFromAssignment(
     @Body() removeAssignmentUserSuspensionDto: RemoveAssignmentUserSuspensionDto,
   ) {
