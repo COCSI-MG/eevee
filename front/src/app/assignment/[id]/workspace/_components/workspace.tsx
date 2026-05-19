@@ -10,6 +10,7 @@ import { useActiveWorkspaceFile } from "../_hooks/use-active-workspace-file";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
+import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -28,6 +29,7 @@ export default function Workspace({
 }: WorkspaceProps) {
   const { replaceFileTree, selectedItem, selectItem } = useWorkspaceContext();
   const userId = user.userId;
+  const { explorerWidth, startResize } = useWorskpaceResizing();
 
   const {
     activeFile,
@@ -76,10 +78,23 @@ export default function Workspace({
 
   return (
     <div className="flex flex-1 min-h-0">
-      <WorkspaceExplorer
-        onFileSelect={handleFileSelect}
-        onTreeChange={handleTreeChange}
-      />
+      <div
+        className="relative shrink-0 min-w-[150px] max-w-[400px] bg-gray-800 border-r border-gray-700 h-full min-h-0"
+        style={{ width: explorerWidth }}
+      >
+        <WorkspaceExplorer
+          onFileSelect={handleFileSelect}
+          onTreeChange={handleTreeChange}
+        />
+
+        <div
+          role="separator"
+          aria-label="Resize explorer"
+          aria-orientation="vertical"
+          className="absolute right-0 top-0 h-full w-1 cursor-ew-resize bg-transparent transition-colors hover:bg-blue-500/40"
+          onMouseDown={(event) => startResize("explorer", event)}
+        />
+      </div>
 
       <div className="flex-1 flex flex-col">
         <WorkspaceCodeEditor

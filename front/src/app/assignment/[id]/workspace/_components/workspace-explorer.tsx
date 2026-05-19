@@ -66,7 +66,7 @@ export default function WorkspaceExplorer({
   });
 
   return (
-    <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+    <div className="w-full bg-gray-800 h-full min-h-0 flex flex-col">
       <div className="px-3 py-2 border-b border-gray-700">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">

@@ -414,7 +414,7 @@ export class AssignmentService {
 
     const response = await query.getOne();
     if (!response) {
-      return null;
+      throw new NotFoundException('Assignment not found');
     }
 
     return await this.attachBoilerplate(response);

@@ -91,6 +91,7 @@ export default function Page() {
   } = useWorkspacePreview({
     assignmentId: assignmentData?.id,
     userId,
+    workerType: assignmentData?.workerType,
   });
 
   const { isSaving, saveFileInServer } = useWorkspaceSaveFile({

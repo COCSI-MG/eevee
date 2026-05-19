@@ -2,7 +2,6 @@
 
 import { getFileTree } from "@/app/integration/filestash";
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
-import { useWorkspaceContext } from "@/app/assignment/[id]/workspace/_providers/workspace-provider";
 import {
   buildSchedulingPayloadFromFileTree,
   createWorkspaceStorageKey,
@@ -10,6 +9,7 @@ import {
   isActivePreviewRunStatus,
   mapPreviewRunToResponse,
 } from "@/app/assignment/[id]/workspace/_utils/workspace-scheduling.utils";
+import { runWorkspacePreflight } from "@/app/assignment/[id]/workspace/_utils/workspace-preflight.utils";
 import { toast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import React from "react";
@@ -17,14 +17,15 @@ import React from "react";
 interface UseWorkspacePreviewParams {
   assignmentId?: number;
   userId?: number;
+  workerType?: string;
 }
 
 export function useWorkspacePreview({
   assignmentId,
   userId,
+  workerType,
 }: UseWorkspacePreviewParams) {
   const CANCELLED_FEEDBACK_DELAY_MS = 1200;
-  const { selectedItem } = useWorkspaceContext();
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [previewRunId, setPreviewRunId] = React.useState<number | null>(null);
   const [showCancelledFeedback, setShowCancelledFeedback] =
@@ -103,7 +104,7 @@ export function useWorkspacePreview({
   const { mutate: runPreview, isPending: isStartingPreviewRun } = useMutation({
     mutationKey: ["run-assignment-preview"],
     mutationFn: async () => {
-      if (!assignmentId || !userId || !selectedItem.path) {
+      if (!assignmentId || !userId) {
         throw new Error("Missing required data");
       }
 
@@ -113,15 +114,31 @@ export function useWorkspacePreview({
       }
 
       const payload = buildSchedulingPayloadFromFileTree(assignmentId, fileTree);
-      return SchedulingService.createPreviewRun(payload);
-    },
-    onMutate: () => {
+
+      const preflightResult = await runWorkspacePreflight({
+        workerType,
+        files: payload.files,
+      });
+
+      if (!preflightResult.ok) {
+        throw new Error(
+          [preflightResult.message, ...(preflightResult.details ?? [])]
+            .filter(Boolean)
+            .join("\n"),
+        );
+      }
+
       setPreviewOpen(true);
+      return SchedulingService.createPreviewRun(payload);
     },
     onError: (error) => {
       console.error("Error starting preview run", error);
       toast({
-        title: "Ocorreu um erro ao iniciar o run",
+        title: "Falha na validação antes do run",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Ocorreu um erro ao iniciar o run",
         variant: "destructive",
       });
     },

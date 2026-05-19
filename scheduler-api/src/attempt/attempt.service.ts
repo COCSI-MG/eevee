@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateAttemptDto } from './dto/create-applicant-attempt.dto';
-import { Brackets, LessThan, Repository } from 'typeorm';
+import { Brackets, In, LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Attempt } from './entities/attempt.entity';
 import { ClsService } from 'nestjs-cls';
@@ -301,9 +301,14 @@ export class AttemptService {
     this.logger.log('Checking for zombie attempts...');
 
     try {
+      const staleStatuses = [
+        AttemptStatus.PENDING,
+        AttemptStatus.ENQUEUED,
+        AttemptStatus.RUNNING,
+      ];
       const attempts = await this.attemptRepository.find({
         where: {
-          status: AttemptStatus.RUNNING,
+          status: In(staleStatuses),
           createdAt: LessThan(new Date(Date.now() - 10 * 60 * 1000)),
         },
         relations: ['assignment'],
@@ -312,6 +317,12 @@ export class AttemptService {
         this.logger.log('No zombie attempts found.');
         return;
       }
+
+      this.logger.warn(
+        `Marking stale attempts as failed: ${attempts
+          .map((attempt) => `${attempt.id}:${attempt.status}`)
+          .join(', ')}`,
+      );
 
       await this.attemptRepository
         .createQueryBuilder()
