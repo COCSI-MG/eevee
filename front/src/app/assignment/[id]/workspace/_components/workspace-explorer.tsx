@@ -303,7 +303,10 @@ export default function WorkspaceExplorer({
         </Dialog>
       </div>
 
-      <div className="flex-1 overflow-y-auto" onContextMenu={handleBackgroundContextMenu}>
+      <div
+        className="flex-1 overflow-y-auto"
+        onContextMenu={handleBackgroundContextMenu}
+      >
         <WorkspaceFileTree
           treeData={treeData}
           onFileSelect={onFileSelect}
