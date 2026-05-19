@@ -315,8 +315,14 @@ export class AssignmentService {
       );
     }
 
-    const [rows, total] = await qb.clone().skip(skip).take(pageSize).getManyAndCount();
-    const data = await Promise.all(rows.map((assignment) => this.attachBoilerplate(assignment)));
+    const [rows, total] = await qb
+      .clone()
+      .skip(skip)
+      .take(pageSize)
+      .getManyAndCount();
+    const data = await Promise.all(
+      rows.map((assignment) => this.attachBoilerplate(assignment)),
+    );
 
     return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }

@@ -11,6 +11,10 @@ import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
+import { FileNode, SelectedItem } from "@/types/shared";
+import { getFileLanguage } from "../_utils/workspace.utils";
+import { useSaveFileTree } from "@/hooks/use-filestash";
+import { Button } from "@/components/ui/button";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -27,9 +31,14 @@ export default function Workspace({
   onResetWorkspaceReady,
   onResettingChange,
 }: WorkspaceProps) {
-  const { replaceFileTree, selectedItem, selectItem } = useWorkspaceContext();
+  const { replaceFileTree, selectedItem, selectItem, fileTreeData } =
+    useWorkspaceContext();
   const userId = user.userId;
   const { explorerWidth, startResize } = useWorskpaceResizing();
+  const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+  const [isSplitView, setIsSplitView] = React.useState(false);
+  const [secondarySelectedItem, setSecondarySelectedItem] =
+    React.useState<SelectedItem | null>(null);
 
   const {
     activeFile,
@@ -47,6 +56,140 @@ export default function Workspace({
     assignment,
     user,
   });
+
+  const findNodeByPath = React.useCallback(
+    (node: FileNode, filePath: string): FileNode | null => {
+      if (node.path === filePath) {
+        return node;
+      }
+
+      if (!node.children?.length) {
+        return null;
+      }
+
+      for (const child of node.children) {
+        const found = findNodeByPath(child, filePath);
+        if (found) {
+          return found;
+        }
+      }
+
+      return null;
+    },
+    [],
+  );
+
+  const buildUpdatedTree = React.useCallback(
+    (node: FileNode, filePath: string, content: string): FileNode => {
+      if (node.path === filePath && node.isFile) {
+        return {
+          ...node,
+          content,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+
+      if (!node.children?.length) {
+        return node;
+      }
+
+      const updatedChildren = node.children.map((child) =>
+        buildUpdatedTree(child, filePath, content),
+      );
+      const hasChanges = updatedChildren.some(
+        (child, index) => child !== node.children![index],
+      );
+
+      if (!hasChanges) {
+        return node;
+      }
+
+      return {
+        ...node,
+        children: updatedChildren,
+      };
+    },
+    [],
+  );
+
+  const secondaryFile = React.useMemo(() => {
+    if (!secondarySelectedItem?.path || secondarySelectedItem.type !== "file") {
+      return null;
+    }
+
+    const fileNode = findNodeByPath(fileTreeData, secondarySelectedItem.path);
+    if (!fileNode || !fileNode.isFile) {
+      return null;
+    }
+
+    return {
+      name: fileNode.id,
+      path: fileNode.path,
+      language: getFileLanguage(fileNode.id),
+      value: fileNode.content || "",
+    };
+  }, [fileTreeData, findNodeByPath, secondarySelectedItem]);
+
+  const handleSecondaryEditorChange = React.useCallback(
+    (value: string | undefined) => {
+      if (value === undefined || !secondaryFile?.path) {
+        return;
+      }
+
+      const updatedTree = buildUpdatedTree(
+        fileTreeData,
+        secondaryFile.path,
+        value,
+      );
+      if (updatedTree === fileTreeData) {
+        return;
+      }
+
+      replaceFileTree(updatedTree);
+
+      void saveFileTreeAsync({
+        assignmentId: assignment.id,
+        userId: user.userId,
+        fileTree: updatedTree,
+      });
+    },
+    [
+      assignment.id,
+      buildUpdatedTree,
+      fileTreeData,
+      replaceFileTree,
+      saveFileTreeAsync,
+      secondaryFile?.path,
+      user.userId,
+    ],
+  );
+
+  const handleOpenInSecondary = React.useCallback((node: FileNode) => {
+    if (!node.isFile) {
+      return;
+    }
+
+    setSecondarySelectedItem({
+      id: node.id,
+      type: "file",
+      path: node.path,
+    });
+    setIsSplitView(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!secondarySelectedItem?.path) {
+      return;
+    }
+
+    const exists = Boolean(
+      findNodeByPath(fileTreeData, secondarySelectedItem.path),
+    );
+    if (!exists) {
+      setSecondarySelectedItem(null);
+      setIsSplitView(false);
+    }
+  }, [fileTreeData, findNodeByPath, secondarySelectedItem]);
 
   const { isResetting, resetWorkspace } = useWorkspaceReset({
     assignment,
@@ -85,6 +228,7 @@ export default function Workspace({
         <WorkspaceExplorer
           onFileSelect={handleFileSelect}
           onTreeChange={handleTreeChange}
+          onOpenInSecondary={handleOpenInSecondary}
         />
 
         <div
@@ -96,11 +240,48 @@ export default function Workspace({
         />
       </div>
 
-      <div className="flex-1 flex flex-col">
-        <WorkspaceCodeEditor
-          file={activeFile}
-          onEditorChange={handleEditorChange}
-        />
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex items-center justify-end gap-2 border-b border-gray-800 px-2 py-1">
+          {isSplitView && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSecondarySelectedItem(null)}
+              disabled={!secondarySelectedItem}
+            >
+              Close page 2
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsSplitView((current) => !current)}
+          >
+            {isSplitView ? "Single page" : "Two pages"}
+          </Button>
+        </div>
+
+        {isSplitView ? (
+          <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-gray-800">
+            <div className="min-w-0 min-h-0 flex flex-col">
+              <WorkspaceCodeEditor
+                file={activeFile}
+                onEditorChange={handleEditorChange}
+              />
+            </div>
+            <div className="min-w-0 min-h-0 flex flex-col">
+              <WorkspaceCodeEditor
+                file={secondaryFile}
+                onEditorChange={handleSecondaryEditorChange}
+              />
+            </div>
+          </div>
+        ) : (
+          <WorkspaceCodeEditor
+            file={activeFile}
+            onEditorChange={handleEditorChange}
+          />
+        )}
       </div>
     </div>
   );

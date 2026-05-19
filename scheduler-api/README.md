@@ -28,6 +28,7 @@ $ npm run start:worker:prod
 ```
 
 When running locally, keep both processes alive in separate terminals:
+
 1. API server (`start:dev`)
 2. Queue worker (`start:worker:dev`)
 

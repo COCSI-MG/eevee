@@ -79,13 +79,13 @@ export function WorkspaceRunPreviewDialog({
               ? "Cancelling the preview run."
               : cancelled
                 ? "The preview run was cancelled."
-              : loading
-                ? "Executing tests synchronously. Closing this dialog cancels the active run."
-              : hasResult
-                ? "The preview finished successfully."
-                : showError
-                  ? "The preview failed."
-                  : "Waiting for preview data."}
+                : loading
+                  ? "Executing tests synchronously. Closing this dialog cancels the active run."
+                  : hasResult
+                    ? "The preview finished successfully."
+                    : showError
+                      ? "The preview failed."
+                      : "Waiting for preview data."}
           </DialogDescription>
         </DialogHeader>
 
@@ -108,7 +108,7 @@ export function WorkspaceRunPreviewDialog({
                 ? "Waiting for the backend to stop the job."
                 : cancelled
                   ? "Returning to the editor."
-                : "Press cancel to stop the current run before returning to the editor."}
+                  : "Press cancel to stop the current run before returning to the editor."}
             </p>
           </div>
         )}

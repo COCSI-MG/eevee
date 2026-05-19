@@ -17,7 +17,7 @@ export class AttemptService {
     @InjectRepository(Attempt)
     private readonly attemptRepository: Repository<Attempt>,
     private readonly clsService: ClsService,
-  ) { }
+  ) {}
 
   async isUserAbleToAttemptAssignment(assignmentId: number): Promise<boolean> {
     const attempts = await this.findAllByAssignmentAndCurrentUser(assignmentId);
@@ -90,7 +90,7 @@ export class AttemptService {
       .leftJoin('attempt.assignment', 'assignment')
       .where('attempt.assignmentId = :assignmentId', {
         assignmentId: query.assignmentId,
-      })
+      });
 
     if (query.userSearch?.trim()) {
       const userSearch = query.userSearch.trim();
@@ -145,7 +145,9 @@ export class AttemptService {
         row.attempt_assignmentid ?? row.attempt_assignmentId,
       ),
       status: row.attempt_status,
-      isAcceptable: Boolean(row.attempt_isacceptable ?? row.attempt_isAcceptable),
+      isAcceptable: Boolean(
+        row.attempt_isacceptable ?? row.attempt_isAcceptable,
+      ),
       score: Number(row.attempt_score),
       passes: Number(row.attempt_passes),
       fails: Number(row.attempt_fails),
@@ -236,8 +238,7 @@ export class AttemptService {
             id: Number(row.assignment_id),
             title: row.assignment_title,
             description: row.assignment_description,
-            workerType:
-              row.assignment_workertype ?? row.assignment_workerType,
+            workerType: row.assignment_workertype ?? row.assignment_workerType,
           },
         };
       });
@@ -246,9 +247,7 @@ export class AttemptService {
   findAllByAssignmentAndCurrentUser(assignmentId: number) {
     const user = this.clsService.get('user');
     return this.attemptRepository.find({
-      relations: [
-        "assignment"
-      ],
+      relations: ['assignment'],
       where: {
         userId: user.userId,
         assignmentId,

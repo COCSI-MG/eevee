@@ -113,7 +113,10 @@ export function useWorkspacePreview({
         throw new Error("File tree not found");
       }
 
-      const payload = buildSchedulingPayloadFromFileTree(assignmentId, fileTree);
+      const payload = buildSchedulingPayloadFromFileTree(
+        assignmentId,
+        fileTree,
+      );
 
       const preflightResult = await runWorkspacePreflight({
         workerType,
@@ -151,13 +154,12 @@ export function useWorkspacePreview({
     },
   });
 
-  const {
-    mutateAsync: cancelPreviewRun,
-    isPending: isCancellingPreviewRun,
-  } = useMutation({
-    mutationKey: ["cancel-preview-run"],
-    mutationFn: async (runId: number) => SchedulingService.cancelPreviewRun(runId),
-  });
+  const { mutateAsync: cancelPreviewRun, isPending: isCancellingPreviewRun } =
+    useMutation({
+      mutationKey: ["cancel-preview-run"],
+      mutationFn: async (runId: number) =>
+        SchedulingService.cancelPreviewRun(runId),
+    });
 
   const previewResult = React.useMemo(
     () => mapPreviewRunToResponse(previewRun),
