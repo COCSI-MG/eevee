@@ -1,0 +1,186 @@
+# -----------------------------------------------------------------------------
+# Default values for the EEVEE umbrella chart.
+# Override these via `-f values.local.yaml` or `--set`.
+# -----------------------------------------------------------------------------
+
+# Namespace handled by the release (`helm install -n <ns>`). Nothing to set here.
+
+# Pin every pod (including spawned worker Jobs) to a single node by default.
+# Leave the map empty ({}) to schedule freely across the cluster.
+nodeSelector:
+  kubernetes.io/hostname: whx-rn
+
+# Image registry pull secret (e.g. for GHCR). The secret MUST be created out-of-band
+# (see README) — Helm only references it by name and never manages its lifecycle.
+imagePullSecret:
+  name: ghcr-auth
+  create: false
+  dockerconfigjson: ""
+
+# Common registry / org prefix for all in-house images. Overridable per-component.
+image:
+  registry: ghcr.io
+  org: cocsi-mg
+  tag: develop
+  pullPolicy: IfNotPresent
+
+# -----------------------------------------------------------------------------
+# Shared configuration (non-sensitive). Becomes the `eevee-config` ConfigMap.
+# -----------------------------------------------------------------------------
+config:
+  DB_HOST: postgres-service
+  DB_PORT: "5432"
+  DB_USERNAME: postgres
+  DB_DATABASE: eevee_db
+  REDIS_HOST: redis-service
+  REDIS_PORT: "6379"
+
+# -----------------------------------------------------------------------------
+# Sensitive values. The Secret is expected to already exist in the namespace —
+# Helm only references it by name (see README for creation steps). Set
+# `create: true` only for local/dev environments.
+# -----------------------------------------------------------------------------
+secrets:
+  create: false
+  name: eevee-secrets
+  # Only consumed when create=true. Keep blank/placeholders in committed values.
+  data:
+    DB_PASSWORD: ""
+    JWT_SECRET: ""
+    GROQ_API_KEY: ""
+
+# -----------------------------------------------------------------------------
+# Postgres
+# -----------------------------------------------------------------------------
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  storage: 20Gi
+  storageClass: ""   # leave blank to use the cluster default
+  resources:
+    requests:
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+# -----------------------------------------------------------------------------
+# Redis
+# -----------------------------------------------------------------------------
+redis:
+  enabled: true
+  image: redis:7-alpine
+  resources:
+    requests:
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+# -----------------------------------------------------------------------------
+# Scheduler API (NestJS)
+# -----------------------------------------------------------------------------
+schedulerApi:
+  enabled: true
+  image:
+    repository: ghcr.io/cocsi-mg/scheduler-api
+    tag: develop
+    pullPolicy: IfNotPresent
+  replicas: 1
+  containerPort: 3000
+  resources:
+    requests:
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+
+# -----------------------------------------------------------------------------
+# Queue Worker (same image as scheduler-api, different args)
+# -----------------------------------------------------------------------------
+queueWorker:
+  enabled: true
+  image:
+    repository: ghcr.io/cocsi-mg/scheduler-api
+    tag: develop
+    pullPolicy: IfNotPresent
+  replicas: 1
+  args: ["start:worker:prod"]
+  resources:
+    requests:
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+  rbac:
+    # Creating Role/RoleBinding requires cluster-level RBAC permissions which
+    # ns-admin lacks. Reuse the pre-existing `ns-admin` SA via
+    # `serviceAccount.name` below instead.
+    create: false
+
+# ServiceAccount used by scheduler-api and queue-worker. The default reuses
+# the `ns-admin` SA that already exists in the eevee-cefetrj namespace and
+# has Jobs/Pods permissions. Set name="" to use the pod's default SA.
+serviceAccount:
+  name: ns-admin
+
+# -----------------------------------------------------------------------------
+# Worker job images (used by scheduler-api / queue-worker at runtime to spawn
+# Kubernetes Jobs). Each value is consumed as an env var by both deployments.
+# -----------------------------------------------------------------------------
+workerImages:
+  bootstrap: ghcr.io/cocsi-mg/eevee-worker-bootstrap:develop
+  nodeDefault: ghcr.io/cocsi-mg/worker-node-default-img:develop
+  nodeNestjs: ghcr.io/cocsi-mg/worker-nestjs-default-img:develop
+  nodeGrpcjs: ghcr.io/cocsi-mg/worker-node-grpcjs-img:develop
+  nodeNextjsCypress: ghcr.io/cocsi-mg/worker-node-nextjs-cypress-img:develop
+  nodeReactjsCypress: ghcr.io/cocsi-mg/worker-react-cypress-img:develop
+  nodeDefaultPostgresql: ghcr.io/cocsi-mg/worker-node-default-img:develop
+  nodeNestjsPostgresql: ghcr.io/cocsi-mg/worker-nestjs-default-img:develop
+
+# -----------------------------------------------------------------------------
+# Frontend (Next.js)
+# -----------------------------------------------------------------------------
+front:
+  enabled: true
+  image:
+    repository: ghcr.io/cocsi-mg/front
+    tag: develop
+    pullPolicy: IfNotPresent
+  replicas: 1
+  containerPort: 3000
+  # Public API URL inlined into the Next.js client bundle at container start.
+  # For port-forward mode this is what the browser uses to reach scheduler-api.
+  apiUrl: "http://localhost:3001"
+  appEnv: "production"
+  resources:
+    requests:
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+
+# -----------------------------------------------------------------------------
+# Ingress (nginx). Disabled by default — use `kubectl port-forward` while no
+# public DNS / external IP is available. Enable + configure hosts when ready.
+# -----------------------------------------------------------------------------
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    api: api.eeveecodelab.local
+    front: frontend.eeveecodelab.local
+    frontWww: ""
+  tls:
+    enabled: false
+    secretName: eevee-tls-secret
+
+# Optional namespace-scoped cert-manager Issuer (ClusterIssuer requires cluster
+# permissions which are usually not available — keep using Issuer per-namespace).
+certManager:
+  issuer:
+    enabled: false
+    name: letsencrypt-production
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: change-me@example.com
+    solver: http01   # http01 | cloudflare
+    cloudflare:
+      email: change-me@example.com
+      apiTokenSecretName: cloudflare-api-token-secret
