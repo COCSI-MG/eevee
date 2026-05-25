@@ -36,6 +36,10 @@ export class WorkerPayloadBuilderService {
           testPath,
         });
 
+        if (!normalizedContent.trim()) {
+          return '';
+        }
+
         testFiles.push({
           templateId: templateRelation.template.id,
           type: workerType,
@@ -46,9 +50,13 @@ export class WorkerPayloadBuilderService {
       }),
     );
 
+    const nonEmptyTestFilesContent = testFilesContent.filter((content) =>
+      content.trim(),
+    );
+
     return {
       ...baseWorkerData,
-      testFilesContent,
+      testFilesContent: nonEmptyTestFilesContent,
       testFiles,
       dependencies,
       templateVariablesModuleContent:

@@ -35,7 +35,7 @@ export function WorkspaceRunPreviewDialog({
 }: WorkspaceRunPreviewDialogProps) {
   const hasResult = Boolean(result);
   const showError = Boolean(error);
-  const isBusy = loading || cancelling || cancelled;
+  const isBusy = loading || cancelling;
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
@@ -60,7 +60,7 @@ export function WorkspaceRunPreviewDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="max-w-3xl border-slate-700 bg-slate-950 text-slate-100"
+        className="w-[min(94vw,56rem)] max-w-[56rem] max-h-[90vh] overflow-hidden border-slate-700 bg-slate-950 text-slate-100"
         onEscapeKeyDown={(event) => {
           if (isBusy) {
             event.preventDefault();
@@ -79,13 +79,13 @@ export function WorkspaceRunPreviewDialog({
               ? "Cancelling the preview run."
               : cancelled
                 ? "The preview run was cancelled."
-              : loading
-                ? "Executing tests synchronously. Closing this dialog cancels the active run."
-              : hasResult
-                ? "The preview finished successfully."
-                : showError
-                  ? "The preview failed."
-                  : "Waiting for preview data."}
+                : loading
+                  ? "Executing tests synchronously. Closing this dialog cancels the active run."
+                  : hasResult
+                    ? "The preview finished successfully."
+                    : showError
+                      ? "The preview failed."
+                      : "Waiting for preview data."}
           </DialogDescription>
         </DialogHeader>
 
@@ -108,7 +108,7 @@ export function WorkspaceRunPreviewDialog({
                 ? "Waiting for the backend to stop the job."
                 : cancelled
                   ? "Returning to the editor."
-                : "Press cancel to stop the current run before returning to the editor."}
+                  : "Press cancel to stop the current run before returning to the editor."}
             </p>
           </div>
         )}
@@ -124,7 +124,7 @@ export function WorkspaceRunPreviewDialog({
         )}
 
         {!loading && hasResult && result && (
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             <div className="flex flex-wrap items-center gap-3">
               <Badge
                 className={
@@ -169,8 +169,8 @@ export function WorkspaceRunPreviewDialog({
 
             <div className="space-y-2">
               <p className="text-sm font-medium text-slate-200">Report</p>
-              <ScrollArea className="h-72 rounded-lg border border-slate-800 bg-slate-900">
-                <pre className="whitespace-pre p-4 text-xs leading-5 text-slate-300">
+              <ScrollArea className="h-72 w-full max-w-full rounded-lg border border-slate-800 bg-slate-900">
+                <pre className="whitespace-pre-wrap break-words p-4 text-xs leading-5 text-slate-300">
                   {result.report || "No report returned."}
                 </pre>
               </ScrollArea>
@@ -179,7 +179,7 @@ export function WorkspaceRunPreviewDialog({
         )}
 
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={handleClose} disabled={cancelling || cancelled}>
+          <Button variant="outline" onClick={handleClose} disabled={cancelling}>
             {loading
               ? "Cancel run"
               : cancelling

@@ -299,6 +299,13 @@ export class KubernetesService {
         // so we need to check the job status every few seconds
         await new Promise((resolve) => setTimeout(resolve, iterationWaitTime)); // Wait for 5 seconds before checking again
         const response = await this.getJob(jobName);
+
+        if (!response?.body?.status) {
+          throw new Error(
+            `Job ${jobName} was not found while waiting for completion. It may have been deleted or cancelled.`,
+          );
+        }
+
         jobStatus = response.body.status;
       } while (!jobStatus.succeeded && !jobStatus.failed && i++ < maxRetries);
 
@@ -314,6 +321,10 @@ export class KubernetesService {
 
       // Get the pods created by the job
       const [pod] = await this.getJobPods(jobName);
+
+      if (!pod?.metadata?.name) {
+        throw new Error(`No pod found for job ${jobName}.`);
+      }
 
       // Get the name of the first pod
       const podName = pod.metadata.name;

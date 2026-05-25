@@ -2,10 +2,12 @@ import { FileNode, SelectedItem } from "@/types/shared";
 import { ChevronRight, File, Folder } from "lucide-react";
 import React from "react";
 import { cn } from "@/lib/utils";
+import { WorkspaceTreeContextMenu } from "./workspace-tree-context-menu";
 
 interface WorkspaceFileTreeProps {
   treeData: FileNode | null;
   onFileSelect: (node: FileNode) => void;
+  onOpenInSecondary?: (node: FileNode) => void;
   selectedItem: SelectedItem;
   onSelectItem: (item: SelectedItem) => void;
   onContextMenu?: (e: React.MouseEvent, node: FileNode) => void;
@@ -59,12 +61,6 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Select the item on right-click
-    onSelectItem({
-      id: node.id,
-      type: node.isFile ? "file" : "folder",
-      path: node.path,
-    });
     onContextMenu?.(e, node);
   };
 
@@ -175,6 +171,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({
 export default function WorkspaceFileTree({
   treeData,
   onFileSelect,
+  onOpenInSecondary,
   selectedItem,
   onSelectItem,
   onContextMenu,
@@ -224,6 +221,10 @@ export default function WorkspaceFileTree({
     });
   };
 
+  const handleCloseContextMenu = () => {
+    setContextMenu(null);
+  };
+
   if (!treeData) {
     return (
       <div className="flex items-center justify-center h-32 text-gray-500">
@@ -248,31 +249,14 @@ export default function WorkspaceFileTree({
       />
 
       {contextMenu && (
-        <div
-          ref={contextMenuRef}
-          className="fixed z-50 min-w-[120px] rounded-md border border-gray-700 bg-gray-800 py-1 shadow-lg"
-          style={{ top: contextMenu.y, left: contextMenu.x }}
-        >
-          <button
-            type="button"
-            className="block w-full px-3 py-1.5 text-left text-sm text-gray-200 hover:bg-gray-700"
-            onClick={() => {
-              onRenameRequest?.(contextMenu.node);
-              setContextMenu(null);
-            }}
-          >
-            Rename
-          </button>
-          <button
-            type="button"
-            className="block w-full px-3 py-1.5 text-left text-sm text-red-300 hover:bg-gray-700"
-            onClick={() => {
-              onDeleteRequest?.(contextMenu.node);
-              setContextMenu(null);
-            }}
-          >
-            Delete
-          </button>
+        <div ref={contextMenuRef}>
+          <WorkspaceTreeContextMenu
+            contextMenu={contextMenu}
+            onOpenInSecondary={onOpenInSecondary}
+            onRenameRequest={onRenameRequest}
+            onDeleteRequest={onDeleteRequest}
+            onClose={handleCloseContextMenu}
+          />
         </div>
       )}
     </div>
