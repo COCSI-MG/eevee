@@ -2,10 +2,12 @@ import { useEffect } from "react";
 import { ClipboardAction, RegisterClipboardAttempt } from "./types";
 
 interface UseKeyboardShortcutGuardOptions {
+  enabled: boolean;
   onClipboardShortcut: RegisterClipboardAttempt;
 }
 
 const BLOCKED_MODIFIER_KEYS = new Set(["a", "c", "s", "u", "v", "x"]);
+const BLOCKED_DEVTOOLS_KEYS = new Set(["c", "i", "j"]);
 const CLIPBOARD_SHORTCUTS: Record<string, ClipboardAction> = {
   c: "copy",
   v: "paste",
@@ -18,15 +20,20 @@ function isBlockedKeyboardShortcut(event: KeyboardEvent) {
 
   return (
     event.key === "F12" ||
-    (isModifierShortcut && event.shiftKey && key === "i") ||
+    (isModifierShortcut && event.shiftKey && BLOCKED_DEVTOOLS_KEYS.has(key)) ||
     (isModifierShortcut && BLOCKED_MODIFIER_KEYS.has(key))
   );
 }
 
 export function useKeyboardShortcutGuard({
+  enabled,
   onClipboardShortcut,
 }: UseKeyboardShortcutGuardOptions) {
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const preventKeyboardShortcuts = (event: KeyboardEvent) => {
       if (!isBlockedKeyboardShortcut(event)) {
         return;
@@ -48,10 +55,12 @@ export function useKeyboardShortcutGuard({
       return false;
     };
 
+    window.addEventListener("keydown", preventKeyboardShortcuts, true);
     document.addEventListener("keydown", preventKeyboardShortcuts, true);
 
     return () => {
+      window.removeEventListener("keydown", preventKeyboardShortcuts, true);
       document.removeEventListener("keydown", preventKeyboardShortcuts, true);
     };
-  }, [onClipboardShortcut]);
+  }, [enabled, onClipboardShortcut]);
 }
