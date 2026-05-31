@@ -15,6 +15,8 @@ interface UseActiveWorkspaceFileParams {
   selectItem: (item: SelectedItem) => void;
 }
 
+const FILE_ITEM_TYPE: SelectedItem["type"] = "file";
+
 export function useActiveWorkspaceFile({
   assignment,
   user,
@@ -24,6 +26,28 @@ export function useActiveWorkspaceFile({
   const { fileTreeData, replaceFileTree } = useWorkspaceContext();
   const [activeFileContent, setActiveFileContent] = React.useState("");
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+
+  const findNodeByPath = React.useCallback(
+    (node: FileNode, filePath: string): FileNode | null => {
+      if (node.path === filePath) {
+        return node;
+      }
+
+      if (!node.children?.length) {
+        return null;
+      }
+
+      for (const child of node.children) {
+        const found = findNodeByPath(child, filePath);
+        if (found) {
+          return found;
+        }
+      }
+
+      return null;
+    },
+    [],
+  );
 
   const buildUpdatedTree = React.useCallback(
     (node: FileNode, filePath: string, content: string): FileNode => {
@@ -60,7 +84,7 @@ export function useActiveWorkspaceFile({
 
   const activeFile = React.useMemo(() => {
     if (
-      selectedItem.type !== "file" ||
+      selectedItem.type !== FILE_ITEM_TYPE ||
       !selectedItem.path ||
       !selectedItem.id
     ) {
@@ -85,7 +109,7 @@ export function useActiveWorkspaceFile({
       if (node.isFile) {
         selectItem({
           id: node.id,
-          type: "file",
+          type: FILE_ITEM_TYPE,
           path: node.path,
         });
 
@@ -102,6 +126,19 @@ export function useActiveWorkspaceFile({
     [selectItem],
   );
 
+  React.useEffect(() => {
+    if (selectedItem.type !== FILE_ITEM_TYPE || !selectedItem.path) {
+      return;
+    }
+
+    const selectedNode = findNodeByPath(fileTreeData, selectedItem.path);
+    if (!selectedNode || !selectedNode.isFile) {
+      return;
+    }
+
+    setActiveFileContent(selectedNode.content || "");
+  }, [fileTreeData, findNodeByPath, selectedItem.path, selectedItem.type]);
+
   const handleEditorChange = React.useCallback(
     (value: string | undefined) => {
       if (value === undefined || !activeFile?.path) {
@@ -110,7 +147,11 @@ export function useActiveWorkspaceFile({
 
       setActiveFileContent(value);
 
-      const updatedTree = buildUpdatedTree(fileTreeData, activeFile.path, value);
+      const updatedTree = buildUpdatedTree(
+        fileTreeData,
+        activeFile.path,
+        value,
+      );
       if (updatedTree === fileTreeData) {
         return;
       }

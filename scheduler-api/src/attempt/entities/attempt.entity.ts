@@ -48,6 +48,9 @@ export class Attempt {
   @Column()
   report: string;
 
+  @Column({ type: 'text', nullable: true })
+  refinedReport?: string;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 }

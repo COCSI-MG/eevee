@@ -1,6 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
 import { AiReportService } from './ai-report.abstract';
+import { hasAllTestsPassed, parseRawReport } from './jest-report-parser';
+import { hasAllCypressTestsPassed, parseCypressRawReport } from './cypress-report-parser';
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
+
+const CYPRESS_WORKER_TYPES = new Set<WorkerType>([
+  WorkerType.NODE_REACTJS_CYPRESS,
+  WorkerType.NODE_NEXTJS_CYPRESS,
+]);
 
 @Injectable()
 export class GroqReportService implements AiReportService {
@@ -18,19 +26,44 @@ export class GroqReportService implements AiReportService {
       : null;
   }
 
-  async refineReport(rawReport: string, assignmentDescription: string, resolucao?: string): Promise<string> {
-    if (this.hasAllTestsPassed(rawReport)) {
-      return 'Parabéns! Seu exercício está correto e passou em todos os testes!';
+  async refineReport(
+    rawReport: string,
+    assignmentDescription: string,
+    files?: Record<string, string>,
+    workerType?: WorkerType,
+  ): Promise<string> {
+    const isCypress = workerType ? CYPRESS_WORKER_TYPES.has(workerType) : false;
+
+    const allPassed = isCypress
+      ? hasAllCypressTestsPassed(rawReport)
+      : hasAllTestsPassed(rawReport);
+
+    if (allPassed) {
+      return 'Parabéns! Seu exercício está correto e passou em todos os testes.';
     }
 
-    const filteredReport = this.parseRawReport(rawReport);
-    if (this.client) {
-      try {
-        const contextBlock = assignmentDescription
-          ? `Descrição da tarefa:\n${assignmentDescription}\n\n`
-          : '';
+    const filteredReport = isCypress
+      ? parseCypressRawReport(rawReport)
+      : parseRawReport(rawReport);
 
-        const prompt = `
+
+    if (!this.client) {
+      return filteredReport;
+    }
+
+    try {
+      const contextBlock = assignmentDescription
+        ? `Descrição da tarefa:\n${assignmentDescription}\n\n`
+        : '';
+
+      const resolucaoBlock =
+        files && Object.keys(files).length > 0
+          ? Object.entries(files)
+              .map(([path, content]) => `// ${path}\n${content}`)
+              .join('\n\n')
+          : 'Nenhuma resolução fornecida.';
+
+      const prompt = `
           Você é um assistente educacional que ajuda alunos a entender erros em exercícios de programação.
 
           Sua tarefa é analisar:
@@ -49,7 +82,7 @@ export class GroqReportService implements AiReportService {
             - NÃO diga "o teste falhou"
             - Explique exatamente POR QUE falhou
 
-          3. NÃO copie o nome do teste como está no Jest.
+          3. NÃO copie o nome do teste como está no relatório.
             - Reescreva em linguagem simples
             Exemplo:
             "deve criar uma nova tarefa (POST /tasks)"
@@ -103,7 +136,6 @@ export class GroqReportService implements AiReportService {
             Exemplos proibidos:
             - "Altere o teste"
             - "Use outro framework"
-            - "Implemente uma arquitetura diferente"
 
           8. Seja direto, sem enrolação.
 
@@ -136,9 +168,9 @@ export class GroqReportService implements AiReportService {
           ${contextBlock}
 
           RESOLUÇÃO DO ALUNO:
-          ${resolucao ? resolucao : 'Nenhuma resolução fornecida.'}
+          ${resolucaoBlock}
 
-          RELATÓRIO BRUTO DE TESTES:
+          RELATÓRIO DE TESTES:
           """
           ${filteredReport}
           """
@@ -146,127 +178,17 @@ export class GroqReportService implements AiReportService {
           Agora gere o feedback seguindo EXATAMENTE o formato acima.
           `;
 
-        const response = await this.client.chat.completions.create({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          temperature: 0.3,
-          max_tokens: 512,
-        });
+      const response = await this.client.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.3,
+        max_tokens: 512,
+      });
 
-        return (
-          response.choices?.[0]?.message?.content?.trim() ||
-          filteredReport
-        );
-      } catch (error: any) {
-        this.logger.warn(`Groq API error, using fallback parser: ${error.message}`);
-      }
+      return response.choices?.[0]?.message?.content?.trim() || filteredReport;
+    } catch (error: any) {
+      this.logger.warn(`Groq API error, using fallback parser: ${error.message}`);
+      return filteredReport;
     }
-
-    return filteredReport;
   }
-
-
-  private hasAllTestsPassed(report: string): boolean {
-    if (!report || !report.trim().length) {
-      return false;
-    }
-
-    const hasFail = report.includes('FAIL ');
-    const hasFailed = report.toLowerCase().includes('failed');
-    const hasErrors = /error TS\d+:/.test(report);
-    const hasFailedTests = report.includes('●');
-
-    return !hasFail && !hasFailed && !hasErrors && !hasFailedTests;
-  }
-
-  private parseRawReport(report: string): string {
-    const lines = report.split('\n');
-    const parts: string[] = [];
-
-    const failures = this.extractFailures(lines);
-    if (failures.length > 0) {
-      parts.push('\nTestes que falharam:');
-      failures.forEach((f) => parts.push(`\n${f}`));
-    }
-
-    const passes = this.extractPasses(lines);
-    if (passes.length > 0) {
-      parts.push('\nTestes que passaram:');
-      passes.forEach((p) => parts.push(`• ${p}`));
-    }
-
-    const summary = this.extractSummary(lines);
-    if (summary) parts.push(`\nResumo: ${summary}`);
-
-    if (!parts.length) {
-      return 'Não foi possível processar o resultado automaticamente.';
-    }
-
-    return parts.join('\n');
-  }
-
-  private extractSummary(lines: string[]): string | null {
-    const summary = lines.find(
-      (l) => l.includes('Tests:') && (l.includes('failed') || l.includes('total'))
-    );
-
-    return summary ? summary.trim() : null;
-  }
-
-  private formatFailure(block: string[]): string {
-    return block
-      .join('\n')
-      .replace(/\s+Expected:/g, '\nExpected:')
-      .replace(/\s+Received:/g, '\nReceived:')
-      .trim();
-  }
-
-  private extractFailures(lines: string[]): string[] {
-      const failures: string[] = [];
-      let current: string[] = [];
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-
-        if (trimmed.startsWith('●')) {
-          if (current.length) {
-            failures.push(this.formatFailure(current));
-            current = [];
-          }
-          current.push(trimmed);
-          continue;
-        }
-
-        if (current.length) {
-          if (
-            trimmed.startsWith('✓') ||
-            trimmed.startsWith('●') ||
-            line.includes('Test Suites:') ||
-            line.includes('Tests:')
-          ) {
-            failures.push(this.formatFailure(current));
-            current = [];
-          } else {
-            current.push(line);
-          }
-        }
-      }
-
-      if (current.length) {
-        failures.push(this.formatFailure(current));
-      }
-
-      return failures;
-    }
-
-    private extractPasses(lines: string[]): string[] {
-      return lines
-        .filter((l) => l.trim().startsWith('✓'))
-        .map((l) => l.trim());
-    }
 }

@@ -41,8 +41,7 @@ export default function Page() {
     data: assignmentData,
     isLoading: isLoadingAssignment,
     refetch: refetchAssignment,
-  } =
-    useFetchAssignment(Number(id));
+  } = useFetchAssignment(Number(id));
 
   const handleClearWorkspace = async () => {
     if (!resetWorkspaceAction || !assignmentData) {
@@ -61,10 +60,14 @@ export default function Page() {
 
       await resetWorkspaceAction(freshAssignment);
     } catch (error) {
-      console.error("Error refetching assignment before workspace reset:", error);
+      console.error(
+        "Error refetching assignment before workspace reset:",
+        error,
+      );
       toast({
         title: "Falha ao limpar workspace",
-        description: "Não foi possível buscar a versão mais recente da atividade.",
+        description:
+          "Não foi possível buscar a versão mais recente da atividade.",
         variant: "destructive",
       });
     } finally {
@@ -91,6 +94,7 @@ export default function Page() {
   } = useWorkspacePreview({
     assignmentId: assignmentData?.id,
     userId,
+    workerType: assignmentData?.workerType,
   });
 
   const { isSaving, saveFileInServer } = useWorkspaceSaveFile({

@@ -9,6 +9,7 @@ import {
   createInitialWorkspaceTree,
   findFirstFile,
   getAssignmentBoilerplate,
+  ensureAssignmentReadme,
   shouldRebuildWorkspaceTree,
 } from "../_utils/workspace.utils";
 
@@ -33,14 +34,18 @@ export function useWorkspaceInitialization({
     () =>
       ({
         id: assignment.id,
+        title: assignment.title,
+        description: assignment.description,
         workerType: assignment.workerType,
         boilerplate: assignment.boilerplate,
         boilerplateContent: assignment.boilerplateContent,
       }) as Assignment,
     [
+      assignment.description,
       assignment.boilerplate,
       assignment.boilerplateContent,
       assignment.id,
+      assignment.title,
       assignment.workerType,
     ],
   );
@@ -83,6 +88,16 @@ export function useWorkspaceInitialization({
     ) {
       fileTree = createInitialWorkspaceTree(workspaceAssignment);
       shouldPersistInitialState = true;
+    } else {
+      const fileTreeWithReadme = ensureAssignmentReadme(
+        fileTree,
+        workspaceAssignment,
+      );
+
+      if (fileTreeWithReadme !== fileTree) {
+        fileTree = fileTreeWithReadme;
+        shouldPersistInitialState = true;
+      }
     }
 
     replaceFileTree(fileTree);

@@ -58,6 +58,11 @@ spec:
             configMapKeyRef:
               name: eevee-config
               key: REDIS_PORT
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: eevee-secrets
+              key: GROQ_API_KEY
         resources:
           requests:
             memory: "128Mi"

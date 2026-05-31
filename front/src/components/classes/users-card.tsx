@@ -88,7 +88,13 @@ export default function UsersCard({
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setSearchTerm("");
+        }}
+      >
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-full justify-start">
             <Plus className="mr-2 h-4 w-4" />
@@ -101,7 +107,7 @@ export default function UsersCard({
           side="bottom"
           sideOffset={8}
         >
-          <Command>
+          <Command shouldFilter={false}>
             <CommandInput
               placeholder="Search Users..."
               value={searchTerm}

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   Logger,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
@@ -23,6 +24,8 @@ import {
   SchedulingWorkerPreparationService,
 } from './scheduling-worker-preparation.service';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { AiReportService } from 'src/ai-report/ai-report.abstract';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import {
   SchedulingPreviewRun,
@@ -43,9 +46,11 @@ export class SchedulingService {
     private readonly schedulingWorkerPreparationService: SchedulingWorkerPreparationService,
     private readonly schedulingAttemptTransitionService: SchedulingAttemptTransitionService,
     private readonly requestContextService: RequestContextService,
+    private readonly aiReportService: AiReportService,
     @InjectRepository(SchedulingPreviewRun)
     private readonly schedulingPreviewRunRepository: Repository<SchedulingPreviewRun>,
     @InjectQueue('scheduling-queue') private readonly schedulingQueue: Queue,
+    @InjectQueue('ai-report-queue') private readonly aiReportQueue: Queue,
   ) {}
 
   async createAndWait(createSchedulingDto: CreateSchedulingDto) {
@@ -375,6 +380,47 @@ export class SchedulingService {
     }
   }
 
+  async requestAiFeedback(attemptId: number): Promise<void> {
+    const user = this.requestContextService.getUser();
+    const attempt = await this.attemptService.findOne(attemptId);
+
+    if (!attempt || attempt.userId !== user.userId) {
+      throw new NotFoundException('Attempt not found');
+    }
+    if (attempt.status !== AttemptStatus.COMPLETED) {
+      throw new BadRequestException('Attempt is not completed');
+    }
+    if (attempt.refinedReport) return;
+
+    await this.aiReportQueue.add(
+      'process-ai-report-job',
+      { attemptId },
+      { jobId: `ai-report-${attemptId}` },
+    );
+  }
+
+  async getAiFeedback(attemptId: number): Promise<string | null> {
+    const user = this.requestContextService.getUser();
+    return this.attemptService.findRefinedReport(attemptId, user.userId);
+  }
+
+  async processAiReportJob(attemptId: number): Promise<void> {
+    const attempt = await this.attemptService.findOne(attemptId);
+    if (!attempt || attempt.status !== AttemptStatus.COMPLETED) return;
+    if (attempt.refinedReport) return;
+
+    const refinedReport = await this.generateRefinedReport(
+      attempt.report,
+      attempt.assignment?.description ?? '',
+      attempt.receivedWork ?? undefined,
+      attempt.assignment?.workerType,
+    );
+
+    if (refinedReport) {
+      await this.attemptService.update({ id: attemptId, refinedReport });
+    }
+  }
+
   private isUserReachedMaxAttempt(maxAttempts: number, currentAttemps: number) {
     return maxAttempts <= currentAttemps;
   }
@@ -422,6 +468,20 @@ export class SchedulingService {
       assignment.workerType,
       workerData,
     );
+  }
+
+  private async generateRefinedReport(
+    rawReport: string,
+    assignmentDescription: string,
+    files?: Record<string, string>,
+    workerType?: WorkerType,
+  ): Promise<string | undefined> {
+    try {
+      return await this.aiReportService.refineReport(rawReport, assignmentDescription, files, workerType);
+    } catch (error) {
+      this.logger.error(`AI report generation failed: ${error instanceof Error ? error.message : error}`);
+      return undefined;
+    }
   }
 
   private async processPreviewRun(

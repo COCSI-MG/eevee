@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { FileNode } from "@/types/shared";
 import { FilePlusIcon, FolderPlusIcon, TrashIcon } from "lucide-react";
 import { Button } from "../../../../../components/ui/button";
@@ -12,11 +13,13 @@ import {
 import { Input } from "../../../../../components/ui/input";
 import { Label } from "../../../../../components/ui/label";
 import { useWorkspaceExplorer } from "../_hooks/use-workspace-explorer";
+import { WorkspaceExplorerContextMenu } from "./workspace-explorer-context-menu";
 import WorkspaceFileTree from "./workspace-tree-item";
 
 interface WorkspaceExplorerProps {
   onFileSelect: (node: FileNode) => void;
   onTreeChange: (newTree: FileNode) => void | Promise<void>;
+  onOpenInSecondary?: (node: FileNode) => void;
   maxDepth?: number;
   maxFiles?: number;
 }
@@ -24,6 +27,7 @@ interface WorkspaceExplorerProps {
 export default function WorkspaceExplorer({
   onFileSelect,
   onTreeChange,
+  onOpenInSecondary,
   maxDepth = 5,
   maxFiles = 50,
 }: WorkspaceExplorerProps) {
@@ -65,8 +69,41 @@ export default function WorkspaceExplorer({
     maxFiles,
   });
 
+  const [backgroundContextMenu, setBackgroundContextMenu] = React.useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const handleBackgroundContextMenu = React.useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      if (event.target !== event.currentTarget) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      setBackgroundContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+      });
+    },
+    [],
+  );
+
+  React.useEffect(() => {
+    const handleClose = () => setBackgroundContextMenu(null);
+
+    document.addEventListener("click", handleClose);
+    document.addEventListener("keydown", handleClose);
+
+    return () => {
+      document.removeEventListener("click", handleClose);
+      document.removeEventListener("keydown", handleClose);
+    };
+  }, []);
+
   return (
-    <div className="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+    <div className="w-full bg-gray-800 h-full min-h-0 flex flex-col">
       <div className="px-3 py-2 border-b border-gray-700">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -266,10 +303,14 @@ export default function WorkspaceExplorer({
         </Dialog>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div
+        className="flex-1 overflow-y-auto"
+        onContextMenu={handleBackgroundContextMenu}
+      >
         <WorkspaceFileTree
           treeData={treeData}
           onFileSelect={onFileSelect}
+          onOpenInSecondary={onOpenInSecondary}
           selectedItem={selectedItem}
           onSelectItem={selectItem}
           onRenameRequest={handleRenameRequest}
@@ -279,6 +320,15 @@ export default function WorkspaceExplorer({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         />
+
+        {backgroundContextMenu && (
+          <WorkspaceExplorerContextMenu
+            position={backgroundContextMenu}
+            onCreateFile={() => openCreateItemDialog("file")}
+            onCreateFolder={() => openCreateItemDialog("folder")}
+            onClose={() => setBackgroundContextMenu(null)}
+          />
+        )}
       </div>
     </div>
   );

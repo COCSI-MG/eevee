@@ -66,6 +66,11 @@ spec:
             secretKeyRef:
               name: eevee-secrets
               key: JWT_SECRET
+        - name: GROQ_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: eevee-secrets
+              key: GROQ_API_KEY
         resources:
           requests:
             memory: "128Mi"

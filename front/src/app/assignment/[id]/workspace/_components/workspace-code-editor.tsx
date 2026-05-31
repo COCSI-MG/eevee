@@ -188,11 +188,7 @@ export default function WorkspaceCodeEditor({
     const editorDomNode = editor.getDomNode();
     if (editorDomNode) {
       BLOCKED_EDITOR_DRAG_EVENTS.forEach((eventName) => {
-        editorDomNode.addEventListener(
-          eventName,
-          blockEditorDragAction,
-          true,
-        );
+        editorDomNode.addEventListener(eventName, blockEditorDragAction, true);
       });
 
       editorDragGuardCleanupRef.current = () => {
@@ -314,14 +310,14 @@ export default function WorkspaceCodeEditor({
 
   if (file === null || file.name.trim() === "") {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500">
+      <div className="flex items-center justify-center h-full min-h-0 text-gray-500">
         Selecione um arquivo para começar a editar.
       </div>
     );
   }
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       <div className="bg-editor-header border-b border-border">
         <div className="flex">
           <div className="flex items-center px-4 py-2 bg-editor-bg border-r border-border">
@@ -353,6 +349,6 @@ export default function WorkspaceCodeEditor({
           }}
         />
       </div>
-    </>
+    </div>
   );
 }

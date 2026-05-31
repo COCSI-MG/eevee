@@ -5,6 +5,7 @@ import { BullMQModule } from './bullmq/bullmq.module';
 import { ConfigModule } from '@nestjs/config';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { SchedulingJobConsumer } from './scheduling/scheduling-job.processor';
+import { AiReportJobConsumer } from './scheduling/ai-report-job.processor';
 import { ClsModule } from 'nestjs-cls';
 import { KubernetesModule } from './kubernetes/kubernetes.module';
 
@@ -23,6 +24,6 @@ import { KubernetesModule } from './kubernetes/kubernetes.module';
     DatabaseModule,
     BullMQModule,
   ],
-  providers: [SchedulingJobConsumer],
+  providers: [SchedulingJobConsumer, AiReportJobConsumer],
 })
 export class QueueWorkerModule {}
