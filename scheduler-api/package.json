@@ -23,6 +23,7 @@
     "migration:generate": "npm run build && npx typeorm migration:generate -d ./dist/data-source.js -p",
     "migration:run": "npm run build && npx typeorm migration:run -d ./dist/data-source.js",
     "seed": "ts-node seed.ts",
+    "seed:teraorm-study": "ts-node seed-teraorm-study.ts",
     "script:add-resource": "nest g resource",
     "script:generate-jwt-key": "node -e \"console.log(require('crypto').randomBytes(60).toString('base64'))\""
   },

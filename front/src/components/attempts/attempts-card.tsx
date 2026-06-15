@@ -52,7 +52,7 @@ function AttemptFeedbackDialog({ attempt }: { attempt: AssignmentAttempt }) {
 
 export default function AttemptsCard() {
   const { id } = useParams();
-  const { back } = useRouter();
+  const { back, push } = useRouter();
 
   const {
     data: assingmentData,
@@ -67,10 +67,18 @@ export default function AttemptsCard() {
   return (
     <>
       <div className="mb-8">
-        <Button variant="outline" className="mb-4" onClick={() => back()}>
-          <ArrowLeft className="mr-2" />
-          Voltar
-        </Button>
+        <div className="mb-4 flex gap-2">
+          <Button variant="outline" onClick={() => back()}>
+            <ArrowLeft className="mr-2" />
+            Voltar
+          </Button>
+          <Button
+            variant="default"
+            onClick={() => push(`/assignment/${id}/interview`)}
+          >
+            Responder Entrevista
+          </Button>
+        </div>
         <h1 className="text-3xl font-bold tracking-tight mb-2">
           Resultados do Aluno
         </h1>

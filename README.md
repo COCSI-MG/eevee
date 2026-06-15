@@ -72,6 +72,21 @@ Agora é necessário incluir a imagem no minikube
 minikube image load worker-node-default-img:latest
 ```
 
+### Node TeraORM Worker (AB study)
+
+Worker dedicado para os exercicios comparativos SDK nativo vs TeraORM.
+
+```
+cd node-worker-images\node-teraorm
+docker build . -t worker-node-teraorm-img:latest
+```
+
+Agora e necessario incluir a imagem no minikube
+
+```
+minikube image load worker-node-teraorm-img:latest
+```
+
 ### Node NestJS Worker
 
 ```
@@ -110,6 +125,31 @@ Agora é necessário incluir a imagem no minikube
 ```
 minikube image load worker-node-nextjs-cypress-img:latest
 ```
+
+## Modulo de exercicios TeraORM AB
+
+Foi adicionado um seed de modulo com um conjunto de exercicios pareados (A = SDK nativo, B = TeraORM), para validacao de prototipo em ambiente controlado.
+
+No `scheduler-api`:
+
+```bash
+cd scheduler-api/
+npm install
+npm run seed
+npm run seed:teraorm-study
+```
+
+Esse seed cria:
+
+- Uma turma: `TeraORM AB Validation Module`
+- 4 exercicios pareados:
+	- AB01-A SDK Native: Revenue by Store
+	- AB01-B TeraORM: Revenue by Store
+	- AB02-A SDK Native: Top Customers by Region
+	- AB02-B TeraORM: Top Customers by Region
+- Templates de teste automatizado para cada exercicio
+
+Objetivo: permitir comparar taxa de conclusao, tentativas, tempo e padroes de erro entre abordagem sem ORM e com ORM.
 
 ## Troubleshooting
 
