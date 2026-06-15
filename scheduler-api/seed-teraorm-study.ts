@@ -1,6 +1,6 @@
-import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
+import { DataSource } from 'typeorm';
 import { WorkerType } from './src/worker/enum/worker-type.enum';
 
 dotenv.config({ path: join(__dirname, '.env') });
@@ -103,8 +103,7 @@ describe('AB01 SDK - Revenue by store', () => {
     title: 'AB01 ORM - Revenue by store test',
     description:
       'Validates ORM-oriented implementation for grouped revenue by store.',
-    workerType: WorkerType.NODE_DEFAULT,
-    dependencies: ['teraorm'],
+    workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { buildRevenueByStoreReport } from './src/app';
 
@@ -132,7 +131,7 @@ describe('AB01 ORM - Revenue by store', () => {
 
   it('solution should avoid raw SQL composition in this track', () => {
     const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
-    expect(/\bselect\s+.+\bfrom\b/.test(source)).toBe(false);
+    expect(/\\bselect\\s+.+\\bfrom\\b/.test(source)).toBe(false);
   });
 });
 `,
@@ -183,8 +182,7 @@ describe('AB02 SDK - Top customers', () => {
     title: 'AB02 ORM - Top customers test',
     description:
       'Validates ORM-oriented implementation for filtered top customers.',
-    workerType: WorkerType.NODE_DEFAULT,
-    dependencies: ['teraorm'],
+    workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { buildTopCustomersReport } from './src/app';
 
@@ -211,7 +209,7 @@ describe('AB02 ORM - Top customers', () => {
 
   it('solution should avoid raw SQL composition in this track', () => {
     const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
-    expect(/\bselect\s+.+\bfrom\b/.test(source)).toBe(false);
+    expect(/\\bselect\\s+.+\\bfrom\\b/.test(source)).toBe(false);
   });
 });
 `,
@@ -249,7 +247,7 @@ export function computeRevenueByStore(
     title: 'AB01-B TeraORM: Revenue by Store',
     description:
       'Question: solve same grouped revenue scenario with ORM-oriented code style. Answer target: same output as AB01-A, but modeled with TeraORM style and no raw SQL.',
-    workerType: WorkerType.NODE_DEFAULT,
+    workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
     templateTitle: 'AB01 ORM - Revenue by store test',
     boilerplateContent: `import { tera } from 'teraorm';
@@ -313,7 +311,7 @@ export function computeTopCustomers(
     title: 'AB02-B TeraORM: Top Customers by Region',
     description:
       'Question: solve same ranking scenario with ORM-oriented composition. Answer target: same output as AB02-A, with explicit intent and no raw SQL.',
-    workerType: WorkerType.NODE_DEFAULT,
+    workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
     templateTitle: 'AB02 ORM - Top customers test',
     boilerplateContent: `import { tera } from 'teraorm';

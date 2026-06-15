@@ -8,6 +8,7 @@ export const WORKER_JOB_PREFIX: Record<WorkerType, string> = {
   [WorkerType.NODE_REACTJS_CYPRESS]: 'worker-react-cypress-default',
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: 'worker-node-default-pg',
   [WorkerType.NODE_NESTJS_POSTGRESQL]: 'worker-node-nestjs-pg',
+  [WorkerType.NODE_TERAORM]: 'worker-node-teraorm',
 };
 
 export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
@@ -19,6 +20,7 @@ export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
   [WorkerType.NODE_REACTJS_CYPRESS]: 'docker.io/library/worker-react-cypress-img:latest',
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: 'docker.io/library/worker-node-default-img:latest',
   [WorkerType.NODE_NESTJS_POSTGRESQL]: 'docker.io/library/worker-nestjs-default-img:latest', // Reuse the same image as NODE_NESTJS since it includes Postgres support
+  [WorkerType.NODE_TERAORM]: 'docker.io/library/worker-node-teraorm-img:latest',
 };
 
 // CHARS USED TO IDENTIFY WORKER OUTPUT RESPONSES

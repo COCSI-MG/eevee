@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Client1_13 } from 'kubernetes-client';
-import { config } from 'kubernetes-client';
+import { Client1_13, config } from 'kubernetes-client';
 import { DEFAULT_NAMESPACE, K8S_JOB_STATUS } from './kubernetes.constants';
 import {
-  KubernetesJobOptions,
-  KubernetesJobResult,
+    KubernetesJobOptions,
+    KubernetesJobResult,
 } from './kubernetes.interfaces';
 
 @Injectable()
@@ -54,6 +53,24 @@ export class KubernetesService {
         name: sharedEmptyDir.volumeName,
         mountPath: mount.mountPath,
         ...(mount.subPath ? { subPath: mount.subPath } : {}),
+      });
+    });
+  }
+
+  private appendSecretVolumesAndMounts(
+    secretVolumes: NonNullable<KubernetesJobOptions['secretVolumes']>,
+    volumes: any[],
+    volumeMounts: any[],
+  ) {
+    secretVolumes.forEach((sv) => {
+      volumes.push({
+        name: sv.volumeName,
+        secret: { secretName: sv.secretName },
+      });
+      volumeMounts.push({
+        name: sv.volumeName,
+        mountPath: sv.mountPath,
+        readOnly: true,
       });
     });
   }
@@ -235,6 +252,14 @@ export class KubernetesService {
       );
     }
 
+    if (options?.secretVolumes?.length) {
+      this.appendSecretVolumesAndMounts(
+        options.secretVolumes,
+        volumes,
+        volumeMounts,
+      );
+    }
+
     const initContainers = this.buildInitContainers(options);
 
     const jobManifest = {
@@ -255,6 +280,9 @@ export class KubernetesService {
                 imagePullPolicy: 'Never',
                 image: imageName,
                 ...(command.length > 0 && { command: command }),
+                ...(options?.mainContainerEnv?.length
+                  ? { env: options.mainContainerEnv }
+                  : {}),
                 volumeMounts: volumeMounts,
               },
             ],
