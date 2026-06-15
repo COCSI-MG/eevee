@@ -7,23 +7,24 @@ export type InterviewPreferenceOption =
 export interface InterviewResponsePayload {
   assignmentId: number;
   attemptId?: number;
-  familiaritySql: number;
-  familiarityJsTs: number;
-  familiarityOrms: number;
-  sdkClarity: number;
-  sdkModifiability: number;
-  sdkSqlErrorProneness: number;
-  ormClarity: number;
-  ormModifiability: number;
-  ormIntent: number;
-  ormMentalEffort: number;
-  ormSafety: number;
-  easierToUnderstand: InterviewPreferenceOption;
-  easierToModify: InterviewPreferenceOption;
-  futurePreference: InterviewPreferenceOption;
+  familiaritySql?: number;
+  familiarityJsTs?: number;
+  familiarityOrms?: number;
+  sdkClarity?: number;
+  sdkModifiability?: number;
+  sdkSqlErrorProneness?: number;
+  ormClarity?: number;
+  ormModifiability?: number;
+  ormIntent?: number;
+  ormMentalEffort?: number;
+  ormSafety?: number;
+  easierToUnderstand?: InterviewPreferenceOption;
+  easierToModify?: InterviewPreferenceOption;
+  futurePreference?: InterviewPreferenceOption;
   teraormMainAdvantage?: string;
   teraormMainDifficulty?: string;
   additionalNotes?: string;
+  extraAnswers?: Record<string, string | number>;
 }
 
 export interface InterviewResponse extends InterviewResponsePayload {

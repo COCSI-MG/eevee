@@ -3,6 +3,9 @@
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
 import { InterviewResponseService } from "@/app/integration/scheduler-api/interview-response";
 import {
+  AssignmentInterviewQuestion,
+} from "@/app/interface/scheduler-api/assignment";
+import {
   InterviewPreferenceOption,
   InterviewResponsePayload,
 } from "@/app/interface/scheduler-api/interview-response";
@@ -10,13 +13,19 @@ import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const likertFields = [
   { key: "familiaritySql", label: "Familiaridade prévia com SQL" },
@@ -55,6 +64,16 @@ const preferenceOptions: { value: InterviewPreferenceOption; label: string }[] =
   { value: "no_preference", label: "Sem preferência" },
 ];
 
+function buildInitialExtraAnswers(
+  questions: AssignmentInterviewQuestion[],
+): Record<string, string | number> {
+  const initial: Record<string, string | number> = {};
+  for (const question of questions) {
+    initial[question.key] = question.type === "likert_1_5" ? 3 : "";
+  }
+  return initial;
+}
+
 export default function AssignmentInterviewPage() {
   const { id } = useParams();
   const assignmentId = Number(id);
@@ -72,12 +91,20 @@ export default function AssignmentInterviewPage() {
   const [teraormMainAdvantage, setTeraormMainAdvantage] = useState("");
   const [teraormMainDifficulty, setTeraormMainDifficulty] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [extraAnswers, setExtraAnswers] = useState<Record<string, string | number>>(
+    {},
+  );
 
   const { data: assignment, isFetching: isFetchingAssignment } = useQuery({
     queryKey: ["assignment", assignmentId],
     queryFn: () => AssignmentService.GetAssignmentById(assignmentId),
     enabled: Number.isFinite(assignmentId),
   });
+
+  const perExerciseQuestions = useMemo(
+    () => assignment?.interviewConfig?.questions ?? [],
+    [assignment],
+  );
 
   const latestAcceptedAttempt = useMemo(() => {
     if (!assignment?.assignmentAttempts?.length) {
@@ -89,19 +116,59 @@ export default function AssignmentInterviewPage() {
       .sort((a, b) => b.attempt - a.attempt)[0];
   }, [assignment]);
 
+  const classId = assignment?.classId;
+
+  const { data: classAssignments, isFetching: isFetchingClassAssignments } = useQuery({
+    queryKey: ["class-assignments-progress", classId],
+    queryFn: () =>
+      classId !== undefined
+        ? AssignmentService.GetAssignmentsByClassId(classId)
+        : Promise.resolve([]),
+    enabled: classId !== undefined,
+  });
+
+  const allClassAssignmentsAccepted = useMemo(() => {
+    if (!classAssignments || classAssignments.length === 0) {
+      return false;
+    }
+    return classAssignments.every((classAssignment) =>
+      (classAssignment.assignmentAttempts ?? []).some(
+        (attempt) =>
+          attempt.isAcceptable && attempt.status === "completed",
+      ),
+    );
+  }, [classAssignments]);
+
   const { data: existingResponse, isFetching: isFetchingResponse } = useQuery({
     queryKey: ["interview-response", assignmentId],
     queryFn: () => InterviewResponseService.findMineByAssignmentId(assignmentId),
     enabled: Number.isFinite(assignmentId),
   });
 
+  useEffect(() => {
+    if (perExerciseQuestions.length === 0) {
+      return;
+    }
+    const initial = buildInitialExtraAnswers(perExerciseQuestions);
+    const merged = { ...initial };
+    const existing = existingResponse?.extraAnswers;
+    if (existing) {
+      for (const key of Object.keys(initial)) {
+        if (existing[key] !== undefined) {
+          merged[key] = existing[key];
+        }
+      }
+    }
+    setExtraAnswers(merged);
+  }, [perExerciseQuestions, existingResponse]);
+
   const submitMutation = useMutation({
     mutationFn: (payload: InterviewResponsePayload) =>
       InterviewResponseService.upsert(payload),
     onSuccess: async () => {
       toast({
-        title: "Entrevista salva",
-        description: "Sua resposta pós-atividade foi registrada com sucesso.",
+        title: "Respostas salvas",
+        description: "Suas respostas foram registradas com sucesso.",
       });
 
       await queryClient.invalidateQueries({
@@ -110,14 +177,15 @@ export default function AssignmentInterviewPage() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Falha ao salvar entrevista",
+        title: "Falha ao salvar respostas",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const isLoading = isFetchingAssignment || isFetchingResponse;
+  const isLoading =
+    isFetchingAssignment || isFetchingResponse || isFetchingClassAssignments;
 
   if (isLoading) {
     return <Loader />;
@@ -131,7 +199,24 @@ export default function AssignmentInterviewPage() {
           Voltar
         </Button>
         <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-300">
-          Você precisa concluir ao menos uma tentativa com sucesso para responder a entrevista.
+          Você precisa concluir ao menos uma tentativa com sucesso para responder.
+        </div>
+      </div>
+    );
+  }
+
+  const hasPerExerciseSection = perExerciseQuestions.length > 0;
+  const showComparativeSection = allClassAssignmentsAccepted;
+
+  if (!hasPerExerciseSection && !showComparativeSection) {
+    return (
+      <div className="container mx-auto p-4 space-y-4">
+        <Button variant="outline" onClick={() => back()}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+        <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-300">
+          Conclua todos os exercícios desta turma para responder a entrevista final.
         </div>
       </div>
     );
@@ -141,14 +226,21 @@ export default function AssignmentInterviewPage() {
     const payload: InterviewResponsePayload = {
       assignmentId,
       attemptId: latestAcceptedAttempt.id,
-      ...likert,
-      easierToUnderstand,
-      easierToModify,
-      futurePreference,
-      teraormMainAdvantage: teraormMainAdvantage || undefined,
-      teraormMainDifficulty: teraormMainDifficulty || undefined,
-      additionalNotes: additionalNotes || undefined,
     };
+
+    if (hasPerExerciseSection) {
+      payload.extraAnswers = extraAnswers;
+    }
+
+    if (showComparativeSection) {
+      Object.assign(payload, likert);
+      payload.easierToUnderstand = easierToUnderstand;
+      payload.easierToModify = easierToModify;
+      payload.futurePreference = futurePreference;
+      payload.teraormMainAdvantage = teraormMainAdvantage || undefined;
+      payload.teraormMainDifficulty = teraormMainDifficulty || undefined;
+      payload.additionalNotes = additionalNotes || undefined;
+    }
 
     submitMutation.mutate(payload);
   };
@@ -172,128 +264,188 @@ export default function AssignmentInterviewPage() {
         )}
       </div>
 
-      <div className="space-y-4 rounded-md border p-4">
-        {likertFields.map((field) => (
-          <div key={field.key} className="space-y-2">
-            <Label htmlFor={field.key}>{field.label} (1 a 5)</Label>
-            <Input
-              id={field.key}
-              type="number"
-              min={1}
-              max={5}
-              value={likert[field.key]}
-              onChange={(event) => {
-                const parsed = Number(event.target.value);
-                const clamped = Number.isFinite(parsed)
-                  ? Math.min(5, Math.max(1, parsed))
-                  : 3;
-                setLikert((current) => ({
-                  ...current,
-                  [field.key]: clamped,
-                }));
-              }}
-            />
+      {hasPerExerciseSection && (
+        <div className="space-y-4 rounded-md border p-4">
+          <h2 className="text-lg font-semibold">Sobre este exercício</h2>
+          {perExerciseQuestions.map((question) => {
+            const inputId = `extra-${question.key}`;
+
+            if (question.type === "likert_1_5") {
+              const value = Number(extraAnswers[question.key] ?? 3);
+              return (
+                <div key={question.key} className="space-y-2">
+                  <Label htmlFor={inputId}>{question.label}</Label>
+                  <Input
+                    id={inputId}
+                    type="number"
+                    min={1}
+                    max={5}
+                    value={value}
+                    onChange={(event) => {
+                      const parsed = Number(event.target.value);
+                      const clamped = Number.isFinite(parsed)
+                        ? Math.min(5, Math.max(1, parsed))
+                        : 3;
+                      setExtraAnswers((current) => ({
+                        ...current,
+                        [question.key]: clamped,
+                      }));
+                    }}
+                  />
+                </div>
+              );
+            }
+
+            const textValue = String(extraAnswers[question.key] ?? "");
+            return (
+              <div key={question.key} className="space-y-2">
+                <Label htmlFor={inputId}>{question.label}</Label>
+                <Textarea
+                  id={inputId}
+                  value={textValue}
+                  onChange={(event) =>
+                    setExtraAnswers((current) => ({
+                      ...current,
+                      [question.key]: event.target.value,
+                    }))
+                  }
+                  placeholder="Opcional"
+                />
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {showComparativeSection && (
+        <>
+          <div className="space-y-4 rounded-md border p-4">
+            <h2 className="text-lg font-semibold">
+              Comparativo geral (todos os exercícios concluídos)
+            </h2>
+            {likertFields.map((field) => (
+              <div key={field.key} className="space-y-2">
+                <Label htmlFor={field.key}>{field.label} (1 a 5)</Label>
+                <Input
+                  id={field.key}
+                  type="number"
+                  min={1}
+                  max={5}
+                  value={likert[field.key]}
+                  onChange={(event) => {
+                    const parsed = Number(event.target.value);
+                    const clamped = Number.isFinite(parsed)
+                      ? Math.min(5, Math.max(1, parsed))
+                      : 3;
+                    setLikert((current) => ({
+                      ...current,
+                      [field.key]: clamped,
+                    }));
+                  }}
+                />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
 
-      <div className="space-y-4 rounded-md border p-4">
-        <div className="space-y-2">
-          <Label>Qual abordagem foi mais fácil de entender?</Label>
-          <Select
-            value={easierToUnderstand}
-            onValueChange={(value) =>
-              setEasierToUnderstand(value as InterviewPreferenceOption)
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {preferenceOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="space-y-4 rounded-md border p-4">
+            <div className="space-y-2">
+              <Label>Qual abordagem foi mais fácil de entender?</Label>
+              <Select
+                value={easierToUnderstand}
+                onValueChange={(value) =>
+                  setEasierToUnderstand(value as InterviewPreferenceOption)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {preferenceOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <Label>Qual abordagem foi mais fácil de modificar?</Label>
-          <Select
-            value={easierToModify}
-            onValueChange={(value) =>
-              setEasierToModify(value as InterviewPreferenceOption)
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {preferenceOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="space-y-2">
+              <Label>Qual abordagem foi mais fácil de modificar?</Label>
+              <Select
+                value={easierToModify}
+                onValueChange={(value) =>
+                  setEasierToModify(value as InterviewPreferenceOption)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {preferenceOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <Label>Qual abordagem você usaria em uma atividade futura?</Label>
-          <Select
-            value={futurePreference}
-            onValueChange={(value) =>
-              setFuturePreference(value as InterviewPreferenceOption)
-            }
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {preferenceOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="space-y-2">
+              <Label>Qual abordagem você usaria em uma atividade futura?</Label>
+              <Select
+                value={futurePreference}
+                onValueChange={(value) =>
+                  setFuturePreference(value as InterviewPreferenceOption)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {preferenceOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="advantage">Principal vantagem percebida no TeraORM</Label>
-          <Textarea
-            id="advantage"
-            value={teraormMainAdvantage}
-            onChange={(event) => setTeraormMainAdvantage(event.target.value)}
-            placeholder="Opcional"
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="advantage">Principal vantagem percebida no TeraORM</Label>
+              <Textarea
+                id="advantage"
+                value={teraormMainAdvantage}
+                onChange={(event) => setTeraormMainAdvantage(event.target.value)}
+                placeholder="Opcional"
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="difficulty">Principal dificuldade percebida no TeraORM</Label>
-          <Textarea
-            id="difficulty"
-            value={teraormMainDifficulty}
-            onChange={(event) => setTeraormMainDifficulty(event.target.value)}
-            placeholder="Opcional"
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="difficulty">Principal dificuldade percebida no TeraORM</Label>
+              <Textarea
+                id="difficulty"
+                value={teraormMainDifficulty}
+                onChange={(event) => setTeraormMainDifficulty(event.target.value)}
+                placeholder="Opcional"
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="notes">Observações adicionais</Label>
-          <Textarea
-            id="notes"
-            value={additionalNotes}
-            onChange={(event) => setAdditionalNotes(event.target.value)}
-            placeholder="Opcional"
-          />
-        </div>
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes">Observações adicionais</Label>
+              <Textarea
+                id="notes"
+                value={additionalNotes}
+                onChange={(event) => setAdditionalNotes(event.target.value)}
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <Button onClick={onSubmit} disabled={submitMutation.isPending}>
-        {submitMutation.isPending ? "Salvando..." : "Salvar Entrevista"}
+        {submitMutation.isPending ? "Salvando..." : "Salvar"}
       </Button>
     </div>
   );

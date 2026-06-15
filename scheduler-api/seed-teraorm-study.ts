@@ -13,6 +13,16 @@ type StudyTemplate = {
   dependencies?: string[];
 };
 
+type InterviewQuestion = {
+  key: string;
+  label: string;
+  type: 'likert_1_5' | 'short_text';
+};
+
+type InterviewConfig = {
+  questions: InterviewQuestion[];
+};
+
 type StudyAssignment = {
   title: string;
   description: string;
@@ -20,6 +30,7 @@ type StudyAssignment = {
   maxAttempts: number;
   boilerplateContent: string;
   templateTitle: string;
+  interviewConfig?: InterviewConfig;
 };
 
 const STUDY_CLASS_NAME = 'TeraORM AB Validation Module';
@@ -59,40 +70,49 @@ const templates: StudyTemplate[] = [
   {
     title: 'AB01 SDK - Revenue by store test',
     description:
-      'Validates SQL-first implementation for grouped revenue by store.',
-    workerType: WorkerType.NODE_DEFAULT,
+      'Executes the student SDK-track function against a freshly seeded BigQuery table.',
+    workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
-import {
-  buildRevenueByStoreQuery,
-  computeRevenueByStore,
-} from './src/app';
+import { bq, seedTable, SeededTable } from '../test-utils/bq';
+import { runRevenueByStore } from './src/app';
 
-describe('AB01 SDK - Revenue by store', () => {
-  const rows = [
-    { store: 'A', total: 50 },
-    { store: 'A', total: 25 },
-    { store: 'B', total: 70 },
-    { store: 'C', total: 10 },
-    { store: 'B', total: 20 },
-  ];
+describe('AB01 SDK - Revenue by store (BigQuery)', () => {
+  let table: SeededTable;
 
-  it('buildRevenueByStoreQuery should express grouped SQL intent', () => {
-    const sql = buildRevenueByStoreQuery(60).toLowerCase();
-    expect(sql).toContain('select');
-    expect(sql).toContain('from');
-    expect(sql).toContain('group by');
-    expect(sql).toContain('order by');
+  beforeAll(async () => {
+    table = await seedTable(
+      'ab01_sales',
+      [
+        { name: 'store', type: 'STRING' },
+        { name: 'total', type: 'INT64' },
+      ],
+      [
+        { store: 'A', total: 50 },
+        { store: 'A', total: 25 },
+        { store: 'B', total: 70 },
+        { store: 'C', total: 10 },
+        { store: 'B', total: 20 },
+      ],
+    );
+  }, 120000);
+
+  afterAll(async () => {
+    if (table) await table.drop();
   });
 
-  it('computeRevenueByStore should aggregate and filter correctly', () => {
-    const report = computeRevenueByStore(rows, 60);
-    expect(report).toEqual([
+  it('returns aggregated and filtered revenue from real BigQuery', async () => {
+    const out = await runRevenueByStore(bq, table.fqn, 60);
+    const normalized = out.map((r: any) => ({
+      store: r.store,
+      revenue: Number(r.revenue),
+    }));
+    expect(normalized).toEqual([
       { store: 'B', revenue: 90 },
       { store: 'A', revenue: 75 },
     ]);
-  });
+  }, 60000);
 
-  it('solution should stay SDK-oriented for this track', () => {
+  it('SDK track marker: solution must not depend on TeraORM', () => {
     const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
     expect(source.includes('teraorm')).toBe(false);
   });
@@ -102,36 +122,51 @@ describe('AB01 SDK - Revenue by store', () => {
   {
     title: 'AB01 ORM - Revenue by store test',
     description:
-      'Validates ORM-oriented implementation for grouped revenue by store.',
+      'Executes the student ORM-track function against a freshly seeded BigQuery table.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
-import { buildRevenueByStoreReport } from './src/app';
+import { bq, seedTable, SeededTable } from '../test-utils/bq';
+import { runRevenueByStore } from './src/app';
 
-describe('AB01 ORM - Revenue by store', () => {
-  const rows = [
-    { store: 'A', total: 50 },
-    { store: 'A', total: 25 },
-    { store: 'B', total: 70 },
-    { store: 'C', total: 10 },
-    { store: 'B', total: 20 },
-  ];
+describe('AB01 ORM - Revenue by store (BigQuery)', () => {
+  let table: SeededTable;
 
-  it('buildRevenueByStoreReport should aggregate and filter correctly', () => {
-    const report = buildRevenueByStoreReport(rows, 60);
-    expect(report).toEqual([
+  beforeAll(async () => {
+    table = await seedTable(
+      'ab01_sales',
+      [
+        { name: 'store', type: 'STRING' },
+        { name: 'total', type: 'INT64' },
+      ],
+      [
+        { store: 'A', total: 50 },
+        { store: 'A', total: 25 },
+        { store: 'B', total: 70 },
+        { store: 'C', total: 10 },
+        { store: 'B', total: 20 },
+      ],
+    );
+  }, 120000);
+
+  afterAll(async () => {
+    if (table) await table.drop();
+  });
+
+  it('returns aggregated and filtered revenue from real BigQuery', async () => {
+    const out = await runRevenueByStore(bq, table.fqn, 60);
+    const normalized = out.map((r: any) => ({
+      store: r.store,
+      revenue: Number(r.revenue),
+    }));
+    expect(normalized).toEqual([
       { store: 'B', revenue: 90 },
       { store: 'A', revenue: 75 },
     ]);
-  });
+  }, 60000);
 
-  it('solution should reference TeraORM in this track', () => {
+  it('ORM track marker: solution must reference TeraORM', () => {
     const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
     expect(source.includes('teraorm')).toBe(true);
-  });
-
-  it('solution should avoid raw SQL composition in this track', () => {
-    const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
-    expect(/\\bselect\\s+.+\\bfrom\\b/.test(source)).toBe(false);
   });
 });
 `,
@@ -139,39 +174,49 @@ describe('AB01 ORM - Revenue by store', () => {
   {
     title: 'AB02 SDK - Top customers test',
     description:
-      'Validates SQL-first implementation for filtered top customers.',
-    workerType: WorkerType.NODE_DEFAULT,
+      'Executes the student SDK-track function against a freshly seeded BigQuery table.',
+    workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
-import {
-  buildTopCustomersQuery,
-  computeTopCustomers,
-} from './src/app';
+import { bq, seedTable, SeededTable } from '../test-utils/bq';
+import { runTopCustomers } from './src/app';
 
-describe('AB02 SDK - Top customers', () => {
-  const rows = [
-    { customer: 'Ana', region: 'sudeste', orders: 7 },
-    { customer: 'Bruno', region: 'sul', orders: 4 },
-    { customer: 'Carla', region: 'sudeste', orders: 10 },
-    { customer: 'Diego', region: 'sudeste', orders: 6 },
-  ];
+describe('AB02 SDK - Top customers (BigQuery)', () => {
+  let table: SeededTable;
 
-  it('buildTopCustomersQuery should contain SQL clauses', () => {
-    const sql = buildTopCustomersQuery('sudeste', 6, 2).toLowerCase();
-    expect(sql).toContain('select');
-    expect(sql).toContain('where');
-    expect(sql).toContain('order by');
-    expect(sql).toContain('limit');
+  beforeAll(async () => {
+    table = await seedTable(
+      'ab02_orders',
+      [
+        { name: 'customer', type: 'STRING' },
+        { name: 'region', type: 'STRING' },
+        { name: 'orders', type: 'INT64' },
+      ],
+      [
+        { customer: 'Ana', region: 'sudeste', orders: 7 },
+        { customer: 'Bruno', region: 'sul', orders: 4 },
+        { customer: 'Carla', region: 'sudeste', orders: 10 },
+        { customer: 'Diego', region: 'sudeste', orders: 6 },
+      ],
+    );
+  }, 120000);
+
+  afterAll(async () => {
+    if (table) await table.drop();
   });
 
-  it('computeTopCustomers should filter and rank correctly', () => {
-    const out = computeTopCustomers(rows, 'sudeste', 6, 2);
-    expect(out).toEqual([
+  it('returns top customers from real BigQuery', async () => {
+    const out = await runTopCustomers(bq, table.fqn, 'sudeste', 6, 2);
+    const normalized = out.map((r: any) => ({
+      customer: r.customer,
+      orders: Number(r.orders),
+    }));
+    expect(normalized).toEqual([
       { customer: 'Carla', orders: 10 },
       { customer: 'Ana', orders: 7 },
     ]);
-  });
+  }, 60000);
 
-  it('solution should stay SDK-oriented for this track', () => {
+  it('SDK track marker: solution must not depend on TeraORM', () => {
     const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
     expect(source.includes('teraorm')).toBe(false);
   });
@@ -181,35 +226,51 @@ describe('AB02 SDK - Top customers', () => {
   {
     title: 'AB02 ORM - Top customers test',
     description:
-      'Validates ORM-oriented implementation for filtered top customers.',
+      'Executes the student ORM-track function against a freshly seeded BigQuery table.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
-import { buildTopCustomersReport } from './src/app';
+import { bq, seedTable, SeededTable } from '../test-utils/bq';
+import { runTopCustomers } from './src/app';
 
-describe('AB02 ORM - Top customers', () => {
-  const rows = [
-    { customer: 'Ana', region: 'sudeste', orders: 7 },
-    { customer: 'Bruno', region: 'sul', orders: 4 },
-    { customer: 'Carla', region: 'sudeste', orders: 10 },
-    { customer: 'Diego', region: 'sudeste', orders: 6 },
-  ];
+describe('AB02 ORM - Top customers (BigQuery)', () => {
+  let table: SeededTable;
 
-  it('buildTopCustomersReport should filter and rank correctly', () => {
-    const out = buildTopCustomersReport(rows, 'sudeste', 6, 2);
-    expect(out).toEqual([
+  beforeAll(async () => {
+    table = await seedTable(
+      'ab02_orders',
+      [
+        { name: 'customer', type: 'STRING' },
+        { name: 'region', type: 'STRING' },
+        { name: 'orders', type: 'INT64' },
+      ],
+      [
+        { customer: 'Ana', region: 'sudeste', orders: 7 },
+        { customer: 'Bruno', region: 'sul', orders: 4 },
+        { customer: 'Carla', region: 'sudeste', orders: 10 },
+        { customer: 'Diego', region: 'sudeste', orders: 6 },
+      ],
+    );
+  }, 120000);
+
+  afterAll(async () => {
+    if (table) await table.drop();
+  });
+
+  it('returns top customers from real BigQuery', async () => {
+    const out = await runTopCustomers(bq, table.fqn, 'sudeste', 6, 2);
+    const normalized = out.map((r: any) => ({
+      customer: r.customer,
+      orders: Number(r.orders),
+    }));
+    expect(normalized).toEqual([
       { customer: 'Carla', orders: 10 },
       { customer: 'Ana', orders: 7 },
     ]);
-  });
+  }, 60000);
 
-  it('solution should reference TeraORM in this track', () => {
+  it('ORM track marker: solution must reference TeraORM', () => {
     const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
     expect(source.includes('teraorm')).toBe(true);
-  });
-
-  it('solution should avoid raw SQL composition in this track', () => {
-    const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
-    expect(/\\bselect\\s+.+\\bfrom\\b/.test(source)).toBe(false);
   });
 });
 `,
@@ -220,25 +281,47 @@ const assignments: StudyAssignment[] = [
   {
     title: 'AB01-A SDK Native: Revenue by Store',
     description:
-      'Question: build grouped revenue query and execute equivalent local aggregation without ORM. Answer target: report sorted by revenue desc and threshold filtering.',
-    workerType: WorkerType.NODE_DEFAULT,
+      'Question: write a BigQuery SQL query (via @google-cloud/bigquery) that returns aggregated revenue per store, filtered by minRevenue and ordered desc.',
+    workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
     templateTitle: 'AB01 SDK - Revenue by store test',
-    boilerplateContent: `export type RevenueRow = { store: string; total: number };
+    interviewConfig: {
+      questions: [
+        {
+          key: 'sdkRevenueClarity',
+          label: 'Quão claro foi escrever esta query em SQL puro? (1 = nada claro, 5 = muito claro)',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'sdkRevenueDifficulty',
+          label: 'Qual foi a principal dificuldade neste exercício?',
+          type: 'short_text',
+        },
+      ],
+    },
+    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
+
 export type RevenueReportRow = { store: string; revenue: number };
 
-// Question 1: Write a SQL string that represents grouped revenue by store.
-export function buildRevenueByStoreQuery(minRevenue: number): string {
-  // TODO: implement for SDK track
-  return '';
-}
-
-// Question 2: Simulate query execution result using local data.
-export function computeRevenueByStore(
-  rows: RevenueRow[],
+/**
+ * SDK track: compose a raw SQL query and execute it via the provided BigQuery client.
+ *
+ * The seeded table has columns:
+ *   - store  STRING
+ *   - total  INT64
+ *
+ * Return rows whose SUM(total) >= minRevenue, ordered by revenue desc.
+ * The shape returned by the query must match { store: string; revenue: number }.
+ *
+ * NOTE: \`table\` is already a backtick-quoted FQN like \`project.dataset.table\`,
+ * so you can interpolate it directly into the FROM clause.
+ */
+export async function runRevenueByStore(
+  bq: BigQuery,
+  table: string,
   minRevenue: number,
-): RevenueReportRow[] {
-  // TODO: implement for SDK track
+): Promise<RevenueReportRow[]> {
+  // TODO: implement using bq.query({ query: 'SELECT ...' })
   return [];
 }
 `,
@@ -246,25 +329,45 @@ export function computeRevenueByStore(
   {
     title: 'AB01-B TeraORM: Revenue by Store',
     description:
-      'Question: solve same grouped revenue scenario with ORM-oriented code style. Answer target: same output as AB01-A, but modeled with TeraORM style and no raw SQL.',
+      'Question: solve the same revenue-by-store scenario but using TeraORM to express the query against BigQuery. Result must match the SDK track exactly.',
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
     templateTitle: 'AB01 ORM - Revenue by store test',
-    boilerplateContent: `import { tera } from 'teraorm';
+    interviewConfig: {
+      questions: [
+        {
+          key: 'ormRevenueClarity',
+          label: 'Quão claro foi expressar esta query com TeraORM? (1 = nada claro, 5 = muito claro)',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormRevenueDifficulty',
+          label: 'Qual foi a principal dificuldade neste exercício?',
+          type: 'short_text',
+        },
+      ],
+    },
+    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
+import * as teraorm from 'teraorm';
 
-export type RevenueRow = { store: string; total: number };
 export type RevenueReportRow = { store: string; revenue: number };
 
-/*
-  Question: implement with ORM-oriented style.
-  You do not need a real DB adapter in this exercise, only preserve ORM semantics.
-*/
-export function buildRevenueByStoreReport(
-  rows: RevenueRow[],
+/**
+ * ORM track: model and execute the query using TeraORM primitives.
+ * You may still call bq.query() to run the resulting SQL, but the composition
+ * itself must be ORM-style (no hand-written SELECT/FROM in this file).
+ *
+ * Seeded table columns:
+ *   - store  STRING
+ *   - total  INT64
+ */
+export async function runRevenueByStore(
+  bq: BigQuery,
+  table: string,
   minRevenue: number,
-): RevenueReportRow[] {
-  void tera;
-  // TODO: implement for ORM track
+): Promise<RevenueReportRow[]> {
+  void teraorm;
+  // TODO: implement with TeraORM
   return [];
 }
 `,
@@ -272,37 +375,47 @@ export function buildRevenueByStoreReport(
   {
     title: 'AB02-A SDK Native: Top Customers by Region',
     description:
-      'Question: build SQL for ranking customers by region and minimum orders, and compute the same result locally. Answer target: ordered list with limit.',
-    workerType: WorkerType.NODE_DEFAULT,
+      'Question: write a BigQuery SQL query that returns top N customers in a region with at least minOrders, ordered by orders desc.',
+    workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
     templateTitle: 'AB02 SDK - Top customers test',
-    boilerplateContent: `export type CustomerOrderRow = {
-  customer: string;
-  region: string;
-  orders: number;
-};
+    interviewConfig: {
+      questions: [
+        {
+          key: 'sdkTopCustomersClarity',
+          label: 'Quão claro foi escrever esta query em SQL puro? (1 = nada claro, 5 = muito claro)',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'sdkTopCustomersDifficulty',
+          label: 'Qual foi a principal dificuldade neste exercício?',
+          type: 'short_text',
+        },
+      ],
+    },
+    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 
-export type CustomerReportRow = {
-  customer: string;
-  orders: number;
-};
+export type CustomerReportRow = { customer: string; orders: number };
 
-export function buildTopCustomersQuery(
+/**
+ * SDK track: compose a raw SQL query and execute it via the provided BigQuery client.
+ *
+ * Seeded table columns:
+ *   - customer  STRING
+ *   - region    STRING
+ *   - orders    INT64
+ *
+ * Return the top \`limit\` customers in the given region whose orders >= minOrders,
+ * ordered by orders desc.
+ */
+export async function runTopCustomers(
+  bq: BigQuery,
+  table: string,
   region: string,
   minOrders: number,
   limit: number,
-): string {
-  // TODO: implement for SDK track
-  return '';
-}
-
-export function computeTopCustomers(
-  rows: CustomerOrderRow[],
-  region: string,
-  minOrders: number,
-  limit: number,
-): CustomerReportRow[] {
-  // TODO: implement for SDK track
+): Promise<CustomerReportRow[]> {
+  // TODO: implement using bq.query({ query: 'SELECT ...' })
   return [];
 }
 `,
@@ -310,31 +423,46 @@ export function computeTopCustomers(
   {
     title: 'AB02-B TeraORM: Top Customers by Region',
     description:
-      'Question: solve same ranking scenario with ORM-oriented composition. Answer target: same output as AB02-A, with explicit intent and no raw SQL.',
+      'Question: same top-customers scenario as AB02-A but composed with TeraORM. Result must match the SDK track exactly.',
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
     templateTitle: 'AB02 ORM - Top customers test',
-    boilerplateContent: `import { tera } from 'teraorm';
+    interviewConfig: {
+      questions: [
+        {
+          key: 'ormTopCustomersClarity',
+          label: 'Quão claro foi expressar esta query com TeraORM? (1 = nada claro, 5 = muito claro)',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormTopCustomersDifficulty',
+          label: 'Qual foi a principal dificuldade neste exercício?',
+          type: 'short_text',
+        },
+      ],
+    },
+    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
+import * as teraorm from 'teraorm';
 
-export type CustomerOrderRow = {
-  customer: string;
-  region: string;
-  orders: number;
-};
+export type CustomerReportRow = { customer: string; orders: number };
 
-export type CustomerReportRow = {
-  customer: string;
-  orders: number;
-};
-
-export function buildTopCustomersReport(
-  rows: CustomerOrderRow[],
+/**
+ * ORM track: model the query using TeraORM primitives.
+ *
+ * Seeded table columns:
+ *   - customer  STRING
+ *   - region    STRING
+ *   - orders    INT64
+ */
+export async function runTopCustomers(
+  bq: BigQuery,
+  table: string,
   region: string,
   minOrders: number,
   limit: number,
-): CustomerReportRow[] {
-  void tera;
-  // TODO: implement for ORM track
+): Promise<CustomerReportRow[]> {
+  void teraorm;
+  // TODO: implement with TeraORM
   return [];
 }
 `,
@@ -446,6 +574,11 @@ async function ensureAssignment(options: {
     'assignment',
     'createdById',
   );
+  const assignmentHasInterviewConfig = await hasColumn(
+    dataSource,
+    'assignment',
+    'interviewConfig',
+  );
 
   const existing = await dataSource.query(
     `SELECT "id" FROM "assignment" WHERE "title" = $1 AND "classId" = $2 LIMIT 1`,
@@ -475,6 +608,15 @@ async function ensureAssignment(options: {
     if (assignmentHasCreatedById) {
       setParts.push(`"createdById" = $${params.length + 1}`);
       params.push(teacherId);
+    }
+
+    if (assignmentHasInterviewConfig) {
+      setParts.push(`"interviewConfig" = $${params.length + 1}`);
+      params.push(
+        assignment.interviewConfig
+          ? JSON.stringify(assignment.interviewConfig)
+          : null,
+      );
     }
 
     params.push(assignmentId);
@@ -507,6 +649,11 @@ async function ensureAssignment(options: {
     if (assignmentHasCreatedById) {
       columns.push('"createdById"');
       values.push(teacherId);
+    }
+
+    if (assignmentHasInterviewConfig && assignment.interviewConfig) {
+      columns.push('"interviewConfig"');
+      values.push(JSON.stringify(assignment.interviewConfig));
     }
 
     const placeholders = values.map((_v, idx) => `$${idx + 1}`).join(', ');

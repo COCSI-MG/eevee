@@ -1,11 +1,12 @@
 import {
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
+    IsEnum,
+    IsInt,
+    IsNotEmpty,
+    IsObject,
+    IsOptional,
+    IsString,
+    Max,
+    Min,
 } from 'class-validator';
 
 export enum InterviewPreferenceOption {
@@ -25,69 +26,83 @@ export class CreateInterviewResponseDto {
   @Min(1)
   attemptId?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  familiaritySql: number;
+  familiaritySql?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  familiarityJsTs: number;
+  familiarityJsTs?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  familiarityOrms: number;
+  familiarityOrms?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  sdkClarity: number;
+  sdkClarity?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  sdkModifiability: number;
+  sdkModifiability?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  sdkSqlErrorProneness: number;
+  sdkSqlErrorProneness?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  ormClarity: number;
+  ormClarity?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  ormModifiability: number;
+  ormModifiability?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  ormIntent: number;
+  ormIntent?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  ormMentalEffort: number;
+  ormMentalEffort?: number;
 
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(5)
-  ormSafety: number;
+  ormSafety?: number;
 
+  @IsOptional()
   @IsEnum(InterviewPreferenceOption)
-  easierToUnderstand: InterviewPreferenceOption;
+  easierToUnderstand?: InterviewPreferenceOption;
 
+  @IsOptional()
   @IsEnum(InterviewPreferenceOption)
-  easierToModify: InterviewPreferenceOption;
+  easierToModify?: InterviewPreferenceOption;
 
+  @IsOptional()
   @IsEnum(InterviewPreferenceOption)
-  futurePreference: InterviewPreferenceOption;
+  futurePreference?: InterviewPreferenceOption;
 
   @IsOptional()
   @IsString()
@@ -103,4 +118,8 @@ export class CreateInterviewResponseDto {
   @IsString()
   @IsNotEmpty()
   additionalNotes?: string;
+
+  @IsOptional()
+  @IsObject()
+  extraAnswers?: Record<string, string | number>;
 }

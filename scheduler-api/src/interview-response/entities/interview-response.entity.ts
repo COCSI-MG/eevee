@@ -31,56 +31,59 @@ export class InterviewResponse {
   @JoinColumn({ name: 'attemptId' })
   attempt?: Attempt;
 
-  @Column()
-  familiaritySql: number;
+  @Column({ nullable: true })
+  familiaritySql?: number;
 
-  @Column()
-  familiarityJsTs: number;
+  @Column({ nullable: true })
+  familiarityJsTs?: number;
 
-  @Column()
-  familiarityOrms: number;
+  @Column({ nullable: true })
+  familiarityOrms?: number;
 
-  @Column()
-  sdkClarity: number;
+  @Column({ nullable: true })
+  sdkClarity?: number;
 
-  @Column()
-  sdkModifiability: number;
+  @Column({ nullable: true })
+  sdkModifiability?: number;
 
-  @Column()
-  sdkSqlErrorProneness: number;
+  @Column({ nullable: true })
+  sdkSqlErrorProneness?: number;
 
-  @Column()
-  ormClarity: number;
+  @Column({ nullable: true })
+  ormClarity?: number;
 
-  @Column()
-  ormModifiability: number;
+  @Column({ nullable: true })
+  ormModifiability?: number;
 
-  @Column()
-  ormIntent: number;
+  @Column({ nullable: true })
+  ormIntent?: number;
 
-  @Column()
-  ormMentalEffort: number;
+  @Column({ nullable: true })
+  ormMentalEffort?: number;
 
-  @Column()
-  ormSafety: number;
-
-  @Column({
-    type: 'enum',
-    enum: InterviewPreferenceOption,
-  })
-  easierToUnderstand: InterviewPreferenceOption;
+  @Column({ nullable: true })
+  ormSafety?: number;
 
   @Column({
     type: 'enum',
     enum: InterviewPreferenceOption,
+    nullable: true,
   })
-  easierToModify: InterviewPreferenceOption;
+  easierToUnderstand?: InterviewPreferenceOption;
 
   @Column({
     type: 'enum',
     enum: InterviewPreferenceOption,
+    nullable: true,
   })
-  futurePreference: InterviewPreferenceOption;
+  easierToModify?: InterviewPreferenceOption;
+
+  @Column({
+    type: 'enum',
+    enum: InterviewPreferenceOption,
+    nullable: true,
+  })
+  futurePreference?: InterviewPreferenceOption;
 
   @Column({ type: 'text', nullable: true })
   teraormMainAdvantage?: string;
@@ -90,6 +93,9 @@ export class InterviewResponse {
 
   @Column({ type: 'text', nullable: true })
   additionalNotes?: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  extraAnswers?: Record<string, string | number>;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
