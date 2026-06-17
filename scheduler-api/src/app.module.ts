@@ -46,7 +46,7 @@ import { InterviewResponseModule } from './interview-response/interview-response
       throttlers: [
         {
           ttl: 60000,
-          limit: 30,
+          limit: 300,
         },
       ],
     }),

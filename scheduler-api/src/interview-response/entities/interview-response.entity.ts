@@ -1,7 +1,14 @@
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { InterviewPreferenceOption } from '../dto/create-interview-response.dto';
 
 @Entity()

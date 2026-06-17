@@ -1,9 +1,9 @@
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
-import { WorkerType } from './src/worker/enum/worker-type.enum';
+import { WorkerType } from '../src/worker/enum/worker-type.enum';
 
-dotenv.config({ path: join(__dirname, '.env') });
+dotenv.config({ path: join(__dirname, '../.env') });
 
 type StudyTemplate = {
   title: string;
@@ -33,9 +33,9 @@ type StudyAssignment = {
   interviewConfig?: InterviewConfig;
 };
 
-const STUDY_CLASS_NAME = 'TeraORM AB Validation Module';
+const STUDY_CLASS_NAME = 'Módulo de Validação TeraORM AB';
 const STUDY_CLASS_DESCRIPTION =
-  'Paired exercises to compare SDK-native and TeraORM-based implementations.';
+  'Exercícios para comparar implementações nativas do SDK e baseadas em TeraORM, com formulário inicial, avaliações por atividade e formulário final comparativo.';
 
 const columnExistsCache = new Map<string, boolean>();
 
@@ -67,16 +67,42 @@ async function hasColumn(
 }
 
 const templates: StudyTemplate[] = [
+
   {
-    title: 'AB01 SDK - Revenue by store test',
+    title: 'FORM00 - Perfil do Participante',
     description:
-      'Executes the student SDK-track function against a freshly seeded BigQuery table.',
+      'Template de validação simples para liberar o formulário inicial de perfil do participante.',
+    workerType: WorkerType.NODE_TERAORM,
+    content: `describe('FORM00 - Perfil do Participante', () => {
+  it('registra o formulário inicial sem avaliar código', () => {
+    expect(true).toBe(true);
+  });
+});
+`,
+  },
+  {
+    title: 'FORM99 - Avaliação Final do Experimento',
+    description:
+      'Template de validação simples para liberar o formulário final de percepção comparativa.',
+    workerType: WorkerType.NODE_TERAORM,
+    content: `describe('FORM99 - Avaliação Final do Experimento', () => {
+  it('registra o formulário final sem avaliar código', () => {
+    expect(true).toBe(true);
+  });
+});
+`,
+  },
+
+  {
+    title: 'AB01 SDK - Teste de Receita por Loja',
+    description:
+      'Valida a solução do aluno na trilha SDK contra uma tabela de teste do BigQuery.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
 import { runRevenueByStore } from './src/app';
 
-describe('AB01 SDK - Revenue by store (BigQuery)', () => {
+describe('AB01 SDK - Receita por loja (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
@@ -100,7 +126,7 @@ describe('AB01 SDK - Revenue by store (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('returns aggregated and filtered revenue from real BigQuery', async () => {
+  it('retorna receita agregada e filtrada do BigQuery', async () => {
     const out = await runRevenueByStore(bq, table.fqn, 60);
     const normalized = out.map((r: any) => ({
       store: r.store,
@@ -120,15 +146,16 @@ describe('AB01 SDK - Revenue by store (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB01 ORM - Revenue by store test',
+    title: 'AB01 ORM - Teste de Receita por Loja',
     description:
-      'Executes the student ORM-track function against a freshly seeded BigQuery table.',
+      'Valida a solução do aluno na trilha TeraORM contra uma tabela de teste do BigQuery.',
     workerType: WorkerType.NODE_TERAORM,
+    dependencies: ['teraorm', '@teraorm/bigquery'],
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
 import { runRevenueByStore } from './src/app';
 
-describe('AB01 ORM - Revenue by store (BigQuery)', () => {
+describe('AB01 TeraORM - Receita por loja (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
@@ -152,7 +179,7 @@ describe('AB01 ORM - Revenue by store (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('returns aggregated and filtered revenue from real BigQuery', async () => {
+  it('retorna receita agregada e filtrada do BigQuery', async () => {
     const out = await runRevenueByStore(bq, table.fqn, 60);
     const normalized = out.map((r: any) => ({
       store: r.store,
@@ -172,15 +199,15 @@ describe('AB01 ORM - Revenue by store (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB02 SDK - Top customers test',
+    title: 'AB02 SDK - Teste de Principais Clientes',
     description:
-      'Executes the student SDK-track function against a freshly seeded BigQuery table.',
+      'Valida a solução do aluno na trilha SDK contra uma tabela de teste do BigQuery.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
 import { runTopCustomers } from './src/app';
 
-describe('AB02 SDK - Top customers (BigQuery)', () => {
+describe('AB02 SDK - Principais clientes (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
@@ -204,7 +231,7 @@ describe('AB02 SDK - Top customers (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('returns top customers from real BigQuery', async () => {
+  it('retorna os principais clientes do BigQuery', async () => {
     const out = await runTopCustomers(bq, table.fqn, 'sudeste', 6, 2);
     const normalized = out.map((r: any) => ({
       customer: r.customer,
@@ -224,15 +251,16 @@ describe('AB02 SDK - Top customers (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB02 ORM - Top customers test',
+    title: 'AB02 ORM - Teste de Principais Clientes',
     description:
-      'Executes the student ORM-track function against a freshly seeded BigQuery table.',
+      'Valida a solução do aluno na trilha TeraORM contra uma tabela de teste do BigQuery.',
     workerType: WorkerType.NODE_TERAORM,
+    dependencies: ['teraorm', '@teraorm/bigquery'],
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
 import { runTopCustomers } from './src/app';
 
-describe('AB02 ORM - Top customers (BigQuery)', () => {
+describe('AB02 TeraORM - Principais clientes (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
@@ -256,7 +284,7 @@ describe('AB02 ORM - Top customers (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('returns top customers from real BigQuery', async () => {
+  it('retorna os principais clientes do BigQuery', async () => {
     const out = await runTopCustomers(bq, table.fqn, 'sudeste', 6, 2);
     const normalized = out.map((r: any) => ({
       customer: r.customer,
@@ -276,15 +304,15 @@ describe('AB02 ORM - Top customers (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB03 SDK - Average ticket by category test',
+    title: 'AB03 SDK - Teste de Ticket Médio por Categoria',
     description:
-      'Executes the student SDK-track function against a freshly seeded BigQuery table.',
+      'Valida a solução do aluno na trilha SDK contra uma tabela de teste do BigQuery.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
 import { runAvgTicketByCategory } from './src/app';
 
-describe('AB03 SDK - Average ticket by category (BigQuery)', () => {
+describe('AB03 SDK - Ticket médio por categoria (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
@@ -310,7 +338,7 @@ describe('AB03 SDK - Average ticket by category (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('returns average ticket per category, filtered and ordered', async () => {
+  it('retorna o ticket médio por categoria, filtrado e ordenado', async () => {
     const out = await runAvgTicketByCategory(bq, table.fqn, 3);
     const normalized = out.map((r: any) => ({
       category: r.category,
@@ -323,7 +351,7 @@ describe('AB03 SDK - Average ticket by category (BigQuery)', () => {
     ]);
   }, 60000);
 
-  it('SDK track marker: solution must not depend on TeraORM', () => {
+  it('marcador de trilha SDK: solução não deve importar TeraORM', () => {
     const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
     expect(source.includes('teraorm')).toBe(false);
   });
@@ -331,15 +359,16 @@ describe('AB03 SDK - Average ticket by category (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB03 ORM - Average ticket by category test',
+    title: 'AB03 ORM - Teste de Ticket Médio por Categoria',
     description:
-      'Executes the student ORM-track function against a freshly seeded BigQuery table.',
+      'Valida a solução do aluno na trilha TeraORM contra uma tabela de teste do BigQuery.',
     workerType: WorkerType.NODE_TERAORM,
+    dependencies: ['teraorm', '@teraorm/bigquery'],
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
 import { runAvgTicketByCategory } from './src/app';
 
-describe('AB03 ORM - Average ticket by category (BigQuery)', () => {
+describe('AB03 TeraORM - Ticket médio por categoria (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
@@ -365,7 +394,7 @@ describe('AB03 ORM - Average ticket by category (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('returns average ticket per category, filtered and ordered', async () => {
+  it('retorna o ticket médio por categoria, filtrado e ordenado', async () => {
     const out = await runAvgTicketByCategory(bq, table.fqn, 3);
     const normalized = out.map((r: any) => ({
       category: r.category,
@@ -378,7 +407,7 @@ describe('AB03 ORM - Average ticket by category (BigQuery)', () => {
     ]);
   }, 60000);
 
-  it('ORM track marker: solution must reference TeraORM', () => {
+  it('marcador de trilha TeraORM: solução deve importar TeraORM', () => {
     const source = fs.readFileSync('./src/app.ts', 'utf8').toLowerCase();
     expect(source.includes('teraorm')).toBe(true);
   });
@@ -386,15 +415,15 @@ describe('AB03 ORM - Average ticket by category (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB04 SDK - Low stock products test',
+    title: 'AB04 SDK - Teste de Produtos com Baixo Estoque',
     description:
-      'Executes the student SDK-track function against a freshly seeded BigQuery table.',
+      'Valida a solução do aluno na trilha SDK contra uma tabela de teste do BigQuery.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
 import { runLowStock } from './src/app';
 
-describe('AB04 SDK - Low stock products (BigQuery)', () => {
+describe('AB04 SDK - Produtos com baixo estoque (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
@@ -441,15 +470,16 @@ describe('AB04 SDK - Low stock products (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB04 ORM - Low stock products test',
+    title: 'AB04 ORM - Teste de Produtos com Baixo Estoque',
     description:
-      'Executes the student ORM-track function against a freshly seeded BigQuery table.',
+      'Valida a solução do aluno na trilha TeraORM contra uma tabela de teste do BigQuery.',
     workerType: WorkerType.NODE_TERAORM,
+    dependencies: ['teraorm', '@teraorm/bigquery'],
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
 import { runLowStock } from './src/app';
 
-describe('AB04 ORM - Low stock products (BigQuery)', () => {
+describe('AB04 TeraORM - Produtos com baixo estoque (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
@@ -498,14 +528,14 @@ describe('AB04 ORM - Low stock products (BigQuery)', () => {
 ];
 
 const SDK_PRIMER = `/**
- * === SDK track primer (read first) ===
+ * === Introdução ao Bigquery (leia primeiro) ===
  *
- * You receive an already-configured BigQuery client (\`bq\`) from
- * '@google-cloud/bigquery' and a table reference (\`table\`) that is ALREADY a
- * backtick-quoted fully-qualified name, e.g.  \\\`project.dataset.table\\\`.
- * Interpolate it directly into the FROM clause — do NOT add extra backticks.
+ * Você recebe um cliente BigQuery já configurado (\`bq\`) do pacote
+ * '@google-cloud/bigquery' e uma referência de tabela (\`table\`) que já é um
+ * nome totalmente qualificado utilizando o seguinte caractere: \`.\` (ponto), ex: \\\`project.dataset.table\\\`.
+ * Interpole-o diretamente na cláusula FROM.
  *
- * Minimal pattern:
+ * Padrão mínimo:
  *
  *   const [rows] = await bq.query({
  *     query: \`
@@ -519,39 +549,40 @@ const SDK_PRIMER = `/**
  *     \`,
  *     params: { region, minValue, limit },
  *   });
- *   return rows.map((r: any) => ({ ...your shape... }));
+ *   return rows.map((r: any) => ({ ...sua forma... }));
  *
- * Notes:
- *  - \`bq.query\` returns \`[rows, jobMetadata]\`; destructure the first element.
- *  - Prefer named parameters (\`@name\`) and the \`params\` option over string
- *    concatenation for any value you did not produce yourself.
- *  - INT64 columns come back as numbers OR strings depending on size — call
- *    \`Number(value)\` if the test expects a JS number.
- *  - The aliases you SELECT are the keys of each row object.
+ * Notas:
+ *  - \`bq.query\` retorna \`[rows, jobMetadata]\`; desestruture o primeiro elemento.
+ *  - Prefira parâmetros nomeados (\`@name\`) e a opção \`params\` em vez de concatenação
+ *    de strings para qualquer valor que você não produziu a si mesmo.
+ *  - Colunas INT64 voltam como números OU strings dependendo do tamanho — chame
+ *    \`Number(value)\` se o teste espera um número JS.
+ *  - Os aliases que você SELECT são as chaves de cada objeto de linha.
  */`;
 
 const ORM_PRIMER = `/**
- * === TeraORM track primer (read first) ===
+ * === Introdução ao TeraORM (leia primeiro) ===
  *
- * TeraORM is a lightweight, chainable query builder. You compose a plan with
- * a fluent API instead of writing SQL by hand, then execute it through an
- * adapter (here: BigQuery).
+ * TeraORM é um query builder leve e encadeável. Você compõe um plano com
+ * uma API fluente em vez de escrever SQL à mão, depois o executa através de um
+ * adaptador (aqui: BigQuery).
  *
- * Minimal pattern:
+ * Padrão mínimo:
  *
  *   import { BigQuery } from '@google-cloud/bigquery';
  *   import { defineModel, tera } from 'teraorm';
  *   import { createBigQueryAdapter } from '@teraorm/bigquery';
  *
- *   // 1. Describe the columns (just the names matter for the plan).
+ *   // 1. Descreva as colunas (apenas os nomes importam para o plano).
  *   const Sales = defineModel('sales', {
  *     category: '' as string,
  *     price: 0 as number,
  *   });
  *
- *   // 2. Build an adapter bound to the seeded table. The \`table\` argument
- *   //    you receive is \\\`project.dataset.table\\\` — strip the backticks
- *   //    and split it to feed projectId / datasetId / tableName.
+ *   // 2. Construa um adaptador vinculado à tabela que foi gerada. O argumento \`table\`
+ *   //    que você recebe é uma string composta de \\\`project.dataset.table\\\`.
+ *   //    Remova os caracteres '\`' e realize um split pelo ponto
+ *   //    para encontrar os valores projectId / datasetId / tableName.
  *   const [projectId, datasetId, tableName] = table.replace(/\`/g, '').split('.');
  *   const adapter = createBigQueryAdapter({
  *     projectId,
@@ -560,8 +591,8 @@ const ORM_PRIMER = `/**
  *     bigquery: bq,
  *   });
  *
- *   // 3. Compose and execute. Aggregates take an alias; filter post-aggregate
- *   //    rows with .having(alias, op, value); sort by alias with .orderByAlias.
+ *   // 3. Componha e execute. Agregações levam um alias; filtro pós-agregação
+ *   //    linhas com .having(alias, op, value); ordene por alias com .orderByAlias.
  *   const rows = await tera(Sales, adapter)
  *     .select('category')
  *     .avg('price', 'avgPrice')
@@ -571,49 +602,87 @@ const ORM_PRIMER = `/**
  *     .orderByAlias('avgPrice', 'desc')
  *     .execute();
  *
- *   return rows.map((r: any) => ({ ...your shape... }));
+ *   return rows.map((r: any) => ({ ...sua forma... }));
  *
- * Operator cheat sheet (.where / .andWhere / .having):
+ * Cola de operadores (.where / .andWhere / .having):
  *   '=', '!=', '>', '>=', '<', '<=', 'LIKE', 'IN', 'BETWEEN'
  *
- * The ORM-marker test will fail unless this file imports from 'teraorm'.
+ * O teste de marcador ORM falhará a menos que este arquivo importe de 'teraorm'.
  */`;
 
 const assignments: StudyAssignment[] = [
   {
-    title: 'AB01-A SDK Native: Revenue by Store',
+    title: 'FORM00 - Perfil do Participante',
     description:
-      'Question: write a BigQuery SQL query (via @google-cloud/bigquery) that returns aggregated revenue per store, filtered by minRevenue and ordered desc.',
+      'Formulário inicial respondido ao entrar na disciplina, antes das atividades práticas.',
+    workerType: WorkerType.NODE_TERAORM,
+    maxAttempts: 1,
+    templateTitle: 'FORM00 - Perfil do Participante',
+    interviewConfig: {
+      questions: [
+        {
+          key: 'profileSqlFamiliarity',
+          label:
+            'Como você avalia sua familiaridade prévia com SQL?',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'profileJsTsFamiliarity',
+          label:
+            'Como você avalia sua familiaridade prévia com JavaScript ou TypeScript?',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'profileOrmFamiliarity',
+          label:
+            'Como você avalia sua familiaridade prévia com ORMs ou bibliotecas de acesso a dados?',
+          type: 'likert_1_5',
+        },
+      ],
+    },
+    boilerplateContent: `/**
+ * Atividade sem implementação de código.
+ * Preencha o formulário associado e submeta para registrar sua resposta.
+ */
+export {};
+`,
+  },
+  {
+    title: 'AB01-A SDK Nativo: Receita por Loja',
+    description:
+      'Pergunta: escreva uma query SQL do BigQuery (via @google-cloud/bigquery) que retorna receita agregada por loja, filtrada por minRevenue e ordenada desc.',
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB01 SDK - Revenue by store test',
+    templateTitle: 'AB01 SDK - Teste de Receita por Loja',
     interviewConfig: {
       questions: [
         {
           key: 'sdkRevenueClarity',
           label:
-            'Quão claro foi escrever esta query em SQL puro? (1 = nada claro, 5 = muito claro)',
+            'A solução implementada com o SDK nativo ficou clara e fácil de entender.',
           type: 'likert_1_5',
         },
         {
-          key: 'sdkRevenueConfidence',
+          key: 'sdkRevenueModification',
           label:
-            'Quão confiante você está de que sua solução funciona em todos os casos? (1 = nada confiante, 5 = muito confiante)',
+            'Foi fácil modificar filtros, parâmetros ou condições da consulta usando o SDK nativo.',
           type: 'likert_1_5',
         },
         {
           key: 'sdkRevenueErrorRisk',
           label:
-            'Quanto risco de erro você sente em escrever este SQL à mão? (1 = nenhum, 5 = muito alto)',
+            'A escrita de SQL literal no código tornou a implementação mais propensa a erros.',
           type: 'likert_1_5',
         },
         {
           key: 'sdkRevenueDifficulty',
-          label: 'Qual foi a principal dificuldade neste exercício?',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida nesta atividade com o SDK nativo?',
           type: 'short_text',
         },
       ],
     },
+    
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 
 ${SDK_PRIMER}
@@ -621,14 +690,14 @@ ${SDK_PRIMER}
 export type RevenueReportRow = { store: string; revenue: number };
 
 /**
- * SDK track: compose a raw SQL query and execute it via the provided BigQuery client.
+ * Trilha SDK: Escreva uma query SQL pura e execute via o cliente BigQuery fornecido.
  *
- * The seeded table has columns:
+ * A tabela de teste possui as colunas:
  *   - store  STRING
  *   - total  INT64
  *
- * Return rows whose SUM(total) >= minRevenue, ordered by revenue desc.
- * The shape returned by the query must match { store: string; revenue: number }.
+ * Retorne as linhas cuja SUM(total) >= minRevenue, ordenadas por receita (desc).
+ * O formato retornado deve corresponder a { store: string; revenue: number }.
  */
 export async function runRevenueByStore(
   bq: BigQuery,
@@ -641,98 +710,41 @@ export async function runRevenueByStore(
 `,
   },
   {
-    title: 'AB01-B TeraORM: Revenue by Store',
+    title: 'AB02-A SDK Nativo: Principais Clientes por Região',
     description:
-      'Question: solve the same revenue-by-store scenario but using TeraORM to express the query against BigQuery. Result must match the SDK track exactly.',
+      'Pergunta: escreva uma query SQL do BigQuery que retorna os N principais clientes em uma região com pelo menos minOrders, ordenado por orders desc.',
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB01 ORM - Revenue by store test',
-    interviewConfig: {
-      questions: [
-        {
-          key: 'ormRevenueClarity',
-          label:
-            'Quão claro foi expressar esta query com TeraORM? (1 = nada claro, 5 = muito claro)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'ormRevenueConfidence',
-          label:
-            'Quão confiante você está de que sua solução funciona em todos os casos? (1 = nada confiante, 5 = muito confiante)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'ormRevenueMentalEffort',
-          label:
-            'Quanto esforço mental foi necessário comparado à versão em SQL puro? (1 = muito menos, 5 = muito mais)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'ormRevenueDifficulty',
-          label: 'Qual foi a principal dificuldade neste exercício?',
-          type: 'short_text',
-        },
-      ],
-    },
-    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
-import * as teraorm from 'teraorm';
-
-${ORM_PRIMER}
-
-export type RevenueReportRow = { store: string; revenue: number };
-
-/**
- * ORM track: model and execute the query using TeraORM primitives.
- *
- * Seeded table columns:
- *   - store  STRING
- *   - total  INT64
- */
-export async function runRevenueByStore(
-  bq: BigQuery,
-  table: string,
-  minRevenue: number,
-): Promise<RevenueReportRow[]> {
-  void teraorm;
-  // TODO: implement with TeraORM
-  return [];
-}
-`,
-  },
-  {
-    title: 'AB02-A SDK Native: Top Customers by Region',
-    description:
-      'Question: write a BigQuery SQL query that returns top N customers in a region with at least minOrders, ordered by orders desc.',
-    workerType: WorkerType.NODE_TERAORM,
-    maxAttempts: 20,
-    templateTitle: 'AB02 SDK - Top customers test',
+    templateTitle: 'AB02 SDK - Teste de Principais Clientes',
     interviewConfig: {
       questions: [
         {
           key: 'sdkTopCustomersClarity',
           label:
-            'Quão claro foi escrever esta query em SQL puro? (1 = nada claro, 5 = muito claro)',
+            'A solução implementada com o SDK nativo ficou clara e fácil de entender.',
           type: 'likert_1_5',
         },
         {
-          key: 'sdkTopCustomersConfidence',
+          key: 'sdkTopCustomersModification',
           label:
-            'Quão confiante você está de que sua solução funciona em todos os casos? (1 = nada confiante, 5 = muito confiante)',
+            'Foi fácil modificar filtros, parâmetros ou condições da consulta usando o SDK nativo.',
           type: 'likert_1_5',
         },
         {
           key: 'sdkTopCustomersErrorRisk',
           label:
-            'Quanto risco de erro você sente em escrever este SQL à mão? (1 = nenhum, 5 = muito alto)',
+            'A escrita de SQL literal no código tornou a implementação mais propensa a erros.',
           type: 'likert_1_5',
         },
         {
           key: 'sdkTopCustomersDifficulty',
-          label: 'Qual foi a principal dificuldade neste exercício?',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida nesta atividade com o SDK nativo?',
           type: 'short_text',
         },
       ],
     },
+    
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 
 ${SDK_PRIMER}
@@ -763,101 +775,41 @@ export async function runTopCustomers(
 `,
   },
   {
-    title: 'AB02-B TeraORM: Top Customers by Region',
+    title: 'AB03-A SDK Nativo: Ticket Médio por Categoria',
     description:
-      'Question: same top-customers scenario as AB02-A but composed with TeraORM. Result must match the SDK track exactly.',
+      'Pergunta: escreva uma query SQL do BigQuery que retorna o ticket médio (AVG de price) por categoria, filtrado por minSales (HAVING COUNT(*) >= minSales) e ordenado por avgTicket desc.',
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB02 ORM - Top customers test',
-    interviewConfig: {
-      questions: [
-        {
-          key: 'ormTopCustomersClarity',
-          label:
-            'Quão claro foi expressar esta query com TeraORM? (1 = nada claro, 5 = muito claro)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'ormTopCustomersConfidence',
-          label:
-            'Quão confiante você está de que sua solução funciona em todos os casos? (1 = nada confiante, 5 = muito confiante)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'ormTopCustomersMentalEffort',
-          label:
-            'Quanto esforço mental foi necessário comparado à versão em SQL puro? (1 = muito menos, 5 = muito mais)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'ormTopCustomersDifficulty',
-          label: 'Qual foi a principal dificuldade neste exercício?',
-          type: 'short_text',
-        },
-      ],
-    },
-    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
-import * as teraorm from 'teraorm';
-
-${ORM_PRIMER}
-
-export type CustomerReportRow = { customer: string; orders: number };
-
-/**
- * ORM track: model the query using TeraORM primitives.
- *
- * Seeded table columns:
- *   - customer  STRING
- *   - region    STRING
- *   - orders    INT64
- */
-export async function runTopCustomers(
-  bq: BigQuery,
-  table: string,
-  region: string,
-  minOrders: number,
-  limit: number,
-): Promise<CustomerReportRow[]> {
-  void teraorm;
-  // TODO: implement with TeraORM
-  return [];
-}
-`,
-  },
-  {
-    title: 'AB03-A SDK Native: Average Ticket by Category',
-    description:
-      'Question: write a BigQuery SQL query that returns the average ticket (AVG of price) per category, filtered by minSales (HAVING COUNT(*) >= minSales) and ordered by avgTicket desc.',
-    workerType: WorkerType.NODE_TERAORM,
-    maxAttempts: 20,
-    templateTitle: 'AB03 SDK - Average ticket by category test',
+    templateTitle: 'AB03 SDK - Teste de Ticket Médio por Categoria',
     interviewConfig: {
       questions: [
         {
           key: 'sdkAvgTicketClarity',
           label:
-            'Quão claro foi escrever esta query em SQL puro? (1 = nada claro, 5 = muito claro)',
+            'A solução implementada com o SDK nativo ficou clara e fácil de entender.',
           type: 'likert_1_5',
         },
         {
-          key: 'sdkAvgTicketConfidence',
+          key: 'sdkAvgTicketModification',
           label:
-            'Quão confiante você está de que sua solução funciona em todos os casos? (1 = nada confiante, 5 = muito confiante)',
+            'Foi fácil modificar filtros, parâmetros ou condições da consulta usando o SDK nativo.',
           type: 'likert_1_5',
         },
         {
-          key: 'sdkAvgTicketHavingDifficulty',
+          key: 'sdkAvgTicketErrorRisk',
           label:
-            'O uso de HAVING para filtrar agrupamentos foi natural? (1 = nada natural, 5 = muito natural)',
+            'A escrita de SQL literal no código tornou a implementação mais propensa a erros.',
           type: 'likert_1_5',
         },
         {
           key: 'sdkAvgTicketDifficulty',
-          label: 'Qual foi a principal dificuldade neste exercício?',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida nesta atividade com o SDK nativo?',
           type: 'short_text',
         },
       ],
     },
+    
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 
 ${SDK_PRIMER}
@@ -889,39 +841,279 @@ export async function runAvgTicketByCategory(
 `,
   },
   {
-    title: 'AB03-B TeraORM: Average Ticket by Category',
+    title: 'AB04-A SDK Nativo: Produtos com Baixo Estoque',
     description:
-      'Question: same average-ticket scenario as AB03-A but composed with TeraORM. Result must match the SDK track exactly.',
+      'Pergunta: escreva uma query SQL do BigQuery que retorna produtos ativos (active = TRUE) cujo estoque é estritamente menor que threshold, ordenado por stock asc, limitado a N linhas.',
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB03 ORM - Average ticket by category test',
+    templateTitle: 'AB04 SDK - Teste de Produtos com Baixo Estoque',
+    interviewConfig: {
+      questions: [
+        {
+          key: 'sdkLowStockClarity',
+          label:
+            'A solução implementada com o SDK nativo ficou clara e fácil de entender.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'sdkLowStockModification',
+          label:
+            'Foi fácil modificar filtros, parâmetros ou condições da consulta usando o SDK nativo.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'sdkLowStockErrorRisk',
+          label:
+            'A escrita de SQL literal no código tornou a implementação mais propensa a erros.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'sdkLowStockDifficulty',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida nesta atividade com o SDK nativo?',
+          type: 'short_text',
+        },
+      ],
+    },
+    
+    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
+
+${SDK_PRIMER}
+
+export type LowStockRow = { product: string; stock: number };
+
+/**
+ * SDK track: compose a raw SQL query and execute it via the provided BigQuery client.
+ *
+ * Seeded table columns:
+ *   - product  STRING
+ *   - stock    INT64
+ *   - active   BOOL
+ *
+ * Return rows where active = TRUE AND stock < threshold,
+ * ordered by stock asc, limited to \`limit\` rows.
+ */
+export async function runLowStock(
+  bq: BigQuery,
+  table: string,
+  threshold: number,
+  limit: number,
+): Promise<LowStockRow[]> {
+  // TODO: implement using bq.query({ query: 'SELECT ...' })
+  return [];
+}
+`,
+  },
+  {
+    title: 'AB01-B TeraORM: Receita por Loja',
+    description:
+      'Pergunta: escreva uma query SQL do BigQuery (via teraORM) que retorna receita agregada por loja, filtrada por minRevenue e ordenada desc.',
+    workerType: WorkerType.NODE_TERAORM,
+    maxAttempts: 20,
+    templateTitle: 'AB01 ORM - Teste de Receita por Loja',
+    interviewConfig: {
+      questions: [
+        {
+          key: 'ormRevenueClarity',
+          label:
+            'A solução implementada com o TeraORM ficou clara e fácil de entender.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormRevenueModification',
+          label:
+            'Foi fácil modificar filtros, parâmetros ou condições da consulta usando o TeraORM.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormRevenueIntent',
+          label:
+            'O TeraORM ajudou a identificar melhor a intenção da consulta.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormRevenueMentalEffort',
+          label:
+            'O TeraORM reduziu o esforço mental necessário para estruturar a consulta.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormRevenueSafety',
+          label:
+            'O TeraORM transmitiu maior segurança na composição de filtros e parâmetros.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormRevenueDifficulty',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida nesta atividade com o TeraORM?',
+          type: 'short_text',
+        },
+      ],
+    },
+    
+    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
+import * as teraorm from 'teraorm';
+
+${ORM_PRIMER}
+
+export type RevenueReportRow = { store: string; revenue: number };
+
+/**
+ * Trilha TeraORM: Modele e execute a query usando primitivos do TeraORM.
+ *
+ * Colunas da tabela de teste:
+ *   - store  STRING
+ *   - total  INT64
+ */
+export async function runRevenueByStore(
+  bq: BigQuery,
+  table: string,
+  minRevenue: number,
+): Promise<RevenueReportRow[]> {
+  void teraorm;
+  // TODO: implement with TeraORM
+  return [];
+}
+
+export type BigQueryClientOptions = {
+  keyFilename: string;
+  projectId: string;
+};
+
+export function getBigQueryClientOptions(): BigQueryClientOptions {
+  // TODO: implement for credential-backed execution
+  return {
+    keyFilename: '',
+    projectId: '',
+  };
+}
+`,
+  },
+  {
+    title: 'AB02-B TeraORM: Principais Clientes por Região',
+    description:
+      'Pergunta: mesmo cenário de principais-clientes que AB02-A, mas composto com TeraORM. O resultado deve corresponder exatamente à trilha SDK.',
+    workerType: WorkerType.NODE_TERAORM,
+    maxAttempts: 20,
+    templateTitle: 'AB02 ORM - Teste de Principais Clientes',
+    interviewConfig: {
+      questions: [
+        {
+          key: 'ormTopCustomersClarity',
+          label:
+            'A solução implementada com o TeraORM ficou clara e fácil de entender.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormTopCustomersModification',
+          label:
+            'Foi fácil modificar filtros, parâmetros ou condições da consulta usando o TeraORM.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormTopCustomersIntent',
+          label:
+            'O TeraORM ajudou a identificar melhor a intenção da consulta.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormTopCustomersMentalEffort',
+          label:
+            'O TeraORM reduziu o esforço mental necessário para estruturar a consulta.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormTopCustomersSafety',
+          label:
+            'O TeraORM transmitiu maior segurança na composição de filtros e parâmetros.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormTopCustomersDifficulty',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida nesta atividade com o TeraORM?',
+          type: 'short_text',
+        },
+      ],
+    },
+    
+    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
+import * as teraorm from 'teraorm';
+
+${ORM_PRIMER}
+
+export type CustomerReportRow = { customer: string; orders: number };
+
+/**
+ * ORM track: model the query using TeraORM primitives.
+ *
+ * Seeded table columns:
+ *   - customer  STRING
+ *   - region    STRING
+ *   - orders    INT64
+ */
+export async function runTopCustomers(
+  bq: BigQuery,
+  table: string,
+  region: string,
+  minOrders: number,
+  limit: number,
+): Promise<CustomerReportRow[]> {
+  void teraorm;
+  // TODO: implement with TeraORM
+  return [];
+}
+`,
+  },
+  {
+    title: 'AB03-B TeraORM: Ticket Médio por Categoria',
+    description:
+      'Pergunta: mesmo cenário de ticket-médio que AB03-A, mas composto com TeraORM. O resultado deve corresponder exatamente à trilha SDK.',
+    workerType: WorkerType.NODE_TERAORM,
+    maxAttempts: 20,
+    templateTitle: 'AB03 ORM - Teste de Ticket Médio por Categoria',
     interviewConfig: {
       questions: [
         {
           key: 'ormAvgTicketClarity',
           label:
-            'Quão claro foi expressar esta query com TeraORM? (1 = nada claro, 5 = muito claro)',
+            'A solução implementada com o TeraORM ficou clara e fácil de entender.',
           type: 'likert_1_5',
         },
         {
-          key: 'ormAvgTicketConfidence',
+          key: 'ormAvgTicketModification',
           label:
-            'Quão confiante você está de que sua solução funciona em todos os casos? (1 = nada confiante, 5 = muito confiante)',
+            'Foi fácil modificar filtros, parâmetros ou condições da consulta usando o TeraORM.',
           type: 'likert_1_5',
         },
         {
-          key: 'ormAvgTicketAggregations',
+          key: 'ormAvgTicketIntent',
           label:
-            'Expressar agregações (AVG, COUNT, HAVING) com TeraORM pareceu mais simples que SQL puro? (1 = muito mais difícil, 5 = muito mais simples)',
+            'O TeraORM ajudou a identificar melhor a intenção da consulta.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormAvgTicketMentalEffort',
+          label:
+            'O TeraORM reduziu o esforço mental necessário para estruturar a consulta.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormAvgTicketSafety',
+          label:
+            'O TeraORM transmitiu maior segurança na composição de filtros e parâmetros.',
           type: 'likert_1_5',
         },
         {
           key: 'ormAvgTicketDifficulty',
-          label: 'Qual foi a principal dificuldade neste exercício?',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida nesta atividade com o TeraORM?',
           type: 'short_text',
         },
       ],
     },
+    
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 import * as teraorm from 'teraorm';
 
@@ -952,101 +1144,53 @@ export async function runAvgTicketByCategory(
 `,
   },
   {
-    title: 'AB04-A SDK Native: Low Stock Products',
+    title: 'AB04-B TeraORM: Produtos com Baixo Estoque',
     description:
-      'Question: write a BigQuery SQL query that returns active products (active = TRUE) whose stock is strictly less than threshold, ordered by stock asc, limited to N rows.',
+      'Pergunta: mesmo cenário de baixo-estoque que AB04-A, mas composto com TeraORM. O resultado deve corresponder exatamente à trilha SDK.',
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB04 SDK - Low stock products test',
-    interviewConfig: {
-      questions: [
-        {
-          key: 'sdkLowStockClarity',
-          label:
-            'Quão claro foi escrever esta query em SQL puro? (1 = nada claro, 5 = muito claro)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'sdkLowStockConfidence',
-          label:
-            'Quão confiante você está de que sua solução funciona em todos os casos? (1 = nada confiante, 5 = muito confiante)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'sdkLowStockBoolFilter',
-          label:
-            'Expressar o filtro booleano (active = TRUE) foi natural em SQL? (1 = nada natural, 5 = muito natural)',
-          type: 'likert_1_5',
-        },
-        {
-          key: 'sdkLowStockDifficulty',
-          label: 'Qual foi a principal dificuldade neste exercício?',
-          type: 'short_text',
-        },
-      ],
-    },
-    boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
-
-${SDK_PRIMER}
-
-export type LowStockRow = { product: string; stock: number };
-
-/**
- * SDK track: compose a raw SQL query and execute it via the provided BigQuery client.
- *
- * Seeded table columns:
- *   - product  STRING
- *   - stock    INT64
- *   - active   BOOL
- *
- * Return rows where active = TRUE AND stock < threshold,
- * ordered by stock asc, limited to \`limit\` rows.
- */
-export async function runLowStock(
-  bq: BigQuery,
-  table: string,
-  threshold: number,
-  limit: number,
-): Promise<LowStockRow[]> {
-  // TODO: implement using bq.query({ query: 'SELECT ...' })
-  return [];
-}
-`,
-  },
-  {
-    title: 'AB04-B TeraORM: Low Stock Products',
-    description:
-      'Question: same low-stock scenario as AB04-A but composed with TeraORM. Result must match the SDK track exactly.',
-    workerType: WorkerType.NODE_TERAORM,
-    maxAttempts: 20,
-    templateTitle: 'AB04 ORM - Low stock products test',
+    templateTitle: 'AB04 ORM - Teste de Produtos com Baixo Estoque',
     interviewConfig: {
       questions: [
         {
           key: 'ormLowStockClarity',
           label:
-            'Quão claro foi expressar esta query com TeraORM? (1 = nada claro, 5 = muito claro)',
+            'A solução implementada com o TeraORM ficou clara e fácil de entender.',
           type: 'likert_1_5',
         },
         {
-          key: 'ormLowStockConfidence',
+          key: 'ormLowStockModification',
           label:
-            'Quão confiante você está de que sua solução funciona em todos os casos? (1 = nada confiante, 5 = muito confiante)',
+            'Foi fácil modificar filtros, parâmetros ou condições da consulta usando o TeraORM.',
           type: 'likert_1_5',
         },
         {
-          key: 'ormLowStockBoolFilter',
+          key: 'ormLowStockIntent',
           label:
-            'Expressar o filtro booleano com TeraORM ficou mais legível que com SQL puro? (1 = muito menos legível, 5 = muito mais legível)',
+            'O TeraORM ajudou a identificar melhor a intenção da consulta.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormLowStockMentalEffort',
+          label:
+            'O TeraORM reduziu o esforço mental necessário para estruturar a consulta.',
+          type: 'likert_1_5',
+        },
+        {
+          key: 'ormLowStockSafety',
+          label:
+            'O TeraORM transmitiu maior segurança na composição de filtros e parâmetros.',
           type: 'likert_1_5',
         },
         {
           key: 'ormLowStockDifficulty',
-          label: 'Qual foi a principal dificuldade neste exercício?',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida nesta atividade com o TeraORM?',
           type: 'short_text',
         },
       ],
     },
+    
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 import * as teraorm from 'teraorm';
 
@@ -1072,8 +1216,87 @@ export async function runLowStock(
   // TODO: implement with TeraORM
   return [];
 }
+
+export type BigQueryClientOptions = {
+  keyFilename: string;
+  projectId: string;
+};
+
+export function getBigQueryClientOptions(): BigQueryClientOptions {
+  // TODO: implement for credential-backed execution
+  return {
+    keyFilename: '',
+    projectId: '',
+  };
+}
 `,
   },
+  {
+    title: 'FORM99 - Avaliação Final do Experimento',
+    description:
+      'Formulário final respondido após as trilhas SDK e TeraORM para comparar as abordagens.',
+    workerType: WorkerType.NODE_TERAORM,
+    maxAttempts: 1,
+    templateTitle: 'FORM99 - Avaliação Final do Experimento',
+    interviewConfig: {
+      questions: [
+        {
+          key: 'finalUnderstandPreference',
+          label:
+            'Comparando as duas abordagens, qual delas você achou mais fácil de entender?',
+          type: 'short_text',
+        },
+        {
+          key: 'finalModifyPreference',
+          label:
+            'Comparando as duas abordagens, qual delas você achou mais fácil de modificar?',
+          type: 'short_text',
+        },
+        {
+          key: 'finalFuturePreference',
+          label:
+            'Comparando as duas abordagens, qual delas você preferiria utilizar em uma atividade futura semelhante?',
+          type: 'short_text',
+        },
+        {
+          key: 'finalTeraOrmAdvantage',
+          label:
+            'Em poucas palavras, qual foi a principal vantagem percebida no uso do TeraORM?',
+          type: 'short_text',
+        },
+        {
+          key: 'finalTeraOrmDifficulty',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida no uso do TeraORM?',
+          type: 'short_text',
+        },
+        {
+          key: 'finalSdkAdvantage',
+          label:
+            'Em poucas palavras, qual foi a principal vantagem percebida no uso do SDK nativo do BigQuery?',
+          type: 'short_text',
+        },
+        {
+          key: 'finalSdkDifficulty',
+          label:
+            'Em poucas palavras, qual foi a principal dificuldade percebida no uso do SDK nativo do BigQuery?',
+          type: 'short_text',
+        },
+        {
+          key: 'finalAdditionalNotes',
+          label:
+            'Há alguma observação adicional sobre a comparação entre o SDK nativo do BigQuery e o TeraORM?',
+          type: 'short_text',
+        },
+      ],
+    },
+    boilerplateContent: `/**
+ * Atividade sem implementação de código.
+ * Preencha o formulário associado e submeta para registrar sua resposta.
+ */
+export {};
+`,
+  }
 ];
 
 async function ensureClass(
@@ -1081,7 +1304,11 @@ async function ensureClass(
   teacherId: number,
   studentId: number,
 ): Promise<number> {
-  const classHasDescription = await hasColumn(dataSource, 'class', 'description');
+  const classHasDescription = await hasColumn(
+    dataSource,
+    'class',
+    'description',
+  );
 
   const existing = await dataSource.query(
     `SELECT "id" FROM "class" WHERE "name" = $1 LIMIT 1`,
@@ -1309,8 +1536,12 @@ async function run() {
       ['admin@example.com', 'student@example.com'],
     );
 
-    const admin = users.find((u: { email: string }) => u.email === 'admin@example.com');
-    const student = users.find((u: { email: string }) => u.email === 'student@example.com');
+    const admin = users.find(
+      (u: { email: string }) => u.email === 'admin@example.com',
+    );
+    const student = users.find(
+      (u: { email: string }) => u.email === 'student@example.com',
+    );
 
     if (!admin || !student) {
       throw new Error(
@@ -1332,7 +1563,9 @@ async function run() {
     for (const assignment of assignments) {
       const templateId = templateIdsByTitle.get(assignment.templateTitle);
       if (!templateId) {
-        throw new Error(`Template not found in map: ${assignment.templateTitle}`);
+        throw new Error(
+          `Template not found in map: ${assignment.templateTitle}`,
+        );
       }
 
       await ensureAssignment({

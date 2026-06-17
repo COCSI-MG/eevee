@@ -20,10 +20,10 @@ export class AuthService {
   ): Promise<{ session: LoginResponseDto; token: string } | undefined> {
     const { email, password } = loginData;
     const user = await this.userService.findByEmail(email);
-    if (
-      user &&
-      (HashUtils.comparePassword(password, user.passwordHash))
-    ) {
+
+    console.log('User pass hash', user?.passwordHash);
+
+    if (user && HashUtils.comparePassword(password, user.passwordHash)) {
       const payload: JwtPayload = {
         email: user.email,
         userId: user.id,

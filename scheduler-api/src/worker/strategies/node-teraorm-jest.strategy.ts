@@ -14,13 +14,18 @@ import {
   normalizeTestFiles,
 } from './worker-strategy-helpers';
 
-const PRELOADED_PACKAGES = new Set(['teraorm', '@teraorm/bigquery', '@teraorm/nestjs']);
+const PRELOADED_PACKAGES = new Set([
+  'teraorm',
+  '@teraorm/bigquery',
+  '@teraorm/nestjs',
+]);
 
 const BQ_SECRET_NAME = 'eevee-bq-credentials';
 const BQ_SECRET_VOLUME = 'bq-credentials';
 const BQ_SECRET_MOUNT_PATH = '/var/run/gcp';
 const BQ_CREDENTIALS_FILE = 'sa.json';
-const BQ_PROJECT_ID = process.env.WORKER_GOOGLE_CLOUD_PROJECT || 'teraorm-survey';
+const BQ_PROJECT_ID =
+  process.env.WORKER_GOOGLE_CLOUD_PROJECT || 'teraorm-survey';
 
 function stripPreloaded(dependencies: string[]): string[] {
   return dependencies.filter((dep) => !PRELOADED_PACKAGES.has(dep));
@@ -120,6 +125,8 @@ export class NodeTeraormJestStrategy extends BootstrapInitContainerStrategy {
     initSqlScript?: string,
   ): KubernetesJobOptions {
     const base = super.buildJobOptions(encodedDefinition, initSqlScript);
+
+    console.log('Project id for BigQuery integration:', BQ_PROJECT_ID);
 
     return {
       ...base,

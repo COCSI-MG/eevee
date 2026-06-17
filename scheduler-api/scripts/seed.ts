@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { HashUtils } from './src/utils/hash.utils';
+import { HashUtils } from '../src/utils/hash.utils';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 
@@ -17,8 +17,14 @@ export class DatabaseSeeder {
        VALUES ($1, $2, $3, $4), ($5, $6, $7, $8)
        ON CONFLICT ("email") DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash"`,
       [
-        'admin@example.com', adminHashPassword, true, 'admin',
-        'student@example.com', userHashPassword, false, 'student',
+        'admin@example.com',
+        adminHashPassword,
+        true,
+        'admin',
+        'student@example.com',
+        userHashPassword,
+        false,
+        'student',
       ],
     );
 

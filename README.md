@@ -25,7 +25,7 @@ Pode copiar um arquivo `.env.example` dentro de `scheduler-api` e trocar os valo
 ```bash
 cd scheduler-api/
 npm install
-npm run start:dev 
+npm run start:dev
 ```
 
 #### 2.1 Consumidor do Scheduler API
@@ -143,10 +143,10 @@ Esse seed cria:
 
 - Uma turma: `TeraORM AB Validation Module`
 - 4 exercicios pareados:
-	- AB01-A SDK Native: Revenue by Store
-	- AB01-B TeraORM: Revenue by Store
-	- AB02-A SDK Native: Top Customers by Region
-	- AB02-B TeraORM: Top Customers by Region
+  - AB01-A SDK Native: Revenue by Store
+  - AB01-B TeraORM: Revenue by Store
+  - AB02-A SDK Native: Top Customers by Region
+  - AB02-B TeraORM: Top Customers by Region
 - Templates de teste automatizado para cada exercicio
 
 Objetivo: permitir comparar taxa de conclusao, tentativas, tempo e padroes de erro entre abordagem sem ORM e com ORM.
@@ -173,3 +173,4 @@ Altere de `forward . /etc/resolv.conf` para `forward . 8.8.8.8 1.1.1.1`, e depoi
 
 ```bash
 kubectl -n kube-system rollout restart deployment coredns
+```

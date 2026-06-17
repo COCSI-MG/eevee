@@ -2,16 +2,13 @@
 
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
 import { InterviewResponseService } from "@/app/integration/scheduler-api/interview-response";
-import {
-  AssignmentInterviewQuestion,
-} from "@/app/interface/scheduler-api/assignment";
+import { AssignmentInterviewQuestion } from "@/app/interface/scheduler-api/assignment";
 import {
   InterviewPreferenceOption,
   InterviewResponsePayload,
 } from "@/app/interface/scheduler-api/interview-response";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -29,14 +26,26 @@ import { useEffect, useMemo, useState } from "react";
 
 const likertFields = [
   { key: "familiaritySql", label: "Familiaridade prévia com SQL" },
-  { key: "familiarityJsTs", label: "Familiaridade prévia com JavaScript/TypeScript" },
+  {
+    key: "familiarityJsTs",
+    label: "Familiaridade prévia com JavaScript/TypeScript",
+  },
   { key: "familiarityOrms", label: "Familiaridade prévia com ORMs" },
   { key: "sdkClarity", label: "Clareza da solução com SDK nativo" },
-  { key: "sdkModifiability", label: "Facilidade de modificação com SDK nativo" },
-  { key: "sdkSqlErrorProneness", label: "SQL literal no SDK é mais propenso a erros" },
+  {
+    key: "sdkModifiability",
+    label: "Facilidade de modificação com SDK nativo",
+  },
+  {
+    key: "sdkSqlErrorProneness",
+    label: "SQL literal no SDK é mais propenso a erros",
+  },
   { key: "ormClarity", label: "Clareza da solução com TeraORM" },
   { key: "ormModifiability", label: "Facilidade de modificação com TeraORM" },
-  { key: "ormIntent", label: "TeraORM ajuda a identificar intenção da consulta" },
+  {
+    key: "ormIntent",
+    label: "TeraORM ajuda a identificar intenção da consulta",
+  },
   { key: "ormMentalEffort", label: "TeraORM reduziu esforço mental" },
   { key: "ormSafety", label: "TeraORM aumentou segurança na composição" },
 ] as const;
@@ -57,12 +66,13 @@ const initialLikert: Record<LikertKey, number> = {
   ormSafety: 3,
 };
 
-const preferenceOptions: { value: InterviewPreferenceOption; label: string }[] = [
-  { value: "sdk", label: "SDK nativo" },
-  { value: "teraorm", label: "TeraORM" },
-  { value: "no_difference", label: "Sem diferença significativa" },
-  { value: "no_preference", label: "Sem preferência" },
-];
+const preferenceOptions: { value: InterviewPreferenceOption; label: string }[] =
+  [
+    { value: "sdk", label: "SDK nativo" },
+    { value: "teraorm", label: "TeraORM" },
+    { value: "no_difference", label: "Sem diferença significativa" },
+    { value: "no_preference", label: "Sem preferência" },
+  ];
 
 function buildInitialExtraAnswers(
   questions: AssignmentInterviewQuestion[],
@@ -74,6 +84,84 @@ function buildInitialExtraAnswers(
   return initial;
 }
 
+type LikertScaleProps = {
+  id: string;
+  value: number;
+  onChange: (value: number) => void;
+  leftLabel?: string;
+  rightLabel?: string;
+};
+
+function getLikertLabels(questionKey: string) {
+  if (
+    questionKey.toLowerCase().includes("familiarity") ||
+    questionKey.toLowerCase().includes("familiaridade")
+  ) {
+    return {
+      leftLabel: "Nenhuma familiaridade",
+      rightLabel: "Alta familiaridade",
+    };
+  }
+
+  if (
+    questionKey.toLowerCase().includes("error") ||
+    questionKey.toLowerCase().includes("risk") ||
+    questionKey.toLowerCase().includes("propensa")
+  ) {
+    return {
+      leftLabel: "Discordo totalmente",
+      rightLabel: "Concordo totalmente",
+    };
+  }
+
+  return {
+    leftLabel: "Discordo totalmente",
+    rightLabel: "Concordo totalmente",
+  };
+}
+
+function LikertScale({
+  id,
+  value,
+  onChange,
+  leftLabel = "Discordo totalmente",
+  rightLabel = "Concordo totalmente",
+}: LikertScaleProps) {
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-5 gap-2">
+        {[1, 2, 3, 4, 5].map((option) => {
+          const selected = value === option;
+
+          return (
+            <button
+              key={option}
+              id={`${id}-${option}`}
+              type="button"
+              onClick={() => onChange(option)}
+              className={[
+                "rounded-md border px-3 py-2 text-sm font-medium transition",
+                "hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring",
+                selected
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-input bg-background",
+              ].join(" ")}
+              aria-pressed={selected}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex justify-between text-xs text-muted-foreground">
+        <span>{leftLabel}</span>
+        <span>{rightLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function AssignmentInterviewPage() {
   const { id } = useParams();
   const assignmentId = Number(id);
@@ -81,7 +169,8 @@ export default function AssignmentInterviewPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const [likert, setLikert] = useState<Record<LikertKey, number>>(initialLikert);
+  const [likert, setLikert] =
+    useState<Record<LikertKey, number>>(initialLikert);
   const [easierToUnderstand, setEasierToUnderstand] =
     useState<InterviewPreferenceOption>("no_difference");
   const [easierToModify, setEasierToModify] =
@@ -91,9 +180,9 @@ export default function AssignmentInterviewPage() {
   const [teraormMainAdvantage, setTeraormMainAdvantage] = useState("");
   const [teraormMainDifficulty, setTeraormMainDifficulty] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
-  const [extraAnswers, setExtraAnswers] = useState<Record<string, string | number>>(
-    {},
-  );
+  const [extraAnswers, setExtraAnswers] = useState<
+    Record<string, string | number>
+  >({});
 
   const { data: assignment, isFetching: isFetchingAssignment } = useQuery({
     queryKey: ["assignment", assignmentId],
@@ -112,20 +201,23 @@ export default function AssignmentInterviewPage() {
     }
 
     return [...assignment.assignmentAttempts]
-      .filter((attempt) => attempt.isAcceptable && attempt.status === "completed")
+      .filter(
+        (attempt) => attempt.isAcceptable && attempt.status === "completed",
+      )
       .sort((a, b) => b.attempt - a.attempt)[0];
   }, [assignment]);
 
   const classId = assignment?.classId;
 
-  const { data: classAssignments, isFetching: isFetchingClassAssignments } = useQuery({
-    queryKey: ["class-assignments-progress", classId],
-    queryFn: () =>
-      classId !== undefined
-        ? AssignmentService.GetAssignmentsByClassId(classId)
-        : Promise.resolve([]),
-    enabled: classId !== undefined,
-  });
+  const { data: classAssignments, isFetching: isFetchingClassAssignments } =
+    useQuery({
+      queryKey: ["class-assignments-progress", classId],
+      queryFn: () =>
+        classId !== undefined
+          ? AssignmentService.GetAssignmentsByClassId(classId)
+          : Promise.resolve([]),
+      enabled: classId !== undefined,
+    });
 
   const allClassAssignmentsAccepted = useMemo(() => {
     if (!classAssignments || classAssignments.length === 0) {
@@ -133,15 +225,15 @@ export default function AssignmentInterviewPage() {
     }
     return classAssignments.every((classAssignment) =>
       (classAssignment.assignmentAttempts ?? []).some(
-        (attempt) =>
-          attempt.isAcceptable && attempt.status === "completed",
+        (attempt) => attempt.isAcceptable && attempt.status === "completed",
       ),
     );
   }, [classAssignments]);
 
   const { data: existingResponse, isFetching: isFetchingResponse } = useQuery({
     queryKey: ["interview-response", assignmentId],
-    queryFn: () => InterviewResponseService.findMineByAssignmentId(assignmentId),
+    queryFn: () =>
+      InterviewResponseService.findMineByAssignmentId(assignmentId),
     enabled: Number.isFinite(assignmentId),
   });
 
@@ -199,7 +291,8 @@ export default function AssignmentInterviewPage() {
           Voltar
         </Button>
         <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-300">
-          Você precisa concluir ao menos uma tentativa com sucesso para responder.
+          Você precisa concluir ao menos uma tentativa com sucesso para
+          responder.
         </div>
       </div>
     );
@@ -216,7 +309,8 @@ export default function AssignmentInterviewPage() {
           Voltar
         </Button>
         <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-300">
-          Conclua todos os exercícios desta turma para responder a entrevista final.
+          Conclua todos os exercícios desta turma para responder a entrevista
+          final.
         </div>
       </div>
     );
@@ -259,7 +353,8 @@ export default function AssignmentInterviewPage() {
         </p>
         {existingResponse && (
           <p className="text-xs text-yellow-300 mt-1">
-            Você já respondeu antes. Enviar novamente irá atualizar sua resposta.
+            Você já respondeu antes. Enviar novamente irá atualizar sua
+            resposta.
           </p>
         )}
       </div>
@@ -269,28 +364,24 @@ export default function AssignmentInterviewPage() {
           <h2 className="text-lg font-semibold">Sobre este exercício</h2>
           {perExerciseQuestions.map((question) => {
             const inputId = `extra-${question.key}`;
+            const { leftLabel, rightLabel } = getLikertLabels(question.key);
 
             if (question.type === "likert_1_5") {
               const value = Number(extraAnswers[question.key] ?? 3);
               return (
                 <div key={question.key} className="space-y-2">
                   <Label htmlFor={inputId}>{question.label}</Label>
-                  <Input
+                  <LikertScale
                     id={inputId}
-                    type="number"
-                    min={1}
-                    max={5}
                     value={value}
-                    onChange={(event) => {
-                      const parsed = Number(event.target.value);
-                      const clamped = Number.isFinite(parsed)
-                        ? Math.min(5, Math.max(1, parsed))
-                        : 3;
+                    leftLabel={leftLabel}
+                    rightLabel={rightLabel}
+                    onChange={(selectedValue) =>
                       setExtraAnswers((current) => ({
                         ...current,
-                        [question.key]: clamped,
-                      }));
-                    }}
+                        [question.key]: selectedValue,
+                      }))
+                    }
                   />
                 </div>
               );
@@ -326,22 +417,15 @@ export default function AssignmentInterviewPage() {
             {likertFields.map((field) => (
               <div key={field.key} className="space-y-2">
                 <Label htmlFor={field.key}>{field.label} (1 a 5)</Label>
-                <Input
+                <LikertScale
                   id={field.key}
-                  type="number"
-                  min={1}
-                  max={5}
                   value={likert[field.key]}
-                  onChange={(event) => {
-                    const parsed = Number(event.target.value);
-                    const clamped = Number.isFinite(parsed)
-                      ? Math.min(5, Math.max(1, parsed))
-                      : 3;
+                  onChange={(selectedValue) =>
                     setLikert((current) => ({
                       ...current,
-                      [field.key]: clamped,
-                    }));
-                  }}
+                      [field.key]: selectedValue,
+                    }))
+                  }
                 />
               </div>
             ))}
@@ -412,21 +496,29 @@ export default function AssignmentInterviewPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="advantage">Principal vantagem percebida no TeraORM</Label>
+              <Label htmlFor="advantage">
+                Principal vantagem percebida no TeraORM
+              </Label>
               <Textarea
                 id="advantage"
                 value={teraormMainAdvantage}
-                onChange={(event) => setTeraormMainAdvantage(event.target.value)}
+                onChange={(event) =>
+                  setTeraormMainAdvantage(event.target.value)
+                }
                 placeholder="Opcional"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="difficulty">Principal dificuldade percebida no TeraORM</Label>
+              <Label htmlFor="difficulty">
+                Principal dificuldade percebida no TeraORM
+              </Label>
               <Textarea
                 id="difficulty"
                 value={teraormMainDifficulty}
-                onChange={(event) => setTeraormMainDifficulty(event.target.value)}
+                onChange={(event) =>
+                  setTeraormMainDifficulty(event.target.value)
+                }
                 placeholder="Opcional"
               />
             </div>
