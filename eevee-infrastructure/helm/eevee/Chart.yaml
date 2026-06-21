@@ -1,0 +1,8 @@
+apiVersion: v2
+name: eevee
+description: Umbrella chart that deploys the whole EEVEE platform (postgres, redis, scheduler-api, queue-worker, frontend and ingress).
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+maintainers:
+  - name: COCSI-MG

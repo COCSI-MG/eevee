@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Client1_13, config } from 'kubernetes-client';
-import { DEFAULT_NAMESPACE, K8S_JOB_STATUS } from './kubernetes.constants';
+import { config } from 'kubernetes-client';
+import {
+  DEFAULT_NAMESPACE,
+  JOB_IMAGE_PULL_POLICY,
+  JOB_IMAGE_PULL_SECRETS,
+  JOB_NODE_SELECTOR,
+  K8S_JOB_STATUS,
+} from './kubernetes.constants';
 import {
     KubernetesJobOptions,
     KubernetesJobResult,
@@ -80,7 +87,7 @@ export class KubernetesService {
       options?.initContainers?.map((container) => ({
         name: container.name,
         image: container.image,
-        imagePullPolicy: container.imagePullPolicy || 'Never',
+        imagePullPolicy: container.imagePullPolicy || JOB_IMAGE_PULL_POLICY,
         ...(container.restartPolicy
           ? { restartPolicy: container.restartPolicy }
           : {}),
@@ -274,10 +281,18 @@ export class KubernetesService {
           spec: {
             ...(initContainers.length ? { initContainers } : {}),
             automountServiceAccountToken: false, // security best practice
+            ...(JOB_NODE_SELECTOR ? { nodeSelector: JOB_NODE_SELECTOR } : {}),
+            ...(JOB_IMAGE_PULL_SECRETS.length
+              ? {
+                  imagePullSecrets: JOB_IMAGE_PULL_SECRETS.map((name) => ({
+                    name,
+                  })),
+                }
+              : {}),
             containers: [
               {
                 name: jobName,
-                imagePullPolicy: 'Never',
+                imagePullPolicy: JOB_IMAGE_PULL_POLICY,
                 image: imageName,
                 ...(command.length > 0 && { command: command }),
                 ...(options?.mainContainerEnv?.length

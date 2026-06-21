@@ -3,6 +3,11 @@ TAG            ?= develop
 # PRIVATE_KEY_PATH ?= ~/.ssh/id_personal
 PRIVATE_KEY_PATH ?= C:\\Users\\João Vitor Coimbra\\.ssh\\id_personal
 
+HELM_RELEASE ?= eevee
+NAMESPACE    ?= eevee-cefetrj
+CHART        ?= eevee-infrastructure/helm/eevee
+VALUES       ?= eevee-infrastructure/helm/eevee/values.local.yaml
+
 up: up-minikube up-docker up-scheduler
 
 up-infra: up-minikube up-docker
@@ -114,3 +119,20 @@ push-worker-react-cypress:
 
 proxy:
 	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:43000:127.0.0.1:3000 -R 127.0.0.1:43010:127.0.0.1:3010 ubuntu@136.248.94.172
+
+lint:
+	helm lint $(CHART)
+
+template:
+	helm template $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
+		$(if $(wildcard $(VALUES)),-f $(VALUES))
+
+install:
+	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
+		$(if $(wildcard $(VALUES)),-f $(VALUES))
+
+uninstall:
+	helm uninstall $(HELM_RELEASE) -n $(NAMESPACE)
+
+status:
+	helm status $(HELM_RELEASE) -n $(NAMESPACE)

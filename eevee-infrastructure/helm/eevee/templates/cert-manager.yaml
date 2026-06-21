@@ -1,0 +1,27 @@
+{{- if .Values.certManager.issuer.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ .Values.certManager.issuer.name }}
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  acme:
+    server: {{ .Values.certManager.issuer.server }}
+    email: {{ .Values.certManager.issuer.email }}
+    privateKeySecretRef:
+      name: {{ printf "%s-key" .Values.certManager.issuer.name }}
+    solvers:
+      {{- if eq .Values.certManager.issuer.solver "cloudflare" }}
+      - dns01:
+          cloudflare:
+            email: {{ .Values.certManager.issuer.cloudflare.email }}
+            apiTokenSecretRef:
+              name: {{ .Values.certManager.issuer.cloudflare.apiTokenSecretName }}
+              key: api-token
+      {{- else }}
+      - http01:
+          ingress:
+            class: {{ $.Values.ingress.className }}
+      {{- end }}
+{{- end }}
