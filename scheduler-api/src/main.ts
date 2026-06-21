@@ -7,6 +7,19 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  const corsOrigins = [
+    new RegExp(/localhost:\d+/),
+    new RegExp(
+      /^https?:\/\/((www|frontend)\.)?eeveecodelab\.(local|site|com|online)$/,
+    ),
+    ...configuredOrigins,
+  ];
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
   app.enableVersioning({
@@ -15,10 +28,7 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: [
-      new RegExp(/localhost:\d+/),
-      new RegExp(/^https?:\/\/((www|frontend)\.)?eeveecodelab\.(local|site|com|online)$/),
-    ],
+    origin: corsOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE, OPTIONS',
     allowedHeaders: 'Content-Type, Accept, Authorization',
     credentials: true,

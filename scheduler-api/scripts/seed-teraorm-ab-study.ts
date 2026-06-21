@@ -7,6 +7,7 @@ dotenv.config({ path: join(__dirname, '../.env') });
 
 type StudyTemplate = {
   title: string;
+  legacyTitles?: string[];
   description: string;
   workerType: WorkerType;
   content: string;
@@ -25,6 +26,7 @@ type InterviewConfig = {
 
 type StudyAssignment = {
   title: string;
+  legacyTitles?: string[];
   description: string;
   workerType: WorkerType;
   maxAttempts: number;
@@ -67,7 +69,6 @@ async function hasColumn(
 }
 
 const templates: StudyTemplate[] = [
-
   {
     title: 'FORM00 - Perfil do Participante',
     description:
@@ -94,30 +95,34 @@ const templates: StudyTemplate[] = [
   },
 
   {
-    title: 'AB01 SDK - Teste de Receita por Loja',
+    title: 'AB01 SDK - Teste de Relatório de Onboarding',
+    legacyTitles: ['AB01 SDK - Teste de Receita por Loja'],
     description:
-      'Valida a solução do aluno na trilha SDK contra uma tabela de teste do BigQuery.',
+      'Valida uma consulta com filtros opcionais sobre onboarding_events na trilha SDK.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
-import { runRevenueByStore } from './src/app';
+import { runOnboardingReport } from './src/app';
 
-describe('AB01 SDK - Receita por loja (BigQuery)', () => {
+describe('AB01 SDK - Relatório de onboarding (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
     table = await seedTable(
-      'ab01_sales',
+      'ab01_onboarding',
       [
-        { name: 'store', type: 'STRING' },
-        { name: 'total', type: 'INT64' },
+        { name: 'participant', type: 'STRING' },
+        { name: 'razaoSocial', type: 'STRING' },
+        { name: 'stage', type: 'STRING' },
+        { name: 'economicGroup', type: 'STRING' },
+        { name: 'idEmpreendimento', type: 'STRING' },
+        { name: 'nomeComercial', type: 'STRING' },
       ],
       [
-        { store: 'A', total: 50 },
-        { store: 'A', total: 25 },
-        { store: 'B', total: 70 },
-        { store: 'C', total: 10 },
-        { store: 'B', total: 20 },
+        { participant: '111', razaoSocial: 'Alpha DI', stage: 'IM002A', economicGroup: 'Grupo Norte', idEmpreendimento: 'E1', nomeComercial: 'Vista Norte' },
+        { participant: '222', razaoSocial: 'Beta DI', stage: 'IM002A', economicGroup: 'Grupo Norte', idEmpreendimento: 'E2', nomeComercial: 'Parque Sul' },
+        { participant: '333', razaoSocial: 'Gamma DI', stage: 'IM003B', economicGroup: 'Grupo Norte', idEmpreendimento: 'E3', nomeComercial: 'Solar Leste' },
+        { participant: '444', razaoSocial: 'Delta DI', stage: 'IM002A', economicGroup: 'Grupo Sul', idEmpreendimento: 'E4', nomeComercial: 'Alto Oeste' },
       ],
     );
   }, 120000);
@@ -126,15 +131,28 @@ describe('AB01 SDK - Receita por loja (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('retorna receita agregada e filtrada do BigQuery', async () => {
-    const out = await runRevenueByStore(bq, table.fqn, 60);
-    const normalized = out.map((r: any) => ({
-      store: r.store,
-      revenue: Number(r.revenue),
-    }));
+  it('retorna somente linhas que satisfazem os filtros opcionais', async () => {
+    const normalized = await runOnboardingReport(bq, table.fqn, {
+      currentStage: 'IM002A',
+      economicGroup: 'Grupo Norte',
+    });
     expect(normalized).toEqual([
-      { store: 'B', revenue: 90 },
-      { store: 'A', revenue: 75 },
+      {
+        participantDocument: '111',
+        participantName: 'Alpha DI',
+        currentStage: 'IM002A',
+        economicGroup: 'Grupo Norte',
+        empreendimentoId: 'E1',
+        empreendimentoName: 'Vista Norte',
+      },
+      {
+        participantDocument: '222',
+        participantName: 'Beta DI',
+        currentStage: 'IM002A',
+        economicGroup: 'Grupo Norte',
+        empreendimentoId: 'E2',
+        empreendimentoName: 'Parque Sul',
+      },
     ]);
   }, 60000);
 
@@ -146,31 +164,36 @@ describe('AB01 SDK - Receita por loja (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB01 ORM - Teste de Receita por Loja',
+    title: 'AB01 ORM - Teste de Relatório de Onboarding',
+    legacyTitles: ['AB01 ORM - Teste de Receita por Loja'],
     description:
-      'Valida a solução do aluno na trilha TeraORM contra uma tabela de teste do BigQuery.',
+      'Valida uma consulta com filtros opcionais sobre onboarding_events na trilha TeraORM.',
     workerType: WorkerType.NODE_TERAORM,
     dependencies: ['teraorm', '@teraorm/bigquery'],
     content: `import fs from 'fs';
-import { bq, seedTable, SeededTable } from '../test-utils/bq';
-import { runRevenueByStore } from './src/app';
+  import { bq, seedTable, SeededTable } from '../test-utils/bq';
+  import { createTeraRepository } from '../test-utils/tera';
+import { buildOnboardingReportQuery } from './src/app';
 
-describe('AB01 TeraORM - Receita por loja (BigQuery)', () => {
+describe('AB01 TeraORM - Relatório de onboarding (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
     table = await seedTable(
-      'ab01_sales',
+      'ab01_onboarding',
       [
-        { name: 'store', type: 'STRING' },
-        { name: 'total', type: 'INT64' },
+        { name: 'participant', type: 'STRING' },
+        { name: 'razaoSocial', type: 'STRING' },
+        { name: 'stage', type: 'STRING' },
+        { name: 'economicGroup', type: 'STRING' },
+        { name: 'idEmpreendimento', type: 'STRING' },
+        { name: 'nomeComercial', type: 'STRING' },
       ],
       [
-        { store: 'A', total: 50 },
-        { store: 'A', total: 25 },
-        { store: 'B', total: 70 },
-        { store: 'C', total: 10 },
-        { store: 'B', total: 20 },
+        { participant: '111', razaoSocial: 'Alpha DI', stage: 'IM002A', economicGroup: 'Grupo Norte', idEmpreendimento: 'E1', nomeComercial: 'Vista Norte' },
+        { participant: '222', razaoSocial: 'Beta DI', stage: 'IM002A', economicGroup: 'Grupo Norte', idEmpreendimento: 'E2', nomeComercial: 'Parque Sul' },
+        { participant: '333', razaoSocial: 'Gamma DI', stage: 'IM003B', economicGroup: 'Grupo Norte', idEmpreendimento: 'E3', nomeComercial: 'Solar Leste' },
+        { participant: '444', razaoSocial: 'Delta DI', stage: 'IM002A', economicGroup: 'Grupo Sul', idEmpreendimento: 'E4', nomeComercial: 'Alto Oeste' },
       ],
     );
   }, 120000);
@@ -179,15 +202,45 @@ describe('AB01 TeraORM - Receita por loja (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('retorna receita agregada e filtrada do BigQuery', async () => {
-    const out = await runRevenueByStore(bq, table.fqn, 60);
+  it('retorna somente linhas que satisfazem os filtros opcionais', async () => {
+    const events = createTeraRepository(bq, table.fqn, 'ab01_onboarding_model', {
+      participant: '' as string,
+      razaoSocial: '' as string,
+      stage: '' as string,
+      economicGroup: '' as string,
+      idEmpreendimento: '' as string,
+      nomeComercial: '' as string,
+    });
+
+    const out = await buildOnboardingReportQuery(events, {
+      currentStage: 'IM002A',
+      economicGroup: 'Grupo Norte',
+    }).execute();
     const normalized = out.map((r: any) => ({
-      store: r.store,
-      revenue: Number(r.revenue),
+      participantDocument: r.participant,
+      participantName: r.razaoSocial,
+      currentStage: r.stage,
+      economicGroup: r.economicGroup,
+      empreendimentoId: r.idEmpreendimento,
+      empreendimentoName: r.nomeComercial,
     }));
     expect(normalized).toEqual([
-      { store: 'B', revenue: 90 },
-      { store: 'A', revenue: 75 },
+      {
+        participantDocument: '111',
+        participantName: 'Alpha DI',
+        currentStage: 'IM002A',
+        economicGroup: 'Grupo Norte',
+        empreendimentoId: 'E1',
+        empreendimentoName: 'Vista Norte',
+      },
+      {
+        participantDocument: '222',
+        participantName: 'Beta DI',
+        currentStage: 'IM002A',
+        economicGroup: 'Grupo Norte',
+        empreendimentoId: 'E2',
+        empreendimentoName: 'Parque Sul',
+      },
     ]);
   }, 60000);
 
@@ -199,30 +252,34 @@ describe('AB01 TeraORM - Receita por loja (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB02 SDK - Teste de Principais Clientes',
+    title: 'AB02 SDK - Teste de Filtros de Empreendimento',
+    legacyTitles: ['AB02 SDK - Teste de Principais Clientes'],
     description:
-      'Valida a solução do aluno na trilha SDK contra uma tabela de teste do BigQuery.',
+      'Valida uma busca com filtros LIKE/IN sobre onboarding_events na trilha SDK.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
-import { runTopCustomers } from './src/app';
+import { runEmpreendimentoSearch } from './src/app';
 
-describe('AB02 SDK - Principais clientes (BigQuery)', () => {
+describe('AB02 SDK - Filtros de empreendimento (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
     table = await seedTable(
-      'ab02_orders',
+      'ab02_onboarding',
       [
-        { name: 'customer', type: 'STRING' },
-        { name: 'region', type: 'STRING' },
-        { name: 'orders', type: 'INT64' },
+        { name: 'participant', type: 'STRING' },
+        { name: 'razaoSocial', type: 'STRING' },
+        { name: 'stage', type: 'STRING' },
+        { name: 'economicGroup', type: 'STRING' },
+        { name: 'idEmpreendimento', type: 'STRING' },
+        { name: 'nomeComercial', type: 'STRING' },
       ],
       [
-        { customer: 'Ana', region: 'sudeste', orders: 7 },
-        { customer: 'Bruno', region: 'sul', orders: 4 },
-        { customer: 'Carla', region: 'sudeste', orders: 10 },
-        { customer: 'Diego', region: 'sudeste', orders: 6 },
+        { participant: '111', razaoSocial: 'Alpha DI', stage: 'IM002A', economicGroup: 'Grupo Norte', idEmpreendimento: 'E1', nomeComercial: 'Residencial Aurora' },
+        { participant: '222', razaoSocial: 'Beta DI', stage: 'IM003A', economicGroup: 'Grupo Norte', idEmpreendimento: 'E2', nomeComercial: 'Residencial Brisa' },
+        { participant: '333', razaoSocial: 'Gamma DI', stage: 'IM004C', economicGroup: 'Grupo Sul', idEmpreendimento: 'E3', nomeComercial: 'Comercial Centro' },
+        { participant: '444', razaoSocial: 'Alpha DI', stage: 'IM002B', economicGroup: 'Grupo Norte', idEmpreendimento: 'E4', nomeComercial: 'Residencial Delta' },
       ],
     );
   }, 120000);
@@ -231,15 +288,32 @@ describe('AB02 SDK - Principais clientes (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('retorna os principais clientes do BigQuery', async () => {
-    const out = await runTopCustomers(bq, table.fqn, 'sudeste', 6, 2);
-    const normalized = out.map((r: any) => ({
-      customer: r.customer,
-      orders: Number(r.orders),
-    }));
+  it('retorna resultados combinando igualdade, like e in', async () => {
+    const normalized = await runEmpreendimentoSearch(
+      bq,
+      table.fqn,
+      {
+        socialReasonDI: 'Alpha DI',
+        empreendimentoNamePrefix: 'Residencial',
+        stages: ['IM002A', 'IM002B'],
+      },
+      5,
+    );
     expect(normalized).toEqual([
-      { customer: 'Carla', orders: 10 },
-      { customer: 'Ana', orders: 7 },
+      {
+        participantDocument: '111',
+        participantName: 'Alpha DI',
+        currentStage: 'IM002A',
+        empreendimentoId: 'E1',
+        empreendimentoName: 'Residencial Aurora',
+      },
+      {
+        participantDocument: '444',
+        participantName: 'Alpha DI',
+        currentStage: 'IM002B',
+        empreendimentoId: 'E4',
+        empreendimentoName: 'Residencial Delta',
+      },
     ]);
   }, 60000);
 
@@ -251,31 +325,36 @@ describe('AB02 SDK - Principais clientes (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB02 ORM - Teste de Principais Clientes',
+    title: 'AB02 ORM - Teste de Filtros de Empreendimento',
+    legacyTitles: ['AB02 ORM - Teste de Principais Clientes'],
     description:
-      'Valida a solução do aluno na trilha TeraORM contra uma tabela de teste do BigQuery.',
+      'Valida uma busca com filtros LIKE/IN sobre onboarding_events na trilha TeraORM.',
     workerType: WorkerType.NODE_TERAORM,
     dependencies: ['teraorm', '@teraorm/bigquery'],
     content: `import fs from 'fs';
-import { bq, seedTable, SeededTable } from '../test-utils/bq';
-import { runTopCustomers } from './src/app';
+  import { bq, seedTable, SeededTable } from '../test-utils/bq';
+  import { createTeraRepository } from '../test-utils/tera';
+import { buildEmpreendimentoSearchQuery } from './src/app';
 
-describe('AB02 TeraORM - Principais clientes (BigQuery)', () => {
+describe('AB02 TeraORM - Filtros de empreendimento (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
     table = await seedTable(
-      'ab02_orders',
+      'ab02_onboarding',
       [
-        { name: 'customer', type: 'STRING' },
-        { name: 'region', type: 'STRING' },
-        { name: 'orders', type: 'INT64' },
+        { name: 'participant', type: 'STRING' },
+        { name: 'razaoSocial', type: 'STRING' },
+        { name: 'stage', type: 'STRING' },
+        { name: 'economicGroup', type: 'STRING' },
+        { name: 'idEmpreendimento', type: 'STRING' },
+        { name: 'nomeComercial', type: 'STRING' },
       ],
       [
-        { customer: 'Ana', region: 'sudeste', orders: 7 },
-        { customer: 'Bruno', region: 'sul', orders: 4 },
-        { customer: 'Carla', region: 'sudeste', orders: 10 },
-        { customer: 'Diego', region: 'sudeste', orders: 6 },
+        { participant: '111', razaoSocial: 'Alpha DI', stage: 'IM002A', economicGroup: 'Grupo Norte', idEmpreendimento: 'E1', nomeComercial: 'Residencial Aurora' },
+        { participant: '222', razaoSocial: 'Beta DI', stage: 'IM003A', economicGroup: 'Grupo Norte', idEmpreendimento: 'E2', nomeComercial: 'Residencial Brisa' },
+        { participant: '333', razaoSocial: 'Gamma DI', stage: 'IM004C', economicGroup: 'Grupo Sul', idEmpreendimento: 'E3', nomeComercial: 'Comercial Centro' },
+        { participant: '444', razaoSocial: 'Alpha DI', stage: 'IM002B', economicGroup: 'Grupo Norte', idEmpreendimento: 'E4', nomeComercial: 'Residencial Delta' },
       ],
     );
   }, 120000);
@@ -284,15 +363,47 @@ describe('AB02 TeraORM - Principais clientes (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('retorna os principais clientes do BigQuery', async () => {
-    const out = await runTopCustomers(bq, table.fqn, 'sudeste', 6, 2);
+  it('retorna resultados combinando igualdade, like e in', async () => {
+    const events = createTeraRepository(bq, table.fqn, 'ab02_onboarding_model', {
+      participant: '' as string,
+      razaoSocial: '' as string,
+      stage: '' as string,
+      economicGroup: '' as string,
+      idEmpreendimento: '' as string,
+      nomeComercial: '' as string,
+    });
+
+    const out = await buildEmpreendimentoSearchQuery(
+      events,
+      {
+        socialReasonDI: 'Alpha DI',
+        empreendimentoNamePrefix: 'Residencial',
+        stages: ['IM002A', 'IM002B'],
+      },
+      2,
+    ).execute();
     const normalized = out.map((r: any) => ({
-      customer: r.customer,
-      orders: Number(r.orders),
+      participantDocument: r.participant,
+      participantName: r.razaoSocial,
+      currentStage: r.stage,
+      empreendimentoId: r.idEmpreendimento,
+      empreendimentoName: r.nomeComercial,
     }));
     expect(normalized).toEqual([
-      { customer: 'Carla', orders: 10 },
-      { customer: 'Ana', orders: 7 },
+      {
+        participantDocument: '111',
+        participantName: 'Alpha DI',
+        currentStage: 'IM002A',
+        empreendimentoId: 'E1',
+        empreendimentoName: 'Residencial Aurora',
+      },
+      {
+        participantDocument: '444',
+        participantName: 'Alpha DI',
+        currentStage: 'IM002B',
+        empreendimentoId: 'E4',
+        empreendimentoName: 'Residencial Delta',
+      },
     ]);
   }, 60000);
 
@@ -304,32 +415,31 @@ describe('AB02 TeraORM - Principais clientes (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB03 SDK - Teste de Ticket Médio por Categoria',
+    title: 'AB03 SDK - Teste de Horas por Empreendimento',
+    legacyTitles: ['AB03 SDK - Teste de Ticket Médio por Categoria'],
     description:
-      'Valida a solução do aluno na trilha SDK contra uma tabela de teste do BigQuery.',
+      'Valida uma consulta pontual em time_by_onboarding_step na trilha SDK.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
-import { runAvgTicketByCategory } from './src/app';
+import { runTimeAggregatesByEmpreendimento } from './src/app';
 
-describe('AB03 SDK - Ticket médio por categoria (BigQuery)', () => {
+describe('AB03 SDK - Horas por empreendimento (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
     table = await seedTable(
-      'ab03_sales',
+      'ab03_time_by_step',
       [
-        { name: 'category', type: 'STRING' },
-        { name: 'price', type: 'INT64' },
+        { name: 'idEmpreendimento', type: 'STRING' },
+        { name: 'totalHours', type: 'INT64' },
+        { name: 'hours_in_IM002A', type: 'INT64' },
+        { name: 'hours_in_IM002B', type: 'INT64' },
       ],
       [
-        { category: 'eletronicos', price: 200 },
-        { category: 'eletronicos', price: 400 },
-        { category: 'eletronicos', price: 600 },
-        { category: 'livros', price: 30 },
-        { category: 'livros', price: 50 },
-        { category: 'livros', price: 70 },
-        { category: 'roupas', price: 100 },
+        { idEmpreendimento: 'E1', totalHours: 12, hours_in_IM002A: 5, hours_in_IM002B: 7 },
+        { idEmpreendimento: 'E2', totalHours: 20, hours_in_IM002A: 8, hours_in_IM002B: 12 },
+        { idEmpreendimento: 'E3', totalHours: 9, hours_in_IM002A: 4, hours_in_IM002B: 5 },
       ],
     );
   }, 120000);
@@ -338,16 +448,19 @@ describe('AB03 SDK - Ticket médio por categoria (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('retorna o ticket médio por categoria, filtrado e ordenado', async () => {
-    const out = await runAvgTicketByCategory(bq, table.fqn, 3);
-    const normalized = out.map((r: any) => ({
-      category: r.category,
-      avgTicket: Number(r.avgTicket),
-      sales: Number(r.sales),
-    }));
+  it('retorna a linha esperada para um empreendimento especifico', async () => {
+    const normalized = await runTimeAggregatesByEmpreendimento(
+      bq,
+      table.fqn,
+      'E2',
+    );
     expect(normalized).toEqual([
-      { category: 'eletronicos', avgTicket: 400, sales: 3 },
-      { category: 'livros', avgTicket: 50, sales: 3 },
+      {
+        idEmpreendimento: 'E2',
+        totalHours: 20,
+        hoursInIM002A: 8,
+        hoursInIM002B: 12,
+      },
     ]);
   }, 60000);
 
@@ -359,33 +472,33 @@ describe('AB03 SDK - Ticket médio por categoria (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB03 ORM - Teste de Ticket Médio por Categoria',
+    title: 'AB03 ORM - Teste de Horas por Empreendimento',
+    legacyTitles: ['AB03 ORM - Teste de Ticket Médio por Categoria'],
     description:
-      'Valida a solução do aluno na trilha TeraORM contra uma tabela de teste do BigQuery.',
+      'Valida uma consulta pontual em time_by_onboarding_step na trilha TeraORM.',
     workerType: WorkerType.NODE_TERAORM,
     dependencies: ['teraorm', '@teraorm/bigquery'],
     content: `import fs from 'fs';
-import { bq, seedTable, SeededTable } from '../test-utils/bq';
-import { runAvgTicketByCategory } from './src/app';
+  import { bq, seedTable, SeededTable } from '../test-utils/bq';
+  import { createTeraRepository } from '../test-utils/tera';
+import { buildTimeAggregatesQuery } from './src/app';
 
-describe('AB03 TeraORM - Ticket médio por categoria (BigQuery)', () => {
+describe('AB03 TeraORM - Horas por empreendimento (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
     table = await seedTable(
-      'ab03_sales',
+      'ab03_time_by_step',
       [
-        { name: 'category', type: 'STRING' },
-        { name: 'price', type: 'INT64' },
+        { name: 'idEmpreendimento', type: 'STRING' },
+        { name: 'totalHours', type: 'INT64' },
+        { name: 'hours_in_IM002A', type: 'INT64' },
+        { name: 'hours_in_IM002B', type: 'INT64' },
       ],
       [
-        { category: 'eletronicos', price: 200 },
-        { category: 'eletronicos', price: 400 },
-        { category: 'eletronicos', price: 600 },
-        { category: 'livros', price: 30 },
-        { category: 'livros', price: 50 },
-        { category: 'livros', price: 70 },
-        { category: 'roupas', price: 100 },
+        { idEmpreendimento: 'E1', totalHours: 12, hours_in_IM002A: 5, hours_in_IM002B: 7 },
+        { idEmpreendimento: 'E2', totalHours: 20, hours_in_IM002A: 8, hours_in_IM002B: 12 },
+        { idEmpreendimento: 'E3', totalHours: 9, hours_in_IM002A: 4, hours_in_IM002B: 5 },
       ],
     );
   }, 120000);
@@ -394,16 +507,28 @@ describe('AB03 TeraORM - Ticket médio por categoria (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('retorna o ticket médio por categoria, filtrado e ordenado', async () => {
-    const out = await runAvgTicketByCategory(bq, table.fqn, 3);
+  it('retorna a linha esperada para um empreendimento especifico', async () => {
+    const steps = createTeraRepository(bq, table.fqn, 'ab03_time_model', {
+      idEmpreendimento: '' as string,
+      totalHours: 0 as number,
+      hours_in_IM002A: 0 as number,
+      hours_in_IM002B: 0 as number,
+    });
+
+    const out = await buildTimeAggregatesQuery(steps, 'E2').execute();
     const normalized = out.map((r: any) => ({
-      category: r.category,
-      avgTicket: Number(r.avgTicket),
-      sales: Number(r.sales),
+      idEmpreendimento: r.idEmpreendimento,
+      totalHours: Number(r.totalHours),
+      hoursInIM002A: Number(r.hours_in_IM002A),
+      hoursInIM002B: Number(r.hours_in_IM002B),
     }));
     expect(normalized).toEqual([
-      { category: 'eletronicos', avgTicket: 400, sales: 3 },
-      { category: 'livros', avgTicket: 50, sales: 3 },
+      {
+        idEmpreendimento: 'E2',
+        totalHours: 20,
+        hoursInIM002A: 8,
+        hoursInIM002B: 12,
+      },
     ]);
   }, 60000);
 
@@ -415,32 +540,30 @@ describe('AB03 TeraORM - Ticket médio por categoria (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB04 SDK - Teste de Produtos com Baixo Estoque',
+    title: 'AB04 SDK - Teste de Ranking por Horas Totais',
+    legacyTitles: ['AB04 SDK - Teste de Produtos com Baixo Estoque'],
     description:
-      'Valida a solução do aluno na trilha SDK contra uma tabela de teste do BigQuery.',
+      'Valida um ranking por totalHours com filtros opcionais na trilha SDK.',
     workerType: WorkerType.NODE_TERAORM,
     content: `import fs from 'fs';
 import { bq, seedTable, SeededTable } from '../test-utils/bq';
-import { runLowStock } from './src/app';
+import { runTopHoursRanking } from './src/app';
 
-describe('AB04 SDK - Produtos com baixo estoque (BigQuery)', () => {
+describe('AB04 SDK - Ranking por horas totais (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
     table = await seedTable(
-      'ab04_inventory',
+      'ab04_time_by_step',
       [
-        { name: 'product', type: 'STRING' },
-        { name: 'stock', type: 'INT64' },
-        { name: 'active', type: 'BOOL' },
+        { name: 'idEmpreendimento', type: 'STRING' },
+        { name: 'totalHours', type: 'INT64' },
       ],
       [
-        { product: 'caneta', stock: 3, active: true },
-        { product: 'caderno', stock: 12, active: true },
-        { product: 'lapis', stock: 1, active: true },
-        { product: 'borracha', stock: 0, active: false },
-        { product: 'apontador', stock: 4, active: true },
-        { product: 'mochila', stock: 25, active: true },
+        { idEmpreendimento: 'E1', totalHours: 12 },
+        { idEmpreendimento: 'E2', totalHours: 20 },
+        { idEmpreendimento: 'E3', totalHours: 8 },
+        { idEmpreendimento: 'E4', totalHours: 15 },
       ],
     );
   }, 120000);
@@ -449,16 +572,17 @@ describe('AB04 SDK - Produtos com baixo estoque (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('returns active products under threshold, ordered by stock asc', async () => {
-    const out = await runLowStock(bq, table.fqn, 5, 3);
-    const normalized = out.map((r: any) => ({
-      product: r.product,
-      stock: Number(r.stock),
-    }));
+  it('retorna ranking por totalHours com filtro opcional de ids', async () => {
+    const normalized = await runTopHoursRanking(
+      bq,
+      table.fqn,
+      10,
+      ['E1', 'E2', 'E4'],
+      2,
+    );
     expect(normalized).toEqual([
-      { product: 'lapis', stock: 1 },
-      { product: 'caneta', stock: 3 },
-      { product: 'apontador', stock: 4 },
+      { idEmpreendimento: 'E2', totalHours: 20 },
+      { idEmpreendimento: 'E4', totalHours: 15 },
     ]);
   }, 60000);
 
@@ -470,33 +594,32 @@ describe('AB04 SDK - Produtos com baixo estoque (BigQuery)', () => {
 `,
   },
   {
-    title: 'AB04 ORM - Teste de Produtos com Baixo Estoque',
+    title: 'AB04 ORM - Teste de Ranking por Horas Totais',
+    legacyTitles: ['AB04 ORM - Teste de Produtos com Baixo Estoque'],
     description:
-      'Valida a solução do aluno na trilha TeraORM contra uma tabela de teste do BigQuery.',
+      'Valida um ranking por totalHours com filtros opcionais na trilha TeraORM.',
     workerType: WorkerType.NODE_TERAORM,
     dependencies: ['teraorm', '@teraorm/bigquery'],
     content: `import fs from 'fs';
-import { bq, seedTable, SeededTable } from '../test-utils/bq';
-import { runLowStock } from './src/app';
+  import { bq, seedTable, SeededTable } from '../test-utils/bq';
+  import { createTeraRepository } from '../test-utils/tera';
+import { buildTopHoursRankingQuery } from './src/app';
 
-describe('AB04 TeraORM - Produtos com baixo estoque (BigQuery)', () => {
+describe('AB04 TeraORM - Ranking por horas totais (BigQuery)', () => {
   let table: SeededTable;
 
   beforeAll(async () => {
     table = await seedTable(
-      'ab04_inventory',
+      'ab04_time_by_step',
       [
-        { name: 'product', type: 'STRING' },
-        { name: 'stock', type: 'INT64' },
-        { name: 'active', type: 'BOOL' },
+        { name: 'idEmpreendimento', type: 'STRING' },
+        { name: 'totalHours', type: 'INT64' },
       ],
       [
-        { product: 'caneta', stock: 3, active: true },
-        { product: 'caderno', stock: 12, active: true },
-        { product: 'lapis', stock: 1, active: true },
-        { product: 'borracha', stock: 0, active: false },
-        { product: 'apontador', stock: 4, active: true },
-        { product: 'mochila', stock: 25, active: true },
+        { idEmpreendimento: 'E1', totalHours: 12 },
+        { idEmpreendimento: 'E2', totalHours: 20 },
+        { idEmpreendimento: 'E3', totalHours: 8 },
+        { idEmpreendimento: 'E4', totalHours: 15 },
       ],
     );
   }, 120000);
@@ -505,16 +628,30 @@ describe('AB04 TeraORM - Produtos com baixo estoque (BigQuery)', () => {
     if (table) await table.drop();
   });
 
-  it('returns active products under threshold, ordered by stock asc', async () => {
-    const out = await runLowStock(bq, table.fqn, 5, 3);
+  it('retorna ranking por totalHours com filtro opcional de ids', async () => {
+    const steps = createTeraRepository(
+      bq,
+      table.fqn,
+      'ab04_time_model',
+      {
+        idEmpreendimento: '' as string,
+        totalHours: 0 as number,
+      },
+    );
+
+    const out = await buildTopHoursRankingQuery(
+      steps,
+      10,
+      ['E1', 'E2', 'E4'],
+      2,
+    ).execute();
     const normalized = out.map((r: any) => ({
-      product: r.product,
-      stock: Number(r.stock),
+      idEmpreendimento: r.idEmpreendimento,
+      totalHours: Number(r.totalHours),
     }));
     expect(normalized).toEqual([
-      { product: 'lapis', stock: 1 },
-      { product: 'caneta', stock: 3 },
-      { product: 'apontador', stock: 4 },
+      { idEmpreendimento: 'E2', totalHours: 20 },
+      { idEmpreendimento: 'E4', totalHours: 15 },
     ]);
   }, 60000);
 
@@ -604,11 +741,76 @@ const ORM_PRIMER = `/**
  *
  *   return rows.map((r: any) => ({ ...sua forma... }));
  *
- * Cola de operadores (.where / .andWhere / .having):
+ * === Guia rapido de operadores e metodos (sem depender de IntelliSense) ===
+ *
+ * Operadores de comparacao suportados em .where/.andWhere/.having:
  *   '=', '!=', '>', '>=', '<', '<=', 'LIKE', 'IN', 'BETWEEN'
+ *
+ * Como usar cada operador:
+ *   - '=' e '!=': valor escalar, ex: .where('region', '=', 'sudeste')
+ *   - '>', '>=', '<', '<=': valor numerico/data, ex: .andWhere('orders', '>=', 5)
+ *   - 'LIKE': string com padrao, ex: .where('customer', 'LIKE', 'Ana%')
+ *   - 'IN': array de valores, ex: .where('region', 'IN', ['sudeste', 'sul'])
+ *   - 'BETWEEN': array com 2 valores [inicio, fim], ex: .where('price', 'BETWEEN', [10, 100])
+ *
+ * Metodos principais do builder:
+ *   - .select('campo1', 'campo2', ...)
+ *   - .where(campo, operador, valor)
+ *   - .andWhere(campo, operador, valor)
+ *   - .orderBy(campo, 'asc' | 'desc')
+ *   - .limit(n)
+ *   - .sum(campo, alias), .avg(campo, alias), .count(campo, alias)
+ *   - .countDistinct(campo, alias), .min(campo, alias), .max(campo, alias)
+ *   - .groupBy('campo1', 'campo2', ...)
+ *   - .having(aliasAgregado, operador, valor)
+ *   - .orderByAlias(alias, 'asc' | 'desc')
+ *   - .execute()
+ *
+ * Regras praticas:
+ *   - Se usar agregacao (sum/avg/count/etc), geralmente voce precisara de .groupBy.
+ *   - Em .having, use o alias definido na agregacao (nao o nome bruto da coluna).
+ *   - Em .orderByAlias, use alias de agregacao; em .orderBy, use coluna real do modelo.
+ *   - .limit(n) exige inteiro nao-negativo.
+ *
+ * Nas atividades desta trilha, o boilerplate geralmente ja deixa model + adapter
+ * montados acima da funcao principal. O foco esperado e a composicao da consulta.
  *
  * O teste de marcador ORM falhará a menos que este arquivo importe de 'teraorm'.
  */`;
+
+const AB01_ACCEPTANCE_CRITERIA = [
+  'Objetivo: montar um relatorio de onboarding com filtros opcionais.',
+  'Entrada: tabela onboarding_events com participant, razaoSocial, stage, economicGroup, idEmpreendimento e nomeComercial.',
+  'Filtros opcionais: participantDocument, currentStage e economicGroup.',
+  'Regra: aplicar apenas os filtros informados.',
+  'Ordenacao: participant em ordem crescente.',
+  'Limite: retornar no maximo 100 linhas.',
+].join(' ');
+
+const AB02_ACCEPTANCE_CRITERIA = [
+  'Objetivo: montar uma busca de empreendimentos com filtros compostos.',
+  'Entrada: tabela onboarding_events com participant, razaoSocial, stage, economicGroup, idEmpreendimento e nomeComercial.',
+  'Filtros: socialReasonDI opcional, empreendimentoNamePrefix opcional e stages opcional.',
+  'Regra: usar igualdade para socialReasonDI, LIKE prefix% para empreendimentoNamePrefix e IN para stages.',
+  'Ordenacao: nomeComercial em ordem crescente.',
+  'Limite: retornar no maximo limit registros.',
+].join(' ');
+
+const AB03_ACCEPTANCE_CRITERIA = [
+  'Objetivo: consultar horas agregadas por empreendimento.',
+  'Entrada: tabela time_by_onboarding_step com idEmpreendimento, totalHours, hours_in_IM002A e hours_in_IM002B.',
+  'Regra: filtrar por empreendimentoId exato.',
+  'Selecao: retornar idEmpreendimento, totalHours, hours_in_IM002A e hours_in_IM002B.',
+  'Limite: retornar apenas 1 linha.',
+].join(' ');
+
+const AB04_ACCEPTANCE_CRITERIA = [
+  'Objetivo: montar um ranking por horas totais.',
+  'Entrada: tabela time_by_onboarding_step com idEmpreendimento e totalHours.',
+  'Filtro: totalHours >= minHours e, se informado, idEmpreendimento IN ids.',
+  'Ordenacao: totalHours em ordem decrescente.',
+  'Limite: retornar no maximo limit registros.',
+].join(' ');
 
 const assignments: StudyAssignment[] = [
   {
@@ -622,8 +824,7 @@ const assignments: StudyAssignment[] = [
       questions: [
         {
           key: 'profileSqlFamiliarity',
-          label:
-            'Como você avalia sua familiaridade prévia com SQL?',
+          label: 'Como você avalia sua familiaridade prévia com SQL?',
           type: 'likert_1_5',
         },
         {
@@ -648,12 +849,12 @@ export {};
 `,
   },
   {
-    title: 'AB01-A SDK Nativo: Receita por Loja',
-    description:
-      'Pergunta: escreva uma query SQL do BigQuery (via @google-cloud/bigquery) que retorna receita agregada por loja, filtrada por minRevenue e ordenada desc.',
+    title: 'AB01-A SDK Nativo: Relatório de Onboarding com Filtros Opcionais',
+    legacyTitles: ['AB01-A SDK Nativo: Receita por Loja'],
+    description: `Trilha SDK nativo. ${AB01_ACCEPTANCE_CRITERIA}`,
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB01 SDK - Teste de Receita por Loja',
+    templateTitle: 'AB01 SDK - Teste de Relatório de Onboarding',
     interviewConfig: {
       questions: [
         {
@@ -682,40 +883,67 @@ export {};
         },
       ],
     },
-    
+
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 
 ${SDK_PRIMER}
 
-export type RevenueReportRow = { store: string; revenue: number };
+export type OnboardingFilters = {
+  participantDocument?: string;
+  currentStage?: string;
+  economicGroup?: string;
+};
+
+export type OnboardingReportRow = {
+  participantDocument: string;
+  participantName: string;
+  currentStage: string;
+  economicGroup: string;
+  empreendimentoId: string;
+  empreendimentoName: string;
+};
 
 /**
- * Trilha SDK: Escreva uma query SQL pura e execute via o cliente BigQuery fornecido.
+ * Monte um relatorio de onboarding usando SQL do BigQuery.
  *
- * A tabela de teste possui as colunas:
- *   - store  STRING
- *   - total  INT64
+ * Colunas da tabela:
+ *   - participant        STRING
+ *   - razaoSocial        STRING
+ *   - stage              STRING
+ *   - economicGroup      STRING
+ *   - idEmpreendimento   STRING
+ *   - nomeComercial      STRING
  *
- * Retorne as linhas cuja SUM(total) >= minRevenue, ordenadas por receita (desc).
- * O formato retornado deve corresponder a { store: string; revenue: number }.
+ * Selecione:
+ *   participant AS participantDocument,
+ *   razaoSocial AS participantName,
+ *   stage AS currentStage,
+ *   economicGroup,
+ *   idEmpreendimento AS empreendimentoId,
+ *   nomeComercial AS empreendimentoName
+ *
+ * Regras:
+ *   - aplique apenas os filtros informados em filters
+ *   - ordene por participant asc
+ *   - retorne no maximo 100 linhas
  */
-export async function runRevenueByStore(
+export async function runOnboardingReport(
   bq: BigQuery,
   table: string,
-  minRevenue: number,
-): Promise<RevenueReportRow[]> {
-  // TODO: implement using bq.query({ query: 'SELECT ...' })
+  filters: OnboardingFilters,
+): Promise<OnboardingReportRow[]> {
+  // TODO: implemente usando bq.query({ query: 'SELECT ...', params: ... })
   return [];
 }
 `,
   },
   {
-    title: 'AB02-A SDK Nativo: Principais Clientes por Região',
-    description:
-      'Pergunta: escreva uma query SQL do BigQuery que retorna os N principais clientes em uma região com pelo menos minOrders, ordenado por orders desc.',
+    title: 'AB02-A SDK Nativo: Filtros de Empreendimento',
+    legacyTitles: ['AB02-A SDK Nativo: Principais Clientes por Região'],
+    description: `Trilha SDK nativo. ${AB02_ACCEPTANCE_CRITERIA}`,
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB02 SDK - Teste de Principais Clientes',
+    templateTitle: 'AB02 SDK - Teste de Filtros de Empreendimento',
     interviewConfig: {
       questions: [
         {
@@ -744,43 +972,68 @@ export async function runRevenueByStore(
         },
       ],
     },
-    
+
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 
 ${SDK_PRIMER}
 
-export type CustomerReportRow = { customer: string; orders: number };
+export type EmpreendimentoSearchFilters = {
+  socialReasonDI?: string;
+  empreendimentoNamePrefix?: string;
+  stages?: string[];
+};
+
+export type EmpreendimentoSearchRow = {
+  participantDocument: string;
+  participantName: string;
+  currentStage: string;
+  empreendimentoId: string;
+  empreendimentoName: string;
+};
 
 /**
- * SDK track: compose a raw SQL query and execute it via the provided BigQuery client.
+ * Monte uma busca de empreendimentos usando SQL do BigQuery.
  *
- * Seeded table columns:
- *   - customer  STRING
- *   - region    STRING
- *   - orders    INT64
+ * Colunas da tabela:
+ *   - participant        STRING
+ *   - razaoSocial        STRING
+ *   - stage              STRING
+ *   - economicGroup      STRING
+ *   - idEmpreendimento   STRING
+ *   - nomeComercial      STRING
  *
- * Return the top \`limit\` customers in the given region whose orders >= minOrders,
- * ordered by orders desc.
+ * Selecione:
+ *   participant AS participantDocument,
+ *   razaoSocial AS participantName,
+ *   stage AS currentStage,
+ *   idEmpreendimento AS empreendimentoId,
+ *   nomeComercial AS empreendimentoName
+ *
+ * Regras:
+ *   - se socialReasonDI existir, filtre razaoSocial = valor
+ *   - se empreendimentoNamePrefix existir, filtre nomeComercial LIKE 'prefix%'
+ *   - se stages existir e tiver itens, filtre stage IN UNNEST(@stages)
+ *   - ordene por nomeComercial asc
+ *   - limite a consulta pelo parametro limit
  */
-export async function runTopCustomers(
+export async function runEmpreendimentoSearch(
   bq: BigQuery,
   table: string,
-  region: string,
-  minOrders: number,
+  filters: EmpreendimentoSearchFilters,
   limit: number,
-): Promise<CustomerReportRow[]> {
-  // TODO: implement using bq.query({ query: 'SELECT ...' })
+): Promise<EmpreendimentoSearchRow[]> {
+  // TODO: implemente usando bq.query({ query: 'SELECT ...', params: ... })
   return [];
 }
 `,
   },
   {
-    title: 'AB03-A SDK Nativo: Ticket Médio por Categoria',
-    description:
-      'Pergunta: escreva uma query SQL do BigQuery que retorna o ticket médio (AVG de price) por categoria, filtrado por minSales (HAVING COUNT(*) >= minSales) e ordenado por avgTicket desc.',
+    title: 'AB03-A SDK Nativo: Horas por Empreendimento',
+    legacyTitles: ['AB03-A SDK Nativo: Ticket Médio por Categoria'],
+    description: `Trilha SDK nativo. ${AB03_ACCEPTANCE_CRITERIA}`,
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB03 SDK - Teste de Ticket Médio por Categoria',
+    templateTitle: 'AB03 SDK - Teste de Horas por Empreendimento',
     interviewConfig: {
       questions: [
         {
@@ -809,44 +1062,55 @@ export async function runTopCustomers(
         },
       ],
     },
-    
+
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 
 ${SDK_PRIMER}
 
-export type CategoryTicketRow = {
-  category: string;
-  avgTicket: number;
-  sales: number;
+export type TimeAggregateRow = {
+  idEmpreendimento: string;
+  totalHours: number;
+  hoursInIM002A: number;
+  hoursInIM002B: number;
 };
 
 /**
- * SDK track: compose a raw SQL query and execute it via the provided BigQuery client.
+ * Consulte horas agregadas por empreendimento usando SQL do BigQuery.
  *
- * Seeded table columns:
- *   - category  STRING
- *   - price     INT64
+ * Colunas da tabela:
+ *   - idEmpreendimento   STRING
+ *   - totalHours         INT64
+ *   - hours_in_IM002A    INT64
+ *   - hours_in_IM002B    INT64
  *
- * Return rows whose COUNT(*) >= minSales, with avgTicket = AVG(price) and sales = COUNT(*),
- * ordered by avgTicket desc.
+ * Selecione:
+ *   idEmpreendimento, totalHours,
+ *   hours_in_IM002A, hours_in_IM002B
+ *
+ * Regras:
+ *   - filtrar idEmpreendimento = parametro empreendimentoId
+ *   - retornar apenas 1 linha
+ *
+ * Atencao: hours_in_IM002A e hours_in_IM002B voltam como INT64 — use Number().
+ * O tipo de retorno espera hoursInIM002A e hoursInIM002B (camelCase).
  */
-export async function runAvgTicketByCategory(
+export async function runTimeAggregatesByEmpreendimento(
   bq: BigQuery,
   table: string,
-  minSales: number,
-): Promise<CategoryTicketRow[]> {
-  // TODO: implement using bq.query({ query: 'SELECT ...' })
+  empreendimentoId: string,
+): Promise<TimeAggregateRow[]> {
+  // TODO: implemente usando bq.query({ query: 'SELECT ...', params: ... })
   return [];
 }
 `,
   },
   {
-    title: 'AB04-A SDK Nativo: Produtos com Baixo Estoque',
-    description:
-      'Pergunta: escreva uma query SQL do BigQuery que retorna produtos ativos (active = TRUE) cujo estoque é estritamente menor que threshold, ordenado por stock asc, limitado a N linhas.',
+    title: 'AB04-A SDK Nativo: Ranking por Horas Totais',
+    legacyTitles: ['AB04-A SDK Nativo: Produtos com Baixo Estoque'],
+    description: `Trilha SDK nativo. ${AB04_ACCEPTANCE_CRITERIA}`,
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB04 SDK - Teste de Produtos com Baixo Estoque',
+    templateTitle: 'AB04 SDK - Teste de Ranking por Horas Totais',
     interviewConfig: {
       questions: [
         {
@@ -875,42 +1139,51 @@ export async function runAvgTicketByCategory(
         },
       ],
     },
-    
+
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
 
 ${SDK_PRIMER}
 
-export type LowStockRow = { product: string; stock: number };
+export type HoursRankingRow = {
+  idEmpreendimento: string;
+  totalHours: number;
+};
 
 /**
- * SDK track: compose a raw SQL query and execute it via the provided BigQuery client.
+ * Monte um ranking por horas totais usando SQL do BigQuery.
  *
- * Seeded table columns:
- *   - product  STRING
- *   - stock    INT64
- *   - active   BOOL
+ * Colunas da tabela:
+ *   - idEmpreendimento   STRING
+ *   - totalHours         INT64
  *
- * Return rows where active = TRUE AND stock < threshold,
- * ordered by stock asc, limited to \`limit\` rows.
+ * Selecione:
+ *   idEmpreendimento, totalHours
+ *
+ * Regras:
+ *   - filtrar totalHours >= minHours
+ *   - se ids tiver itens, filtrar idEmpreendimento IN UNNEST(@ids)
+ *   - ordenar por totalHours desc
+ *   - limitar pelo parametro limit
  */
-export async function runLowStock(
+export async function runTopHoursRanking(
   bq: BigQuery,
   table: string,
-  threshold: number,
+  minHours: number,
+  ids: string[],
   limit: number,
-): Promise<LowStockRow[]> {
-  // TODO: implement using bq.query({ query: 'SELECT ...' })
+): Promise<HoursRankingRow[]> {
+  // TODO: implemente usando bq.query({ query: 'SELECT ...', params: ... })
   return [];
 }
 `,
   },
   {
-    title: 'AB01-B TeraORM: Receita por Loja',
-    description:
-      'Pergunta: escreva uma query SQL do BigQuery (via teraORM) que retorna receita agregada por loja, filtrada por minRevenue e ordenada desc.',
+    title: 'AB01-B TeraORM: Relatório de Onboarding com Filtros Opcionais',
+    legacyTitles: ['AB01-B TeraORM: Receita por Loja'],
+    description: `Trilha TeraORM. ${AB01_ACCEPTANCE_CRITERIA} Requisito de trilha: a implementacao deve usar teraorm.`,
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB01 ORM - Teste de Receita por Loja',
+    templateTitle: 'AB01 ORM - Teste de Relatório de Onboarding',
     interviewConfig: {
       questions: [
         {
@@ -951,52 +1224,61 @@ export async function runLowStock(
         },
       ],
     },
-    
+
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
-import * as teraorm from 'teraorm';
+import { defineModel, tera } from 'teraorm';
+import { createBigQueryAdapter } from '@teraorm/bigquery';
 
 ${ORM_PRIMER}
 
-export type RevenueReportRow = { store: string; revenue: number };
-
-/**
- * Trilha TeraORM: Modele e execute a query usando primitivos do TeraORM.
- *
- * Colunas da tabela de teste:
- *   - store  STRING
- *   - total  INT64
- */
-export async function runRevenueByStore(
-  bq: BigQuery,
-  table: string,
-  minRevenue: number,
-): Promise<RevenueReportRow[]> {
-  void teraorm;
-  // TODO: implement with TeraORM
-  return [];
-}
-
-export type BigQueryClientOptions = {
-  keyFilename: string;
-  projectId: string;
+export type OnboardingFilters = {
+  participantDocument?: string;
+  currentStage?: string;
+  economicGroup?: string;
 };
 
-export function getBigQueryClientOptions(): BigQueryClientOptions {
-  // TODO: implement for credential-backed execution
-  return {
-    keyFilename: '',
-    projectId: '',
-  };
+function createOnboardingEventsRepository(bq: BigQuery, table: string) {
+  const [projectId, datasetId, tableName] = table.replace(/\`/g, '').split('.');
+  const adapter = createBigQueryAdapter({ projectId, datasetId, tableName, bigquery: bq });
+
+  const OnboardingEvents = defineModel('onboarding_events', {
+    participant: '' as string,
+    razaoSocial: '' as string,
+    stage: '' as string,
+    economicGroup: '' as string,
+    idEmpreendimento: '' as string,
+    nomeComercial: '' as string,
+  });
+
+  return tera(OnboardingEvents, adapter);
+}
+
+/**
+ * Monte a consulta de onboarding com o repositorio TeraORM ja preparado.
+ *
+ * Regras:
+ *   - aplique apenas os filtros informados em filters
+ *   - ordene por participant asc
+ *   - retorne no maximo 100 linhas
+ */
+export function buildOnboardingReportQuery(events: any, filters: OnboardingFilters) {
+  // TODO: retorne a query TeraORM composta
+  return events;
+}
+
+export async function runOnboardingReport(bq: BigQuery, table: string, filters: OnboardingFilters) {
+  const events = createOnboardingEventsRepository(bq, table);
+  return buildOnboardingReportQuery(events, filters).execute();
 }
 `,
   },
   {
-    title: 'AB02-B TeraORM: Principais Clientes por Região',
-    description:
-      'Pergunta: mesmo cenário de principais-clientes que AB02-A, mas composto com TeraORM. O resultado deve corresponder exatamente à trilha SDK.',
+    title: 'AB02-B TeraORM: Filtros de Empreendimento',
+    legacyTitles: ['AB02-B TeraORM: Principais Clientes por Região'],
+    description: `Trilha TeraORM. ${AB02_ACCEPTANCE_CRITERIA} Requisito de trilha: a implementacao deve usar teraorm.`,
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB02 ORM - Teste de Principais Clientes',
+    templateTitle: 'AB02 ORM - Teste de Filtros de Empreendimento',
     interviewConfig: {
       questions: [
         {
@@ -1037,42 +1319,68 @@ export function getBigQueryClientOptions(): BigQueryClientOptions {
         },
       ],
     },
-    
+
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
-import * as teraorm from 'teraorm';
+import { defineModel, tera } from 'teraorm';
+import { createBigQueryAdapter } from '@teraorm/bigquery';
 
 ${ORM_PRIMER}
 
-export type CustomerReportRow = { customer: string; orders: number };
+export type EmpreendimentoSearchFilters = {
+  socialReasonDI?: string;
+  empreendimentoNamePrefix?: string;
+  stages?: string[];
+};
+
+function createOnboardingEventsRepository(bq: BigQuery, table: string) {
+  const [projectId, datasetId, tableName] = table.replace(/\`/g, '').split('.');
+  const adapter = createBigQueryAdapter({ projectId, datasetId, tableName, bigquery: bq });
+
+  const OnboardingEvents = defineModel('onboarding_events', {
+    participant: '' as string,
+    razaoSocial: '' as string,
+    stage: '' as string,
+    economicGroup: '' as string,
+    idEmpreendimento: '' as string,
+    nomeComercial: '' as string,
+  });
+
+  return tera(OnboardingEvents, adapter);
+}
 
 /**
- * ORM track: model the query using TeraORM primitives.
+ * Monte uma busca de empreendimentos com o repositorio TeraORM ja preparado.
  *
- * Seeded table columns:
- *   - customer  STRING
- *   - region    STRING
- *   - orders    INT64
+ * Regras:
+ *   - se socialReasonDI existir, filtre razaoSocial = valor
+ *   - se empreendimentoNamePrefix existir, filtre nomeComercial LIKE 'prefix%'
+ *   - se stages existir e tiver itens, filtre stage IN stages
+ *   - ordene por nomeComercial asc
+ *   - limite a consulta pelo parametro limit
  */
-export async function runTopCustomers(
+export function buildEmpreendimentoSearchQuery(events: any, filters: EmpreendimentoSearchFilters, limit: number) {
+  // TODO: retorne a query TeraORM composta
+  return events;
+}
+
+export async function runEmpreendimentoSearch(
   bq: BigQuery,
   table: string,
-  region: string,
-  minOrders: number,
+  filters: EmpreendimentoSearchFilters,
   limit: number,
-): Promise<CustomerReportRow[]> {
-  void teraorm;
-  // TODO: implement with TeraORM
-  return [];
+) {
+  const events = createOnboardingEventsRepository(bq, table);
+  return buildEmpreendimentoSearchQuery(events, filters, limit).execute();
 }
 `,
   },
   {
-    title: 'AB03-B TeraORM: Ticket Médio por Categoria',
-    description:
-      'Pergunta: mesmo cenário de ticket-médio que AB03-A, mas composto com TeraORM. O resultado deve corresponder exatamente à trilha SDK.',
+    title: 'AB03-B TeraORM: Horas por Empreendimento',
+    legacyTitles: ['AB03-B TeraORM: Ticket Médio por Categoria'],
+    description: `Trilha TeraORM. ${AB03_ACCEPTANCE_CRITERIA} Requisito de trilha: a implementacao deve usar teraorm.`,
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB03 ORM - Teste de Ticket Médio por Categoria',
+    templateTitle: 'AB03 ORM - Teste de Horas por Empreendimento',
     interviewConfig: {
       questions: [
         {
@@ -1113,43 +1421,57 @@ export async function runTopCustomers(
         },
       ],
     },
-    
+
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
-import * as teraorm from 'teraorm';
+import { defineModel, tera } from 'teraorm';
+import { createBigQueryAdapter } from '@teraorm/bigquery';
 
 ${ORM_PRIMER}
 
-export type CategoryTicketRow = {
-  category: string;
-  avgTicket: number;
-  sales: number;
-};
+function createTimeByStepRepository(bq: BigQuery, table: string) {
+  const [projectId, datasetId, tableName] = table.replace(/\`/g, '').split('.');
+  const adapter = createBigQueryAdapter({ projectId, datasetId, tableName, bigquery: bq });
+
+  const TimeByOnboardingStep = defineModel('time_by_onboarding_step', {
+    idEmpreendimento: '' as string,
+    totalHours: 0 as number,
+    hours_in_IM002A: 0 as number,
+    hours_in_IM002B: 0 as number,
+  });
+
+  return tera(TimeByOnboardingStep, adapter);
+}
 
 /**
- * ORM track: model and execute the query using TeraORM primitives.
+ * Monte a consulta de horas por empreendimento com o repositorio TeraORM ja preparado.
  *
- * Seeded table columns:
- *   - category  STRING
- *   - price     INT64
+ * Regras:
+ *   - filtrar idEmpreendimento = parametro empreendimentoId
+ *   - selecionar idEmpreendimento, totalHours, hours_in_IM002A e hours_in_IM002B
+ *   - retornar apenas 1 linha
  */
-export async function runAvgTicketByCategory(
+export function buildTimeAggregatesQuery(steps: any, empreendimentoId: string) {
+  // TODO: retorne a query TeraORM composta
+  return steps;
+}
+
+export async function runTimeAggregatesByEmpreendimento(
   bq: BigQuery,
   table: string,
-  minSales: number,
-): Promise<CategoryTicketRow[]> {
-  void teraorm;
-  // TODO: implement with TeraORM
-  return [];
+  empreendimentoId: string,
+) {
+  const steps = createTimeByStepRepository(bq, table);
+  return buildTimeAggregatesQuery(steps, empreendimentoId).execute();
 }
 `,
   },
   {
-    title: 'AB04-B TeraORM: Produtos com Baixo Estoque',
-    description:
-      'Pergunta: mesmo cenário de baixo-estoque que AB04-A, mas composto com TeraORM. O resultado deve corresponder exatamente à trilha SDK.',
+    title: 'AB04-B TeraORM: Ranking por Horas Totais',
+    legacyTitles: ['AB04-B TeraORM: Produtos com Baixo Estoque'],
+    description: `Trilha TeraORM. ${AB04_ACCEPTANCE_CRITERIA} Requisito de trilha: a implementacao deve usar teraorm.`,
     workerType: WorkerType.NODE_TERAORM,
     maxAttempts: 20,
-    templateTitle: 'AB04 ORM - Teste de Produtos com Baixo Estoque',
+    templateTitle: 'AB04 ORM - Teste de Ranking por Horas Totais',
     interviewConfig: {
       questions: [
         {
@@ -1190,44 +1512,53 @@ export async function runAvgTicketByCategory(
         },
       ],
     },
-    
+
     boilerplateContent: `import { BigQuery } from '@google-cloud/bigquery';
-import * as teraorm from 'teraorm';
+import { defineModel, tera } from 'teraorm';
+import { createBigQueryAdapter } from '@teraorm/bigquery';
 
 ${ORM_PRIMER}
 
-export type LowStockRow = { product: string; stock: number };
+function createTimeByStepRepository(bq: BigQuery, table: string) {
+  const [projectId, datasetId, tableName] = table.replace(/\`/g, '').split('.');
+  const adapter = createBigQueryAdapter({ projectId, datasetId, tableName, bigquery: bq });
 
-/**
- * ORM track: model and execute the query using TeraORM primitives.
- *
- * Seeded table columns:
- *   - product  STRING
- *   - stock    INT64
- *   - active   BOOL
- */
-export async function runLowStock(
-  bq: BigQuery,
-  table: string,
-  threshold: number,
-  limit: number,
-): Promise<LowStockRow[]> {
-  void teraorm;
-  // TODO: implement with TeraORM
-  return [];
+  const TimeByOnboardingStep = defineModel('time_by_onboarding_step', {
+    idEmpreendimento: '' as string,
+    totalHours: 0 as number,
+  });
+
+  return tera(TimeByOnboardingStep, adapter);
 }
 
-export type BigQueryClientOptions = {
-  keyFilename: string;
-  projectId: string;
-};
+/**
+ * Monte um ranking por horas totais com o repositorio TeraORM ja preparado.
+ *
+ * Regras:
+ *   - filtrar totalHours >= minHours
+ *   - se ids tiver itens, filtrar idEmpreendimento IN ids
+ *   - ordenar por totalHours desc
+ *   - limitar pelo parametro limit
+ */
+export function buildTopHoursRankingQuery(
+  steps: any,
+  minHours: number,
+  ids: string[],
+  limit: number,
+) {
+  // TODO: retorne a query TeraORM composta
+  return steps;
+}
 
-export function getBigQueryClientOptions(): BigQueryClientOptions {
-  // TODO: implement for credential-backed execution
-  return {
-    keyFilename: '',
-    projectId: '',
-  };
+export async function runTopHoursRanking(
+  bq: BigQuery,
+  table: string,
+  minHours: number,
+  ids: string[],
+  limit: number,
+) {
+  const steps = createTimeByStepRepository(bq, table);
+  return buildTopHoursRankingQuery(steps, minHours, ids, limit).execute();
 }
 `,
   },
@@ -1296,7 +1627,7 @@ export function getBigQueryClientOptions(): BigQueryClientOptions {
  */
 export {};
 `,
-  }
+  },
 ];
 
 async function ensureClass(
@@ -1355,16 +1686,18 @@ async function ensureTemplate(
   dataSource: DataSource,
   template: StudyTemplate,
 ): Promise<number> {
+  const candidateTitles = [template.title, ...(template.legacyTitles ?? [])];
   const existing = await dataSource.query(
-    `SELECT "id" FROM "template" WHERE "title" = $1 LIMIT 1`,
-    [template.title],
+    `SELECT "id" FROM "template" WHERE "title" = ANY($1) LIMIT 1`,
+    [candidateTitles],
   );
 
   if (existing.length > 0) {
     const id = Number(existing[0].id);
     await dataSource.query(
-      `UPDATE "template" SET "description" = $1, "content" = $2, "workerType" = $3, "dependencies" = $4 WHERE "id" = $5`,
+      `UPDATE "template" SET "title" = $1, "description" = $2, "content" = $3, "workerType" = $4, "dependencies" = $5 WHERE "id" = $6`,
       [
+        template.title,
         template.description,
         template.content,
         template.workerType,
@@ -1413,10 +1746,14 @@ async function ensureAssignment(options: {
     'assignment',
     'interviewConfig',
   );
+  const candidateTitles = [
+    assignment.title,
+    ...(assignment.legacyTitles ?? []),
+  ];
 
   const existing = await dataSource.query(
-    `SELECT "id" FROM "assignment" WHERE "title" = $1 AND "classId" = $2 LIMIT 1`,
-    [assignment.title, classId],
+    `SELECT "id" FROM "assignment" WHERE "title" = ANY($1) AND "classId" = $2 LIMIT 1`,
+    [candidateTitles, classId],
   );
 
   let assignmentId: number;
@@ -1424,11 +1761,13 @@ async function ensureAssignment(options: {
     assignmentId = Number(existing[0].id);
 
     const setParts = [
-      `"description" = $1`,
-      `"maxAttempts" = $2`,
-      `"workerType" = $3`,
+      `"title" = $1`,
+      `"description" = $2`,
+      `"maxAttempts" = $3`,
+      `"workerType" = $4`,
     ];
     const params: unknown[] = [
+      assignment.title,
       assignment.description,
       assignment.maxAttempts,
       assignment.workerType,

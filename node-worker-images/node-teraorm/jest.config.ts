@@ -6,11 +6,10 @@ const config: Config = {
   moduleFileExtensions: ["ts", "js", "json"],
   testMatch: ["**/*.spec.ts", "**/*.test.ts"],
   transform: {
-    "^.+\\.ts$": [
+    "^.+\\.[tj]s$": [
       "ts-jest",
       {
         diagnostics: false,
-        isolatedModules: true,
         tsconfig: {
           module: "commonjs",
           esModuleInterop: true,
@@ -23,6 +22,10 @@ const config: Config = {
       },
     ],
   },
+  // Transpile ESM-only TeraORM packages so Jest can execute them in this CJS runtime.
+  transformIgnorePatterns: [
+    "/node_modules/(?!(teraorm|@teraorm/core|@teraorm/bigquery)/)",
+  ],
 };
 
 export default config;

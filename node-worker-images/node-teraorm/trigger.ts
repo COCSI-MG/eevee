@@ -25,7 +25,7 @@ function runJestWithJson(): Promise<number> {
     const child = spawn("npm", ["test"], {
       cwd: RUNTIME_WORKDIR,
       env: {
-        PATH: process.env.PATH ?? "",
+        ...process.env,
         NODE_ENV: "test",
       },
       stdio: ["ignore", "pipe", "pipe"],

@@ -1,5 +1,7 @@
 GHCR_NAMESPACE ?= ghcr.io/cocsi-mg
 TAG            ?= develop
+# PRIVATE_KEY_PATH ?= ~/.ssh/id_personal
+PRIVATE_KEY_PATH ?= C:\\Users\\João Vitor Coimbra\\.ssh\\id_personal
 
 up: up-minikube up-docker up-scheduler
 
@@ -109,3 +111,6 @@ build-worker-react-cypress:
 	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG) node-worker-images/reactjs-cypress
 push-worker-react-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
+
+proxy:
+	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:43000:127.0.0.1:3000 -R 127.0.0.1:43010:127.0.0.1:3010 ubuntu@136.248.94.172

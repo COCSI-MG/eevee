@@ -1,13 +1,36 @@
-import { BigQuery, TableField } from '@google-cloud/bigquery';
-import { randomBytes } from 'crypto';
+import { BigQuery, TableField } from "@google-cloud/bigquery";
+import { randomBytes } from "crypto";
+import fs from "fs";
 
-const projectId = process.env.GOOGLE_CLOUD_PROJECT;
-if (!projectId) {
-  throw new Error('GOOGLE_CLOUD_PROJECT env var is required to use test-utils/bq');
+function inferProjectIdFromCredentials(): string | undefined {
+  const credentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (!credentialsPath || !fs.existsSync(credentialsPath)) {
+    return undefined;
+  }
+
+  try {
+    const content = fs.readFileSync(credentialsPath, "utf-8");
+    const parsed = JSON.parse(content) as { project_id?: string };
+    return parsed.project_id;
+  } catch {
+    return undefined;
+  }
 }
 
-const DATASET_ID = process.env.EEVEE_BQ_DATASET || 'eevee_ab_validation';
-const LOCATION = process.env.EEVEE_BQ_LOCATION || 'US';
+const projectId =
+  process.env.GOOGLE_CLOUD_PROJECT ||
+  process.env.GCLOUD_PROJECT ||
+  process.env.GOOGLE_PROJECT_ID ||
+  inferProjectIdFromCredentials();
+
+if (!projectId) {
+  throw new Error(
+    "Unable to resolve GCP project id. Set GOOGLE_CLOUD_PROJECT (or GCLOUD_PROJECT/GOOGLE_PROJECT_ID) or provide GOOGLE_APPLICATION_CREDENTIALS with project_id.",
+  );
+}
+
+const DATASET_ID = process.env.EEVEE_BQ_DATASET || "eevee_ab_validation";
+const LOCATION = process.env.EEVEE_BQ_LOCATION || "US";
 const TABLE_TTL_MS = 60 * 60 * 1000;
 
 export const bq = new BigQuery({ projectId });
@@ -42,7 +65,7 @@ export async function seedTable(
 ): Promise<SeededTable> {
   await ensureDataset();
   const dataset = bq.dataset(DATASET_ID);
-  const tableName = `${prefix}_${randomBytes(4).toString('hex')}`;
+  const tableName = `${prefix}_${randomBytes(4).toString("hex")}`;
 
   await dataset.createTable(tableName, {
     schema,
@@ -52,16 +75,13 @@ export async function seedTable(
   if (rows.length) {
     const cols = schema.map((f) => f.name as string);
     const values = rows
-      .map(
-        (row) =>
-          '(' + cols.map((c) => bqLiteral(row[c])).join(', ') + ')',
-      )
-      .join(', ');
+      .map((row) => "(" + cols.map((c) => bqLiteral(row[c])).join(", ") + ")")
+      .join(", ");
 
     await bq.query({
       query: `INSERT INTO \`${projectId}.${DATASET_ID}.${tableName}\` (${cols
         .map((c) => `\`${c}\``)
-        .join(', ')}) VALUES ${values}`,
+        .join(", ")}) VALUES ${values}`,
       location: LOCATION,
     });
   }
@@ -80,9 +100,9 @@ export async function seedTable(
 }
 
 function bqLiteral(v: unknown): string {
-  if (v === null || v === undefined) return 'NULL';
-  if (typeof v === 'number') return Number.isFinite(v) ? String(v) : 'NULL';
-  if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
-  const escaped = String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  if (v === null || v === undefined) return "NULL";
+  if (typeof v === "number") return Number.isFinite(v) ? String(v) : "NULL";
+  if (typeof v === "boolean") return v ? "TRUE" : "FALSE";
+  const escaped = String(v).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
   return `'${escaped}'`;
 }
