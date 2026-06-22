@@ -53,6 +53,7 @@ push-images: \
 build-workers: \
 	build-eevee-worker-bootstrap \
 	build-worker-node-default \
+	build-worker-node-teraorm \
 	build-worker-nestjs-default \
 	build-worker-node-grpcjs \
 	build-worker-node-nextjs-cypress \
@@ -61,6 +62,7 @@ build-workers: \
 push-workers: \
 	push-eevee-worker-bootstrap \
 	push-worker-node-default \
+	push-worker-node-teraorm \
 	push-worker-nestjs-default \
 	push-worker-node-grpcjs \
 	push-worker-node-nextjs-cypress \
@@ -92,6 +94,12 @@ build-worker-node-default:
 	docker build -t $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG) node-worker-images/node
 push-worker-node-default:
 	docker push $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG)
+
+.PHONY: build-worker-node-teraorm push-worker-node-teraorm
+build-worker-node-teraorm:
+	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG) node-worker-images/node-teraorm
+push-worker-node-teraorm:
+	docker push $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG)
 
 .PHONY: build-worker-nestjs-default push-worker-nestjs-default
 build-worker-nestjs-default:

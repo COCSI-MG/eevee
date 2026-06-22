@@ -74,6 +74,8 @@ override the GHCR defaults baked into worker.constants.ts.
   value: {{ .Values.workerImages.bootstrap | quote }}
 - name: WORKER_IMAGE_NODE_DEFAULT
   value: {{ .Values.workerImages.nodeDefault | quote }}
+- name: WORKER_IMAGE_NODE_TERAORM
+  value: {{ .Values.workerImages.nodeTeraorm | quote }}
 - name: WORKER_IMAGE_NODE_NESTJS
   value: {{ .Values.workerImages.nodeNestjs | quote }}
 - name: WORKER_IMAGE_NODE_GRPCJS

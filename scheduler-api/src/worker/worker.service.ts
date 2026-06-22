@@ -1,12 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
-    KubernetesJobOptions,
-    KubernetesJobResult,
+  KubernetesJobOptions,
+  KubernetesJobResult,
 } from 'src/kubernetes/kubernetes.interfaces';
 import { KubernetesService } from 'src/kubernetes/kubernetes.service';
 import { CreateWorkerDto } from './dto/create-worker.dto';
 import { WorkerType } from './enum/worker-type.enum';
-import { WORKER_DEFINITION_B64_ENV_NAME } from './worker.constants';
+import {
+  WORKER_BOOTSTRAP_IMAGE_NAME,
+  WORKER_DEFINITION_B64_ENV_NAME,
+} from './worker.constants';
 import { WorkerResponse } from './worker.interfaces';
 
 import { NodeDefaultJestStrategy } from './strategies/node-default-jest.strategy';
@@ -185,7 +188,7 @@ export class WorkerService {
       initContainers: [
         {
           name: 'eevee-worker-bootstrap',
-          image: 'eevee-worker-bootstrap',
+          image: WORKER_BOOTSTRAP_IMAGE_NAME,
           env: [
             {
               name: WORKER_DEFINITION_B64_ENV_NAME,

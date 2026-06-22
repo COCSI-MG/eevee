@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { Client1_13, config } from 'kubernetes-client';
-import { config } from 'kubernetes-client';
 import {
   DEFAULT_NAMESPACE,
   JOB_IMAGE_PULL_POLICY,
@@ -9,8 +8,8 @@ import {
   K8S_JOB_STATUS,
 } from './kubernetes.constants';
 import {
-    KubernetesJobOptions,
-    KubernetesJobResult,
+  KubernetesJobOptions,
+  KubernetesJobResult,
 } from './kubernetes.interfaces';
 
 @Injectable()
