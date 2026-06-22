@@ -63,6 +63,11 @@ DB_* values from the ConfigMap but expose them to the app as PG_*.
     secretKeyRef:
       name: {{ .Values.secrets.name }}
       key: GROQ_API_KEY
+- name: CORS_ALLOWED_ORIGINS
+  valueFrom:
+    configMapKeyRef:
+      name: eevee-config
+      key: CORS_ALLOWED_ORIGINS
 {{- end -}}
 
 {{/*

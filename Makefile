@@ -7,6 +7,7 @@ HELM_RELEASE ?= eevee
 NAMESPACE    ?= eevee-cefetrj
 CHART        ?= eevee-infrastructure/helm/eevee
 VALUES       ?= eevee-infrastructure/helm/eevee/values.local.yaml
+VM_PUBLIC_IP ?= 136.248.94.172
 
 up: up-minikube up-docker up-scheduler
 
@@ -126,6 +127,7 @@ push-worker-react-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
 
 proxy:
+	@echo Starting the VM reverse-proxy tunnel
 	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:43000:127.0.0.1:3000 -R 127.0.0.1:43010:127.0.0.1:3010 ubuntu@136.248.94.172
 
 lint:
@@ -135,9 +137,21 @@ template:
 	helm template $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
 		$(if $(wildcard $(VALUES)),-f $(VALUES))
 
+template-vm:
+	helm template $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
+		--set ingress.enabled=true \
+		--set front.apiUrl=http://$(VM_PUBLIC_IP)/v1 \
+		--set config.CORS_ALLOWED_ORIGINS=http://$(VM_PUBLIC_IP)
+
 install:
 	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
 		$(if $(wildcard $(VALUES)),-f $(VALUES))
+
+install-vm:
+	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
+		--set ingress.enabled=true \
+		--set front.apiUrl=http://$(VM_PUBLIC_IP)/v1 \
+		--set config.CORS_ALLOWED_ORIGINS=http://$(VM_PUBLIC_IP)
 
 uninstall:
 	helm uninstall $(HELM_RELEASE) -n $(NAMESPACE)
