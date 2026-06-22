@@ -26,6 +26,12 @@ const BQ_SECRET_MOUNT_PATH = '/var/run/gcp';
 const BQ_CREDENTIALS_FILE = 'sa.json';
 const BQ_PROJECT_ID =
   process.env.WORKER_GOOGLE_CLOUD_PROJECT || 'teraorm-survey';
+const TERAORM_PROXY_URL =
+  process.env.WORKER_TERAORM_PROXY_URL ||
+  'http://eevee-egress-proxy-service:3128';
+const TERAORM_NO_PROXY =
+  process.env.WORKER_TERAORM_NO_PROXY ||
+  '127.0.0.1,localhost,.svc,.cluster.local,kubernetes.default.svc';
 
 function stripPreloaded(dependencies: string[]): string[] {
   return dependencies.filter((dep) => !PRELOADED_PACKAGES.has(dep));
@@ -130,6 +136,10 @@ export class NodeTeraormJestStrategy extends BootstrapInitContainerStrategy {
 
     return {
       ...base,
+      podLabels: {
+        'eevee/worker-type': 'node-teraorm',
+        'eevee/network-profile': 'google-egress',
+      },
       secretVolumes: [
         {
           secretName: BQ_SECRET_NAME,
@@ -145,6 +155,30 @@ export class NodeTeraormJestStrategy extends BootstrapInitContainerStrategy {
         {
           name: 'GOOGLE_CLOUD_PROJECT',
           value: BQ_PROJECT_ID,
+        },
+        {
+          name: 'HTTPS_PROXY',
+          value: TERAORM_PROXY_URL,
+        },
+        {
+          name: 'HTTP_PROXY',
+          value: TERAORM_PROXY_URL,
+        },
+        {
+          name: 'NO_PROXY',
+          value: TERAORM_NO_PROXY,
+        },
+        {
+          name: 'https_proxy',
+          value: TERAORM_PROXY_URL,
+        },
+        {
+          name: 'http_proxy',
+          value: TERAORM_PROXY_URL,
+        },
+        {
+          name: 'no_proxy',
+          value: TERAORM_NO_PROXY,
         },
       ],
     };

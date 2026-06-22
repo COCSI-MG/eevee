@@ -1,7 +1,7 @@
-# ALTERNATIVE DEPLOYMENT STRATEGY - Public IP Forward Setup (Server -> Local Eeeve)
+# ALTERNATIVE DEPLOYMENT STRATEGY - Public IP Forward Setup for the VM (Server -> Local Eeeve)
 
-This setup exposes your local Eeeve instance through the public server `136.248.94.172` without changing local ports.
-It uses Dockerized Nginx on the public server (no host Nginx install needed).
+This is the setup used by the virtual machine: it exposes your local Eeeve instance through the public server `136.248.94.172` without changing local ports.
+It uses Dockerized Nginx on the public VM (no host Nginx install needed).
 
 ## 1) Keep local ports as-is
 
@@ -26,14 +26,14 @@ CORS_ALLOWED_ORIGINS=http://136.248.94.172
 
 This is supported by [scheduler-api/src/main.ts](../../scheduler-api/src/main.ts).
 
-## 4) Server Docker proxy (Nginx container)
+## 4) VM Docker proxy (Nginx container)
 
 Copy this folder to the server and run Docker Compose from it:
 
 - [docker-compose.yml](./docker-compose.yml)
 - [nginx-eevee-public-ip.conf](./nginx-eevee-public-ip.conf)
 
-On server `136.248.94.172`:
+On the VM at `136.248.94.172`:
 
 ```bash
 docker compose up -d
@@ -41,7 +41,7 @@ docker compose up -d
 
 Notes:
 
-- This compose uses `network_mode: host` so the container can reach `127.0.0.1:43000` and `127.0.0.1:43010` on the server.
+- This compose uses `network_mode: host` so the container can reach `127.0.0.1:43080` on the VM.
 - If host Nginx is already bound to port 80, stop/disable it first.
 
 ## 5) Start reverse SSH tunnel from your local machine
@@ -50,15 +50,13 @@ Run this from your local machine (replace `SERVER_USER`):
 
 ```bash
 ssh -i "C:\\Users\\João Vitor Coimbra\\.ssh\\id_personal" -N \
-  -R 127.0.0.1:43000:127.0.0.1:3000 \
-  -R 127.0.0.1:43010:127.0.0.1:3010 \
+  -R 127.0.0.1:43080:127.0.0.1:18080 \
   SERVER_USER@136.248.94.172
 ```
 
 Meaning:
 
-- Server `127.0.0.1:43000` forwards to local frontend `127.0.0.1:3000`
-- Server `127.0.0.1:43010` forwards to local API `127.0.0.1:3010`
+- VM `127.0.0.1:43080` forwards to the local ingress controller port `127.0.0.1:18080`
 
 ## 6) Access
 
@@ -68,7 +66,7 @@ Open:
 http://136.248.94.172
 ```
 
-Nginx forwards frontend traffic to your local app and `/v1/*` API calls to your local scheduler API.
+Nginx forwards frontend traffic to the ingress controller using the correct `Host` header for each route, and the ingress controller sends the request to the frontend or API service inside the cluster.
 
 ## Optional hardening
 

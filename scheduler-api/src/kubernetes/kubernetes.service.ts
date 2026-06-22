@@ -267,16 +267,25 @@ export class KubernetesService {
     }
 
     const initContainers = this.buildInitContainers(options);
+    const podLabels = options?.podLabels || {};
 
     const jobManifest = {
       apiVersion: 'batch/v1',
       kind: 'Job',
       metadata: {
         name: jobName,
+        ...(Object.keys(podLabels).length ? { labels: podLabels } : {}),
       },
       spec: {
         restartPolicy: 'Never', //
         template: {
+          ...(Object.keys(podLabels).length
+            ? {
+                metadata: {
+                  labels: podLabels,
+                },
+              }
+            : {}),
           spec: {
             ...(initContainers.length ? { initContainers } : {}),
             automountServiceAccountToken: false, // security best practice

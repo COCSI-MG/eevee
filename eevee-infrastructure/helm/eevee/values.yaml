@@ -218,3 +218,18 @@ certManager:
     cloudflare:
       email: change-me@example.com
       apiTokenSecretName: cloudflare-api-token-secret
+
+# Namespace-scoped egress controls for worker profiles. This deploys a local
+# HTTP CONNECT proxy and locks selected worker pods to use only that proxy plus
+# kube-dns. The proxy itself allows only *.googleapis.com and oauth endpoints.
+egressProxy:
+  enabled: true
+  image: sameersbn/squid:3.5.27-2
+  port: 3128
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi

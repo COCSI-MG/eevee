@@ -46,6 +46,7 @@ export interface KubernetesJobOptions {
   initContainers?: KubernetesJobInitContainer[];
   sharedEmptyDir?: KubernetesJobSharedEmptyDir;
   secretVolumes?: KubernetesJobSecretVolume[];
+  podLabels?: Record<string, string>;
   mainContainerEnv?: KubernetesJobEnvVar[];
   command?: string[];
   backoffLimit?: number;

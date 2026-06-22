@@ -104,6 +104,29 @@ ingress:
     front: app.eevee.example.org
 ```
 
+### 5. VM ingress-controller mode (recommended for the public machine)
+
+This is the proper setup when another machine with a fixed public IP will
+forward traffic to the Kubernetes ingress controller.
+
+1. Install/upgrade with:
+
+```bash
+make install-vm
+```
+
+2. Point the public machine's reverse proxy at the ingress controller, not at
+  the frontend or scheduler-api pods directly.
+
+If you change the public hostnames, update the inline overrides in the
+Makefile target:
+
+- `ingress.hosts.front` / `ingress.hosts.api`
+- `front.apiUrl`
+
+If the browser is served from a different origin, also adjust
+`config.CORS_ALLOWED_ORIGINS` so the scheduler API accepts those requests.
+
 ## Node pinning
 
 All pods — including worker Jobs spawned by the scheduler at runtime —
@@ -123,4 +146,5 @@ workerImages:
   bootstrap: ghcr.io/cocsi-mg/eevee-worker-bootstrap:latest
   nodeDefault: ghcr.io/cocsi-mg/worker-node-default-img:latest
   # ...
+  nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:latest
 ```

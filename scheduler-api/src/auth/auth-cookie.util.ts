@@ -21,7 +21,7 @@ export function parseCookieHeader(cookieHeader?: string) {
 
 export function getAuthCookieOptions(configService: ConfigService) {
   const environment = configService.get<string>('ENV');
-  const isProduction = environment !== 'local';
+  const isProduction = environment === 'production';
 
   return {
     httpOnly: true,
