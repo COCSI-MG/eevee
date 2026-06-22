@@ -56,6 +56,8 @@ secrets:
 postgres:
   enabled: true
   image: postgres:16-alpine
+  pvcName: postgres-pvc
+  keepPVCOnUninstall: true
   storage: 20Gi
   storageClass: "" # leave blank to use the cluster default
   resources:
@@ -85,6 +87,7 @@ schedulerApi:
     repository: ghcr.io/cocsi-mg/scheduler-api
     tag: develop
     pullPolicy: IfNotPresent
+  env: "production"
   replicas: 1
   containerPort: 3000
   resources:
@@ -102,6 +105,7 @@ queueWorker:
     repository: ghcr.io/cocsi-mg/scheduler-api
     tag: develop
     pullPolicy: IfNotPresent
+  env: "production"
   replicas: 1
   args: ["start:worker:prod"]
   resources:
@@ -184,6 +188,7 @@ ingress-nginx:
   controller:
     scope:
       enabled: true
+    watchIngressWithoutClass: true
     ingressClassResource:
       name: nginx
       enabled: false

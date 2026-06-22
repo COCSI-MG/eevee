@@ -127,8 +127,8 @@ push-worker-react-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
 
 proxy:
-	@echo Starting the VM reverse-proxy tunnel
-	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:43000:127.0.0.1:3000 -R 127.0.0.1:43010:127.0.0.1:3010 ubuntu@136.248.94.172
+	@echo Starting the VM reverse-proxy tunnel to ingress
+	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:43080:127.0.0.1:18080 ubuntu@136.248.94.172
 
 lint:
 	helm lint $(CHART)
@@ -150,6 +150,8 @@ install:
 install-vm:
 	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
 		--set ingress.enabled=true \
+		--set schedulerApi.env=local \
+		--set queueWorker.env=local \
 		--set front.apiUrl=http://$(VM_PUBLIC_IP)/v1 \
 		--set config.CORS_ALLOWED_ORIGINS=http://$(VM_PUBLIC_IP)
 

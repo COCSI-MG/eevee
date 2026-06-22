@@ -2,9 +2,13 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: {{ .Values.postgres.pvcName | quote }}
   labels:
     {{- include "eevee.labels" . | nindent 4 }}
+  {{- if .Values.postgres.keepPVCOnUninstall }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -79,6 +83,6 @@ spec:
       volumes:
         - name: postgres-data
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: {{ .Values.postgres.pvcName | quote }}
       {{- include "eevee.nodeSelector" . | nindent 6 }}
 {{- end }}

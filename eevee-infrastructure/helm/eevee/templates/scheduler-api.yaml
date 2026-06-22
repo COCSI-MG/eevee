@@ -41,6 +41,8 @@ spec:
           ports:
             - containerPort: {{ .Values.schedulerApi.containerPort }}
           env:
+            - name: ENV
+              value: {{ .Values.schedulerApi.env | quote }}
             {{- include "eevee.appEnv" . | nindent 12 }}
             {{- include "eevee.workerImageEnv" . | nindent 12 }}
             {{- include "eevee.jobRuntimeEnv" . | nindent 12 }}

@@ -6,6 +6,7 @@ metadata:
   labels:
     {{- include "eevee.labels" . | nindent 4 }}
   annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.className | quote }}
     {{- if .Values.certManager.issuer.enabled }}
     cert-manager.io/issuer: {{ .Values.certManager.issuer.name | quote }}
     {{- end }}
@@ -13,7 +14,6 @@ metadata:
     {{ $k }}: {{ $v | quote }}
     {{- end }}
 spec:
-  ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.tls.enabled }}
   tls:
     - secretName: {{ .Values.ingress.tls.secretName }}
