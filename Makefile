@@ -1,6 +1,11 @@
 GHCR_NAMESPACE ?= ghcr.io/cocsi-mg
 TAG            ?= develop
 
+HELM_RELEASE ?= eevee
+NAMESPACE    ?= eevee-cefetrj
+CHART        ?= eevee-infrastructure/helm/eevee
+VALUES       ?= eevee-infrastructure/helm/eevee/values.local.yaml
+
 up: up-minikube up-docker up-scheduler
 
 up-infra: up-minikube up-docker
@@ -109,3 +114,20 @@ build-worker-react-cypress:
 	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG) node-worker-images/reactjs-cypress
 push-worker-react-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
+
+lint:
+	helm lint $(CHART)
+
+template:
+	helm template $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
+		$(if $(wildcard $(VALUES)),-f $(VALUES))
+
+install:
+	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
+		$(if $(wildcard $(VALUES)),-f $(VALUES))
+
+uninstall:
+	helm uninstall $(HELM_RELEASE) -n $(NAMESPACE)
+
+status:
+	helm status $(HELM_RELEASE) -n $(NAMESPACE)
