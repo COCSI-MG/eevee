@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { Brackets, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateOrUpdateUserDto } from './dto/request/create-or-update-user.dto';
@@ -19,6 +19,15 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
   async createOrReplace(createUserDto: CreateOrUpdateUserDto) {
+    const isCreate = !createUserDto.id;
+
+    if (isCreate) {
+      const existing = await this.findByEmail(createUserDto.email);
+      if (existing) {
+        throw new ConflictException('A user with this email already exists.');
+      }
+    }
+
     const user: Partial<User> = {
       ...createUserDto,
       passwordHash: HashUtils.hashPassword(createUserDto.password),

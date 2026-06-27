@@ -44,6 +44,10 @@ axiosClientWithAuth.interceptors.response.use(
       );
     }
 
+    if (status === 409) {
+      return Promise.reject(error);
+    }
+
     console.error('Response error:', error);
 
     if (error.response.data) {

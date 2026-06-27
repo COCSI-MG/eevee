@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { UsersService } from "@/app/integration/scheduler-api/user";
 import { UpsertUser } from "@/app/interface/scheduler-api/user";
 import * as Yup from "yup";
@@ -58,6 +59,19 @@ export default function UserEditPage() {
         duration: 5000,
       });
       router.push("/admin/users");
+    },
+    onError: (error: unknown) => {
+      const axiosError = error instanceof AxiosError ? error : null;
+      const isConflict = axiosError?.response?.status === 409;
+      const responseMessage = (axiosError?.response?.data as { message?: string } | undefined)?.message;
+      toast({
+        title: "Failed to save user",
+        description: isConflict
+          ? "A user with this email already exists."
+          : (responseMessage ?? (error instanceof Error ? error.message : "Unable to save the user. Please try again.")),
+        variant: "destructive",
+        duration: 5000,
+      });
     },
   });
 
