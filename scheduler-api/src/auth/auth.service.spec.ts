@@ -115,7 +115,7 @@ describe('AuthService', () => {
     });
   });
 
-  it('returns undefined when registering an existing user', async () => {
+  it('throws ConflictException when registering an existing email', async () => {
     userService.findByEmail.mockResolvedValue({
       id: 12,
       email: 'admin@example.com',
@@ -129,7 +129,7 @@ describe('AuthService', () => {
         password: 'secret',
         name: 'Admin',
       }),
-    ).resolves.toBeUndefined();
+    ).rejects.toThrow('Unable to create an account with the provided information.');
 
     expect(userService.createOrReplace).not.toHaveBeenCalled();
   });

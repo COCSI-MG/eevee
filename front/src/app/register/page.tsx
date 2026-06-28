@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { isAxiosError } from 'axios';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RegisterService } from '../integration/scheduler-api/register-service';
@@ -45,10 +46,14 @@ export default function Register() {
       setSession(session);
       replace(session.isAdmin ? '/admin' : '/classes');
     },
-    onError: () => {
+    onError: (error) => {
+      const description =
+        isAxiosError(error) && error.response?.status === 409
+          ? 'Unable to create an account with the provided information.'
+          : 'Unable to create your account. Please try again.';
       toast({
         title: 'Register error',
-        description: 'Unable to create your account. Please try again.',
+        description,
         variant: 'destructive',
       });
     },

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { LoginRequestDto } from './dto/request/login-request.dto';
 import { UserService } from 'src/user/user.service';
 import { JwtService } from '@nestjs/jwt';
@@ -45,32 +45,35 @@ export class AuthService {
 
   async registerUser(
     registerData: RegisterRequestDto,
-  ): Promise<{ session: LoginResponseDto; token: string } | undefined> {
+  ): Promise<{ session: LoginResponseDto; token: string }> {
     const { email } = registerData;
     const user = await this.userService.findByEmail(email);
-    if (!user) {
-      const createdUser = await this.userService.createOrReplace({
-        ...registerData,
-        email,
-        isAdmin: false,
-      });
-      const payload: JwtPayload = {
-        email: createdUser.email,
-        userId: createdUser.id,
-        isAdmin: false,
-      };
-
-      const token = this.jwtService.sign(payload);
-
-      return {
-        token,
-        session: {
-          userId: createdUser.id,
-          email: createdUser.email,
-          isAdmin: false,
-        },
-      };
+    if (user) {
+      throw new ConflictException('Unable to create an account with the provided information.');
     }
+
+    const createdUser = await this.userService.createOrReplace({
+      ...registerData,
+      email,
+      isAdmin: false,
+    });
+
+    const payload: JwtPayload = {
+      email: createdUser.email,
+      userId: createdUser.id,
+      isAdmin: false,
+    };
+
+    const token = this.jwtService.sign(payload);
+
+    return {
+      token,
+      session: {
+        userId: createdUser.id,
+        email: createdUser.email,
+        isAdmin: false,
+      },
+    };
   }
 
   buildSession(payload: JwtPayload): AuthSessionResponseDto {
