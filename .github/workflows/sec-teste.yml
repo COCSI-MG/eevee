@@ -1,4 +1,4 @@
-name: Snyk PHP Security Scan
+name: Security Scan
 
 on:
   push:
@@ -11,8 +11,8 @@ on:
     branches:
       - master
       - main
-      - nome-da-sua-branch
-
+      - Security
+      
   workflow_dispatch:
 
 jobs:
@@ -46,7 +46,10 @@ jobs:
         run: |
           snyk test \
             --file=composer.lock \
-            --severity-threshold=medium
+            --severity-threshold=medium || {
+              echo "Pipeline interrompida: foram encontradas vulnerabilidades de severidade média ou superior."
+              exit 1
+            }
 
       - name: Monitorar projeto no Snyk
         if: success()
