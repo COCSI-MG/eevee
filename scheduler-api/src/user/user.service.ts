@@ -19,13 +19,9 @@ export class UserService {
     private readonly userRepository: Repository<User>,
   ) {}
   async createOrReplace(createUserDto: CreateOrUpdateUserDto) {
-    const isCreate = !createUserDto.id;
-
-    if (isCreate) {
-      const existing = await this.findByEmail(createUserDto.email);
-      if (existing) {
-        throw new ConflictException('A user with this email already exists.');
-      }
+    const existing = await this.findByEmail(createUserDto.email);
+    if (existing && existing.id !== createUserDto.id) {
+      throw new ConflictException('A user with this email already exists.');
     }
 
     const user: Partial<User> = {
@@ -33,18 +29,23 @@ export class UserService {
       passwordHash: HashUtils.hashPassword(createUserDto.password),
     };
 
-    const result = await this.userRepository.upsert(user, {
-      conflictPaths: ['email'],
-      skipUpdateIfNoValuesChanged: true,
-      upsertType: 'on-conflict-do-update',
-    });
-    const [newIdentifier] = result.identifiers;
+    let savedId: number;
 
-    const newUser = await this.findOne(newIdentifier.id)!;
+    if (createUserDto.id) {
+      await this.userRepository.save(user);
+      savedId = createUserDto.id;
+    } else {
+      const result = await this.userRepository.upsert(user, {
+        conflictPaths: ['email'],
+        skipUpdateIfNoValuesChanged: true,
+        upsertType: 'on-conflict-do-update',
+      });
+      savedId = result.identifiers[0].id;
+    }
 
-    const response = UserHelper.toResponseDto(newUser);
+    const newUser = await this.findOne(savedId)!;
 
-    return response;
+    return UserHelper.toResponseDto(newUser);
   }
 
   findAll() {

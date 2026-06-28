@@ -8,6 +8,7 @@ describe('UserService', () => {
   let service: UserService;
   let userRepository: {
     upsert: jest.Mock;
+    save: jest.Mock;
     findOne: jest.Mock;
     delete: jest.Mock;
     createQueryBuilder: jest.Mock;
@@ -16,6 +17,7 @@ describe('UserService', () => {
   beforeEach(async () => {
     userRepository = {
       upsert: jest.fn(),
+      save: jest.fn(),
       findOne: jest.fn(),
       delete: jest.fn(),
       createQueryBuilder: jest.fn(),
@@ -50,13 +52,16 @@ describe('UserService', () => {
     userRepository.upsert.mockResolvedValue({
       identifiers: [{ id: 10 }],
     } as any);
-    userRepository.findOne.mockResolvedValue({
-      id: 10,
-      email: dto.email,
-      name: dto.name,
-      isAdmin: dto.isAdmin,
-      userClasses: [],
-    } as unknown as User);
+    userRepository.findOne.mockImplementation((options: any) => {
+      if (options?.where?.email) return Promise.resolve(null);
+      return Promise.resolve({
+        id: 10,
+        email: dto.email,
+        name: dto.name,
+        isAdmin: dto.isAdmin,
+        userClasses: [],
+      } as unknown as User);
+    });
 
     const result = await service.createOrReplace(dto as any);
 
@@ -91,13 +96,16 @@ describe('UserService', () => {
     userRepository.upsert.mockResolvedValue({
       identifiers: [{ id: 42 }],
     } as any);
-    userRepository.findOne.mockResolvedValue({
-      id: 42,
-      email: 'saved@example.com',
-      name: 'Saved User',
-      isAdmin: false,
-      userClasses: [],
-    } as unknown as User);
+    userRepository.findOne.mockImplementation((options: any) => {
+      if (options?.where?.email) return Promise.resolve(null);
+      return Promise.resolve({
+        id: 42,
+        email: 'saved@example.com',
+        name: 'Saved User',
+        isAdmin: false,
+        userClasses: [],
+      } as unknown as User);
+    });
 
     await service.createOrReplace({
       email: 'saved@example.com',
@@ -109,6 +117,26 @@ describe('UserService', () => {
     expect(userRepository.findOne).toHaveBeenCalledWith({
       where: { id: 42 },
     });
+  });
+
+  it('throws ConflictException when creating a user with a duplicate email', async () => {
+    userRepository.findOne.mockResolvedValue({ id: 5, email: 'existing@example.com' } as unknown as User);
+
+    await expect(
+      service.createOrReplace({ email: 'existing@example.com', name: 'Dup', password: 'pass', isAdmin: false } as any),
+    ).rejects.toThrow('A user with this email already exists.');
+
+    expect(userRepository.upsert).not.toHaveBeenCalled();
+  });
+
+  it('throws ConflictException when updating a user with an email that belongs to another user', async () => {
+    userRepository.findOne.mockResolvedValue({ id: 5, email: 'other@example.com' } as unknown as User);
+
+    await expect(
+      service.createOrReplace({ id: 99, email: 'other@example.com', name: 'User', password: 'pass', isAdmin: false } as any),
+    ).rejects.toThrow('A user with this email already exists.');
+
+    expect(userRepository.upsert).not.toHaveBeenCalled();
   });
 
   it('throws when removing a missing user', async () => {
