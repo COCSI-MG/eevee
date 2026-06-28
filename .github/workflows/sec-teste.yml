@@ -1,0 +1,71 @@
+name: Snyk PHP Security Scan
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - nome-da-sua-branch
+
+  pull_request:
+    branches:
+      - master
+      - main
+      - nome-da-sua-branch
+
+  workflow_dispatch:
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Validar Composer
+        run: composer validate --no-check-publish
+
+      - name: Instalar dependências
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Instalar Snyk CLI
+        run: npm install -g snyk
+
+      - name: Executar scan Snyk
+        env:
+          SNYK_TOKEN: ${{ secrets.SECRET_SNYK }}
+        run: |
+          snyk test \
+            --file=composer.lock \
+            --severity-threshold=medium
+
+      - name: Monitorar projeto no Snyk
+        if: success()
+        env:
+          SNYK_TOKEN: ${{ secrets.SECRET_SNYK }}
+        run: |
+          snyk monitor \
+            --file=composer.lock \
+            --project-name="${{ github.repository }}-${{ github.ref_name }}"
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SECRET_SONAR }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: SonarQube Quality Gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SECRET_SONAR }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
