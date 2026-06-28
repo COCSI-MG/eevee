@@ -238,6 +238,7 @@ export default function ClassEditPage() {
                 <Textarea
                   id="description"
                   name="description"
+                  rows={5}
                   value={formik.values.description}
                   onChange={formik.handleChange}
                   placeholder="Enter class description"
