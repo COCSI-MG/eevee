@@ -1,32 +1,14 @@
-# ALTERNATIVE DEPLOYMENT STRATEGY - Public IP Forward Setup for the VM (Server -> Local Eeeve)
+# BACKUP STRATEGY - Public DB Debug Proxy (Server -> Local Postgres)
 
-This is the setup used by the virtual machine: it exposes your local Eeeve instance through the public server `136.248.94.172` without changing local ports.
-It uses Dockerized Nginx on the public VM (no host Nginx install needed).
+This backup strategy exposes your local PostgreSQL through the public server
+`136.248.94.172` on port `80` for temporary debugging sessions.
+It uses Dockerized Nginx in TCP stream mode on the VM.
 
-## 1) Keep local ports as-is
+## 1) Local database source
 
-- Frontend: `localhost:3000`
-- Scheduler API: `localhost:3010`
+- Local PostgreSQL endpoint: `127.0.0.1:5432`
 
-## 2) Frontend env on your local machine
-
-Use [front/.env.public-ip.example](../../front/.env.public-ip.example) as reference and set:
-
-```env
-NEXT_PUBLIC_API_URL=http://136.248.94.172/v1
-```
-
-## 3) Scheduler API CORS env on your local machine
-
-In your local Scheduler API env, add:
-
-```env
-CORS_ALLOWED_ORIGINS=http://136.248.94.172
-```
-
-This is supported by [scheduler-api/src/main.ts](../../scheduler-api/src/main.ts).
-
-## 4) VM Docker proxy (Nginx container)
+## 2) VM Docker proxy (Nginx container)
 
 Copy this folder to the server and run Docker Compose from it:
 
@@ -41,38 +23,43 @@ docker compose up -d
 
 Notes:
 
-- This compose uses `network_mode: host` so the container can reach `127.0.0.1:43080` on the VM.
-- If host Nginx is already bound to port 80, stop/disable it first.
+- This compose uses `network_mode: host` so the container can reach
+  `127.0.0.1:45432` on the VM.
+- If host Nginx is already bound to port `80`, stop/disable it first.
+- This file is mounted as `/etc/nginx/nginx.conf` because TCP stream proxying
+  requires top-level `stream {}` configuration.
 
-## 5) Start reverse SSH tunnel from your local machine
+## 3) Start reverse SSH DB tunnel from your local machine
 
 Run this from your local machine (replace `SERVER_USER`):
 
 ```bash
 ssh -i "C:\\Users\\João Vitor Coimbra\\.ssh\\id_personal" -N \
-  -R 127.0.0.1:43080:127.0.0.1:18080 \
+  -R 127.0.0.1:45432:127.0.0.1:5432 \
   SERVER_USER@136.248.94.172
 ```
 
 Meaning:
 
-- VM `127.0.0.1:43080` forwards to the local ingress controller port `127.0.0.1:18080`
+- VM `127.0.0.1:45432` forwards to local PostgreSQL `127.0.0.1:5432`
 
-## 6) Access
+## 4) Access
 
-Open:
+Connect from your external client to:
 
 ```text
-http://136.248.94.172
+Host: 136.248.94.172
+Port: 80
 ```
 
-Nginx forwards frontend traffic to the ingress controller using the correct `Host` header for each route, and the ingress controller sends the request to the frontend or API service inside the cluster.
+Nginx forwards this TCP connection to VM `127.0.0.1:45432`, which the SSH
+tunnel forwards to your local PostgreSQL.
 
 ## Optional hardening
 
-- Put this behind HTTPS on the server.
+- Restrict server firewall to trusted source IPs.
 - Use `autossh` or a systemd user service to keep tunnel alive.
-- Restrict server firewall to your expected source IPs.
+- Use this only for temporary debugging windows.
 
 ## Quick validation
 
@@ -83,8 +70,8 @@ docker compose ps
 docker compose logs --tail=100
 ```
 
-From any browser:
+From a PostgreSQL client:
 
 ```text
-http://136.248.94.172
+136.248.94.172:80
 ```

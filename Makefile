@@ -1,13 +1,12 @@
 GHCR_NAMESPACE ?= ghcr.io/cocsi-mg
 TAG            ?= develop
 # PRIVATE_KEY_PATH ?= ~/.ssh/id_personal
-PRIVATE_KEY_PATH ?= C:\\Users\\João Vitor Coimbra\\.ssh\\id_personal
+PRIVATE_KEY_PATH ?= secrets/id_iee_cluster
 
 HELM_RELEASE ?= eevee
 NAMESPACE    ?= eevee-cefetrj
 CHART        ?= eevee-infrastructure/helm/eevee
 VALUES       ?= eevee-infrastructure/helm/eevee/values.local.yaml
-VM_PUBLIC_IP ?= 136.248.94.172
 
 up: up-minikube up-docker up-scheduler
 
@@ -127,8 +126,12 @@ push-worker-react-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
 
 proxy:
-	@echo Starting the VM reverse-proxy tunnel to ingress
-	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:43080:127.0.0.1:18080 ubuntu@136.248.94.172
+	@echo Starting backup VM reverse-proxy tunnel to single entrypoint NodePort
+	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:43080:127.0.0.1:30001 ubuntu@136.248.94.172
+
+proxy-db:
+	@echo "Starting backup VM reverse tunnel for PostgreSQL (5432)"
+	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:45432:127.0.0.1:5432 ubuntu@136.248.94.172
 
 lint:
 	helm lint $(CHART)
@@ -137,23 +140,12 @@ template:
 	helm template $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
 		$(if $(wildcard $(VALUES)),-f $(VALUES))
 
-template-vm:
-	helm template $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
-		--set ingress.enabled=true \
-		--set front.apiUrl=http://$(VM_PUBLIC_IP)/v1 \
-		--set config.CORS_ALLOWED_ORIGINS=http://$(VM_PUBLIC_IP)
-
 install:
 	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
+		--set front.image.pullPolicy=Always \
+		--set schedulerApi.image.pullPolicy=Always \
+		--set queueWorker.image.pullPolicy=Always \
 		$(if $(wildcard $(VALUES)),-f $(VALUES))
-
-install-vm:
-	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
-		--set ingress.enabled=true \
-		--set schedulerApi.env=local \
-		--set queueWorker.env=local \
-		--set front.apiUrl=http://$(VM_PUBLIC_IP)/v1 \
-		--set config.CORS_ALLOWED_ORIGINS=http://$(VM_PUBLIC_IP)
 
 uninstall:
 	helm uninstall $(HELM_RELEASE) -n $(NAMESPACE)

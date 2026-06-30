@@ -5,4 +5,4 @@ services:
     restart: unless-stopped
     network_mode: host
     volumes:
-      - ./nginx-eevee-public-ip.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx-eevee-public-ip.conf:/etc/nginx/nginx.conf:ro

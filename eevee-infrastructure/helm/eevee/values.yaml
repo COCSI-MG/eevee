@@ -151,9 +151,14 @@ front:
     pullPolicy: IfNotPresent
   replicas: 1
   containerPort: 3000
-  # Public API URL inlined into the Next.js client bundle at container start.
-  # For port-forward mode this is what the browser uses to reach scheduler-api.
-  apiUrl: "http://localhost:3001"
+  # Frontend is internal; public access is handled by entrypointGateway.
+  serviceType: ClusterIP
+  servicePort: 80
+  nodePort: null
+  # Browser calls same-origin API path, then Next.js rewrites to scheduler.
+  apiUrl: "/api/v1"
+  # Internal service DNS used by Next.js rewrite target.
+  schedulerInternalUrl: "http://scheduler-api-service:3000"
   appEnv: "production"
   resources:
     requests:
@@ -162,9 +167,25 @@ front:
       memory: 384Mi
 
 # -----------------------------------------------------------------------------
-# Ingress (nginx). Disabled by default — use `kubectl port-forward` while no
-# public DNS / external IP is available. For the VM ingress-controller setup,
-# use `make install-vm`.
+# Single external entrypoint (NodePort) that path-routes to frontend and API.
+# -----------------------------------------------------------------------------
+entrypointGateway:
+  enabled: true
+  image: nginx:1.27-alpine
+  replicas: 1
+  containerPort: 8080
+  servicePort: 80
+  nodePort: 30001
+  resources:
+    requests:
+      memory: 32Mi
+    limits:
+      memory: 128Mi
+
+# -----------------------------------------------------------------------------
+# Ingress (nginx). Disabled by default because external traffic is handled by
+# `entrypointGateway` (NodePort + path routing). Keep ingress only for scenarios
+# where a dedicated ingress controller is explicitly required.
 # -----------------------------------------------------------------------------
 ingress:
   enabled: false
@@ -185,6 +206,7 @@ ingress:
 # cluster-internal so the VM can reach it through the private network/tunnel.
 # -----------------------------------------------------------------------------
 ingress-nginx:
+  enabled: false
   controller:
     scope:
       enabled: true

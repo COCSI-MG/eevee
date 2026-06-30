@@ -10,6 +10,7 @@ single release:
 | Scheduler API   | Deployment + Service                    |
 | Queue Worker    | Deployment + RBAC (ServiceAccount/Role) |
 | Frontend        | Deployment + Service                    |
+| Entrypoint      | Nginx gateway + NodePort Service        |
 | Ingress (nginx) | Ingress with optional TLS               |
 | cert-manager    | Namespace-scoped `Issuer` (optional)    |
 | Config / Secret | `eevee-config` ConfigMap + `eevee-secrets` Secret |
@@ -80,52 +81,54 @@ kubectl -n $NAMESPACE get pods,svc,pvc
 helm status $RELEASE -n $NAMESPACE
 ```
 
-### 4. Access the apps (port-forward mode)
+### 4. Access the app (single entrypoint)
 
-No Ingress is provisioned by default (`ingress.enabled=false`) because no
-public DNS / external IP has been assigned yet. Use port-forward:
+`eevee-entrypoint-service` is exposed as NodePort (`30001`) and is the only
+public entrypoint. It routes:
+
+- `/` to `eevee-front-service`
+- `/api/v1/*` to `scheduler-api-service`
+
+For local access without a public VM, use only frontend port-forward:
 
 ```bash
-# Frontend
-kubectl -n $NAMESPACE port-forward svc/eevee-front-service 3000:3000
-# Scheduler API (in another terminal)
-kubectl -n $NAMESPACE port-forward svc/scheduler-api-service 3001:3000
+kubectl -n $NAMESPACE port-forward svc/eevee-entrypoint-service 3000:80
 ```
 
 Then open <http://localhost:3000> in your browser.
 
-To expose via Ingress once a real domain is available, set in values:
+To expose frontend via NodePort on a specific port, set in values:
 
 ```yaml
-ingress:
+entrypointGateway:
   enabled: true
-  hosts:
-    api: api.eevee.example.org
-    front: app.eevee.example.org
+  nodePort: 30001
 ```
 
-### 5. VM ingress-controller mode (recommended for the public machine)
+### 5. VM reverse-proxy mode (recommended for the public machine)
 
-This is the proper setup when another machine with a fixed public IP will
-forward traffic to the Kubernetes ingress controller.
+This is the backup/high-availability setup when another machine with a fixed
+public IP will forward traffic to this cluster's entrypoint NodePort.
 
-1. Install/upgrade with:
+1. Install/upgrade the cluster with:
 
 ```bash
-make install-vm
+make install
 ```
 
-2. Point the public machine's reverse proxy at the ingress controller, not at
-  the frontend or scheduler-api pods directly.
+2. Start the backup SSH tunnel endpoint from this host (when needed):
 
-If you change the public hostnames, update the inline overrides in the
-Makefile target:
+```bash
+make proxy
+```
 
-- `ingress.hosts.front` / `ingress.hosts.api`
-- `front.apiUrl`
+3. Point the public machine's reverse proxy at the SSH tunnel endpoint that
+  forwards to local `127.0.0.1:30001`.
 
-If the browser is served from a different origin, also adjust
-`config.CORS_ALLOWED_ORIGINS` so the scheduler API accepts those requests.
+If you change the external setup, update:
+
+- `entrypointGateway.nodePort`
+- `proxy` / `proxy-db` Make targets as needed
 
 ## Node pinning
 

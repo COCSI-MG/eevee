@@ -93,12 +93,10 @@ spec:
   policyTypes:
     - Egress
   egress:
-    # DNS resolution for proxy hostname and Google API domains.
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-      ports:
+    # DNS resolution for proxy hostname and Google API domains. Allowing port
+    # 53 generically is more robust across namespace-scoped clusters where the
+    # DNS service path may not map cleanly to namespace selectors.
+    - ports:
         - protocol: UDP
           port: 53
         - protocol: TCP
@@ -125,12 +123,9 @@ spec:
   policyTypes:
     - Egress
   egress:
-    # Proxy can resolve DNS.
-    - to:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: kube-system
-      ports:
+    # Proxy can resolve DNS. Allowing port 53 generically avoids cluster-DNS
+    # implementation details leaking into the namespace policy.
+    - ports:
         - protocol: UDP
           port: 53
         - protocol: TCP
