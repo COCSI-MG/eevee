@@ -22,13 +22,15 @@ export function parseCookieHeader(cookieHeader?: string) {
 export function getAuthCookieOptions(configService: ConfigService) {
   const environment = configService.get<string>('ENV');
   const isProduction = environment === 'production';
+  const configuredDomain = configService.get<string>('AUTH_COOKIE_DOMAIN');
+  const cookieDomain = configuredDomain?.trim() || undefined;
 
   return {
     httpOnly: true,
     path: '/',
     sameSite: 'lax' as const,
     secure: isProduction,
-    domain: isProduction ? '.eeveecodelab.online' : undefined,
+    domain: cookieDomain,
     maxAge: 60 * 60 * 1000,
   };
 }

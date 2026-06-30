@@ -17,6 +17,7 @@ async function bootstrap() {
     new RegExp(
       /^https?:\/\/((www|frontend)\.)?eeveecodelab\.(local|site|com|online)$/,
     ),
+    new RegExp(/^https?:\/\/[a-z0-9.-]+\.testbeds\.rnp\.br$/),
     ...configuredOrigins,
   ];
 
