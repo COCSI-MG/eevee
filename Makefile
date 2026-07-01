@@ -6,7 +6,7 @@ PRIVATE_KEY_PATH ?= secrets/id_iee_cluster
 HELM_RELEASE ?= eevee
 NAMESPACE    ?= eevee-cefetrj
 CHART        ?= eevee-infrastructure/helm/eevee
-VALUES       ?= eevee-infrastructure/helm/eevee/values.local.yaml
+VALUES       ?= eevee-infrastructure/helm/eevee/values.yaml
 
 up: up-minikube up-docker up-scheduler
 

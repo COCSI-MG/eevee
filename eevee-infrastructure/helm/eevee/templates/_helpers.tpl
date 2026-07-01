@@ -68,6 +68,11 @@ DB_* values from the ConfigMap but expose them to the app as PG_*.
     configMapKeyRef:
       name: eevee-config
       key: CORS_ALLOWED_ORIGINS
+- name: AUTH_COOKIE_DOMAIN
+  valueFrom:
+    configMapKeyRef:
+      name: eevee-config
+      key: AUTH_COOKIE_DOMAIN
 {{- end -}}
 
 {{/*
