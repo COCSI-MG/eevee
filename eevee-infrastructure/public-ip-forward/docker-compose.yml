@@ -1,0 +1,8 @@
+services:
+  eevee-public-proxy:
+    image: nginx:1.27-alpine
+    container_name: eevee-public-proxy
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./nginx-eevee-public-ip.conf:/etc/nginx/nginx.conf:ro

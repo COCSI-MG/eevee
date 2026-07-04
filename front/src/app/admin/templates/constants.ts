@@ -148,6 +148,7 @@ export const WorkerTypeLabelMap: Record<WorkerType, string> = {
   [WorkerType.NODE_REACTJS_CYPRESS]: WorkerType.NODE_REACTJS_CYPRESS,
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: WorkerType.NODE_DEFAULT_POSTGRESQL,
   [WorkerType.NODE_NESTJS_POSTGRESQL]: WorkerType.NODE_NESTJS_POSTGRESQL,
+  [WorkerType.NODE_TERAORM]: WorkerType.NODE_TERAORM,
 };
 
 export const TemplateParamTypeLabelMap: Record<TemplateParamType, string> = {

@@ -12,6 +12,20 @@ export class AddAssignmentBoilerplateContentAndBackfill1765824300000
       `ALTER TABLE "assignment" ADD COLUMN IF NOT EXISTS "boilerplateContent" text`,
     );
 
+    const hasBoilerplateFilePathColumn = await queryRunner.query(
+      `SELECT EXISTS (
+         SELECT 1
+         FROM information_schema.columns
+         WHERE table_schema = 'public'
+           AND table_name = 'assignment'
+           AND column_name = 'boilerplateFilePath'
+       ) AS "exists"`,
+    );
+
+    if (!hasBoilerplateFilePathColumn?.[0]?.exists) {
+      return;
+    }
+
     const assignments = await queryRunner.query(
       `SELECT "id", "boilerplateFilePath", "boilerplateContent" FROM "assignment" WHERE ("boilerplateContent" IS NULL OR "boilerplateContent" = '') AND "boilerplateFilePath" IS NOT NULL AND "boilerplateFilePath" <> ''`,
     );

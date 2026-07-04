@@ -67,6 +67,8 @@ spec:
           imagePullPolicy: {{ .Values.queueWorker.image.pullPolicy }}
           args: {{ toJson .Values.queueWorker.args }}
           env:
+            - name: ENV
+              value: {{ .Values.queueWorker.env | quote }}
             {{- include "eevee.appEnv" . | nindent 12 }}
             {{- include "eevee.workerImageEnv" . | nindent 12 }}
             {{- include "eevee.jobRuntimeEnv" . | nindent 12 }}

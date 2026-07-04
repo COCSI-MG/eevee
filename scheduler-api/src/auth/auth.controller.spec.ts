@@ -152,25 +152,43 @@ describe('AuthController', () => {
 
   it('applies a strong throttle to login and register', () => {
     expect(
-      Reflect.getMetadata(THROTTLER_LIMIT + 'default', AuthController.prototype.create),
+      Reflect.getMetadata(
+        THROTTLER_LIMIT + 'default',
+        AuthController.prototype.create,
+      ),
     ).toBe(5);
     expect(
-      Reflect.getMetadata(THROTTLER_TTL + 'default', AuthController.prototype.create),
+      Reflect.getMetadata(
+        THROTTLER_TTL + 'default',
+        AuthController.prototype.create,
+      ),
     ).toBe(60000);
     expect(
-      Reflect.getMetadata(THROTTLER_LIMIT + 'default', AuthController.prototype.register),
+      Reflect.getMetadata(
+        THROTTLER_LIMIT + 'default',
+        AuthController.prototype.register,
+      ),
     ).toBe(5);
     expect(
-      Reflect.getMetadata(THROTTLER_TTL + 'default', AuthController.prototype.register),
+      Reflect.getMetadata(
+        THROTTLER_TTL + 'default',
+        AuthController.prototype.register,
+      ),
     ).toBe(60000);
   });
 
   it('skips throttling for me and logout', () => {
     expect(
-      Reflect.getMetadata(THROTTLER_SKIP + 'default', AuthController.prototype.getMe),
+      Reflect.getMetadata(
+        THROTTLER_SKIP + 'default',
+        AuthController.prototype.getMe,
+      ),
     ).toBe(true);
     expect(
-      Reflect.getMetadata(THROTTLER_SKIP + 'default', AuthController.prototype.logout),
+      Reflect.getMetadata(
+        THROTTLER_SKIP + 'default',
+        AuthController.prototype.logout,
+      ),
     ).toBe(true);
   });
 });

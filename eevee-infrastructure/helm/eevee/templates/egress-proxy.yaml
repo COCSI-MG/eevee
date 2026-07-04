@@ -1,0 +1,137 @@
+{{- if .Values.egressProxy.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eevee-egress-proxy-config
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+data:
+  squid.conf: |
+    http_port {{ .Values.egressProxy.port }}
+
+    acl SSL_ports port 443
+    acl Safe_ports port 80
+    acl Safe_ports port 443
+    acl CONNECT method CONNECT
+
+    # Allow only Google API/oauth destinations through this proxy.
+    acl allowed_google dstdomain .googleapis.com oauth2.googleapis.com www.googleapis.com
+
+    http_access deny !Safe_ports
+    http_access deny CONNECT !SSL_ports
+    http_access allow allowed_google
+    http_access deny all
+
+    dns_v4_first on
+    cache deny all
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eevee-egress-proxy-service
+  labels:
+    app: eevee-egress-proxy
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app: eevee-egress-proxy
+  ports:
+    - name: http-proxy
+      port: {{ .Values.egressProxy.port }}
+      targetPort: {{ .Values.egressProxy.port }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eevee-egress-proxy-deployment
+  labels:
+    app: eevee-egress-proxy
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eevee-egress-proxy
+  template:
+    metadata:
+      labels:
+        app: eevee-egress-proxy
+    spec:
+      containers:
+        - name: squid
+          image: {{ .Values.egressProxy.image | quote }}
+          ports:
+            - containerPort: {{ .Values.egressProxy.port }}
+          resources:
+            {{- toYaml .Values.egressProxy.resources | nindent 12 }}
+          volumeMounts:
+            - name: squid-config
+              mountPath: /etc/squid/squid.conf
+              subPath: squid.conf
+              readOnly: true
+      volumes:
+        - name: squid-config
+          configMap:
+            name: eevee-egress-proxy-config
+            items:
+              - key: squid.conf
+                path: squid.conf
+      {{- include "eevee.imagePullSecrets" . | nindent 6 }}
+      {{- include "eevee.nodeSelector" . | nindent 6 }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: eevee-worker-google-egress-policy
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      eevee/network-profile: google-egress
+  policyTypes:
+    - Egress
+  egress:
+    # DNS resolution for proxy hostname and Google API domains. Allowing port
+    # 53 generically is more robust across namespace-scoped clusters where the
+    # DNS service path may not map cleanly to namespace selectors.
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Only allow talking to the namespace-local egress proxy.
+    - to:
+        - podSelector:
+            matchLabels:
+              app: eevee-egress-proxy
+      ports:
+        - protocol: TCP
+          port: {{ .Values.egressProxy.port }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: eevee-egress-proxy-egress-policy
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app: eevee-egress-proxy
+  policyTypes:
+    - Egress
+  egress:
+    # Proxy can resolve DNS. Allowing port 53 generically avoids cluster-DNS
+    # implementation details leaking into the namespace policy.
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Proxy can connect out to HTTPS destinations (squid ACL still limits domains).
+    - ports:
+        - protocol: TCP
+          port: 443
+{{- end }}

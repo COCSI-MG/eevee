@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Client1_13 } from 'kubernetes-client';
-import { config } from 'kubernetes-client';
+import { Client1_13, config } from 'kubernetes-client';
 import {
   DEFAULT_NAMESPACE,
   JOB_IMAGE_PULL_POLICY,
@@ -60,6 +59,24 @@ export class KubernetesService {
         name: sharedEmptyDir.volumeName,
         mountPath: mount.mountPath,
         ...(mount.subPath ? { subPath: mount.subPath } : {}),
+      });
+    });
+  }
+
+  private appendSecretVolumesAndMounts(
+    secretVolumes: NonNullable<KubernetesJobOptions['secretVolumes']>,
+    volumes: any[],
+    volumeMounts: any[],
+  ) {
+    secretVolumes.forEach((sv) => {
+      volumes.push({
+        name: sv.volumeName,
+        secret: { secretName: sv.secretName },
+      });
+      volumeMounts.push({
+        name: sv.volumeName,
+        mountPath: sv.mountPath,
+        readOnly: true,
       });
     });
   }
@@ -241,17 +258,34 @@ export class KubernetesService {
       );
     }
 
+    if (options?.secretVolumes?.length) {
+      this.appendSecretVolumesAndMounts(
+        options.secretVolumes,
+        volumes,
+        volumeMounts,
+      );
+    }
+
     const initContainers = this.buildInitContainers(options);
+    const podLabels = options?.podLabels || {};
 
     const jobManifest = {
       apiVersion: 'batch/v1',
       kind: 'Job',
       metadata: {
         name: jobName,
+        ...(Object.keys(podLabels).length ? { labels: podLabels } : {}),
       },
       spec: {
         restartPolicy: 'Never', //
         template: {
+          ...(Object.keys(podLabels).length
+            ? {
+                metadata: {
+                  labels: podLabels,
+                },
+              }
+            : {}),
           spec: {
             ...(initContainers.length ? { initContainers } : {}),
             automountServiceAccountToken: false, // security best practice
@@ -269,6 +303,9 @@ export class KubernetesService {
                 imagePullPolicy: JOB_IMAGE_PULL_POLICY,
                 image: imageName,
                 ...(command.length > 0 && { command: command }),
+                ...(options?.mainContainerEnv?.length
+                  ? { env: options.mainContainerEnv }
+                  : {}),
                 volumeMounts: volumeMounts,
               },
             ],

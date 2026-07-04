@@ -1,10 +1,12 @@
 GHCR_NAMESPACE ?= ghcr.io/cocsi-mg
 TAG            ?= develop
+# PRIVATE_KEY_PATH ?= ~/.ssh/id_personal
+PRIVATE_KEY_PATH ?= secrets/id_iee_cluster
 
 HELM_RELEASE ?= eevee
 NAMESPACE    ?= eevee-cefetrj
 CHART        ?= eevee-infrastructure/helm/eevee
-VALUES       ?= eevee-infrastructure/helm/eevee/values.local.yaml
+VALUES       ?= eevee-infrastructure/helm/eevee/values.yaml
 
 up: up-minikube up-docker up-scheduler
 
@@ -51,6 +53,7 @@ push-images: \
 build-workers: \
 	build-eevee-worker-bootstrap \
 	build-worker-node-default \
+	build-worker-node-teraorm \
 	build-worker-nestjs-default \
 	build-worker-node-grpcjs \
 	build-worker-node-nextjs-cypress \
@@ -59,6 +62,7 @@ build-workers: \
 push-workers: \
 	push-eevee-worker-bootstrap \
 	push-worker-node-default \
+	push-worker-node-teraorm \
 	push-worker-nestjs-default \
 	push-worker-node-grpcjs \
 	push-worker-node-nextjs-cypress \
@@ -91,6 +95,12 @@ build-worker-node-default:
 push-worker-node-default:
 	docker push $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG)
 
+.PHONY: build-worker-node-teraorm push-worker-node-teraorm
+build-worker-node-teraorm:
+	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG) node-worker-images/node-teraorm
+push-worker-node-teraorm:
+	docker push $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG)
+
 .PHONY: build-worker-nestjs-default push-worker-nestjs-default
 build-worker-nestjs-default:
 	docker build -t $(GHCR_NAMESPACE)/worker-nestjs-default-img:$(TAG) node-worker-images/nest.js
@@ -115,6 +125,14 @@ build-worker-react-cypress:
 push-worker-react-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
 
+proxy:
+	@echo Starting backup VM reverse-proxy tunnel to single entrypoint NodePort
+	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:43080:127.0.0.1:30001 ubuntu@136.248.94.172
+
+proxy-db:
+	@echo "Starting backup VM reverse tunnel for PostgreSQL (5432)"
+	ssh -i "$(PRIVATE_KEY_PATH)" -N -R 127.0.0.1:45432:127.0.0.1:5432 ubuntu@136.248.94.172
+
 lint:
 	helm lint $(CHART)
 
@@ -124,6 +142,9 @@ template:
 
 install:
 	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
+		--set front.image.pullPolicy=Always \
+		--set schedulerApi.image.pullPolicy=Always \
+		--set queueWorker.image.pullPolicy=Always \
 		$(if $(wildcard $(VALUES)),-f $(VALUES))
 
 uninstall:

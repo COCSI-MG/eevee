@@ -6,12 +6,15 @@ metadata:
   labels:
     {{- include "eevee.labels" . | nindent 4 }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.front.serviceType }}
   selector:
     app: eevee-front
   ports:
-    - port: 80
+    - port: {{ .Values.front.servicePort }}
       targetPort: {{ .Values.front.containerPort }}
+      {{- if and (eq .Values.front.serviceType "NodePort") .Values.front.nodePort }}
+      nodePort: {{ .Values.front.nodePort }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -42,6 +45,8 @@ spec:
               value: {{ .Values.front.apiUrl | quote }}
             - name: APP_ENV
               value: {{ .Values.front.appEnv | quote }}
+            - name: SCHEDULER_API_INTERNAL_URL
+              value: {{ .Values.front.schedulerInternalUrl | quote }}
           resources:
             {{- toYaml .Values.front.resources | nindent 12 }}
       {{- include "eevee.imagePullSecrets" . | nindent 6 }}

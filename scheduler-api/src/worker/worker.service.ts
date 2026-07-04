@@ -1,23 +1,27 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { KubernetesService } from 'src/kubernetes/kubernetes.service';
-import { WORKER_DEFINITION_B64_ENV_NAME } from './worker.constants';
-import { CreateWorkerDto } from './dto/create-worker.dto';
-import { WorkerResponse } from './worker.interfaces';
-import { WorkerType } from './enum/worker-type.enum';
 import {
   KubernetesJobOptions,
   KubernetesJobResult,
 } from 'src/kubernetes/kubernetes.interfaces';
+import { KubernetesService } from 'src/kubernetes/kubernetes.service';
+import { CreateWorkerDto } from './dto/create-worker.dto';
+import { WorkerType } from './enum/worker-type.enum';
+import {
+  WORKER_BOOTSTRAP_IMAGE_NAME,
+  WORKER_DEFINITION_B64_ENV_NAME,
+} from './worker.constants';
+import { WorkerResponse } from './worker.interfaces';
 
-import { WorkerExecutionStrategy } from './strategies/worker-execution-strategy';
 import { NodeDefaultJestStrategy } from './strategies/node-default-jest.strategy';
+import { NodeDefaultPostgresqlJestStrategy } from './strategies/node-default-postgresql-jest.strategy';
 import { NodeGrpcJsJestStrategy } from './strategies/node-grpcjs-jest.strategy';
+import { NodeNestJsPostgresqlJestStrategy } from './strategies/node-nestjs-postgresql-jest.strategy';
 import { NodeNestJsStrategy } from './strategies/node-nestjs.strategy';
 import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.strategy';
 import { NodeReactJsCypressIsolatedLogStrategy } from './strategies/node-reactjs-cypress-isolated-log.strategy';
-import { NodeDefaultPostgresqlJestStrategy } from './strategies/node-default-postgresql-jest.strategy';
+import { NodeTeraormJestStrategy } from './strategies/node-teraorm-jest.strategy';
+import { WorkerExecutionStrategy } from './strategies/worker-execution-strategy';
 import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
-import { NodeNestJsPostgresqlJestStrategy } from './strategies/node-nestjs-postgresql-jest.strategy';
 
 @Injectable()
 export class WorkerService {
@@ -38,6 +42,7 @@ export class WorkerService {
     [WorkerType.NODE_DEFAULT_POSTGRESQL]:
       new NodeDefaultPostgresqlJestStrategy(),
     [WorkerType.NODE_NESTJS_POSTGRESQL]: new NodeNestJsPostgresqlJestStrategy(), // Reuse NodeNestJsStrategy with Postgres support enabled
+    [WorkerType.NODE_TERAORM]: new NodeTeraormJestStrategy(),
   };
 
   getStrategy(workerType: WorkerType): WorkerExecutionStrategy {
@@ -183,7 +188,7 @@ export class WorkerService {
       initContainers: [
         {
           name: 'eevee-worker-bootstrap',
-          image: 'eevee-worker-bootstrap',
+          image: WORKER_BOOTSTRAP_IMAGE_NAME,
           env: [
             {
               name: WORKER_DEFINITION_B64_ENV_NAME,

@@ -63,6 +63,16 @@ DB_* values from the ConfigMap but expose them to the app as PG_*.
     secretKeyRef:
       name: {{ .Values.secrets.name }}
       key: GROQ_API_KEY
+- name: CORS_ALLOWED_ORIGINS
+  valueFrom:
+    configMapKeyRef:
+      name: eevee-config
+      key: CORS_ALLOWED_ORIGINS
+- name: AUTH_COOKIE_DOMAIN
+  valueFrom:
+    configMapKeyRef:
+      name: eevee-config
+      key: AUTH_COOKIE_DOMAIN
 {{- end -}}
 
 {{/*
@@ -74,6 +84,8 @@ override the GHCR defaults baked into worker.constants.ts.
   value: {{ .Values.workerImages.bootstrap | quote }}
 - name: WORKER_IMAGE_NODE_DEFAULT
   value: {{ .Values.workerImages.nodeDefault | quote }}
+- name: WORKER_IMAGE_NODE_TERAORM
+  value: {{ .Values.workerImages.nodeTeraorm | quote }}
 - name: WORKER_IMAGE_NODE_NESTJS
   value: {{ .Values.workerImages.nodeNestjs | quote }}
 - name: WORKER_IMAGE_NODE_GRPCJS

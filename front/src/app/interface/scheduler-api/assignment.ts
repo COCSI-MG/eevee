@@ -24,6 +24,18 @@ export interface AssignmentTemplate {
   template: Template;
 }
 
+export type AssignmentInterviewQuestionType = 'likert_1_5' | 'short_text';
+
+export interface AssignmentInterviewQuestion {
+  key: string;
+  label: string;
+  type: AssignmentInterviewQuestionType;
+}
+
+export interface AssignmentInterviewConfig {
+  questions: AssignmentInterviewQuestion[];
+}
+
 export interface Assignment {
   id: number;
   classId: number;
@@ -45,6 +57,7 @@ export interface Assignment {
   assignmentTemplates: AssignmentTemplate[];
   assignmentParams: AssignmentParam[];
   suspensions?: AssignmentUserSuspension[];
+  interviewConfig?: AssignmentInterviewConfig;
 }
 
 export interface CreateAssignmentRequest {

@@ -1,18 +1,30 @@
-import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
 import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
 import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
+import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
 import { User } from 'src/user/entities/user.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
+    Column,
+    Entity,
+    JoinColumn,
+    ManyToOne,
+    OneToMany,
+    PrimaryGeneratedColumn,
 } from 'typeorm';
+
+export type AssignmentInterviewQuestionType = 'likert_1_5' | 'short_text';
+
+export interface AssignmentInterviewQuestion {
+  key: string;
+  label: string;
+  type: AssignmentInterviewQuestionType;
+}
+
+export interface AssignmentInterviewConfig {
+  questions: AssignmentInterviewQuestion[];
+}
 
 @Entity()
 export class Assignment {
@@ -76,6 +88,9 @@ export class Assignment {
 
   @Column({ type: 'text', nullable: true })
   boilerplateContent?: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  interviewConfig?: AssignmentInterviewConfig;
 
   @OneToMany(
     () => AssignmentUserSuspension,

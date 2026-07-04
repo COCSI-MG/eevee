@@ -3,6 +3,7 @@
 import React from "react";
 import WorkspaceCodeEditor from "./workspace-code-editor";
 import WorkspaceExplorer from "./workspace-explorer";
+import WorkspaceQuestionPanel from "./workspace-question-panel";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
@@ -241,6 +242,10 @@ export default function Workspace({
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
+        <WorkspaceQuestionPanel
+          title={assignment.title}
+          description={assignment.description}
+        />
         <div className="flex items-center justify-end gap-2 border-b border-gray-800 px-2 py-1">
           {isSplitView && (
             <Button
