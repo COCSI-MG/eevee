@@ -84,16 +84,23 @@ export class InterviewResponseService {
       },
     });
 
-    const payload = {
+    if (!existing) {
+      const payload = {
+        ...dto,
+        userId: user.userId,
+        updatedAt: new Date(),
+      };
+      const created = this.interviewResponseRepository.create(payload);
+      return this.interviewResponseRepository.save(created);
+    }
+
+    // Preserve existing values when the client sends a partial payload.
+    const payload: Partial<InterviewResponse> = {
+      ...existing,
       ...dto,
       userId: user.userId,
       updatedAt: new Date(),
     };
-
-    if (!existing) {
-      const created = this.interviewResponseRepository.create(payload);
-      return this.interviewResponseRepository.save(created);
-    }
 
     await this.interviewResponseRepository.update(existing.id, payload);
     return this.interviewResponseRepository.findOne({

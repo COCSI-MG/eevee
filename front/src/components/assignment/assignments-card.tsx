@@ -150,6 +150,16 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 </div>
 
                 <div className="flex flex-col space-y-2 items-center justify-between">
+                  <Button
+                    className="w-full bg-violet-700 hover:bg-violet-800 text-white disabled:bg-slate-700 disabled:text-slate-400"
+                    onClick={() =>
+                      push(`/${Route.Assignment}/${assignment.id}/interview`)
+                    }
+                    disabled={!canAccess}
+                  >
+                    Responder Entrevista
+                  </Button>
+
                   {assignment.assignmentAttempts?.length > 0 && (
                     <Button
                       className="w-full bg-green-700 hover:bg-green-800 text-white"

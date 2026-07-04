@@ -230,6 +230,14 @@ export default function AssignmentInterviewPage() {
     );
   }, [classAssignments]);
 
+  const comparativeAssignmentId = useMemo(() => {
+    if (!classAssignments || classAssignments.length === 0) {
+      return null;
+    }
+
+    return [...classAssignments].sort((a, b) => b.id - a.id)[0]?.id ?? null;
+  }, [classAssignments]);
+
   const { data: existingResponse, isFetching: isFetchingResponse } = useQuery({
     queryKey: ["interview-response", assignmentId],
     queryFn: () =>
@@ -253,6 +261,35 @@ export default function AssignmentInterviewPage() {
     }
     setExtraAnswers(merged);
   }, [perExerciseQuestions, existingResponse]);
+
+  useEffect(() => {
+    if (!existingResponse) {
+      return;
+    }
+
+    setLikert((current) => ({
+      ...current,
+      ...Object.fromEntries(
+        likertFields
+          .map((field) => [field.key, existingResponse[field.key]])
+          .filter(([, value]) => typeof value === "number"),
+      ),
+    }));
+
+    if (existingResponse.easierToUnderstand) {
+      setEasierToUnderstand(existingResponse.easierToUnderstand);
+    }
+    if (existingResponse.easierToModify) {
+      setEasierToModify(existingResponse.easierToModify);
+    }
+    if (existingResponse.futurePreference) {
+      setFuturePreference(existingResponse.futurePreference);
+    }
+
+    setTeraormMainAdvantage(existingResponse.teraormMainAdvantage ?? "");
+    setTeraormMainDifficulty(existingResponse.teraormMainDifficulty ?? "");
+    setAdditionalNotes(existingResponse.additionalNotes ?? "");
+  }, [existingResponse]);
 
   const submitMutation = useMutation({
     mutationFn: (payload: InterviewResponsePayload) =>
@@ -299,7 +336,8 @@ export default function AssignmentInterviewPage() {
   }
 
   const hasPerExerciseSection = perExerciseQuestions.length > 0;
-  const showComparativeSection = allClassAssignmentsAccepted;
+  const showComparativeSection =
+    allClassAssignmentsAccepted && comparativeAssignmentId === assignmentId;
 
   if (!hasPerExerciseSection && !showComparativeSection) {
     return (
