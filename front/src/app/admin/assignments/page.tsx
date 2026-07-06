@@ -26,21 +26,21 @@ export default function AssignmentsAdminPage() {
 
   const assignmentsEmptyMessage = useMemo(() => {
     if (!meta || meta.total === 0) {
-      return debouncedSearch.trim() ? "No assignments match your search." : "No Assignments found.";
+      return debouncedSearch.trim() ? "Nenhuma atividade corresponde a sua busca." : "Nenhuma atividade encontrada.";
     }
-    return "No Assignments found.";
+    return "Nenhuma atividade encontrada.";
   }, [meta, debouncedSearch]);
 
   if (isError) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Assignments</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Atividades</h1>
 
           <Link href={`/${Route.AdminAssignmentCreate}`}>
             <Button variant={"outline"}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Assignment
+              Adicionar Atividade
             </Button>
           </Link>
         </div>
@@ -65,20 +65,20 @@ export default function AssignmentsAdminPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Assignments</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Atividades</h1>
 
         <Link href={`/${Route.AdminAssignmentCreate}`}>
           <Button variant={"outline"}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Assignment
+            Adicionar Atividade
           </Button>
         </Link>
       </div>
       <AdminListSearch
         value={search}
         onChange={setSearch}
-        placeholder="Filter by title, class, or worker type"
-        ariaLabel="Filter assignments by title, class, or worker type"
+        placeholder="Filtrar por título, turma ou tipo de worker"
+        ariaLabel="Filtrar atividades por título, turma ou tipo de worker"
         className="max-w-md"
       />
       <div className="border rounded-md">
@@ -95,7 +95,7 @@ export default function AssignmentsAdminPage() {
           pageSize={meta.pageSize}
           total={meta.total}
           onPageChange={setPage}
-          itemLabel={{ singular: "assignment", plural: "assignments" }}
+          itemLabel={{ singular: "atividade", plural: "atividades" }}
         />
       )}
     </div>

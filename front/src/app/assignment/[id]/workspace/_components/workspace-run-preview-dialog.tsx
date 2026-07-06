@@ -73,19 +73,19 @@ export function WorkspaceRunPreviewDialog({
         }}
       >
         <DialogHeader className="space-y-2">
-          <DialogTitle className="text-xl">Run preview</DialogTitle>
+          <DialogTitle className="text-xl">Pré-visualização da execução</DialogTitle>
           <DialogDescription className="text-slate-400">
             {cancelling
-              ? "Cancelling the preview run."
+              ? "Cancelando a pré-visualização."
               : cancelled
-                ? "The preview run was cancelled."
+                ? "A pré-visualização foi cancelada."
                 : loading
-                  ? "Executing tests synchronously. Closing this dialog cancels the active run."
+                  ? "Executando testes sincronamente. Fechar este diálogo cancela a execução ativa."
                   : hasResult
-                    ? "The preview finished successfully."
+                    ? "A pré-visualização foi concluída com sucesso."
                     : showError
-                      ? "The preview failed."
-                      : "Waiting for preview data."}
+                      ? "A pré-visualização falhou."
+                      : "Aguardando dados da pré-visualização."}
           </DialogDescription>
         </DialogHeader>
 
@@ -98,17 +98,17 @@ export function WorkspaceRunPreviewDialog({
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
               {cancelling
-                ? "Cancelling run..."
+                ? "Cancelando execução..."
                 : cancelled
-                  ? "Run cancelled."
-                  : "Running checks..."}
+                  ? "Execução cancelada."
+                  : "Executando verificações..."}
             </div>
             <p className="text-sm text-slate-400">
               {cancelling
-                ? "Waiting for the backend to stop the job."
+                ? "Aguardando o backend parar o trabalho."
                 : cancelled
-                  ? "Returning to the editor."
-                  : "Press cancel to stop the current run before returning to the editor."}
+                  ? "Retornando ao editor."
+                  : "Pressione cancelar para parar a execução atual antes de voltar ao editor."}
             </p>
           </div>
         )}
@@ -117,7 +117,7 @@ export function WorkspaceRunPreviewDialog({
           <div className="rounded-lg border border-red-900 bg-red-950/40 p-4 text-sm text-red-200">
             <div className="mb-2 flex items-center gap-2 font-medium">
               <XCircle className="h-4 w-4" />
-              Preview failed
+              Pré-visualização falhou
             </div>
             <p>{error}</p>
           </div>
@@ -133,17 +133,17 @@ export function WorkspaceRunPreviewDialog({
                     : "bg-red-600 text-white"
                 }
               >
-                {result.isAcceptable ? "Accepted" : "Failed"}
+                {result.isAcceptable ? "Aceito" : "Reprovado"}
               </Badge>
               <span className="text-sm text-slate-400">
-                Score {scoreValue.toFixed(0)}
+                Nota {scoreValue.toFixed(0)}
               </span>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
                 <p className="text-xs uppercase tracking-wide text-slate-400">
-                  Score
+                  Nota
                 </p>
                 <p className="mt-1 text-lg font-semibold text-slate-100">
                   {result.score}
@@ -151,7 +151,7 @@ export function WorkspaceRunPreviewDialog({
               </div>
               <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
                 <p className="text-xs uppercase tracking-wide text-slate-400">
-                  Passes
+                  Aprovados
                 </p>
                 <p className="mt-1 text-lg font-semibold text-slate-100">
                   {result.passes}
@@ -159,7 +159,7 @@ export function WorkspaceRunPreviewDialog({
               </div>
               <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
                 <p className="text-xs uppercase tracking-wide text-slate-400">
-                  Fails
+                  Reprovados
                 </p>
                 <p className="mt-1 text-lg font-semibold text-slate-100">
                   {result.fails}
@@ -168,10 +168,10 @@ export function WorkspaceRunPreviewDialog({
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-200">Report</p>
+              <p className="text-sm font-medium text-slate-200">Relatório</p>
               <ScrollArea className="h-72 w-full max-w-full rounded-lg border border-slate-800 bg-slate-900">
                 <pre className="whitespace-pre-wrap break-words p-4 text-xs leading-5 text-slate-300">
-                  {result.report || "No report returned."}
+                  {result.report || "Nenhum relatório retornado."}
                 </pre>
               </ScrollArea>
             </div>
@@ -181,12 +181,12 @@ export function WorkspaceRunPreviewDialog({
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={handleClose} disabled={cancelling}>
             {loading
-              ? "Cancel run"
+              ? "Cancelar execução"
               : cancelling
-                ? "Cancelling..."
+                ? "Cancelando..."
                 : cancelled
-                  ? "Cancelled"
-                  : "Close"}
+                  ? "Cancelado"
+                  : "Fechar"}
           </Button>
         </div>
       </DialogContent>

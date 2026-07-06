@@ -67,14 +67,14 @@ function AdminAttemptsPageContent() {
     },
     onSuccess: () => {
       toast({
-        title: "Reexecucao enviada",
-        description: "A tentativa foi enviada novamente para fila de execucao.",
+        title: "Reexecução enviada",
+        description: "A tentativa foi enviada novamente para fila de execução.",
       });
       refetch();
     },
     onError: (error: unknown) => {
       const description =
-        error instanceof Error ? error.message : "Nao foi possivel reexecutar a tentativa.";
+        error instanceof Error ? error.message : "Não foi possível reexecutar a tentativa.";
 
       toast({
         title: "Erro ao reexecutar",
@@ -204,7 +204,7 @@ function AdminAttemptsPageContent() {
             </p>
             <Select value={selectedAssignmentId} onValueChange={handleAssignmentChange}>
               <SelectTrigger className="border-slate-700 bg-slate-950 text-slate-100">
-                <SelectValue placeholder="Selecione um assignment" />
+                <SelectValue placeholder="Selecione uma atividade" />
               </SelectTrigger>
               <SelectContent>
                 {(assignments ?? []).map((assignment) => (
@@ -218,12 +218,12 @@ function AdminAttemptsPageContent() {
 
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-              Buscar usuario
+              Buscar usuário
             </p>
             <Input
               value={userSearch}
               onChange={(event) => handleSearchChange(event.target.value)}
-              placeholder="Buscar por email ou ID"
+              placeholder="Buscar por e-mail ou ID"
               className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500"
               disabled={!selectedAssignmentId}
             />
@@ -242,7 +242,7 @@ function AdminAttemptsPageContent() {
 
         {selectedAssignment && (
           <p className="mt-3 text-xs text-slate-400">
-            Assignment selecionado: <span className="text-slate-200">{selectedAssignment.title}</span>
+            Atividade selecionada: <span className="text-slate-200">{selectedAssignment.title}</span>
           </p>
         )}
 
@@ -253,13 +253,13 @@ function AdminAttemptsPageContent() {
 
       {isAssignmentsError && (
         <div className="rounded-md border border-red-800 bg-red-950/40 p-4 text-sm text-red-200">
-          Nao foi possivel carregar assignments para o filtro.
+          Não foi possível carregar atividades para o filtro.
         </div>
       )}
 
       {!selectedAssignmentId && (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 text-center text-slate-400">
-          Selecione um assignment para carregar as tentativas.
+          Selecione uma atividade para carregar as tentativas.
         </div>
       )}
 
@@ -267,7 +267,7 @@ function AdminAttemptsPageContent() {
 
       {selectedAssignmentId && isAttemptsError && !isAttemptsFetching && (
         <div className="rounded-md border border-red-800 bg-red-950/40 p-4 text-sm text-red-200">
-          Nao foi possivel carregar as tentativas para este assignment.
+          Não foi possível carregar as tentativas para esta atividade.
         </div>
       )}
 

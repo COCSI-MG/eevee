@@ -34,21 +34,21 @@ const getStatusBadge = (status: string) => {
     case "completed":
       return (
         <Badge variant="outline" className="border-emerald-500 text-emerald-300">
-          Success
+          Sucesso
         </Badge>
       );
     case "failed":
       return (
         <Badge variant="destructive" className="bg-red-700 text-white">
-          Failure
+          Falha
         </Badge>
       );
     case "running":
       return (
-        <Badge className="bg-amber-600 text-white animate-pulse">Running</Badge>
+        <Badge className="bg-amber-600 text-white animate-pulse">Executando</Badge>
       );
     case "pending":
-      return <Badge className="bg-slate-600 text-white">Pending</Badge>;
+      return <Badge className="bg-slate-600 text-white">Pendente</Badge>;
     default:
       return <Badge variant="secondary">{status}</Badge>;
   }
@@ -83,9 +83,9 @@ export default function AdminAttemptsTable({
             <TableRow className="bg-slate-900/80 hover:bg-slate-900/80">
               <TableHead className="text-slate-300">Usuário</TableHead>
               <TableHead className="text-slate-300">Status</TableHead>
-              <TableHead className="text-slate-300">Score</TableHead>
+              <TableHead className="text-slate-300">Nota</TableHead>
               <TableHead className="text-slate-300">Tentativa</TableHead>
-              <TableHead className="text-slate-300">Timestamp</TableHead>
+              <TableHead className="text-slate-300">Data/Hora</TableHead>
               <TableHead className="text-right text-slate-300">Ação</TableHead>
             </TableRow>
           </TableHeader>

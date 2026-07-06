@@ -24,14 +24,14 @@ import { toast } from '@/hooks/use-toast';
 import { useAuthContext } from '@/hooks/use-auth-context';
 
 const registerSchema = Yup.object().shape({
-  email: Yup.string().email('Invalid email').required('Email is required'),
+  email: Yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
   password: Yup.string()
-    .min(8, 'Password must be at least 8 characters')
-    .required('Password is required'),
+    .min(8, 'A senha deve ter pelo menos 8 caracteres')
+    .required('Senha é obrigatória'),
   name: Yup.string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name must be at most 50 characters')
-    .required('Name is required'),
+    .min(2, 'O nome deve ter pelo menos 2 caracteres')
+    .max(50, 'O nome deve ter no máximo 50 caracteres')
+    .required('Nome é obrigatório'),
 });
 
 export default function Register() {
@@ -47,8 +47,8 @@ export default function Register() {
     },
     onError: () => {
       toast({
-        title: 'Register error',
-        description: 'Unable to create your account. Please try again.',
+        title: 'Erro no registro',
+        description: 'Não foi possível criar sua conta. Por favor, tente novamente.',
         variant: 'destructive',
       });
     },
@@ -59,7 +59,7 @@ export default function Register() {
       <AuthContainer context="register">
         <Card>
           <CardHeader>
-            <CardTitle>Sing up</CardTitle>
+            <CardTitle>Cadastrar</CardTitle>
           </CardHeader>
           <Formik
             initialValues={{
@@ -80,11 +80,11 @@ export default function Register() {
               <Form>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                    <Label htmlFor="name">Nome</Label>
                     <Input
                       type="text"
                       name="name"
-                      placeholder="Your name"
+                      placeholder="Seu nome"
                       onChange={handleChange}
                       value={values.name}
                       disabled={isPending}
@@ -92,11 +92,11 @@ export default function Register() {
                     {errors.name && <ErrorMessage name="name" />}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">E-mail</Label>
                     <Input
                       type="email"
                       name="email"
-                      placeholder="your-email@example.com"
+                      placeholder="seu-email@exemplo.com"
                       onChange={handleChange}
                       value={values.email}
                       disabled={isPending}
@@ -104,7 +104,7 @@ export default function Register() {
                     {errors.email && <ErrorMessage name="email" />}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="passowrd">Password</Label>
+                    <Label htmlFor="passowrd">Senha</Label>
                     <div className="relative">
                       <Input
                         id="password"
@@ -140,7 +140,7 @@ export default function Register() {
                       className="w-full"
                       disabled={isPending}
                     >
-                      {isPending ? 'Signing in...' : 'Sign up'}
+                      {isPending ? 'Cadastrando...' : 'Cadastrar'}
                     </Button>
                   </div>
                   <div className="flex-1 flex justify-end">
@@ -148,7 +148,7 @@ export default function Register() {
                       href="/login"
                       className="text-sm text-blue-500 hover:text-blue-700 ml-4"
                     >
-                      Already have an account?
+                      Já tem uma conta?
                     </Link>
                   </div>
                 </CardFooter>

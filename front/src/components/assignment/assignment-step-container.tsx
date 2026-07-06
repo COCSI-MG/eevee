@@ -50,7 +50,7 @@ export default function AssignmentStepContainer({
                         : "text-slate-400",
                   )}
                 >
-                  Step {stepNumber}
+                  Passo {stepNumber}
                 </p>
                 <p
                   className={cn(
@@ -104,7 +104,7 @@ export default function AssignmentStepContainer({
                           : "text-slate-400",
                     )}
                   >
-                    Step {stepNumber}
+                    Passo {stepNumber}
                   </p>
                   <p
                     className={cn(

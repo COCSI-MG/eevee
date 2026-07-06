@@ -15,7 +15,7 @@ export const AssignmentConfigForm = ({
   <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
     <CardHeader>
       <CardTitle className="text-white flex items-center justify-between">
-        Informações do Assignment
+        Informações da Atividade
       </CardTitle>
     </CardHeader>
     <CardContent className="space-y-4">
@@ -27,7 +27,7 @@ export const AssignmentConfigForm = ({
           type="text"
           name="title"
           className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
-          placeholder="Título do Assignment"
+          placeholder="Título da Atividade"
         />
         <ErrorMessage
           name="title"
