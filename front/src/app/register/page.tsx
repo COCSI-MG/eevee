@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RegisterService } from '../integration/scheduler-api/register-service';
 import { RegisterRequest } from '../interface/scheduler-api/auth';
-import { ErrorMessage, Form, Formik, FormikHelpers } from 'formik';
+import { Form, Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import AuthContainer from '@/components/auth/container';
 import {
