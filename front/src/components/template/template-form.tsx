@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2Icon, Save } from "lucide-react";
+import { Code, Loader2Icon, Save } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CreateTemplateRequest as UpsertTemplateRequest,
@@ -16,7 +16,6 @@ import { TemplatesService } from "@/app/integration/scheduler-api/templates";
 import { toast } from "@/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import dynamic from "next/dynamic";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { AxiosError } from "axios";
@@ -27,6 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ExpandableDialog,
+  ExpandableTrigger,
+  useExpandable,
+} from "@/components/ui/expandable";
 import { WorkerDefaultTemplateContentMap } from "@/app/admin/assignments/constants";
 import {
   TEMPLATE_FORM_TEXT,
@@ -36,16 +40,17 @@ import {
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
 import QueryErrorState from "../admin/query-error-state";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
-});
+import TemplateCodeEditor from "./template-code-editor";
 
 const upsertTemplateSchema = Yup.object().shape({
-  title: Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
-  description: Yup.string().required(
-    TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired
-  ),
+  title: Yup
+    .string()
+    .trim()
+    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
+  description: Yup
+    .string()
+    .trim()
+    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired),
   workerType: Yup.string().required(
     TEMPLATE_FORM_VALIDATION_MESSAGES.workerTypeRequired
   ),
@@ -83,6 +88,8 @@ export default function TemplateForm() {
     Record<string, TemplateParamType>
   >({});
   const [dependenciesInput, setDependenciesInput] = useState("");
+  const codeExpandable = useExpandable();
+  const descriptionExpandable = useExpandable();
 
   const { mutate: upsertTemplate, status: mutationStatus } = useMutation({
     mutationKey: ["upsertTemplate", id],
@@ -245,7 +252,7 @@ export default function TemplateForm() {
     setDependenciesInput(value);
     const dependenciesArray = parseDependenciesInput(value);
     formik.setFieldValue("dependencies", dependenciesArray, false);
-  }; 
+  };
 
   const handleParamTypeChange = (name: string, type: TemplateParamType) => {
     setParamTypesByName((prev) => ({
@@ -309,9 +316,15 @@ export default function TemplateForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-slate-200">
-                      {TEMPLATE_FORM_TEXT.descriptionLabel}
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="description" className="text-slate-200">
+                        {TEMPLATE_FORM_TEXT.descriptionLabel}
+                      </Label>
+                      <ExpandableTrigger
+                        onClick={descriptionExpandable.open}
+                        label="Expandir"
+                      />
+                    </div>
                     <Textarea
                       id="description"
                       name="description"
@@ -484,53 +497,24 @@ export default function TemplateForm() {
 
             <div className="space-y-6">
               <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-white">
                     {TEMPLATE_FORM_TEXT.codeCardTitle}
                   </CardTitle>
+                  <ExpandableTrigger
+                    onClick={codeExpandable.open}
+                    label={TEMPLATE_FORM_TEXT.codeExpandButton}
+                  />
                 </CardHeader>
                 <CardContent className="pb-6">
                   <div style={{ height: "600px" }}>
-                    <Editor
-                      height="600px"
-                      defaultLanguage="typescript"
+                    <TemplateCodeEditor
                       value={formik.values.content}
-                      theme="vs-dark"
                       onChange={(value) =>
-                        formik.setFieldValue("content", value || "")
+                        formik.setFieldValue("content", value)
                       }
+                      height="600px"
                       className="bg-slate-700 border-slate-600 text-white"
-                      options={{
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        wordWrap: "on",
-                        wrappingIndent: "indent",
-                        fontSize: 14,
-                        lineNumbers: "on",
-                        quickSuggestions: false,
-                        suggest: {
-                          showWords: false,
-                          showSnippets: false,
-                        },
-                        "semanticHighlighting.enabled": false,
-                      }}
-                      beforeMount={(monaco) => {
-                        // Disable all diagnostics for TypeScript/JavaScript
-                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          }
-                        );
-                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          }
-                        );
-                      }}
                     />
                   </div>
                   {(formik.touched.content || formik.submitCount > 0) &&
@@ -545,6 +529,56 @@ export default function TemplateForm() {
           </div>
         </form>
       </div>
+
+      <ExpandableDialog
+        open={codeExpandable.isOpen}
+        onOpenChange={codeExpandable.setIsOpen}
+        title={
+          <span className="flex items-center gap-2">
+            <Code className="h-5 w-5" />
+            {TEMPLATE_FORM_TEXT.codeDialogTitle}
+          </span>
+        }
+        minimizeLabel={TEMPLATE_FORM_TEXT.codeMinimizeButton}
+      >
+        <TemplateCodeEditor
+          value={formik.values.content}
+          onChange={(value) => formik.setFieldValue("content", value)}
+          height="100%"
+          className="bg-slate-700 border-slate-600 text-white"
+        />
+        {(formik.touched.content || formik.submitCount > 0) &&
+          formik.errors.content && (
+          <div className="px-4 pb-4 text-red-500">
+            {formik.errors.content}
+          </div>
+        )}
+      </ExpandableDialog>
+
+      <ExpandableDialog
+        open={descriptionExpandable.isOpen}
+        onOpenChange={descriptionExpandable.setIsOpen}
+        title="Descrição"
+        minimizeLabel="Minimizar"
+        contentClassName="flex flex-col"
+      >
+        <Textarea
+          id="description-expanded"
+          name="description"
+          value={formik.values.description}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          autoFocus
+          className="flex-1 w-full p-3 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
+          placeholder={TEMPLATE_FORM_TEXT.descriptionPlaceholder}
+        />
+        {(formik.touched.description || formik.submitCount > 0) &&
+          formik.errors.description && (
+          <div className="text-red-500 text-sm mt-2">
+            {formik.errors.description}
+          </div>
+        )}
+      </ExpandableDialog>
     </div>
   );
 }
