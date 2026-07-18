@@ -36,6 +36,7 @@ import {
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
 import QueryErrorState from "../admin/query-error-state";
+import { Tooltip } from "../ui/tooltip";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -245,7 +246,7 @@ export default function TemplateForm() {
     setDependenciesInput(value);
     const dependenciesArray = parseDependenciesInput(value);
     formik.setFieldValue("dependencies", dependenciesArray, false);
-  }; 
+  };
 
   const handleParamTypeChange = (name: string, type: TemplateParamType) => {
     setParamTypesByName((prev) => ({
@@ -331,7 +332,7 @@ export default function TemplateForm() {
 
                   <div className="space-y-2">
                     <Label htmlFor="workerType" className="text-slate-200">
-                      {TEMPLATE_FORM_TEXT.workerTypeLabel}
+                      {TEMPLATE_FORM_TEXT.workerTypeLabel} <Tooltip message="Escolha o tipo de ambiente de execução que será utilizado no template" />
                     </Label>
                     <Select
                       value={formik.values.workerType as string}
@@ -363,7 +364,7 @@ export default function TemplateForm() {
                   <div className="space-y-2">
                     <Label htmlFor="params" className="text-slate-200">
                       {TEMPLATE_FORM_TEXT.paramsLabel} <br />
-                      {TEMPLATE_FORM_TEXT.paramsHelper}
+                      {TEMPLATE_FORM_TEXT.paramsHelper} <Tooltip message="Parâmetros que serão passados para o template" />
                     </Label>
                     <Input
                       id="params"

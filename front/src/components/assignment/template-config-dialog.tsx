@@ -12,6 +12,7 @@ import {
 import { Badge } from "../ui/badge";
 import dynamic from "next/dynamic";
 import { Template, TemplateParamType } from "@/app/interface/scheduler-api/template";
+import { Tooltip } from "../ui/tooltip";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -60,7 +61,7 @@ export default function TemplateConfigDialog({
 
               <div className="space-y-6">
                 <h4 className="text-white font-medium">
-                  Parâmetros do Template
+                  Parâmetros do Template <Tooltip message="Adicione o parâmetro para configurar os testes do template" />
                 </h4>
                 {configTemplateDialog.templateParams.map((param) => (
                   <div key={param.id} className="space-y-3">
