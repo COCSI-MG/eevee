@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2Icon, Save } from "lucide-react";
+import { FlaskConical, Loader2Icon, Save } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CreateTemplateRequest as UpsertTemplateRequest,
@@ -37,6 +37,7 @@ import {
 } from "@/app/admin/templates/constants";
 import QueryErrorState from "../admin/query-error-state";
 import { Tooltip } from "../ui/tooltip";
+import { TemplateTestDialog } from "./template-test-dialog";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -84,6 +85,7 @@ export default function TemplateForm() {
     Record<string, TemplateParamType>
   >({});
   const [dependenciesInput, setDependenciesInput] = useState("");
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
 
   const { mutate: upsertTemplate, status: mutationStatus } = useMutation({
     mutationKey: ["upsertTemplate", id],
@@ -466,6 +468,16 @@ export default function TemplateForm() {
                       {TEMPLATE_FORM_TEXT.clearButton}
                     </Button>
                     <Button
+                      type="button"
+                      variant="outline"
+                      className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                      onClick={() => setTestDialogOpen(true)}
+                      title="Testar o conteúdo do template contra um app.ts de exemplo em um pod efêmero. Nada é persistido."
+                    >
+                      <FlaskConical className="w-4 h-4 mr-2" />
+                      Testar
+                    </Button>
+                    <Button
                       type="submit"
                       className="flex-1 hover:bg-slate-700"
                       variant={"outline"}
@@ -540,12 +552,22 @@ export default function TemplateForm() {
                       {formik.errors.content}
                     </div>
                   )}
-                </CardContent>
+                 </CardContent>
               </Card>
             </div>
           </div>
         </form>
       </div>
+
+      <TemplateTestDialog
+        open={testDialogOpen}
+        onOpenChange={setTestDialogOpen}
+        workerType={formik.values.workerType as WorkerType}
+        templateContent={formik.values.content}
+        paramNames={formik.values.params}
+        paramTypesByName={paramTypesByName}
+        dependencies={formik.values.dependencies}
+      />
     </div>
   );
 }
