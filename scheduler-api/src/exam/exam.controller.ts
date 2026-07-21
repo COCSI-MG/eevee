@@ -24,7 +24,6 @@ import {
 } from '@nestjs/swagger';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CreateAssignmentDto } from 'src/assignment/dto/create-assignment.dto';
 import { CreateAndLinkAssignmentDto } from './dto/create-and-link-assignment.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { LinkAssignmentDto } from './dto/link-assignment.dto';
