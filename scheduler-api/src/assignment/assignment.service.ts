@@ -12,6 +12,7 @@ import { Assignment } from './entities/assignment.entity';
 import {
   Brackets,
   DataSource,
+  EntityManager,
   FindOneOptions,
   In,
   IsNull,
@@ -58,11 +59,13 @@ export class AssignmentService {
   private async assertTemplatesCompatibleWithWorkerType(options: {
     templates: { templateId: number }[];
     workerType: Assignment['workerType'];
+    templateRepo?: Repository<Template>;
   }): Promise<void> {
+    const templateRepo = options.templateRepo ?? this.templateRepository;
     const templateIds = options.templates.map((t) => t.templateId);
     if (!templateIds.length) return;
 
-    const found = await this.templateRepository.find({
+    const found = await templateRepo.find({
       where: { id: In(templateIds) },
       select: { id: true, workerType: true },
     });
@@ -170,7 +173,23 @@ export class AssignmentService {
     }
   }
 
-  async create(createAssignmentDto: CreateAssignmentDto) {
+  async create(
+    createAssignmentDto: CreateAssignmentDto,
+    manager?: EntityManager,
+  ) {
+    const assignmentRepo = manager
+      ? manager.getRepository(Assignment)
+      : this.assignmentRepository;
+    const assignmentTemplateRepo = manager
+      ? manager.getRepository(AssignmentTemplate)
+      : this.assignmentTemplateRepository;
+    const assignmentParamRepo = manager
+      ? manager.getRepository(AssignmentParam)
+      : this.assignmentParamsRepository;
+    const templateRepo = manager
+      ? manager.getRepository(Template)
+      : this.templateRepository;
+
     const {
       templates,
       boilerplateContent,
@@ -197,7 +216,7 @@ export class AssignmentService {
       validationScript,
     });
 
-    const newAssignment = await this.assignmentRepository.save({
+    const newAssignment = await assignmentRepo.save({
       classId: assignmentData.classId,
       title: assignmentData.title,
       description: assignmentData.description,
@@ -212,6 +231,7 @@ export class AssignmentService {
       await this.assertTemplatesCompatibleWithWorkerType({
         templates,
         workerType: assignmentData.workerType,
+        templateRepo,
       });
 
       const assignmentTemplateEntities = templates.map((template) => ({
@@ -227,8 +247,8 @@ export class AssignmentService {
         })),
       );
 
-      await this.assignmentTemplateRepository.save(assignmentTemplateEntities);
-      await this.assignmentParamsRepository.save(assignmentParamsEntities);
+      await assignmentTemplateRepo.save(assignmentTemplateEntities);
+      await assignmentParamRepo.save(assignmentParamsEntities);
     }
 
     return await this.attachBoilerplate(newAssignment);

@@ -3,7 +3,8 @@ import { Class } from 'src/class/entities/class.entity';
 import { UserClassResponseDto } from 'src/user-class/dto/response/user-class-response.dto';
 
 export class ClassResponseDto
-  implements Omit<Omit<Class, 'assignments'>, 'userClasses'> {
+  implements
+    Omit<Omit<Omit<Class, 'assignments'>, 'userClasses'>, 'exams'> {
   @ApiProperty()
   id: number;
   @ApiProperty()

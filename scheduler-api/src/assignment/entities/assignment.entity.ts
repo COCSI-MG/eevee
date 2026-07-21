@@ -3,6 +3,7 @@ import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-
 import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
+import { ExamActivity } from 'src/exam/entities/exam-activity.entity';
 import { User } from 'src/user/entities/user.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import {
@@ -11,6 +12,7 @@ import {
     JoinColumn,
     ManyToOne,
     OneToMany,
+    OneToOne,
     PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -97,4 +99,7 @@ export class Assignment {
     (suspension) => suspension.assignment,
   )
   suspensions?: AssignmentUserSuspension[];
+
+  @OneToOne(() => ExamActivity, (examActivity) => examActivity.activity)
+  examActivity?: ExamActivity;
 }
