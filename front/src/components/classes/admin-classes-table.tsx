@@ -8,9 +8,24 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
 import TableActions from "../table/table-actions";
 import { cn } from "@/lib/utils";
 import { Class } from "@/app/interface/scheduler-api/class";
+import { Route } from "@/app/routes";
+import Link from "next/link";
+import { ClipboardList } from "lucide-react";
+
+const ViewExamsComponent = ({ classId }: { classId: number }) => (
+  <Link
+    href={`/${Route.AdminClasses}/${classId}/${Route.AdminClassExams}`}
+  >
+    <DropdownMenuItem>
+      <ClipboardList className="h-4 w-4" />
+      provas
+    </DropdownMenuItem>
+  </Link>
+);
 
 interface AdminClassesTableProps {
   classes: Array<Class> | undefined;
@@ -57,6 +72,12 @@ export default function AdminClassesTable({
                 <TableActions
                   href={`/admin/classes/${cls.id}`}
                   onDelete={() => handleDelete(cls.id)}
+                  otherActions={[
+                    <ViewExamsComponent
+                      key={`${cls.id}-exams`}
+                      classId={cls.id}
+                    />,
+                  ]}
                 />
               </TableCell>
             </TableRow>

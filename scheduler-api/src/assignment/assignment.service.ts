@@ -27,6 +27,7 @@ import { Template } from 'src/template/entities/template.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { ListAssignmentsByClassQueryDto } from './dto/list-assignments-by-class.query.dto';
 import { ListAssignmentsQueryDto } from './dto/list-assignments.query.dto';
 import {
   PaginatedResult,
@@ -347,7 +348,10 @@ export class AssignmentService {
     return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
-  async findAssignmentsByClass(classId: number) {
+  async findAssignmentsByClass(
+    classId: number,
+    queryParams?: ListAssignmentsByClassQueryDto,
+  ) {
     const user = this.requestContextService.getUser()!;
 
     if (!user.isAdmin) {
@@ -374,7 +378,14 @@ export class AssignmentService {
         { userId: user.userId },
       )
       .leftJoinAndSelect('assignment.suspensions', 'suspensions')
+      .leftJoin('assignment.examActivity', 'examActivity')
       .where('assignment.classId = :classId', { classId });
+
+    if (queryParams?.linkedToExam === true) {
+      query.andWhere('examActivity.id IS NULL');
+    } else if (queryParams?.linkedToExam === false) {
+      query.andWhere('examActivity.id IS NOT NULL');
+    }
 
     if (user?.isAdmin) {
       query.andWhere(

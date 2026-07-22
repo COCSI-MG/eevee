@@ -15,6 +15,7 @@ import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { instanceToPlain } from 'class-transformer';
+import { ListAssignmentsByClassQueryDto } from './dto/list-assignments-by-class.query.dto';
 import { ListAssignmentsQueryDto } from './dto/list-assignments.query.dto';
 
 @Controller('assignment')
@@ -35,8 +36,11 @@ export class AssignmentController {
   }
 
   @Get('class/:classId')
-  findAssignmentsByClass(@Param('classId') classId: string) {
-    return this.assignmentService.findAssignmentsByClass(+classId);
+  findAssignmentsByClass(
+    @Param('classId') classId: string,
+    @Query() query: ListAssignmentsByClassQueryDto,
+  ) {
+    return this.assignmentService.findAssignmentsByClass(+classId, query);
   }
 
   @Get('me')

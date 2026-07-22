@@ -21,6 +21,10 @@ import { UserClassService } from 'src/user-class/user-class.service';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { ListExamsByClassQueryDto } from './dto/list-exams-by-class.query.dto';
 import { CreateActivityAndLinkResponseDto } from './dto/response/create-activity-and-link-response.dto';
+import {
+  AssignmentSummaryResponseDto,
+  ExamWithActivitiesResponseDto,
+} from './dto/response/exam-with-activities-response.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamActivity } from './entities/exam-activity.entity';
 import { Exam } from './entities/exam.entity';
@@ -132,6 +136,53 @@ export class ExamService {
     return { data: rows, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
+  async findOneWithActivities(
+    examId: number,
+  ): Promise<ExamWithActivitiesResponseDto> {
+    const exam = await this.examRepository.findOne({ where: { id: examId } });
+    if (!exam) {
+      throw new NotFoundException(`Exam with id ${examId} not found`);
+    }
+
+    const user = this.requestContextService.getUser();
+    if (!user.isAdmin) {
+      if (exam.classId == null) {
+        throw new ForbiddenException(
+          'You are not allowed to view this exam.',
+        );
+      }
+      const enrollment = await this.userClassService.findOneByKeys(
+        user.userId,
+        exam.classId,
+      );
+      if (!enrollment) {
+        throw new ForbiddenException(
+          'You are not enrolled in the class of this exam.',
+        );
+      }
+    }
+
+    const examActivities = await this.examActivityRepository.find({
+      where: { examId },
+      relations: ['activity'],
+      order: { id: 'ASC' },
+    });
+
+    const activities: AssignmentSummaryResponseDto[] = examActivities
+      .map((ea) => ea.activity)
+      .filter((a): a is NonNullable<typeof a> => a != null)
+      .map((a) => ({
+        id: a.id,
+        title: a.title,
+        description: a.description,
+        classId: a.classId,
+        maxAttempts: a.maxAttempts,
+        workerType: a.workerType,
+      }));
+
+    return { exam, activities };
+  }
+
   async linkActivity(
     examId: number,
     activityId: number,
@@ -164,6 +215,33 @@ export class ExamService {
       where: { id: saved.id },
       relations: ['exam', 'activity'],
     });
+  }
+
+  async unlinkActivity(examId: number, activityId: number): Promise<void> {
+    const exam = await this.examRepository.findOne({ where: { id: examId } });
+    if (!exam) {
+      throw new NotFoundException(`Exam with id ${examId} not found`);
+    }
+
+    const activity = await this.assignmentRepository.findOne({
+      where: { id: activityId },
+    });
+    if (!activity) {
+      throw new NotFoundException(
+        `Activity with id ${activityId} not found`,
+      );
+    }
+
+    const link = await this.examActivityRepository.findOne({
+      where: { examId, activityId },
+    });
+    if (!link) {
+      throw new NotFoundException(
+        `Link between exam ${examId} and activity ${activityId} does not exist`,
+      );
+    }
+
+    await this.examActivityRepository.delete({ id: link.id });
   }
 
   async remove(id: number) {

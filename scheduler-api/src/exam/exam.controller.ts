@@ -16,6 +16,7 @@ import {
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
@@ -29,6 +30,7 @@ import { ListExamsByClassQueryDto } from './dto/list-exams-by-class.query.dto';
 import { CreateActivityAndLinkResponseDto } from './dto/response/create-activity-and-link-response.dto';
 import { ExamActivityResponseDto } from './dto/response/exam-activity-response.dto';
 import { ExamResponseDto } from './dto/response/exam-response.dto';
+import { ExamWithActivitiesResponseDto } from './dto/response/exam-with-activities-response.dto';
 import { PaginatedExamsResponseDto } from './dto/response/paginated-exams-response.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamService } from './exam.service';
@@ -71,7 +73,20 @@ export class ExamController {
     return this.examService.findByClass(+classId, query);
   }
 
-  @Post(':examId/activities')
+  @Get(':idExam')
+  @ApiOkResponse({ type: ExamWithActivitiesResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
+  @ApiForbiddenResponse({
+    description:
+      'User is not enrolled in the class of this exam, or the exam has no class',
+  })
+  @ApiNotFoundResponse({ description: 'Exam not found' })
+  @UseGuards(JwtAuthGuard)
+  findOne(@Param('idExam') idExam: string) {
+    return this.examService.findOneWithActivities(+idExam);
+  }
+
+  @Post(':examId/assignments')
   @ApiCreatedResponse({
     type: CreateActivityAndLinkResponseDto,
     description: 'Activity created and linked to the exam',
@@ -99,7 +114,7 @@ export class ExamController {
     return this.examService.createActivityAndLink(+examId, createAssignmentDto);
   }
 
-  @Post(':examId/activities/:activityId')
+  @Post(':examId/assignments/:assignmentId')
   @ApiCreatedResponse({
     type: ExamActivityResponseDto,
     description: 'Link created successfully',
@@ -116,9 +131,28 @@ export class ExamController {
   @HttpCode(HttpStatus.CREATED)
   async linkActivity(
     @Param('examId') examId: string,
-    @Param('activityId') activityId: string,
+    @Param('assignmentId') assignmentId: string,
   ) {
-    return this.examService.linkActivity(+examId, +activityId);
+    return this.examService.linkActivity(+examId, +assignmentId);
+  }
+
+  @Delete(':idExam/assignments/:assignmentId')
+  @ApiNoContentResponse({
+    description: 'Activity successfully unlinked from the exam',
+  })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
+  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiNotFoundResponse({
+    description:
+      'Exam not found, Activity not found, or the link between them does not exist',
+  })
+  @UseGuards(AdminGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unlinkActivity(
+    @Param('idExam') idExam: string,
+    @Param('assignmentId') assignmentId: string,
+  ): Promise<void> {
+    await this.examService.unlinkActivity(+idExam, +assignmentId);
   }
 
   @Patch(':id')

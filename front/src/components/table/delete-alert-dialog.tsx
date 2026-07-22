@@ -1,3 +1,4 @@
+import { Loader2Icon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -13,6 +14,10 @@ interface DeleteAlertDialogProps {
   open: boolean;
   onOpenChange?: (open: boolean) => void;
   resourceName: string;
+  itemName?: string;
+  isDeleting?: boolean;
+  title?: string;
+  description?: string;
   onDelete: () => void | Promise<void>;
 }
 
@@ -20,6 +25,10 @@ export default function DeleteAlertDialog({
   open,
   onOpenChange,
   resourceName,
+  itemName,
+  isDeleting = false,
+  title,
+  description,
   onDelete,
 }: DeleteAlertDialogProps) {
   return (
@@ -27,20 +36,27 @@ export default function DeleteAlertDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Tem certeza que deseja excluir este {resourceName}
+            {title ??
+              `Tem certeza que deseja excluir este ${resourceName}${
+                itemName ? ` '${itemName}'` : ""
+              }?`}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Esta ação não pode ser desfeita. Todos os dados relacionados a este{" "}
-            {resourceName} serão permanentemente excluídos.
+            {description ??
+              `Esta ação não pode ser desfeita. Todos os dados relacionados a este ${resourceName} serão permanentemente excluídos.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
           <Button
             variant={"destructive"}
+            disabled={isDeleting}
             onClick={() => void Promise.resolve(onDelete())}
           >
-            Delete
+            {isDeleting && (
+              <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {isDeleting ? "Excluindo…" : "Delete"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

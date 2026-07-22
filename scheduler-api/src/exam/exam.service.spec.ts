@@ -7,6 +7,7 @@ import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { ClassService } from 'src/class/class.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClassService } from 'src/user-class/user-class.service';
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamActivity } from './entities/exam-activity.entity';
@@ -22,6 +23,7 @@ describe('ExamService', () => {
     findOne: jest.fn(),
     findOneOrFail: jest.fn(),
     update: jest.fn(),
+    delete: jest.fn(),
     createQueryBuilder: jest.fn(),
   });
 
@@ -648,6 +650,310 @@ describe('ExamService', () => {
         relations: ['exam', 'activity'],
       });
       expect(result).toEqual(hydrated);
+    });
+  });
+
+  describe('unlinkActivity', () => {
+    it('throws NotFoundException when the exam does not exist', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        assignmentRepository,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.unlinkActivity(1, 2)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+
+      expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(assignmentRepository.findOne).not.toHaveBeenCalled();
+      expect(examActivityRepository.findOne).not.toHaveBeenCalled();
+      expect(examActivityRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the activity does not exist', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        assignmentRepository,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1 });
+      assignmentRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.unlinkActivity(1, 2)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+
+      expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(assignmentRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 2 },
+      });
+      expect(examActivityRepository.findOne).not.toHaveBeenCalled();
+      expect(examActivityRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the link between exam and activity does not exist', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        assignmentRepository,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examActivityRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.unlinkActivity(1, 2)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+
+      expect(examActivityRepository.findOne).toHaveBeenCalledWith({
+        where: { examId: 1, activityId: 2 },
+      });
+      expect(examActivityRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('deletes the link and returns void when exam, activity and link all exist', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        assignmentRepository,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examActivityRepository.findOne.mockResolvedValue({
+        id: 99,
+        examId: 1,
+        activityId: 2,
+      });
+      examActivityRepository.delete.mockResolvedValue({ raw: [], affected: 1 });
+
+      const result = await service.unlinkActivity(1, 2);
+
+      expect(examActivityRepository.findOne).toHaveBeenCalledWith({
+        where: { examId: 1, activityId: 2 },
+      });
+      expect(examActivityRepository.delete).toHaveBeenCalledWith({ id: 99 });
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('findOneWithActivities', () => {
+    it('throws NotFoundException when the exam does not exist', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue(null);
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+
+      await expect(service.findOneWithActivities(123)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+
+      expect(examRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 123 },
+      });
+      expect(requestContextService.getUser).not.toHaveBeenCalled();
+      expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
+      expect(examActivityRepository.find).not.toHaveBeenCalled();
+    });
+
+    it('returns the exam with an empty activities array when there are no linked activities', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      const exam = {
+        id: 1,
+        title: 'Midterm',
+        description: 'Covers chapters 1-5',
+        classId: 5,
+        dueDate: new Date('2026-08-15T23:59:00Z'),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      examRepository.findOne.mockResolvedValue(exam);
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+      examActivityRepository.find.mockResolvedValue([]);
+
+      const result = await service.findOneWithActivities(1);
+
+      expect(userClassService.findOneByKeys).toHaveBeenCalledWith(7, 5);
+      expect(examActivityRepository.find).toHaveBeenCalledWith({
+        where: { examId: 1 },
+        relations: ['activity'],
+        order: { id: 'ASC' },
+      });
+      expect(result).toEqual({ exam, activities: [] });
+    });
+
+    it('returns the exam with activities mapped to the summary DTO and ordered by ExamActivity id', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      const exam = { id: 1, title: 'Midterm', classId: 5 };
+      examRepository.findOne.mockResolvedValue(exam);
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+
+      const activityB = {
+        id: 20,
+        title: 'Activity B',
+        description: 'B desc',
+        classId: 5,
+        maxAttempts: 2,
+        workerType: WorkerType.NODE_NESTJS,
+        initSqlScript: 'secret',
+        boilerplateFilePath: '/secret',
+        interviewConfig: { questions: [] },
+      };
+      const activityA = {
+        id: 10,
+        title: 'Activity A',
+        description: 'A desc',
+        classId: 5,
+        maxAttempts: 3,
+        workerType: WorkerType.NODE_DEFAULT,
+      };
+      examActivityRepository.find.mockResolvedValue([
+        { id: 2, examId: 1, activityId: 20, activity: activityB },
+        { id: 1, examId: 1, activityId: 10, activity: activityA },
+      ]);
+
+      const result = await service.findOneWithActivities(1);
+
+      expect(result.exam).toEqual(exam);
+      expect(result.activities).toEqual([
+        {
+          id: 20,
+          title: 'Activity B',
+          description: 'B desc',
+          classId: 5,
+          maxAttempts: 2,
+          workerType: WorkerType.NODE_NESTJS,
+        },
+        {
+          id: 10,
+          title: 'Activity A',
+          description: 'A desc',
+          classId: 5,
+          maxAttempts: 3,
+          workerType: WorkerType.NODE_DEFAULT,
+        },
+      ]);
+      expect(result.activities[0]).not.toHaveProperty('initSqlScript');
+      expect(result.activities[0]).not.toHaveProperty('boilerplateFilePath');
+      expect(result.activities[0]).not.toHaveProperty('interviewConfig');
+    });
+
+    it('skips the enrollment check when the user is an admin', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: true,
+      });
+      examActivityRepository.find.mockResolvedValue([]);
+
+      const result = await service.findOneWithActivities(1);
+
+      expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
+      expect(result).toEqual({ exam: { id: 1, classId: 5 }, activities: [] });
+    });
+
+    it('throws ForbiddenException when a non-admin user is not enrolled in the exam class', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue(null);
+
+      await expect(service.findOneWithActivities(1)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+
+      expect(userClassService.findOneByKeys).toHaveBeenCalledWith(7, 5);
+      expect(examActivityRepository.find).not.toHaveBeenCalled();
+    });
+
+    it('throws ForbiddenException when a non-admin user tries to view an exam without a class', async () => {
+      const {
+        service,
+        examRepository,
+        examActivityRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({
+        id: 1,
+        classId: null,
+      });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+
+      await expect(service.findOneWithActivities(1)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
+
+      expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
+      expect(examActivityRepository.find).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,7 +1,7 @@
 import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
+import { Brackets, DataSource } from 'typeorm';
 import { AssignmentService } from './assignment.service';
 import { Assignment } from './entities/assignment.entity';
 import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
@@ -379,6 +379,139 @@ describe('AssignmentService', () => {
       expect(qb.skip).toHaveBeenCalledWith(0);
       expect(qb.take).toHaveBeenCalledWith(10);
       expect(result.meta).toEqual({ total: 1, page: 1, pageSize: 10, totalPages: 1 });
+    });
+  });
+
+  describe('findAssignmentsByClass', () => {
+    const makeFindQueryBuilder = () => {
+      const qb: Record<string, jest.Mock> = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        leftJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      return qb;
+    };
+
+    it('does not apply an exam link filter when linkedToExam is not provided', async () => {
+      const {
+        service,
+        assignmentRepository,
+        userClassRepository,
+        requestContextService,
+      } = await setup();
+
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassRepository.findOne.mockResolvedValue({ userId: 7, classId: 1 });
+      const qb = makeFindQueryBuilder();
+      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findAssignmentsByClass(1, {});
+
+      expect(qb.leftJoin).toHaveBeenCalledWith(
+        'assignment.examActivity',
+        'examActivity',
+      );
+      const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
+      expect(andWhereCalls).not.toContain('examActivity.id IS NOT NULL');
+      expect(andWhereCalls).not.toContain('examActivity.id IS NULL');
+      expect(result).toEqual([]);
+    });
+
+    it('filters to assignments linked to an exam when linkedToExam=true', async () => {
+      const {
+        service,
+        assignmentRepository,
+        userClassRepository,
+        requestContextService,
+      } = await setup();
+
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassRepository.findOne.mockResolvedValue({ userId: 7, classId: 1 });
+      const qb = makeFindQueryBuilder();
+      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findAssignmentsByClass(1, { linkedToExam: true });
+
+      expect(qb.andWhere).toHaveBeenCalledWith('examActivity.id IS NOT NULL');
+      const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
+      expect(andWhereCalls).not.toContain('examActivity.id IS NULL');
+    });
+
+    it('filters to assignments NOT linked to an exam when linkedToExam=false', async () => {
+      const {
+        service,
+        assignmentRepository,
+        userClassRepository,
+        requestContextService,
+      } = await setup();
+
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassRepository.findOne.mockResolvedValue({ userId: 7, classId: 1 });
+      const qb = makeFindQueryBuilder();
+      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findAssignmentsByClass(1, { linkedToExam: false });
+
+      expect(qb.andWhere).toHaveBeenCalledWith('examActivity.id IS NULL');
+      const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
+      expect(andWhereCalls).not.toContain('examActivity.id IS NOT NULL');
+    });
+
+    it('throws ForbiddenException for a non-admin user not enrolled in the class', async () => {
+      const {
+        service,
+        assignmentRepository,
+        userClassRepository,
+        requestContextService,
+      } = await setup();
+
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.findAssignmentsByClass(1, { linkedToExam: true }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+
+      expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('applies linkedToExam filter together with the admin createdById branch', async () => {
+      const {
+        service,
+        assignmentRepository,
+        userClassRepository,
+        requestContextService,
+      } = await setup();
+
+      requestContextService.getUser.mockReturnValue({
+        userId: 10,
+        isAdmin: true,
+      });
+      userClassRepository.findOne.mockResolvedValue({ userId: 10, classId: 1 });
+      const qb = makeFindQueryBuilder();
+      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findAssignmentsByClass(1, { linkedToExam: true });
+
+      expect(qb.andWhere).toHaveBeenCalledWith('examActivity.id IS NOT NULL');
+      const createdByCall = qb.andWhere.mock.calls.find(
+        (c) => c[0] instanceof Brackets,
+      );
+      expect(createdByCall).toBeDefined();
     });
   });
 });
