@@ -228,7 +228,7 @@ export default function WorkspaceFileTree({
   if (!treeData) {
     return (
       <div className="flex items-center justify-center h-32 text-gray-500">
-        <p className="text-sm">No files available</p>
+        <p className="text-sm">Nenhum arquivo disponível</p>
       </div>
     );
   }

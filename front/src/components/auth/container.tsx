@@ -20,8 +20,8 @@ export default function AuthContainer({ ...props }: AuthContainerProps) {
         </h1>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           {props.context === 'login'
-            ? 'Sign in to your account to access your dashboard'
-            : 'Create your account and start coding with us'}
+            ? 'Faca login na sua conta para acessar seu painel'
+            : 'Crie sua conta e comece a programar conosco'}
         </p>
       </div>
       {/* Form children render by parent */}

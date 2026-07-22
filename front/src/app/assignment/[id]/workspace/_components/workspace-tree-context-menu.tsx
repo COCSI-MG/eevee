@@ -36,7 +36,7 @@ export function WorkspaceTreeContextMenu({
             onClose();
           }}
         >
-          Show in side-by-side view
+          Mostrar lado a lado
         </button>
       )}
       <button
@@ -47,7 +47,7 @@ export function WorkspaceTreeContextMenu({
           onClose();
         }}
       >
-        Rename
+        Renomear
       </button>
       <button
         type="button"
@@ -57,7 +57,7 @@ export function WorkspaceTreeContextMenu({
           onClose();
         }}
       >
-        Delete
+        Excluir
       </button>
     </div>
   );

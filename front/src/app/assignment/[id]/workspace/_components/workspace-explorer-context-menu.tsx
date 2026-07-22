@@ -29,7 +29,7 @@ export function WorkspaceExplorerContextMenu({
           onClose();
         }}
       >
-        Create File
+        Criar Arquivo
       </button>
       <button
         type="button"
@@ -39,7 +39,7 @@ export function WorkspaceExplorerContextMenu({
           onClose();
         }}
       >
-        Create Folder
+        Criar Pasta
       </button>
     </div>
   );

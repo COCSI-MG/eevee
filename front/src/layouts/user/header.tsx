@@ -25,7 +25,7 @@ export function Header() {
               href={`/${Route.Classes}`}
               className="text-slate-300 hover:text-white transition-colors"
             >
-              Classes
+              Turmas
             </Link>
             <Button
               onClick={logout}
@@ -33,7 +33,7 @@ export function Header() {
               className="text-slate-300 hover:text-white transition-colors"
             >
               <LogOut className="mr-2 h-4 w-4" />
-              <span className="mr-2">Logout</span>
+              <span className="mr-2">Sair</span>
             </Button>
           </nav>
         </div>

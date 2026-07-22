@@ -55,13 +55,13 @@ const AssigmentReview = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wide">
-              Worker Type
+              Tipo de Worker
             </p>
             <p className="text-white">{values.workerType}</p>
           </div>
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wide">
-              Max Tentativas
+              Máximo de Tentativas
             </p>
             <p className="text-white">{values.maxAttempts}</p>
           </div>

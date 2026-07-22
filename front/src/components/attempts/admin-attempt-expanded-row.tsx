@@ -22,7 +22,7 @@ export function AdminAttemptExpandedRow({ attemptId }: AdminAttemptExpandedRowPr
 
   if (isError) {
     const message =
-      error instanceof Error ? error.message : "Nao foi possivel carregar os detalhes.";
+      error instanceof Error ? error.message : "Não foi possível carregar os detalhes.";
     return (
       <div className="space-y-3 py-2">
         <p className="text-sm text-red-300">{message}</p>
@@ -48,7 +48,7 @@ export function AdminAttemptExpandedRow({ attemptId }: AdminAttemptExpandedRowPr
   return (
     <div className="space-y-4 py-2">
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Report</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Relatório</p>
         <pre className="max-h-64 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-200 whitespace-pre-wrap">
           {data.report || "Sem report para esta tentativa."}
         </pre>
@@ -60,7 +60,7 @@ export function AdminAttemptExpandedRow({ attemptId }: AdminAttemptExpandedRowPr
         </p>
         {fileEntries.length === 0 ? (
           <div className="rounded-md border border-slate-800 bg-slate-950 p-3 text-xs text-slate-400">
-            Esta tentativa nao possui arquivos armazenados.
+            Esta tentativa não possui arquivos armazenados.
           </div>
         ) : (
           <div className="space-y-3">

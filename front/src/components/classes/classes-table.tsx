@@ -75,7 +75,7 @@ export default function ClassesTable() {
           <CardContent className="pb-2">
             <div className="mt-4 flex items-center text-sm text-muted-foreground">
               <BookOpen className="h-4 w-4 mr-1" />
-              <span>{cls.assignments?.length || 0} tarefas disponiveis</span>
+              <span>{cls.assignments?.length || 0} tarefas disponíveis</span>
             </div>
           </CardContent>
           <CardFooter>
@@ -85,7 +85,7 @@ export default function ClassesTable() {
             >
               <Button variant="default" className="w-full flex items-center">
                 <BookOpen className="h-4 w-4 mr-2" />
-                Assignments
+                Atividades
               </Button>
             </Link>
           </CardFooter>

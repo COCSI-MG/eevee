@@ -25,10 +25,10 @@ import { useFormik } from "formik";
 import QueryErrorState from "@/components/admin/query-error-state";
 
 const usersUpsertSchema = Yup.object().shape({
-  name: Yup.string().required("Name is required"),
-  email: Yup.string().email("Invalid email").required("Email is required"),
+  name: Yup.string().required("Nome é obrigatório"),
+  email: Yup.string().email("E-mail inválido").required("E-mail é obrigatório"),
   password: Yup.string()
-    .min(8, "Password must be at least 8 characters"),
+    .min(8, "A senha deve ter pelo menos 8 caracteres"),
   isAdmin: Yup.boolean().required(),
 });
 
@@ -51,10 +51,8 @@ export default function UserEditPage() {
     },
     onSuccess: () => {
       toast({
-        title: isNewUser ? "User created" : "User updated",
-        description: `Successfully ${isNewUser ? "created" : "updated"} user ${
-          formik.values.name
-        }`,
+        title: isNewUser ? "Usuário criado" : "Usuário atualizado",
+        description: `Usuário ${formik.values.name} ${isNewUser ? "criado" : "atualizado"} com sucesso`,
         duration: 5000,
       });
       router.push("/admin/users");
@@ -72,7 +70,7 @@ export default function UserEditPage() {
     enableReinitialize: true,
     onSubmit: (values) => {
       if (!values.password && isNewUser) {
-        formik.setFieldError("password", "Password is required");
+        formik.setFieldError("password", "Senha é obrigatória");
         return;
       }
 
@@ -113,10 +111,10 @@ export default function UserEditPage() {
     <div className="flex items-center">
       <Button variant="ghost" onClick={() => router.back()} className="mr-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back
+        Voltar
       </Button>
       <h1 className="text-3xl font-bold tracking-tight">
-        {isNewUser ? "Create User" : "Edit User"}
+        {isNewUser ? "Criar Usuário" : "Editar Usuário"}
       </h1>
     </div>
   );
@@ -142,7 +140,7 @@ export default function UserEditPage() {
     return (
       <div className="space-y-6">
         {header}
-        <div>Loading...</div>
+        <div>Carregando...</div>
       </div>
     );
   }
@@ -155,45 +153,45 @@ export default function UserEditPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {isNewUser ? "New User Information" : "User Information"}
+              {isNewUser ? "Informações do Novo Usuário" : "Informações do Usuário"}
             </CardTitle>
             <CardDescription>
               {isNewUser
-                ? "Add a new user to the system"
-                : "Update the user's information"}
+                ? "Adicione um novo usuário ao sistema"
+                : "Atualize as informações do usuário"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Nome</Label>
               <Input
                 id="name"
                 {...formik.getFieldProps("name")}
-                placeholder="Enter user name"
+                placeholder="Insira o nome do usuário"
               />
               {formik.errors.name && formik.touched.name && (
                 <p className="text-red-500 text-sm">{formik.errors.name}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
                 id="email"
                 type="email"
                 {...formik.getFieldProps("email")}
-                placeholder="Enter email address"
+                placeholder="Insira o endereço de e-mail"
               />
               {formik.errors.email && formik.touched.email && (
                 <p className="text-red-500 text-sm">{formik.errors.email}</p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 type="password"
                 {...formik.getFieldProps("password")}
-                placeholder="Enter password"
+                placeholder="Insira a senha"
                 minLength={8}
               />
               {formik.errors.password && formik.touched.password && (
@@ -208,7 +206,7 @@ export default function UserEditPage() {
                   formik.setFieldValue("isAdmin", checked)
                 }
               />
-              <Label htmlFor="isAdmin">Administrator</Label>
+              <Label htmlFor="isAdmin">Administrador</Label>
             </div>
             {formik.errors.isAdmin && formik.touched.isAdmin && (
               <p className="text-red-500 text-sm">{formik.errors.isAdmin}</p>
@@ -220,11 +218,11 @@ export default function UserEditPage() {
               type="button"
               onClick={() => router.back()}
             >
-              Cancel
+              Cancelar
             </Button>
             <Button type="submit">
               <Save className="h-4 w-4 mr-2" />
-              {isNewUser ? "Create User" : "Save Changes"}
+              {isNewUser ? "Criar Usuário" : "Salvar Alterações"}
             </Button>
           </CardFooter>
         </Card>

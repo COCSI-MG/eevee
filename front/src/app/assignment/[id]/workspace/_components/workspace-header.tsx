@@ -172,7 +172,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             ) : (
               <Play className="w-4 h-4 mr-1" />
             )}
-            {isRunningSync ? "Running..." : "Run"}
+            {isRunningSync ? "Executando..." : "Executar"}
           </Button>
 
           <Button
