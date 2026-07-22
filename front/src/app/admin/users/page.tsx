@@ -27,17 +27,17 @@ export default function UsersPage() {
 
   const usersEmptyMessage = useMemo(() => {
     if (!meta || meta.total === 0) {
-      return debouncedSearch.trim() ? "No users match your search." : "No users found.";
+      return debouncedSearch.trim() ? "Nenhum usuário corresponde a sua busca." : "Nenhum usuário encontrado.";
     }
-    return "No users found.";
+    return "Nenhum usuário encontrado.";
   }, [meta, debouncedSearch]);
 
   const handleDelete = async (id: number) => {
     try {
       await UsersService.deleteUser(id);
       toast({
-        title: "User deleted",
-        description: "The user has been successfully deleted.",
+        title: "Usuário excluído",
+        description: "O usuário foi excluído com sucesso.",
         duration: 4000,
       });
       refetch();
@@ -47,20 +47,20 @@ export default function UsersPage() {
       if (err instanceof AxiosError && err.response) {
         const apiMessage = err.response.data?.message;
         if (apiMessage) {
-          toast({
-            title: "Error",
-            description: apiMessage,
-            variant: "destructive",
-            duration: 4000,
-          });
+      toast({
+        title: "Erro",
+        description: apiMessage,
+        variant: "destructive",
+        duration: 4000,
+      });
           return;
         }
       }
 
       toast({
-        title: "Error",
+        title: "Erro",
         description:
-          err instanceof Error ? err.message : "Failed to delete user.",
+          err instanceof Error ? err.message : "Falha ao excluir usuário.",
         variant: "destructive",
         duration: 4000,
       });
@@ -71,11 +71,11 @@ export default function UsersPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
           <Link href="/admin/users/new">
             <Button variant={"outline"}>
               <Plus className="h-4 w-4 mr-2" />
-              Add User
+              Adicionar Usuário
             </Button>
           </Link>
         </div>
@@ -100,11 +100,11 @@ export default function UsersPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Users</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
         <Link href="/admin/users/new">
           <Button variant={"outline"}>
             <Plus className="h-4 w-4 mr-2" />
-            Add User
+            Adicionar Usuário
           </Button>
         </Link>
       </div>
@@ -112,8 +112,8 @@ export default function UsersPage() {
       <AdminListSearch
         value={search}
         onChange={setSearch}
-        placeholder="Filter by name or email"
-        ariaLabel="Filter users by name or email"
+        placeholder="Filtrar por nome ou email"
+        ariaLabel="Filtrar usuários por nome ou e-mail"
         className="max-w-md"
       />
       <div className="border rounded-md">

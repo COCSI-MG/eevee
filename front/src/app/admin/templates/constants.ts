@@ -41,14 +41,14 @@ export const TEMPLATE_FORM_TOAST_MESSAGES = {
   fetchErrorDescription: TEMPLATE_TOAST_FETCH_ERROR_DESCRIPTION,
 } as const;
 
-export const TEMPLATE_FORM_LOADING_TEXT = "Loading...";
+export const TEMPLATE_FORM_LOADING_TEXT = "Carregando...";
 export const TEMPLATE_FORM_INFO_CARD_TITLE = "Informações do Template";
 export const TEMPLATE_FORM_TITLE_LABEL = "Título *";
 export const TEMPLATE_FORM_TITLE_PLACEHOLDER = "Ex: Algoritmo de Ordenação";
 export const TEMPLATE_FORM_DESCRIPTION_LABEL = "Descrição *";
 export const TEMPLATE_FORM_DESCRIPTION_PLACEHOLDER =
   "Descreva o propósito e funcionamento deste template...";
-export const TEMPLATE_FORM_WORKER_TYPE_LABEL = "Worker Type *";
+export const TEMPLATE_FORM_WORKER_TYPE_LABEL = "Tipo de Worker *";
 export const TEMPLATE_FORM_WORKER_TYPE_PLACEHOLDER = "Selecione o worker";
 export const TEMPLATE_FORM_PARAMS_LABEL = "Parâmetros";
 export const TEMPLATE_FORM_PARAMS_HELPER =
@@ -89,7 +89,7 @@ export const TEMPLATE_FORM_TEXT = {
   codeCardTitle: TEMPLATE_FORM_CODE_CARD_TITLE,
 } as const;
 
-export const TEMPLATE_PAGE_BACK_BUTTON = "Back";
+export const TEMPLATE_PAGE_BACK_BUTTON = "Voltar";
 export const TEMPLATE_PAGE_TITLE = "Template";
 
 export const TEMPLATE_PAGE_TEXT = {
@@ -98,19 +98,19 @@ export const TEMPLATE_PAGE_TEXT = {
 } as const;
 
 export const TEMPLATE_LIST_TITLE = "Templates";
-export const TEMPLATE_LIST_ADD_BUTTON = "Add Template";
+export const TEMPLATE_LIST_ADD_BUTTON = "Adicionar Template";
 
 export const TEMPLATE_LIST_TEXT = {
   title: TEMPLATE_LIST_TITLE,
   addButton: TEMPLATE_LIST_ADD_BUTTON,
 } as const;
 
-export const TEMPLATE_TOAST_DELETE_SUCCESS_TITLE = "Template deleted";
+export const TEMPLATE_TOAST_DELETE_SUCCESS_TITLE = "Template excluído";
 export const TEMPLATE_TOAST_DELETE_SUCCESS_DESCRIPTION =
-  "The template has been successfully deleted.";
-export const TEMPLATE_TOAST_ERROR_TITLE = "Error";
+  "O template foi excluído com sucesso.";
+export const TEMPLATE_TOAST_ERROR_TITLE = "Erro";
 export const TEMPLATE_TOAST_DELETE_ERROR_FALLBACK_DESCRIPTION =
-  "Failed to delete template.";
+  "Falha ao excluir template.";
 
 export const TEMPLATE_LIST_TOAST_MESSAGES = {
   deleteSuccessTitle: TEMPLATE_TOAST_DELETE_SUCCESS_TITLE,
@@ -120,12 +120,12 @@ export const TEMPLATE_LIST_TOAST_MESSAGES = {
     TEMPLATE_TOAST_DELETE_ERROR_FALLBACK_DESCRIPTION,
 } as const;
 
-export const TEMPLATE_TABLE_TITLE_HEADER = "Title";
-export const TEMPLATE_TABLE_DESCRIPTION_HEADER = "Description";
-export const TEMPLATE_TABLE_WORKER_TYPE_HEADER = "Worker Type";
+export const TEMPLATE_TABLE_TITLE_HEADER = "Título";
+export const TEMPLATE_TABLE_DESCRIPTION_HEADER = "Descrição";
+export const TEMPLATE_TABLE_WORKER_TYPE_HEADER = "Tipo de Worker";
 export const TEMPLATE_TABLE_CONTENT_HEADER = "Conteúdo";
-export const TEMPLATE_TABLE_ACTIONS_HEADER = "Actions";
-export const TEMPLATE_TABLE_EMPTY_TEXT = "No templates found.";
+export const TEMPLATE_TABLE_ACTIONS_HEADER = "Ações";
+export const TEMPLATE_TABLE_EMPTY_TEXT = "Nenhum template encontrado.";
 export const TEMPLATE_TABLE_VIEW_BUTTON = "Visualizar";
 
 export const TEMPLATE_TABLE_TEXT = {

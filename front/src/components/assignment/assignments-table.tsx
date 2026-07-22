@@ -28,7 +28,7 @@ const ASSIGNMENT_DESCRIPTION_MAX_LENGTH = 100;
 
 export default function AssignmentsTable({
   assignments,
-  emptyMessage = "No Assignments found.",
+  emptyMessage = "Nenhuma atividade encontrada.",
 }: AssignmentsTableProps) {
   const queryClient = useQueryClient();
   const list = assignments ?? [];
@@ -38,18 +38,18 @@ export default function AssignmentsTable({
       <TableHeader>
         <TableRow>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Title</div>
+            <div className="flex items-center">Título</div>
           </TableHead>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Class</div>
+            <div className="flex items-center">Turma</div>
           </TableHead>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Description</div>
+            <div className="flex items-center">Descrição</div>
           </TableHead>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Worker Type</div>
+            <div className="flex items-center">Tipo de Worker</div>
           </TableHead>
-          <TableHead className="w-[100px]">Actions</TableHead>
+          <TableHead className="w-[100px]">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

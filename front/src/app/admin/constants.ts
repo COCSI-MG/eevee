@@ -11,22 +11,22 @@ import { Route } from '@/app/routes';
 export const ADMIN_ROUTES = [
   {
     href: '/admin',
-    label: 'Dashboard',
+    label: 'Painel',
     icon: LayoutDashboard,
   },
   {
     href: '/admin/users',
-    label: 'Users',
+    label: 'Usuários',
     icon: Users,
   },
   {
     href: '/admin/classes',
-    label: 'Classes',
+    label: 'Turmas',
     icon: GraduationCap,
   },
   {
     href: Route.AdminAssignments,
-    label: 'Assignments',
+    label: 'Atividades',
     icon: FileText,
   },
   {

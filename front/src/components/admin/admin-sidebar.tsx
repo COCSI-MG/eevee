@@ -52,7 +52,7 @@ export function AdminSidebar() {
           onClick={logout}
         >
           <LogOut className="mr-3 h-4 w-4" />
-          Logout
+          Sair
         </Button>
       </div>
     </div>

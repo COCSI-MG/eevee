@@ -113,10 +113,10 @@ export default function WorkspaceExplorer({
 
         <div className="text-xs text-gray-500 mb-2 space-y-1">
           <div>
-            Files: {treeInfo.fileCount}/{maxFiles}
+            Arquivos: {treeInfo.fileCount}/{maxFiles}
           </div>
           <div>
-            Current depth: {treeInfo.maxDepthReached}/{maxDepth}
+            Profundidade atual: {treeInfo.maxDepthReached}/{maxDepth}
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export default function WorkspaceExplorer({
             size="sm"
             className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
             onClick={() => openCreateItemDialog("file")}
-            title={`Create file in ${createTargetLabel}`}
+            title={`Criar arquivo em ${createTargetLabel}`}
           >
             <FilePlusIcon className="w-4 h-4" />
           </Button>
@@ -136,7 +136,7 @@ export default function WorkspaceExplorer({
             size="sm"
             className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
             onClick={() => openCreateItemDialog("folder")}
-            title={`Create folder in ${createTargetLabel}`}
+            title={`Criar pasta em ${createTargetLabel}`}
           >
             <FolderPlusIcon className="w-4 h-4" />
           </Button>
@@ -148,8 +148,8 @@ export default function WorkspaceExplorer({
             onClick={() => handleDeleteRequest()}
             title={
               hasSelection
-                ? `Delete ${selectedItem.id || "selected item"}`
-                : "Select an item to delete"
+                ? `Excluir ${selectedItem.id || "item selecionado"}`
+                : "Selecione um item para excluir"
             }
             disabled={!hasSelection}
           >
@@ -168,13 +168,13 @@ export default function WorkspaceExplorer({
           <DialogContent className="bg-gray-800 border-gray-700">
             <DialogHeader>
               <DialogTitle className="text-white">
-                Create New {newItemType === "file" ? "File" : "Folder"}
+                Criar Novo {newItemType === "file" ? "Arquivo" : "Pasta"}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="name" className="text-gray-300">
-                  {newItemType === "file" ? "File" : "Folder"} Name
+                  Nome do {newItemType === "file" ? "Arquivo" : "Pasta"}
                 </Label>
                 <Input
                   id="name"
@@ -197,13 +197,13 @@ export default function WorkspaceExplorer({
                   onClick={resetCreateDialog}
                   className="border-gray-600 text-gray-300 hover:text-white"
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   onClick={handleCreateItem}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  Create
+                  Criar
                 </Button>
               </div>
             </div>
@@ -220,18 +220,18 @@ export default function WorkspaceExplorer({
         >
           <DialogContent className="bg-gray-800 border-gray-700">
             <DialogHeader>
-              <DialogTitle className="text-white">Confirm Delete</DialogTitle>
+              <DialogTitle className="text-white">Confirmar Exclusão</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p className="text-gray-300">
-                Are you sure you want to delete{" "}
+                Tem certeza que deseja excluir{" "}
                 <span className="font-semibold text-white">
                   &quot;{selectedItem.id || deleteTargetLabel}&quot;
                 </span>
                 ?
                 {selectedItem.type === "folder" && (
                   <span className="block text-sm text-red-400 mt-1">
-                    This will also delete all files and folders inside it.
+                    Isso também excluirá todos os arquivos e pastas dentro dela.
                   </span>
                 )}
               </p>
@@ -241,13 +241,13 @@ export default function WorkspaceExplorer({
                   onClick={closeDeleteDialog}
                   className="border-gray-600 text-gray-300 hover:text-white"
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   onClick={handleDeleteConfirm}
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >
-                  Delete
+                  Excluir
                 </Button>
               </div>
             </div>
@@ -264,12 +264,12 @@ export default function WorkspaceExplorer({
         >
           <DialogContent className="bg-gray-800 border-gray-700">
             <DialogHeader>
-              <DialogTitle className="text-white">Rename Item</DialogTitle>
+              <DialogTitle className="text-white">Renomear Item</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="rename-name" className="text-gray-300">
-                  New name
+                  Novo nome
                 </Label>
                 <Input
                   id="rename-name"
@@ -289,13 +289,13 @@ export default function WorkspaceExplorer({
                   onClick={closeRenameDialog}
                   className="border-gray-600 text-gray-300 hover:text-white"
                 >
-                  Cancel
+                  Cancelar
                 </Button>
                 <Button
                   onClick={handleRename}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  Rename
+                  Renomear
                 </Button>
               </div>
             </div>

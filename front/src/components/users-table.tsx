@@ -21,7 +21,7 @@ interface UsersTableProps {
 export default function UsersTable({
   users,
   handleDelete,
-  emptyMessage = "No users found.",
+  emptyMessage = "Nenhum usuário encontrado.",
 }: UsersTableProps) {
   const rows = users ?? [];
 
@@ -30,15 +30,15 @@ export default function UsersTable({
       <TableHeader>
         <TableRow>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Name</div>
+            <div className="flex items-center">Nome</div>
           </TableHead>
           <TableHead className="cursor-pointer">
             <div className="flex items-center">Email</div>
           </TableHead>
           <TableHead className="cursor-pointer">
-            <div className="flex items-center">Role</div>
+            <div className="flex items-center">Função</div>
           </TableHead>
-          <TableHead className="w-[100px]">Actions</TableHead>
+          <TableHead className="w-[100px]">Ações</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -56,7 +56,7 @@ export default function UsersTable({
               <TableCell>{user.email}</TableCell>
               <TableCell>
                 <Badge variant={user.isAdmin ? "default" : "outline"}>
-                  {user.isAdmin ? "Admin" : "User"}
+                  {user.isAdmin ? "Administrador" : "Usuário"}
                 </Badge>
               </TableCell>
               <TableCell>

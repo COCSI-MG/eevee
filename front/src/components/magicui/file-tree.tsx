@@ -384,7 +384,7 @@ const CollapseButton = forwardRef<
       {...props}
     >
       {children}
-      <span className="sr-only">Toggle</span>
+      <span className="sr-only">Alternar</span>
     </Button>
   );
 });

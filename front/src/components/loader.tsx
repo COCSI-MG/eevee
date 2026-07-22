@@ -8,7 +8,7 @@ interface LoaderProps {
   fullScreen?: boolean;
 }
 
-export default function Loader({ text = "Loading...", fullScreen = true }: LoaderProps) {
+export default function Loader({ text = "Carregando...", fullScreen = true }: LoaderProps) {
   const [progress, setProgress] = useState(13);
 
   useEffect(() => {

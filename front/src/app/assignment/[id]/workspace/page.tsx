@@ -55,7 +55,7 @@ export default function Page() {
       });
 
       if (!freshAssignment) {
-        throw new Error("Assignment data is empty after refetch");
+        throw new Error("Dados da atividade estão vazios após recarregamento");
       }
 
       await resetWorkspaceAction(freshAssignment);

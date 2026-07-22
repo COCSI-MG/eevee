@@ -36,20 +36,20 @@ interface AdminClassesTableProps {
 export default function AdminClassesTable({
   classes,
   handleDelete,
-  emptyMessage = "No classes found.",
+  emptyMessage = "Nenhuma turma encontrada.",
 }: AdminClassesTableProps) {
   return (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>
-            <div className="flex items-center">Class Name</div>
+            <div className="flex items-center">Nome da Turma</div>
           </TableHead>
           <TableHead>
-            <div className="flex items-center">Description</div>
+            <div className="flex items-center">Descrição</div>
           </TableHead>
           <TableHead>
-            <div className="flex items-center">Actions</div>
+            <div className="flex items-center">Ações</div>
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -66,7 +66,7 @@ export default function AdminClassesTable({
             <TableRow key={cls.id}>
               <TableCell className="font-medium">{cls.name}</TableCell>
               <TableCell className={cn(!cls.description && "text-muted")}>
-                {cls.description ?? "Empty"}
+                {cls.description ?? "Vazio"}
               </TableCell>
               <TableCell>
                 <TableActions

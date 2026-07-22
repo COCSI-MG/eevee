@@ -21,7 +21,7 @@ export default function CreateAssignmentPage() {
             </Link>
           </Button>
           <div className="h-4 w-px bg-slate-600 mr-2" />
-          <h1 className="text-xl font-semibold">Criar Assigment</h1>
+          <h1 className="text-xl font-semibold">Criar Atividade</h1>
         </div>
       </div>
 

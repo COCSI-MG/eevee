@@ -79,7 +79,7 @@ export default function TableActions({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="h-8 w-8">
             <MoreHorizontal className="h-4 w-4" />
-            <span className="sr-only">Actions</span>
+            <span className="sr-only">Ações</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
@@ -94,7 +94,7 @@ export default function TableActions({
             <DropdownMenuItem asChild>
               <Link href={href} className="flex items-center">
                 <Pencil className="h-4 w-4 mr-2" />
-                Edit
+                Editar
               </Link>
             </DropdownMenuItem>
           )}
@@ -113,7 +113,7 @@ export default function TableActions({
               onClick={handleDeleteClick}
             >
               <Trash className="h-4 w-4 mr-2" />
-              Delete
+              Excluir
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
