@@ -17,7 +17,7 @@ export default function QueryErrorState({
   title,
   description,
   onRetry,
-  retryLabel = "Try again",
+  retryLabel = "Tentar novamente",
   isRetrying = false,
   className,
 }: QueryErrorStateProps) {

@@ -43,8 +43,8 @@ export default function Login() {
     },
     onError: () => {
       toast({
-        title: 'Login error',
-        description: 'Invalid email or password. Please try again.',
+        title: 'Erro no login',
+        description: 'E-mail ou senha inválidos. Por favor, tente novamente.',
         variant: 'destructive',
       });
     },
@@ -62,17 +62,17 @@ export default function Login() {
     let valid = true;
     const newErrors = { email: '', password: '' };
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'E-mail é obrigatório';
       valid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Por favor, insira um endereço de e-mail válido';
       valid = false;
     }
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Senha é obrigatória';
       valid = false;
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = 'A senha deve ter pelo menos 6 caracteres';
       valid = false;
     }
     setErrors(newErrors);
@@ -100,26 +100,26 @@ export default function Login() {
             EEVEE CEFET Code Lab
           </h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Sign in to your account to access your account
+            Faça login na sua conta para acessar seu painel
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>Entrar</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              Insira suas credenciais para acessar sua conta
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">E-mail</Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="your.email@example.com"
+                  placeholder="seu.email@exemplo.com"
                   value={formData.email}
                   onChange={handleChange}
                   className={errors.email ? 'border-destructive' : ''}
@@ -132,12 +132,12 @@ export default function Login() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">Senha</Label>
                   <Link
                     href="/forgot-password"
                     className="text-xs text-primary hover:text-primary/90 underline underline-offset-4"
                   >
-                    Forgot password?
+                    Esqueceu a senha?
                   </Link>
                 </div>
                 <div className="relative">
@@ -172,10 +172,10 @@ export default function Login() {
             </CardContent>
             <CardFooter className="flex flex-col gap-3">
               <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? 'Signing in...' : 'Sign in'}
+                {isPending ? 'Entrando...' : 'Entrar'}
               </Button>
               <p className="text-sm text-center text-muted-foreground">
-                Nao tem uma conta?{' '}
+                Não tem uma conta?{' '}
                 <Link
                   href="/register"
                   className="text-primary hover:text-primary/90 underline underline-offset-4"

@@ -234,7 +234,7 @@ export default function Workspace({
 
         <div
           role="separator"
-          aria-label="Resize explorer"
+          aria-label="Redimensionar explorador"
           aria-orientation="vertical"
           className="absolute right-0 top-0 h-full w-1 cursor-ew-resize bg-transparent transition-colors hover:bg-blue-500/40"
           onMouseDown={(event) => startResize("explorer", event)}
@@ -248,21 +248,21 @@ export default function Workspace({
         />
         <div className="flex items-center justify-end gap-2 border-b border-gray-800 px-2 py-1">
           {isSplitView && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSecondarySelectedItem(null)}
-              disabled={!secondarySelectedItem}
-            >
-              Close page 2
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSecondarySelectedItem(null)}
+                disabled={!secondarySelectedItem}
+              >
+                Fechar página 2
+              </Button>
           )}
           <Button
             variant="outline"
             size="sm"
             onClick={() => setIsSplitView((current) => !current)}
           >
-            {isSplitView ? "Single page" : "Two pages"}
+            {isSplitView ? "Página única" : "Duas páginas"}
           </Button>
         </div>
 

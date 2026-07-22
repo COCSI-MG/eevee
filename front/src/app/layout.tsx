@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "EEVEE",
-  description: "Your code testing plataform",
+  description: "Sua plataforma de testes de codigo",
 };
 
 export default function RootLayout({

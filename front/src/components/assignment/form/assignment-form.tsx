@@ -31,16 +31,16 @@ import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
 import QueryErrorState from "@/components/admin/query-error-state";
 
 const validationSchema = Yup.object({
-  title: Yup.string().required("Title is required"),
-  description: Yup.string().required("Description is required"),
+  title: Yup.string().required("Título é obrigatório"),
+  description: Yup.string().required("Descrição é obrigatória"),
   maxAttempts: Yup.number()
-    .required("Max attempts is required")
-    .min(1, "Must be at least 1"),
+    .required("Máximo de tentativas é obrigatório")
+    .min(1, "Deve ser pelo menos 1"),
   workerType: Yup.string()
     .oneOf(Object.values(WorkerType))
-    .required("Worker type is required"),
-  boilerplate: Yup.string().required("Boilerplate is required"),
-  classId: Yup.string().required("Class is required"),
+    .required("Tipo de worker é obrigatório"),
+  boilerplate: Yup.string().required("Boilerplate é obrigatório"),
+  classId: Yup.string().required("Turma é obrigatória"),
 });
 
 const STEP_CONFIG: StepDefinition = {
@@ -60,7 +60,7 @@ const STEP_BOILERPLATE: StepDefinition = {
 };
 const STEP_INIT_SQL: StepDefinition = {
   id: "initSql",
-  title: "Init SQL Script",
+  title: "Script SQL Inicial",
   icon: Database,
 };
 const STEP_REVIEW: StepDefinition = {
@@ -169,11 +169,11 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   }
 
   if (existingAssignmentId && isFetchingAssignment) {
-    return <div>Loading...</div>;
+    return <div>Carregando...</div>;
   }
 
   if (isFetchingClasses && !classes) {
-    return <div>Loading...</div>;
+    return <div>Carregando...</div>;
   }
 
   return (
@@ -221,7 +221,12 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
           }, [totalSteps]);
 
           const stepValidations: Record<string, boolean> = {
-            config: isValid,
+            config:
+              Boolean(values.title?.trim()) &&
+              Boolean(values.description?.trim()) &&
+              Boolean(values.workerType) &&
+              Number(values.maxAttempts) >= 1 &&
+              Number(values.classId) > 0,
             templates: true,
             boilerplate: values.boilerplate?.trim() !== "",
             initSql: true,
@@ -307,8 +312,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                         >
                           <Save className="w-4 h-4 mr-2" />
                           {existingAssignmentId
-                            ? "Update Assignment"
-                            : "Create Assignment"}
+                            ? "Atualizar Atividade"
+                            : "Criar Atividade"}
                         </Button>
                       )}
                     </div>
