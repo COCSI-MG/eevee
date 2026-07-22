@@ -1,9 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddExamAndExamActivity1774600000000
+export class AddExamAndExamAssignment1774600000000
   implements MigrationInterface
 {
-  name = 'AddExamAndExamActivity1774600000000';
+  name = 'AddExamAndExamAssignment1774600000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
@@ -20,44 +20,44 @@ export class AddExamAndExamActivity1774600000000
     `);
 
     await queryRunner.query(`
-      CREATE TABLE "exam_activity" (
+      CREATE TABLE "exam_assignment" (
         "id" SERIAL NOT NULL,
         "examId" integer NOT NULL,
-        "activityId" integer NOT NULL,
-        CONSTRAINT "PK_exam_activity_id" PRIMARY KEY ("id")
+        "assignmentId" integer NOT NULL,
+        CONSTRAINT "PK_exam_assignment_id" PRIMARY KEY ("id")
       )
     `);
 
     await queryRunner.query(
-      `CREATE UNIQUE INDEX "UQ_exam_activity_activityId" ON "exam_activity" ("activityId")`,
+      `CREATE UNIQUE INDEX "UQ_exam_assignment_assignmentId" ON "exam_assignment" ("assignmentId")`,
     );
 
     await queryRunner.query(
       `ALTER TABLE "exam" ADD CONSTRAINT "FK_exam_class" FOREIGN KEY ("classId") REFERENCES "class"("id") ON DELETE SET NULL ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "exam_activity" ADD CONSTRAINT "FK_exam_activity_exam" FOREIGN KEY ("examId") REFERENCES "exam"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "exam_assignment" ADD CONSTRAINT "FK_exam_assignment_exam" FOREIGN KEY ("examId") REFERENCES "exam"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
-      `ALTER TABLE "exam_activity" ADD CONSTRAINT "FK_exam_activity_activity" FOREIGN KEY ("activityId") REFERENCES "assignment"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+      `ALTER TABLE "exam_assignment" ADD CONSTRAINT "FK_exam_assignment_assignment" FOREIGN KEY ("assignmentId") REFERENCES "assignment"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "exam_activity" DROP CONSTRAINT "FK_exam_activity_activity"`,
+      `ALTER TABLE "exam_assignment" DROP CONSTRAINT "FK_exam_assignment_assignment"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "exam_activity" DROP CONSTRAINT "FK_exam_activity_exam"`,
+      `ALTER TABLE "exam_assignment" DROP CONSTRAINT "FK_exam_assignment_exam"`,
     );
     await queryRunner.query(
       `ALTER TABLE "exam" DROP CONSTRAINT "FK_exam_class"`,
     );
 
     await queryRunner.query(
-      `DROP INDEX "public"."UQ_exam_activity_activityId"`,
+      `DROP INDEX "public"."UQ_exam_assignment_assignmentId"`,
     );
-    await queryRunner.query(`DROP TABLE "exam_activity"`);
+    await queryRunner.query(`DROP TABLE "exam_assignment"`);
     await queryRunner.query(`DROP TABLE "exam"`);
   }
 }

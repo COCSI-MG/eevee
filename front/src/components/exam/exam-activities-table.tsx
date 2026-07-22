@@ -16,22 +16,22 @@ import {
 import { Route as AppRoutes } from "@/app/routes";
 import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
 
-interface ExamActivitiesTableProps {
-  activities: Array<AssignmentSummary>;
+interface ExamAssignmentsTableProps {
+  assignments: Array<AssignmentSummary>;
   emptyMessage?: string;
-  onDelete: (activity: AssignmentSummary) => void;
-  onUnlink: (activity: AssignmentSummary) => void;
+  onDelete: (assignment: AssignmentSummary) => void;
+  onUnlink: (assignment: AssignmentSummary) => void;
 }
 
 const DESCRIPTION_MAX_LENGTH = 100;
 
-export default function ExamActivitiesTable({
-  activities,
+export default function ExamAssignmentsTable({
+  assignments,
   emptyMessage = "Nenhuma atividade.",
   onDelete,
   onUnlink,
-}: ExamActivitiesTableProps) {
-  const list = activities ?? [];
+}: ExamAssignmentsTableProps) {
+  const list = assignments ?? [];
 
   return (
     <Table>
@@ -63,12 +63,12 @@ export default function ExamActivitiesTable({
             </TableCell>
           </TableRow>
         )}
-        {list.map((activity) => {
-          const description = activity.description ?? "";
+        {list.map((assignment) => {
+          const description = assignment.description ?? "";
 
           return (
-            <TableRow key={activity.id}>
-              <TableCell>{activity.title}</TableCell>
+            <TableRow key={assignment.id}>
+              <TableCell>{assignment.title}</TableCell>
               <TableCell
                 title={
                   description.length > DESCRIPTION_MAX_LENGTH
@@ -81,27 +81,27 @@ export default function ExamActivitiesTable({
                   ? `${description.slice(0, DESCRIPTION_MAX_LENGTH)}...`
                   : description}
               </TableCell>
-              <TableCell>{activity.maxAttempts}</TableCell>
-              <TableCell>{activity.workerType}</TableCell>
+              <TableCell>{assignment.maxAttempts}</TableCell>
+              <TableCell>{assignment.workerType}</TableCell>
               <TableCell>
                 <TableActions
-                  href={`${AppRoutes.AdminAssignments}/${activity.id}`}
-                  onDelete={() => onDelete(activity)}
-                  onUnlink={() => onUnlink(activity)}
-                  unlinkTitle={`Tem certeza que deseja desvincular esta atividade '${activity.title}'?`}
+                  href={`${AppRoutes.AdminAssignments}/${assignment.id}`}
+                  onDelete={() => onDelete(assignment)}
+                  onUnlink={() => onUnlink(assignment)}
+                  unlinkTitle={`Tem certeza que deseja desvincular esta atividade '${assignment.title}'?`}
                   unlinkDescription="A atividade não será excluída, apenas removida desta prova."
                   otherActions={[
                     <WorkspaceLinkComponent
-                      key={activity.id}
-                      assignmentId={activity.id.toString()}
+                      key={assignment.id}
+                      assignmentId={assignment.id.toString()}
                     />,
                     <ViewUserSuspensionComponent
-                      key={`${activity.id}-suspensions`}
-                      assignmentId={activity.id.toString()}
+                      key={`${assignment.id}-suspensions`}
+                      assignmentId={assignment.id.toString()}
                     />,
                   ]}
                   resourceName="atividade"
-                  itemName={activity.title}
+                  itemName={assignment.title}
                 />
               </TableCell>
             </TableRow>

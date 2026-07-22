@@ -6,10 +6,10 @@ export class AssignmentSummaryResponseDto {
   @ApiProperty({ example: 42 })
   id: number;
 
-  @ApiProperty({ example: 'Activity 1' })
+  @ApiProperty({ example: 'Assignment 1' })
   title: string;
 
-  @ApiPropertyOptional({ example: 'Activity description' })
+  @ApiPropertyOptional({ example: 'Assignment description' })
   description?: string;
 
   @ApiProperty({ example: 5 })
@@ -22,10 +22,10 @@ export class AssignmentSummaryResponseDto {
   workerType: WorkerType;
 }
 
-export class ExamWithActivitiesResponseDto {
+export class ExamWithAssignmentsResponseDto {
   @ApiProperty({ type: () => ExamResponseDto })
   exam: ExamResponseDto;
 
   @ApiProperty({ type: () => [AssignmentSummaryResponseDto] })
-  activities: AssignmentSummaryResponseDto[];
+  assignments: AssignmentSummaryResponseDto[];
 }

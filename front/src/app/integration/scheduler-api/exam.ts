@@ -1,4 +1,4 @@
-import { CreateExamRequest, Exam, ExamActivity, ExamWithActivities, UpdateExamRequest } from "@/app/interface/scheduler-api/exam";
+import { CreateExamRequest, Exam, ExamAssignment, ExamWithAssignments, UpdateExamRequest } from "@/app/interface/scheduler-api/exam";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
 
@@ -39,24 +39,24 @@ export class ExamService {
     await axiosClientWithAuth.delete(`/exam/${id}`);
   }
 
-  static async getOne(id: number): Promise<ExamWithActivities> {
-    const response = await axiosClientWithAuth.get<ExamWithActivities>(
+  static async getOne(id: number): Promise<ExamWithAssignments> {
+    const response = await axiosClientWithAuth.get<ExamWithAssignments>(
       `/exam/${id}`,
     );
     return response.data;
   }
 
-  static async linkActivity(
+  static async linkAssignment(
     examId: number,
     assignmentId: number,
-  ): Promise<ExamActivity> {
-    const response = await axiosClientWithAuth.post<ExamActivity>(
+  ): Promise<ExamAssignment> {
+    const response = await axiosClientWithAuth.post<ExamAssignment>(
       `/exam/${examId}/assignments/${assignmentId}`,
     );
     return response.data;
   }
 
-  static async unlinkActivity(
+  static async unlinkAssignment(
     examId: number,
     assignmentId: number,
   ): Promise<void> {

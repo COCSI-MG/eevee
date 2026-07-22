@@ -2,14 +2,14 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { ExamResponseDto } from './exam-response.dto';
 
-export class CreateActivityAndLinkResponseDto {
+export class CreateAssignmentAndLinkResponseDto {
   @ApiProperty({ example: 1 })
   id: number;
 
-  @ApiProperty({ example: 'Activity 1' })
+  @ApiProperty({ example: 'Assignment 1' })
   title: string;
 
-  @ApiPropertyOptional({ example: 'Activity description' })
+  @ApiPropertyOptional({ example: 'Assignment description' })
   description?: string;
 
   @ApiProperty({ example: 5 })

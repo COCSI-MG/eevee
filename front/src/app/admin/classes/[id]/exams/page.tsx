@@ -98,13 +98,9 @@ function ExamsPageContent() {
   const handleDelete = async (id: number) => {
     const shouldGoToPrevPage = exams.length === 1 && page > 1;
 
-    try {
-      await deleteExam(id);
-      if (shouldGoToPrevPage) {
-        setPage(page - 1);
-      }
-    } catch {
-      // Error already shown via onError toast; dialog stays open.
+    await deleteExam(id);
+    if (shouldGoToPrevPage) {
+      setPage(page - 1);
     }
   };
 

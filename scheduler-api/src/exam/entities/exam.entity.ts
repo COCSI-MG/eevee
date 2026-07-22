@@ -1,5 +1,5 @@
 import { Class } from 'src/class/entities/class.entity';
-import { ExamActivity } from 'src/exam/entities/exam-activity.entity';
+import { ExamAssignment } from 'src/exam/entities/exam-assignment.entity';
 import {
   Column,
   CreateDateColumn,
@@ -35,8 +35,8 @@ export class Exam {
   @Column({ type: 'timestamp', nullable: true })
   dueDate?: Date;
 
-  @OneToMany(() => ExamActivity, (examActivity) => examActivity.exam)
-  examActivities: ExamActivity[];
+  @OneToMany(() => ExamAssignment, (examAssignment) => examAssignment.exam)
+  examAssignments: ExamAssignment[];
 
   @CreateDateColumn()
   createdAt: Date;

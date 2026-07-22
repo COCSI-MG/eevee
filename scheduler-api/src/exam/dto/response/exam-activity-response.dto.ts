@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { ExamResponseDto } from './exam-response.dto';
 
-export class ExamActivityResponseDto {
+export class ExamAssignmentResponseDto {
   @ApiProperty({ example: 99 })
   id: number;
 
@@ -10,11 +10,11 @@ export class ExamActivityResponseDto {
   examId: number;
 
   @ApiProperty({ example: 2 })
-  activityId: number;
+  assignmentId: number;
 
   @ApiProperty({ type: () => ExamResponseDto })
   exam: ExamResponseDto;
 
   @ApiProperty({ type: () => Assignment })
-  activity: Assignment;
+  assignment: Assignment;
 }

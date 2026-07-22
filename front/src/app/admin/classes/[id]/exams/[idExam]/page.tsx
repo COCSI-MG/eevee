@@ -14,7 +14,7 @@ import Loader from "@/components/loader";
 import QueryErrorState from "@/components/admin/query-error-state";
 import AdminListSearch from "@/components/admin/admin-list-search";
 import AdminPagination from "@/components/admin/admin-pagination";
-import ExamActivitiesTable from "@/components/exam/exam-activities-table";
+import ExamAssignmentsTable from "@/components/exam/exam-activities-table";
 import SelectFromListModal from "@/components/ui/select-from-list-modal";
 import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
 import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
@@ -59,7 +59,7 @@ export default function ExamDetailsPage() {
   const { page, search, debouncedSearch, setPage, setSearch } =
     usePaginatedSearch();
 
-  const { mutateAsync: deleteActivity } = useMutation({
+  const { mutateAsync: deleteAssignment } = useMutation({
     mutationFn: AssignmentService.DeleteAssignment,
     onSuccess: () => {
       toast({
@@ -83,26 +83,26 @@ export default function ExamDetailsPage() {
     },
   });
 
-  const filteredActivities = useMemo(() => {
-    const all = examData?.activities ?? [];
+  const filteredAssignments = useMemo(() => {
+    const all = examData?.assignments ?? [];
     const q = debouncedSearch.trim().toLowerCase();
     if (!q) return all;
     return all.filter((a) => a.title.toLowerCase().includes(q));
-  }, [examData?.activities, debouncedSearch]);
+  }, [examData?.assignments, debouncedSearch]);
 
-  const total = filteredActivities.length;
+  const total = filteredAssignments.length;
   const totalPages = Math.max(1, Math.ceil(total / ADMIN_LIST_PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pagedActivities = useMemo(
+  const pagedAssignments = useMemo(
     () =>
-      filteredActivities.slice(
+      filteredAssignments.slice(
         (safePage - 1) * ADMIN_LIST_PAGE_SIZE,
         safePage * ADMIN_LIST_PAGE_SIZE,
       ),
-    [filteredActivities, safePage],
+    [filteredAssignments, safePage],
   );
 
-  const activitiesEmptyMessage = useMemo(() => {
+  const assignmentsEmptyMessage = useMemo(() => {
     if (total === 0) {
       return debouncedSearch.trim()
         ? "Nenhuma atividade corresponde à busca."
@@ -111,18 +111,18 @@ export default function ExamDetailsPage() {
     return "Nenhuma atividade.";
   }, [total, debouncedSearch]);
 
-  const handleDeleteActivity = (activity: AssignmentSummary) => {
-    void deleteActivity(activity.id);
+  const handleDeleteAssignment = (assignment: AssignmentSummary) => {
+    void deleteAssignment(assignment.id);
   };
 
-  const { mutateAsync: unlinkActivityMutation } = useMutation({
+  const { mutateAsync: unlinkAssignmentMutation } = useMutation({
     mutationFn: ({
       examId,
       assignmentId,
     }: {
       examId: number;
       assignmentId: number;
-    }) => ExamService.unlinkActivity(examId, assignmentId),
+    }) => ExamService.unlinkAssignment(examId, assignmentId),
     onSuccess: () => {
       toast({
         title: "Atividade desvinculada",
@@ -143,10 +143,10 @@ export default function ExamDetailsPage() {
     },
   });
 
-  const handleUnlinkActivity = (activity: AssignmentSummary) => {
-    void unlinkActivityMutation({
+  const handleUnlinkAssignment = (assignment: AssignmentSummary) => {
+    void unlinkAssignmentMutation({
       examId,
-      assignmentId: activity.id,
+      assignmentId: assignment.id,
     });
   };
 
@@ -154,26 +154,26 @@ export default function ExamDetailsPage() {
   const [linkPendingId, setLinkPendingId] = useState<number | null>(null);
 
   const {
-    data: linkableActivities,
+    data: linkableAssignments,
     isFetching: isLinkableFetching,
     isError: isLinkableError,
     error: linkableError,
     refetch: refetchLinkable,
   } = useQuery<Assignment[]>({
-    queryKey: ["linkable-activities", classId],
+    queryKey: ["linkable-assignments", classId],
     queryFn: () => AssignmentService.getLinkableByClassId(classId),
     enabled: isLinkOpen && Number.isFinite(classId),
     refetchOnWindowFocus: false,
   });
 
-  const { mutateAsync: linkActivityMutation } = useMutation({
+  const { mutateAsync: linkAssignmentMutation } = useMutation({
     mutationFn: ({
       examId,
       assignmentId,
     }: {
       examId: number;
       assignmentId: number;
-    }) => ExamService.linkActivity(examId, assignmentId),
+    }) => ExamService.linkAssignment(examId, assignmentId),
     onSuccess: () => {
       toast({
         title: "Atividade vinculada",
@@ -182,7 +182,7 @@ export default function ExamDetailsPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["exam", examId] });
       queryClient.invalidateQueries({
-        queryKey: ["linkable-activities", classId],
+        queryKey: ["linkable-assignments", classId],
       });
       setIsLinkOpen(false);
       setLinkPendingId(null);
@@ -200,9 +200,9 @@ export default function ExamDetailsPage() {
     },
   });
 
-  const handleLinkActivity = (assignment: Assignment) => {
+  const handleLinkAssignment = (assignment: Assignment) => {
     setLinkPendingId(assignment.id);
-    void linkActivityMutation({
+    void linkAssignmentMutation({
       examId,
       assignmentId: assignment.id,
     });
@@ -345,11 +345,11 @@ export default function ExamDetailsPage() {
             className="max-w-md"
           />
           <div className="border rounded-md">
-            <ExamActivitiesTable
-              activities={pagedActivities}
-              emptyMessage={activitiesEmptyMessage}
-              onDelete={handleDeleteActivity}
-              onUnlink={handleUnlinkActivity}
+            <ExamAssignmentsTable
+              assignments={pagedAssignments}
+              emptyMessage={assignmentsEmptyMessage}
+              onDelete={handleDeleteAssignment}
+              onUnlink={handleUnlinkAssignment}
             />
           </div>
           {total > 0 && (
@@ -373,7 +373,7 @@ export default function ExamDetailsPage() {
         }}
         title="Vincular atividade"
         description="Selecione uma atividade da turma para vincular a esta prova. Atividades já vinculadas a outras provas não são listadas."
-        items={linkableActivities ?? []}
+        items={linkableAssignments ?? []}
         isLoading={isLinkableFetching}
         errorMessage={linkableErrorMessage}
         emptyMessage="Nenhuma atividade disponível para vincular."
@@ -391,7 +391,7 @@ export default function ExamDetailsPage() {
           </div>
         )}
         actionLabel="Vincular"
-        onSelect={handleLinkActivity}
+        onSelect={handleLinkAssignment}
         actionPendingId={linkPendingId}
       />
     </div>

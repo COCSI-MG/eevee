@@ -10,7 +10,7 @@ import { UserClassService } from 'src/user-class/user-class.service';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
-import { ExamActivity } from './entities/exam-activity.entity';
+import { ExamAssignment } from './entities/exam-assignment.entity';
 import { Exam } from './entities/exam.entity';
 import { ExamService } from './exam.service';
 
@@ -29,7 +29,7 @@ describe('ExamService', () => {
 
   const setup = async () => {
     const examRepository = createRepositoryMock();
-    const examActivityRepository = createRepositoryMock();
+    const examAssignmentRepository = createRepositoryMock();
     const assignmentRepository = createRepositoryMock();
     const classService = { findOne: jest.fn() };
     const userClassService = { findOneByKeys: jest.fn() };
@@ -45,8 +45,8 @@ describe('ExamService', () => {
           useValue: examRepository,
         },
         {
-          provide: getRepositoryToken(ExamActivity),
-          useValue: examActivityRepository,
+          provide: getRepositoryToken(ExamAssignment),
+          useValue: examAssignmentRepository,
         },
         {
           provide: getRepositoryToken(Assignment),
@@ -78,7 +78,7 @@ describe('ExamService', () => {
     return {
       service: module.get<ExamService>(ExamService),
       examRepository,
-      examActivityRepository,
+      examAssignmentRepository,
       assignmentRepository,
       classService,
       userClassService,
@@ -404,7 +404,7 @@ describe('ExamService', () => {
   });
 
   describe('remove', () => {
-    it('deletes the exam and its activity links in a single transaction', async () => {
+    it('deletes the exam and its assignment links in a single transaction', async () => {
       const { service, examRepository, dataSource } = await setup();
 
       examRepository.findOne.mockResolvedValue({ id: 1 });
@@ -422,7 +422,7 @@ describe('ExamService', () => {
       expect(manager.delete).toHaveBeenCalledTimes(2);
       expect(manager.delete).toHaveBeenNthCalledWith(
         1,
-        ExamActivity,
+        ExamAssignment,
         { examId: 1 },
       );
       expect(manager.delete).toHaveBeenNthCalledWith(2, Exam, { id: 1 });
@@ -442,8 +442,8 @@ describe('ExamService', () => {
     });
   });
 
-  describe('createActivityAndLink', () => {
-    it('creates the activity via AssignmentService and links it to the exam in a single transaction', async () => {
+  describe('createAssignmentAndLink', () => {
+    it('creates the assignment via AssignmentService and links it to the exam in a single transaction', async () => {
       const {
         service,
         examRepository,
@@ -482,18 +482,18 @@ describe('ExamService', () => {
         templates: [],
       };
 
-      const result = await service.createActivityAndLink(1, dto);
+      const result = await service.createAssignmentAndLink(1, dto);
 
       expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
       expect(assignmentService.create).toHaveBeenCalledWith(dto, manager);
-      expect(manager.save).toHaveBeenCalledWith(ExamActivity, {
+      expect(manager.save).toHaveBeenCalledWith(ExamAssignment, {
         examId: 1,
-        activityId: 42,
+        assignmentId: 42,
       });
       expect(result).toEqual({ ...newActivity, exam });
     });
 
-    it('throws ConflictException and aborts the transaction when the activity is already linked to another exam (unique violation 23505)', async () => {
+    it('throws ConflictException and aborts the transaction when the assignment is already linked to another exam (unique violation 23505)', async () => {
       const {
         service,
         examRepository,
@@ -512,7 +512,7 @@ describe('ExamService', () => {
       );
       driverError.code = '23505';
       const dbError: any = new QueryFailedError(
-        'INSERT INTO "exam_activity" ...',
+        'INSERT INTO "exam_assignment" ...',
         [],
         driverError,
       );
@@ -534,7 +534,7 @@ describe('ExamService', () => {
       };
 
       await expect(
-        service.createActivityAndLink(1, dto),
+        service.createAssignmentAndLink(1, dto),
       ).rejects.toBeInstanceOf(ConflictException);
 
       expect(assignmentService.create).toHaveBeenCalledTimes(1);
@@ -542,51 +542,51 @@ describe('ExamService', () => {
     });
   });
 
-  describe('linkActivity', () => {
+  describe('linkAssignment', () => {
     it('throws NotFoundException when the exam does not exist', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         assignmentRepository,
       } = await setup();
 
       examRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.linkActivity(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.linkAssignment(1, 2)).rejects.toBeInstanceOf(
         NotFoundException,
       );
       expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
       expect(assignmentRepository.findOne).not.toHaveBeenCalled();
-      expect(examActivityRepository.save).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.save).not.toHaveBeenCalled();
     });
 
-    it('throws NotFoundException when the activity does not exist', async () => {
+    it('throws NotFoundException when the assignment does not exist', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         assignmentRepository,
       } = await setup();
 
       examRepository.findOne.mockResolvedValue({ id: 1 });
       assignmentRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.linkActivity(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.linkAssignment(1, 2)).rejects.toBeInstanceOf(
         NotFoundException,
       );
       expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
       expect(assignmentRepository.findOne).toHaveBeenCalledWith({
         where: { id: 2 },
       });
-      expect(examActivityRepository.save).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.save).not.toHaveBeenCalled();
     });
 
-    it('throws ConflictException when the activity is already linked (unique violation 23505)', async () => {
+    it('throws ConflictException when the assignment is already linked (unique violation 23505)', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         assignmentRepository,
       } = await setup();
 
@@ -598,94 +598,94 @@ describe('ExamService', () => {
       );
       driverError.code = '23505';
       const dbError: any = new QueryFailedError(
-        'INSERT INTO "exam_activity" ...',
+        'INSERT INTO "exam_assignment" ...',
         [],
         driverError,
       );
       dbError.code = '23505';
-      examActivityRepository.save.mockRejectedValue(dbError);
+      examAssignmentRepository.save.mockRejectedValue(dbError);
 
-      await expect(service.linkActivity(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.linkAssignment(1, 2)).rejects.toBeInstanceOf(
         ConflictException,
       );
-      expect(examActivityRepository.save).toHaveBeenCalledWith({
+      expect(examAssignmentRepository.save).toHaveBeenCalledWith({
         examId: 1,
-        activityId: 2,
+        assignmentId: 2,
       });
-      expect(examActivityRepository.findOneOrFail).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.findOneOrFail).not.toHaveBeenCalled();
     });
 
     it('creates the link and returns it with relations when all checks pass', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         assignmentRepository,
       } = await setup();
 
       examRepository.findOne.mockResolvedValue({ id: 1 });
       assignmentRepository.findOne.mockResolvedValue({ id: 2 });
-      examActivityRepository.save.mockResolvedValue({
+      examAssignmentRepository.save.mockResolvedValue({
         id: 99,
         examId: 1,
-        activityId: 2,
+        assignmentId: 2,
       });
       const hydrated = {
         id: 99,
         examId: 1,
-        activityId: 2,
+        assignmentId: 2,
         exam: { id: 1, title: 'Midterm' },
-        activity: { id: 2, title: 'Activity 2' },
+        assignment: { id: 2, title: 'Activity 2' },
       };
-      examActivityRepository.findOneOrFail.mockResolvedValue(hydrated);
+      examAssignmentRepository.findOneOrFail.mockResolvedValue(hydrated);
 
-      const result = await service.linkActivity(1, 2);
+      const result = await service.linkAssignment(1, 2);
 
-      expect(examActivityRepository.save).toHaveBeenCalledWith({
+      expect(examAssignmentRepository.save).toHaveBeenCalledWith({
         examId: 1,
-        activityId: 2,
+        assignmentId: 2,
       });
-      expect(examActivityRepository.findOneOrFail).toHaveBeenCalledWith({
+      expect(examAssignmentRepository.findOneOrFail).toHaveBeenCalledWith({
         where: { id: 99 },
-        relations: ['exam', 'activity'],
+        relations: ['exam', 'assignment'],
       });
       expect(result).toEqual(hydrated);
     });
   });
 
-  describe('unlinkActivity', () => {
+  describe('unlinkAssignment', () => {
     it('throws NotFoundException when the exam does not exist', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         assignmentRepository,
       } = await setup();
 
       examRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.unlinkActivity(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.unlinkAssignment(1, 2)).rejects.toBeInstanceOf(
         NotFoundException,
       );
 
       expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
       expect(assignmentRepository.findOne).not.toHaveBeenCalled();
-      expect(examActivityRepository.findOne).not.toHaveBeenCalled();
-      expect(examActivityRepository.delete).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.delete).not.toHaveBeenCalled();
     });
 
-    it('throws NotFoundException when the activity does not exist', async () => {
+    it('throws NotFoundException when the assignment does not exist', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         assignmentRepository,
       } = await setup();
 
       examRepository.findOne.mockResolvedValue({ id: 1 });
       assignmentRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.unlinkActivity(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.unlinkAssignment(1, 2)).rejects.toBeInstanceOf(
         NotFoundException,
       );
 
@@ -693,65 +693,65 @@ describe('ExamService', () => {
       expect(assignmentRepository.findOne).toHaveBeenCalledWith({
         where: { id: 2 },
       });
-      expect(examActivityRepository.findOne).not.toHaveBeenCalled();
-      expect(examActivityRepository.delete).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.delete).not.toHaveBeenCalled();
     });
 
-    it('throws NotFoundException when the link between exam and activity does not exist', async () => {
+    it('throws NotFoundException when the link between exam and assignment does not exist', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         assignmentRepository,
       } = await setup();
 
       examRepository.findOne.mockResolvedValue({ id: 1 });
       assignmentRepository.findOne.mockResolvedValue({ id: 2 });
-      examActivityRepository.findOne.mockResolvedValue(null);
+      examAssignmentRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.unlinkActivity(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.unlinkAssignment(1, 2)).rejects.toBeInstanceOf(
         NotFoundException,
       );
 
-      expect(examActivityRepository.findOne).toHaveBeenCalledWith({
-        where: { examId: 1, activityId: 2 },
+      expect(examAssignmentRepository.findOne).toHaveBeenCalledWith({
+        where: { examId: 1, assignmentId: 2 },
       });
-      expect(examActivityRepository.delete).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.delete).not.toHaveBeenCalled();
     });
 
-    it('deletes the link and returns void when exam, activity and link all exist', async () => {
+    it('deletes the link and returns void when exam, assignment and link all exist', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         assignmentRepository,
       } = await setup();
 
       examRepository.findOne.mockResolvedValue({ id: 1 });
       assignmentRepository.findOne.mockResolvedValue({ id: 2 });
-      examActivityRepository.findOne.mockResolvedValue({
+      examAssignmentRepository.findOne.mockResolvedValue({
         id: 99,
         examId: 1,
-        activityId: 2,
+        assignmentId: 2,
       });
-      examActivityRepository.delete.mockResolvedValue({ raw: [], affected: 1 });
+      examAssignmentRepository.delete.mockResolvedValue({ raw: [], affected: 1 });
 
-      const result = await service.unlinkActivity(1, 2);
+      const result = await service.unlinkAssignment(1, 2);
 
-      expect(examActivityRepository.findOne).toHaveBeenCalledWith({
-        where: { examId: 1, activityId: 2 },
+      expect(examAssignmentRepository.findOne).toHaveBeenCalledWith({
+        where: { examId: 1, assignmentId: 2 },
       });
-      expect(examActivityRepository.delete).toHaveBeenCalledWith({ id: 99 });
+      expect(examAssignmentRepository.delete).toHaveBeenCalledWith({ id: 99 });
       expect(result).toBeUndefined();
     });
   });
 
-  describe('findOneWithActivities', () => {
+  describe('findOneWithAssignments', () => {
     it('throws NotFoundException when the exam does not exist', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         requestContextService,
         userClassService,
       } = await setup();
@@ -762,7 +762,7 @@ describe('ExamService', () => {
         isAdmin: false,
       });
 
-      await expect(service.findOneWithActivities(123)).rejects.toBeInstanceOf(
+      await expect(service.findOneWithAssignments(123)).rejects.toBeInstanceOf(
         NotFoundException,
       );
 
@@ -771,14 +771,14 @@ describe('ExamService', () => {
       });
       expect(requestContextService.getUser).not.toHaveBeenCalled();
       expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
-      expect(examActivityRepository.find).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.find).not.toHaveBeenCalled();
     });
 
     it('returns the exam with an empty activities array when there are no linked activities', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         requestContextService,
         userClassService,
       } = await setup();
@@ -801,24 +801,24 @@ describe('ExamService', () => {
         userId: 7,
         classId: 5,
       });
-      examActivityRepository.find.mockResolvedValue([]);
+      examAssignmentRepository.find.mockResolvedValue([]);
 
-      const result = await service.findOneWithActivities(1);
+      const result = await service.findOneWithAssignments(1);
 
       expect(userClassService.findOneByKeys).toHaveBeenCalledWith(7, 5);
-      expect(examActivityRepository.find).toHaveBeenCalledWith({
+      expect(examAssignmentRepository.find).toHaveBeenCalledWith({
         where: { examId: 1 },
-        relations: ['activity'],
+        relations: ['assignment'],
         order: { id: 'ASC' },
       });
       expect(result).toEqual({ exam, activities: [] });
     });
 
-    it('returns the exam with activities mapped to the summary DTO and ordered by ExamActivity id', async () => {
+    it('returns the exam with activities mapped to the summary DTO and ordered by ExamAssignment id', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         requestContextService,
         userClassService,
       } = await setup();
@@ -834,7 +834,7 @@ describe('ExamService', () => {
         classId: 5,
       });
 
-      const activityB = {
+      const assignmentB = {
         id: 20,
         title: 'Activity B',
         description: 'B desc',
@@ -845,7 +845,7 @@ describe('ExamService', () => {
         boilerplateFilePath: '/secret',
         interviewConfig: { questions: [] },
       };
-      const activityA = {
+      const assignmentA = {
         id: 10,
         title: 'Activity A',
         description: 'A desc',
@@ -853,15 +853,15 @@ describe('ExamService', () => {
         maxAttempts: 3,
         workerType: WorkerType.NODE_DEFAULT,
       };
-      examActivityRepository.find.mockResolvedValue([
-        { id: 2, examId: 1, activityId: 20, activity: activityB },
-        { id: 1, examId: 1, activityId: 10, activity: activityA },
+      examAssignmentRepository.find.mockResolvedValue([
+        { id: 2, examId: 1, assignmentId: 20, assignment: assignmentB },
+        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
       ]);
 
-      const result = await service.findOneWithActivities(1);
+      const result = await service.findOneWithAssignments(1);
 
       expect(result.exam).toEqual(exam);
-      expect(result.activities).toEqual([
+      expect(result.assignments).toEqual([
         {
           id: 20,
           title: 'Activity B',
@@ -879,16 +879,16 @@ describe('ExamService', () => {
           workerType: WorkerType.NODE_DEFAULT,
         },
       ]);
-      expect(result.activities[0]).not.toHaveProperty('initSqlScript');
-      expect(result.activities[0]).not.toHaveProperty('boilerplateFilePath');
-      expect(result.activities[0]).not.toHaveProperty('interviewConfig');
+      expect(result.assignments[0]).not.toHaveProperty('initSqlScript');
+      expect(result.assignments[0]).not.toHaveProperty('boilerplateFilePath');
+      expect(result.assignments[0]).not.toHaveProperty('interviewConfig');
     });
 
     it('skips the enrollment check when the user is an admin', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         requestContextService,
         userClassService,
       } = await setup();
@@ -898,9 +898,9 @@ describe('ExamService', () => {
         userId: 7,
         isAdmin: true,
       });
-      examActivityRepository.find.mockResolvedValue([]);
+      examAssignmentRepository.find.mockResolvedValue([]);
 
-      const result = await service.findOneWithActivities(1);
+      const result = await service.findOneWithAssignments(1);
 
       expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
       expect(result).toEqual({ exam: { id: 1, classId: 5 }, activities: [] });
@@ -910,7 +910,7 @@ describe('ExamService', () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         requestContextService,
         userClassService,
       } = await setup();
@@ -922,19 +922,19 @@ describe('ExamService', () => {
       });
       userClassService.findOneByKeys.mockResolvedValue(null);
 
-      await expect(service.findOneWithActivities(1)).rejects.toBeInstanceOf(
+      await expect(service.findOneWithAssignments(1)).rejects.toBeInstanceOf(
         ForbiddenException,
       );
 
       expect(userClassService.findOneByKeys).toHaveBeenCalledWith(7, 5);
-      expect(examActivityRepository.find).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.find).not.toHaveBeenCalled();
     });
 
     it('throws ForbiddenException when a non-admin user tries to view an exam without a class', async () => {
       const {
         service,
         examRepository,
-        examActivityRepository,
+        examAssignmentRepository,
         requestContextService,
         userClassService,
       } = await setup();
@@ -948,12 +948,12 @@ describe('ExamService', () => {
         isAdmin: false,
       });
 
-      await expect(service.findOneWithActivities(1)).rejects.toBeInstanceOf(
+      await expect(service.findOneWithAssignments(1)).rejects.toBeInstanceOf(
         ForbiddenException,
       );
 
       expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
-      expect(examActivityRepository.find).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.find).not.toHaveBeenCalled();
     });
   });
 });

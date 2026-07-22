@@ -378,13 +378,13 @@ export class AssignmentService {
         { userId: user.userId },
       )
       .leftJoinAndSelect('assignment.suspensions', 'suspensions')
-      .leftJoin('assignment.examActivity', 'examActivity')
+      .leftJoin('assignment.examAssignment', 'examAssignment')
       .where('assignment.classId = :classId', { classId });
 
     if (queryParams?.linkedToExam === true) {
-      query.andWhere('examActivity.id IS NULL');
+      query.andWhere('examAssignment.id IS NULL');
     } else if (queryParams?.linkedToExam === false) {
-      query.andWhere('examActivity.id IS NOT NULL');
+      query.andWhere('examAssignment.id IS NOT NULL');
     }
 
     if (user?.isAdmin) {

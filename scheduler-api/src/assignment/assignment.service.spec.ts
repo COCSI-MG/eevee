@@ -413,12 +413,12 @@ describe('AssignmentService', () => {
       const result = await service.findAssignmentsByClass(1, {});
 
       expect(qb.leftJoin).toHaveBeenCalledWith(
-        'assignment.examActivity',
-        'examActivity',
+        'assignment.examAssignment',
+        'examAssignment',
       );
       const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
-      expect(andWhereCalls).not.toContain('examActivity.id IS NOT NULL');
-      expect(andWhereCalls).not.toContain('examActivity.id IS NULL');
+      expect(andWhereCalls).not.toContain('examAssignment.id IS NOT NULL');
+      expect(andWhereCalls).not.toContain('examAssignment.id IS NULL');
       expect(result).toEqual([]);
     });
 
@@ -440,9 +440,9 @@ describe('AssignmentService', () => {
 
       await service.findAssignmentsByClass(1, { linkedToExam: true });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('examActivity.id IS NOT NULL');
+      expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NOT NULL');
       const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
-      expect(andWhereCalls).not.toContain('examActivity.id IS NULL');
+      expect(andWhereCalls).not.toContain('examAssignment.id IS NULL');
     });
 
     it('filters to assignments NOT linked to an exam when linkedToExam=false', async () => {
@@ -463,9 +463,9 @@ describe('AssignmentService', () => {
 
       await service.findAssignmentsByClass(1, { linkedToExam: false });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('examActivity.id IS NULL');
+      expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
       const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
-      expect(andWhereCalls).not.toContain('examActivity.id IS NOT NULL');
+      expect(andWhereCalls).not.toContain('examAssignment.id IS NOT NULL');
     });
 
     it('throws ForbiddenException for a non-admin user not enrolled in the class', async () => {
@@ -507,7 +507,7 @@ describe('AssignmentService', () => {
 
       await service.findAssignmentsByClass(1, { linkedToExam: true });
 
-      expect(qb.andWhere).toHaveBeenCalledWith('examActivity.id IS NOT NULL');
+      expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NOT NULL');
       const createdByCall = qb.andWhere.mock.calls.find(
         (c) => c[0] instanceof Brackets,
       );

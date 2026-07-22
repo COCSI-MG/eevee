@@ -17,17 +17,17 @@ export interface AssignmentSummary {
   workerType: string;
 }
 
-export interface ExamWithActivities {
+export interface ExamWithAssignments {
   exam: Exam;
-  activities: AssignmentSummary[];
+  assignments: AssignmentSummary[];
 }
 
-export interface ExamActivity {
+export interface ExamAssignment {
   id: number;
   examId: number;
-  activityId: number;
+  assignmentId: number;
   exam?: Exam;
-  activity?: AssignmentSummary;
+  assignment?: AssignmentSummary;
 }
 
 export interface CreateExamRequest {

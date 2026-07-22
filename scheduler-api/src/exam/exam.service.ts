@@ -20,13 +20,13 @@ import { RequestContextService } from 'src/request-context/request-context.servi
 import { UserClassService } from 'src/user-class/user-class.service';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { ListExamsByClassQueryDto } from './dto/list-exams-by-class.query.dto';
-import { CreateActivityAndLinkResponseDto } from './dto/response/create-activity-and-link-response.dto';
+import { CreateAssignmentAndLinkResponseDto } from './dto/response/create-activity-and-link-response.dto';
 import {
   AssignmentSummaryResponseDto,
-  ExamWithActivitiesResponseDto,
+  ExamWithAssignmentsResponseDto,
 } from './dto/response/exam-with-activities-response.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
-import { ExamActivity } from './entities/exam-activity.entity';
+import { ExamAssignment } from './entities/exam-assignment.entity';
 import { Exam } from './entities/exam.entity';
 
 @Injectable()
@@ -34,8 +34,8 @@ export class ExamService {
   constructor(
     @InjectRepository(Exam)
     private readonly examRepository: Repository<Exam>,
-    @InjectRepository(ExamActivity)
-    private readonly examActivityRepository: Repository<ExamActivity>,
+    @InjectRepository(ExamAssignment)
+    private readonly examAssignmentRepository: Repository<ExamAssignment>,
     @InjectRepository(Assignment)
     private readonly assignmentRepository: Repository<Assignment>,
     private readonly classService: ClassService,
@@ -136,9 +136,9 @@ export class ExamService {
     return { data: rows, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
-  async findOneWithActivities(
+  async findOneWithAssignments(
     examId: number,
-  ): Promise<ExamWithActivitiesResponseDto> {
+  ): Promise<ExamWithAssignmentsResponseDto> {
     const exam = await this.examRepository.findOne({ where: { id: examId } });
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
@@ -162,14 +162,14 @@ export class ExamService {
       }
     }
 
-    const examActivities = await this.examActivityRepository.find({
+    const examAssignments = await this.examAssignmentRepository.find({
       where: { examId },
-      relations: ['activity'],
+      relations: ['assignment'],
       order: { id: 'ASC' },
     });
 
-    const activities: AssignmentSummaryResponseDto[] = examActivities
-      .map((ea) => ea.activity)
+    const assignments: AssignmentSummaryResponseDto[] = examAssignments
+      .map((ea) => ea.assignment)
       .filter((a): a is NonNullable<typeof a> => a != null)
       .map((a) => ({
         id: a.id,
@@ -180,68 +180,68 @@ export class ExamService {
         workerType: a.workerType,
       }));
 
-    return { exam, activities };
+    return { exam, assignments };
   }
 
-  async linkActivity(
+  async linkAssignment(
     examId: number,
-    activityId: number,
-  ): Promise<ExamActivity> {
+    assignmentId: number,
+  ): Promise<ExamAssignment> {
     const exam = await this.examRepository.findOne({ where: { id: examId } });
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
     }
 
-    const activity = await this.assignmentRepository.findOne({
-      where: { id: activityId },
+    const assignment = await this.assignmentRepository.findOne({
+      where: { id: assignmentId },
     });
-    if (!activity) {
-      throw new NotFoundException(`Activity with id ${activityId} not found`);
+    if (!assignment) {
+      throw new NotFoundException(`Assignment with id ${assignmentId} not found`);
     }
 
-    let saved: ExamActivity;
+    let saved: ExamAssignment;
     try {
-      saved = await this.examActivityRepository.save({ examId, activityId });
+      saved = await this.examAssignmentRepository.save({ examId, assignmentId });
     } catch (error) {
       if (error && (error as { code?: string }).code === '23505') {
         throw new ConflictException(
-          `Activity with id ${activityId} is already linked to an exam`,
+          `Assignment with id ${assignmentId} is already linked to an exam`,
         );
       }
       throw error;
     }
 
-    return this.examActivityRepository.findOneOrFail({
+    return this.examAssignmentRepository.findOneOrFail({
       where: { id: saved.id },
-      relations: ['exam', 'activity'],
+      relations: ['exam', 'assignment'],
     });
   }
 
-  async unlinkActivity(examId: number, activityId: number): Promise<void> {
+  async unlinkAssignment(examId: number, assignmentId: number): Promise<void> {
     const exam = await this.examRepository.findOne({ where: { id: examId } });
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
     }
 
-    const activity = await this.assignmentRepository.findOne({
-      where: { id: activityId },
+    const assignment = await this.assignmentRepository.findOne({
+      where: { id: assignmentId },
     });
-    if (!activity) {
+    if (!assignment) {
       throw new NotFoundException(
-        `Activity with id ${activityId} not found`,
+        `Assignment with id ${assignmentId} not found`,
       );
     }
 
-    const link = await this.examActivityRepository.findOne({
-      where: { examId, activityId },
+    const link = await this.examAssignmentRepository.findOne({
+      where: { examId, assignmentId },
     });
     if (!link) {
       throw new NotFoundException(
-        `Link between exam ${examId} and activity ${activityId} does not exist`,
+        `Link between exam ${examId} and assignment ${assignmentId} does not exist`,
       );
     }
 
-    await this.examActivityRepository.delete({ id: link.id });
+    await this.examAssignmentRepository.delete({ id: link.id });
   }
 
   async remove(id: number) {
@@ -251,15 +251,15 @@ export class ExamService {
     }
 
     return this.dataSource.transaction(async (manager) => {
-      await manager.delete(ExamActivity, { examId: id });
+      await manager.delete(ExamAssignment, { examId: id });
       return manager.delete(Exam, { id });
     });
   }
 
-  async createActivityAndLink(
+  async createAssignmentAndLink(
     examId: number,
     createAssignmentDto: CreateAssignmentDto,
-  ): Promise<CreateActivityAndLinkResponseDto> {
+  ): Promise<CreateAssignmentAndLinkResponseDto> {
     const exam = await this.examRepository.findOne({ where: { id: examId } });
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
@@ -267,31 +267,31 @@ export class ExamService {
 
     if (createAssignmentDto.classId !== exam.classId) {
       throw new BadRequestException(
-        `Activity classId (${createAssignmentDto.classId}) does not match the exam's classId (${exam.classId})`,
+        `Assignment classId (${createAssignmentDto.classId}) does not match the exam's classId (${exam.classId})`,
       );
     }
 
     return this.dataSource.transaction(async (manager) => {
-      const newActivity = await this.assignmentService.create(
+      const newAssignment = await this.assignmentService.create(
         createAssignmentDto,
         manager,
       );
 
       try {
-        await manager.save(ExamActivity, {
+        await manager.save(ExamAssignment, {
           examId,
-          activityId: newActivity.id,
+          assignmentId: newAssignment.id,
         });
       } catch (error) {
         if (error && (error as { code?: string }).code === '23505') {
           throw new ConflictException(
-            `Activity with id ${newActivity.id} is already linked to another exam`,
+            `Assignment with id ${newAssignment.id} is already linked to another exam`,
           );
         }
         throw error;
       }
 
-      return { ...newActivity, exam };
+      return { ...newAssignment, exam };
     });
   }
 }

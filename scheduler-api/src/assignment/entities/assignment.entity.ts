@@ -3,7 +3,7 @@ import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-
 import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
-import { ExamActivity } from 'src/exam/entities/exam-activity.entity';
+import { ExamAssignment } from 'src/exam/entities/exam-assignment.entity';
 import { User } from 'src/user/entities/user.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import {
@@ -100,6 +100,6 @@ export class Assignment {
   )
   suspensions?: AssignmentUserSuspension[];
 
-  @OneToOne(() => ExamActivity, (examActivity) => examActivity.activity)
-  examActivity?: ExamActivity;
+  @OneToOne(() => ExamAssignment, (examAssignment) => examAssignment.assignment)
+  examAssignment?: ExamAssignment;
 }

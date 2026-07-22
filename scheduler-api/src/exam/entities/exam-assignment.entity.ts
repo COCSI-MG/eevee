@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class ExamActivity {
+export class ExamAssignment {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -18,17 +18,17 @@ export class ExamActivity {
   examId: number;
 
   @Column({ unique: true })
-  activityId: number;
+  assignmentId: number;
 
-  @ManyToOne(() => Exam, (exam) => exam.examActivities, {
+  @ManyToOne(() => Exam, (exam) => exam.examAssignments, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'examId' })
   exam: Exam;
 
-  @OneToOne(() => Assignment, (assignment) => assignment.examActivity, {
+  @OneToOne(() => Assignment, (assignment) => assignment.examAssignment, {
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'activityId' })
-  activity: Assignment;
+  @JoinColumn({ name: 'assignmentId' })
+  assignment: Assignment;
 }
