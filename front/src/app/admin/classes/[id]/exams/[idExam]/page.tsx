@@ -11,9 +11,9 @@ import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
 import { ExamService } from "@/app/integration/scheduler-api/exam";
 import Loader from "@/components/loader";
-import QueryErrorState from "@/components/admin/query-error-state";
-import AdminListSearch from "@/components/admin/admin-list-search";
-import AdminPagination from "@/components/admin/admin-pagination";
+import QueryErrorState from "@/components/shared/query-error-state";
+import ListSearch from "@/components/shared/list-search";
+import Pagination from "@/components/shared/pagination";
 import ExamAssignmentsTable from "@/components/exam/exam-activities-table";
 import SelectFromListModal from "@/components/ui/select-from-list-modal";
 import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
@@ -337,7 +337,7 @@ export default function ExamDetailsPage() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          <AdminListSearch
+          <ListSearch
             value={search}
             onChange={setSearch}
             placeholder="Filtrar por título da atividade"
@@ -353,7 +353,7 @@ export default function ExamDetailsPage() {
             />
           </div>
           {total > 0 && (
-            <AdminPagination
+            <Pagination
               page={safePage}
               totalPages={totalPages}
               pageSize={ADMIN_LIST_PAGE_SIZE}

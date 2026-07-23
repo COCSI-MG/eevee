@@ -35,7 +35,7 @@ import {
   TemplateParamTypeLabelMap,
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
-import QueryErrorState from "../admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -245,7 +245,7 @@ export default function TemplateForm() {
     setDependenciesInput(value);
     const dependenciesArray = parseDependenciesInput(value);
     formik.setFieldValue("dependencies", dependenciesArray, false);
-  }; 
+  };
 
   const handleParamTypeChange = (name: string, type: TemplateParamType) => {
     setParamTypesByName((prev) => ({

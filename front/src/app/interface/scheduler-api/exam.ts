@@ -8,6 +8,14 @@ export interface Exam {
   updatedAt: string;
 }
 
+import { AssignmentAttempt } from "./assignment-attempt";
+
+export interface AssignmentUserSuspensionSummary {
+  id: number;
+  reason: string | null;
+  createdAt: string;
+}
+
 export interface AssignmentSummary {
   id: number;
   title: string;
@@ -15,6 +23,8 @@ export interface AssignmentSummary {
   classId: number;
   maxAttempts: number;
   workerType: string;
+  lastAttempt: AssignmentAttempt | null;
+  suspensions: AssignmentUserSuspensionSummary[];
 }
 
 export interface ExamWithAssignments {

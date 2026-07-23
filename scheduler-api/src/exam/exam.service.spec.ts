@@ -1,4 +1,8 @@
-import { ConflictException, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource, QueryFailedError, Brackets } from 'typeorm';
@@ -7,6 +11,7 @@ import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { ClassService } from 'src/class/class.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClassService } from 'src/user-class/user-class.service';
+import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
@@ -92,10 +97,13 @@ describe('ExamService', () => {
     const qb: Record<string, jest.Mock> = {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
+      innerJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
       getManyAndCount: jest.fn(),
+      getMany: jest.fn(),
     };
     return qb;
   };
@@ -771,7 +779,7 @@ describe('ExamService', () => {
       });
       expect(requestContextService.getUser).not.toHaveBeenCalled();
       expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
-      expect(examAssignmentRepository.find).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
     });
 
     it('returns the exam with an empty activities array when there are no linked activities', async () => {
@@ -801,17 +809,32 @@ describe('ExamService', () => {
         userId: 7,
         classId: 5,
       });
-      examAssignmentRepository.find.mockResolvedValue([]);
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
       const result = await service.findOneWithAssignments(1);
 
       expect(userClassService.findOneByKeys).toHaveBeenCalledWith(7, 5);
-      expect(examAssignmentRepository.find).toHaveBeenCalledWith({
-        where: { examId: 1 },
-        relations: ['assignment'],
-        order: { id: 'ASC' },
+      expect(examAssignmentRepository.createQueryBuilder).toHaveBeenCalledWith(
+        'ea',
+      );
+      expect(qb.innerJoinAndSelect).toHaveBeenCalledWith(
+        'ea.assignment',
+        'assignment',
+      );
+      expect(qb.leftJoinAndSelect).toHaveBeenCalledWith(
+        'assignment.assignmentAttempts',
+        'assignmentAttempts',
+        'assignmentAttempts.userId = :userId',
+        { userId: 7 },
+      );
+      expect(qb.where).toHaveBeenCalledWith('ea.examId = :examId', {
+        examId: 1,
       });
-      expect(result).toEqual({ exam, activities: [] });
+      expect(qb.orderBy).toHaveBeenCalledWith('ea.id', 'ASC');
+      expect(result).toEqual({ exam, assignments: [] });
     });
 
     it('returns the exam with activities mapped to the summary DTO and ordered by ExamAssignment id', async () => {
@@ -841,6 +864,8 @@ describe('ExamService', () => {
         classId: 5,
         maxAttempts: 2,
         workerType: WorkerType.NODE_NESTJS,
+        assignmentAttempts: [],
+        suspensions: [],
         initSqlScript: 'secret',
         boilerplateFilePath: '/secret',
         interviewConfig: { questions: [] },
@@ -852,11 +877,16 @@ describe('ExamService', () => {
         classId: 5,
         maxAttempts: 3,
         workerType: WorkerType.NODE_DEFAULT,
+        assignmentAttempts: [],
+        suspensions: [],
       };
-      examAssignmentRepository.find.mockResolvedValue([
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([
         { id: 2, examId: 1, assignmentId: 20, assignment: assignmentB },
         { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
       ]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
       const result = await service.findOneWithAssignments(1);
 
@@ -869,6 +899,8 @@ describe('ExamService', () => {
           classId: 5,
           maxAttempts: 2,
           workerType: WorkerType.NODE_NESTJS,
+          lastAttempt: null,
+          suspensions: [],
         },
         {
           id: 10,
@@ -877,6 +909,8 @@ describe('ExamService', () => {
           classId: 5,
           maxAttempts: 3,
           workerType: WorkerType.NODE_DEFAULT,
+          lastAttempt: null,
+          suspensions: [],
         },
       ]);
       expect(result.assignments[0]).not.toHaveProperty('initSqlScript');
@@ -898,12 +932,15 @@ describe('ExamService', () => {
         userId: 7,
         isAdmin: true,
       });
-      examAssignmentRepository.find.mockResolvedValue([]);
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
       const result = await service.findOneWithAssignments(1);
 
       expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
-      expect(result).toEqual({ exam: { id: 1, classId: 5 }, activities: [] });
+      expect(result).toEqual({ exam: { id: 1, classId: 5 }, assignments: [] });
     });
 
     it('throws ForbiddenException when a non-admin user is not enrolled in the exam class', async () => {
@@ -927,7 +964,7 @@ describe('ExamService', () => {
       );
 
       expect(userClassService.findOneByKeys).toHaveBeenCalledWith(7, 5);
-      expect(examAssignmentRepository.find).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
     });
 
     it('throws ForbiddenException when a non-admin user tries to view an exam without a class', async () => {
@@ -953,7 +990,365 @@ describe('ExamService', () => {
       );
 
       expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
-      expect(examAssignmentRepository.find).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('populates lastAttempt with the user’s latest attempt for each activity and null otherwise', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      const exam = { id: 1, title: 'Midterm', classId: 5 };
+      examRepository.findOne.mockResolvedValue(exam);
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+
+      const createdAtLater = new Date('2026-08-16T12:00:00Z');
+      const createdAtEarly = new Date('2026-08-15T12:00:00Z');
+      const attemptA1 = {
+        id: 100,
+        attempt: 1,
+        status: AttemptStatus.RUNNING,
+        score: null,
+        isAcceptable: null,
+        passes: null,
+        fails: null,
+        userId: 7,
+        createdAt: createdAtEarly,
+      };
+      const attemptA2 = {
+        id: 101,
+        attempt: 2,
+        status: AttemptStatus.COMPLETED,
+        score: 85,
+        isAcceptable: true,
+        passes: 3,
+        fails: 1,
+        userId: 7,
+        createdAt: createdAtLater,
+      };
+      const assignmentA = {
+        id: 10,
+        title: 'Activity A',
+        description: 'A desc',
+        classId: 5,
+        maxAttempts: 3,
+        workerType: WorkerType.NODE_DEFAULT,
+        assignmentAttempts: [attemptA1, attemptA2],
+        suspensions: [],
+      };
+      const assignmentB = {
+        id: 20,
+        title: 'Activity B',
+        description: 'B desc',
+        classId: 5,
+        maxAttempts: 2,
+        workerType: WorkerType.NODE_NESTJS,
+        assignmentAttempts: [],
+        suspensions: [],
+      };
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([
+        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+        { id: 2, examId: 1, assignmentId: 20, assignment: assignmentB },
+      ]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findOneWithAssignments(1);
+
+      expect(result.assignments[0].lastAttempt).toEqual({
+        id: 101,
+        attempt: 2,
+        status: AttemptStatus.COMPLETED,
+        score: 85,
+        isAcceptable: true,
+        passes: 3,
+        fails: 1,
+        createdAt: createdAtLater,
+      });
+      expect(result.assignments[0].suspensions).toEqual([]);
+      expect(result.assignments[1].lastAttempt).toBeNull();
+      expect(result.assignments[1].suspensions).toEqual([]);
+    });
+
+    it('sets lastAttempt to null when the user has no attempts for an activity', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+
+      const assignmentA = {
+        id: 10,
+        title: 'Activity A',
+        classId: 5,
+        maxAttempts: 3,
+        workerType: WorkerType.NODE_DEFAULT,
+        assignmentAttempts: [],
+        suspensions: [],
+      };
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([
+        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+      ]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findOneWithAssignments(1);
+
+      expect(result.assignments[0].lastAttempt).toBeNull();
+    });
+
+    it('sets suspensions to an empty array when the user has no suspensions', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+
+      const assignmentA = {
+        id: 10,
+        title: 'Activity A',
+        classId: 5,
+        maxAttempts: 3,
+        workerType: WorkerType.NODE_DEFAULT,
+        assignmentAttempts: [],
+        suspensions: [],
+      };
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([
+        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+      ]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findOneWithAssignments(1);
+
+      expect(result.assignments[0].suspensions).toEqual([]);
+    });
+
+    it('populates suspensions when the user has suspensions for an activity', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+
+      const suspensionDate = new Date('2026-08-14T10:00:00Z');
+      const assignmentA = {
+        id: 10,
+        title: 'Activity A',
+        classId: 5,
+        maxAttempts: 3,
+        workerType: WorkerType.NODE_DEFAULT,
+        assignmentAttempts: [],
+        suspensions: [
+          { id: 55, userId: 7, reason: 'Plagiarism', createdAt: suspensionDate },
+        ],
+      };
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([
+        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+      ]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findOneWithAssignments(1);
+
+      expect(result.assignments[0].suspensions).toEqual([
+        { id: 55, reason: 'Plagiarism', createdAt: suspensionDate },
+      ]);
+    });
+
+    it('issues exactly one query regardless of how many activities the exam has (N+1 guard)', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([
+        {
+          id: 1,
+          examId: 1,
+          assignmentId: 10,
+          assignment: {
+            id: 10,
+            assignmentAttempts: [],
+            suspensions: [],
+          },
+        },
+        {
+          id: 2,
+          examId: 1,
+          assignmentId: 20,
+          assignment: {
+            id: 20,
+            assignmentAttempts: [],
+            suspensions: [],
+          },
+        },
+        {
+          id: 3,
+          examId: 1,
+          assignmentId: 30,
+          assignment: {
+            id: 30,
+            assignmentAttempts: [],
+            suspensions: [],
+          },
+        },
+      ]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findOneWithAssignments(1);
+
+      expect(examAssignmentRepository.createQueryBuilder).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(qb.getMany).toHaveBeenCalledTimes(1);
+    });
+
+    it('filters lastAttempt by the authenticated user only and does not leak another user’s attempt', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+
+      const assignmentA = {
+        id: 10,
+        title: 'Activity A',
+        classId: 5,
+        maxAttempts: 3,
+        workerType: WorkerType.NODE_DEFAULT,
+        assignmentAttempts: [{ id: 999, userId: 8, attempt: 1 }],
+        suspensions: [],
+      };
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([
+        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+      ]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findOneWithAssignments(1);
+
+      expect(result.assignments[0].lastAttempt).toBeNull();
+    });
+
+    it('filters suspensions by the authenticated user only and does not leak another user’s suspension', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        requestContextService,
+        userClassService,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 5,
+      });
+
+      const assignmentA = {
+        id: 10,
+        title: 'Activity A',
+        classId: 5,
+        maxAttempts: 3,
+        workerType: WorkerType.NODE_DEFAULT,
+        assignmentAttempts: [],
+        suspensions: [
+          { id: 55, userId: 8, reason: 'Other user', createdAt: new Date() },
+        ],
+      };
+
+      const qb = makeQueryBuilder();
+      qb.getMany.mockResolvedValue([
+        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+      ]);
+      examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findOneWithAssignments(1);
+
+      expect(result.assignments[0].suspensions).toEqual([]);
     });
   });
 });

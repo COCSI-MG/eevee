@@ -1,6 +1,44 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { ExamResponseDto } from './exam-response.dto';
+
+export class AssignmentAttemptSummaryDto {
+  @ApiProperty({ example: 999 })
+  id: number;
+
+  @ApiProperty({ example: 1 })
+  attempt: number;
+
+  @ApiProperty({ enum: AttemptStatus, example: AttemptStatus.COMPLETED })
+  status: AttemptStatus;
+
+  @ApiProperty({ example: 91.5 })
+  score: number;
+
+  @ApiProperty({ example: true })
+  isAcceptable: boolean;
+
+  @ApiProperty({ example: 8 })
+  passes: number;
+
+  @ApiProperty({ example: 1 })
+  fails: number;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  createdAt: Date;
+}
+
+export class AssignmentUserSuspensionSummaryDto {
+  @ApiProperty({ example: 5 })
+  id: number;
+
+  @ApiProperty({ example: 'Cheating detected', nullable: true })
+  reason: string | null;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  createdAt: Date;
+}
 
 export class AssignmentSummaryResponseDto {
   @ApiProperty({ example: 42 })
@@ -20,6 +58,12 @@ export class AssignmentSummaryResponseDto {
 
   @ApiProperty({ enum: WorkerType, example: WorkerType.NODE_DEFAULT })
   workerType: WorkerType;
+
+  @ApiProperty({ type: () => AssignmentAttemptSummaryDto, nullable: true })
+  lastAttempt: AssignmentAttemptSummaryDto | null;
+
+  @ApiProperty({ type: () => [AssignmentUserSuspensionSummaryDto] })
+  suspensions: AssignmentUserSuspensionSummaryDto[];
 }
 
 export class ExamWithAssignmentsResponseDto {

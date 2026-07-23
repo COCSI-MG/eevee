@@ -1,10 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import AdminPagination from "./admin-pagination";
+import Pagination from "./pagination";
 
-describe("AdminPagination", () => {
+describe("Pagination", () => {
   it("shows item range and page indicator", () => {
     render(
-      <AdminPagination
+      <Pagination
         page={2}
         totalPages={5}
         pageSize={10}
@@ -20,7 +20,7 @@ describe("AdminPagination", () => {
   it("disables prev on first page and next on last page", () => {
     const onPageChange = jest.fn();
     const { rerender } = render(
-      <AdminPagination
+      <Pagination
         page={1}
         totalPages={3}
         pageSize={10}
@@ -32,7 +32,7 @@ describe("AdminPagination", () => {
     expect(screen.getByLabelText("Próxima página")).not.toBeDisabled();
 
     rerender(
-      <AdminPagination
+      <Pagination
         page={3}
         totalPages={3}
         pageSize={10}
@@ -46,7 +46,7 @@ describe("AdminPagination", () => {
   it("calls onPageChange with the next/prev page", () => {
     const onPageChange = jest.fn();
     render(
-      <AdminPagination
+      <Pagination
         page={2}
         totalPages={5}
         pageSize={10}
@@ -62,7 +62,7 @@ describe("AdminPagination", () => {
 
   it("shows zero range and forces totalPages to at least 1 when empty", () => {
     render(
-      <AdminPagination
+      <Pagination
         page={1}
         totalPages={0}
         pageSize={10}

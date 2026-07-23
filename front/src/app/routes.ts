@@ -12,5 +12,4 @@ export enum Route {
   AdminAttempts = "/admin/attempts",
   AssignmenstUsersSuspensions = "suspensions",
   Classes = "classes",
-  ClassesAssignments = "classes/assignments",
 }

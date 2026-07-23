@@ -28,7 +28,7 @@ import AssignmentFormReview from "@/components/assignment/form/assignment-review
 import { AssignmentConfigForm } from "./assignment-config-form";
 import { AssignmentBoilerplateForm } from "./assignment-boilerplate-form";
 import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
-import QueryErrorState from "@/components/admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 
 const validationSchema = Yup.object({
   title: Yup.string().required("Título é obrigatório"),

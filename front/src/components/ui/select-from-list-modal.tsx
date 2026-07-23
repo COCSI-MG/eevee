@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import AdminListSearch from "@/components/admin/admin-list-search";
+import ListSearch from "@/components/shared/list-search";
 import Loader from "@/components/loader";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 
@@ -81,7 +81,7 @@ export default function SelectFromListModal<T>({
         </DialogHeader>
 
         <div className="space-y-4">
-          <AdminListSearch
+          <ListSearch
             value={search}
             onChange={setSearch}
             placeholder={searchPlaceholder}

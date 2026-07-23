@@ -162,25 +162,63 @@ export class ExamService {
       }
     }
 
-    const examAssignments = await this.examAssignmentRepository.find({
-      where: { examId },
-      relations: ['assignment'],
-      order: { id: 'ASC' },
-    });
+    const examAssignments = await this.examAssignmentRepository
+      .createQueryBuilder('ea')
+      .innerJoinAndSelect('ea.assignment', 'assignment')
+      .leftJoinAndSelect(
+        'assignment.assignmentAttempts',
+        'assignmentAttempts',
+        'assignmentAttempts.userId = :userId',
+        { userId: user.userId },
+      )
+      .leftJoinAndSelect(
+        'assignment.suspensions',
+        'suspensions',
+        'suspensions.userId = :userId',
+        { userId: user.userId },
+      )
+      .where('ea.examId = :examId', { examId })
+      .orderBy('ea.id', 'ASC')
+      .addOrderBy('assignmentAttempts.createdAt', 'DESC')
+      .getMany();
 
-    const assignments: AssignmentSummaryResponseDto[] = examAssignments
-      .map((ea) => ea.assignment)
-      .filter((a): a is NonNullable<typeof a> => a != null)
-      .map((a) => ({
-        id: a.id,
-        title: a.title,
-        description: a.description,
-        classId: a.classId,
-        maxAttempts: a.maxAttempts,
-        workerType: a.workerType,
-      }));
+    const mappedAssignments: AssignmentSummaryResponseDto[] = examAssignments.map(
+      (ea) => {
+        const a = ea.assignment;
+        const attempts = a.assignmentAttempts ?? [];
+        const lastAttempt = attempts[0] ?? null;
 
-    return { exam, assignments };
+        const userSuspensions = a.suspensions ?? [];
+
+        return {
+          id: a.id,
+          title: a.title,
+          description: a.description,
+          classId: a.classId,
+          maxAttempts: a.maxAttempts,
+          workerType: a.workerType,
+          lastAttempt: lastAttempt
+            ? {
+                id: lastAttempt.id,
+                attempt: lastAttempt.attempt,
+                status: lastAttempt.status,
+                score: lastAttempt.score,
+                isAcceptable: lastAttempt.isAcceptable,
+                passes: lastAttempt.passes,
+                fails: lastAttempt.fails,
+                createdAt: lastAttempt.createdAt,
+              }
+            : null,
+          suspensions: userSuspensions.map((s) => ({
+            id: s.id,
+            reason: s.reason ?? null,
+            createdAt: s.createdAt,
+          })),
+        };
+      },
+    );
+
+    return { exam, assignments: mappedAssignments };
   }
 
   async linkAssignment(

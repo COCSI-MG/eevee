@@ -80,7 +80,7 @@ export default function ClassesTable() {
           </CardContent>
           <CardFooter>
             <Link
-              href={`/classes/assignment/${cls.id}`}
+              href={`/classes/${cls.id}`}
               className="flex-1 mt-4"
             >
               <Button variant="default" className="w-full flex items-center">

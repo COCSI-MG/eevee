@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface AdminPaginationProps {
+interface PaginationProps {
   page: number;
   totalPages: number;
   pageSize: number;
@@ -14,7 +14,7 @@ interface AdminPaginationProps {
   className?: string;
 }
 
-export default function AdminPagination({
+export default function Pagination({
   page,
   totalPages,
   pageSize,
@@ -22,7 +22,7 @@ export default function AdminPagination({
   onPageChange,
   itemLabel = { singular: "item", plural: "itens" },
   className,
-}: AdminPaginationProps) {
+}: PaginationProps) {
   const safeTotalPages = Math.max(1, totalPages);
   const startIndex = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const endIndex = Math.min(page * pageSize, total);

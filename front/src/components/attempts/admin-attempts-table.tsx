@@ -2,7 +2,7 @@
 
 import { AdminAttemptListItem } from "@/app/interface/scheduler-api/admin-attempt";
 import { AdminAttemptExpandedRow } from "@/components/attempts/admin-attempt-expanded-row";
-import AdminPagination from "@/components/admin/admin-pagination";
+import Pagination from "@/components/shared/admin-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -157,7 +157,7 @@ export default function AdminAttemptsTable({
         </Table>
       </div>
 
-      <AdminPagination
+      <Pagination
         page={page}
         totalPages={totalPages}
         pageSize={pageSize}

@@ -15,7 +15,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { useUsers } from "@/hooks/use-users";
 import { SelectedUser } from "@/types/shared";
 import { useMemo, useState } from "react";
-import QueryErrorState from "../admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 
 interface UsersCardContentProps {
   selectedUsers: Array<SelectedUser>;

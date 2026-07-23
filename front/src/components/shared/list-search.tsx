@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 
-interface AdminListSearchProps {
+interface ListSearchProps {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
@@ -12,13 +12,13 @@ interface AdminListSearchProps {
   className?: string;
 }
 
-export default function AdminListSearch({
+export default function ListSearch({
   value,
   onChange,
   placeholder,
   ariaLabel,
   className,
-}: AdminListSearchProps) {
+}: ListSearchProps) {
   return (
     <div className={cn("relative", className)}>
       <Search
