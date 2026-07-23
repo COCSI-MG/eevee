@@ -3,7 +3,7 @@ import { HashUtils } from '../src/utils/hash.utils';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 
-dotenv.config({ path: join(__dirname, '.env') });
+dotenv.config({ path: join(__dirname, '..', '.env') });
 
 export class DatabaseSeeder {
   constructor(private dataSource: DataSource) {}

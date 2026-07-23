@@ -311,7 +311,7 @@ export default function ExamDetailsPage() {
                 !exam.dueDate && "text-muted-foreground",
               )}
             >
-              {formatDateTime(exam.dueDate, { fallback: '—' })}
+              {formatDateTime(exam.dueDate)}
             </p>
           </div>
           <div>
@@ -324,7 +324,7 @@ export default function ExamDetailsPage() {
                 !exam.startDate && "text-muted-foreground",
               )}
             >
-              {formatDateTime(exam.startDate, { fallback: '—' })}
+              {formatDateTime(exam.startDate)}
             </p>
           </div>
         </CardContent>

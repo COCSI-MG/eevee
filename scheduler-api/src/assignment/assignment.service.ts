@@ -381,11 +381,11 @@ export class AssignmentService {
       .leftJoin('assignment.examAssignment', 'examAssignment')
       .where('assignment.classId = :classId', { classId });
 
-    if (queryParams?.linkedToExam === true) {
-      query.andWhere('examAssignment.id IS NULL');
-    } else if (queryParams?.linkedToExam === false) {
-      query.andWhere('examAssignment.id IS NOT NULL');
-    }
+      if (queryParams?.linkedToExam !== undefined) {
+        query.andWhere(
+          `examAssignment.id IS ${queryParams.linkedToExam ? 'NULL' : 'NOT NULL'}`
+        );
+      }
 
     if (user?.isAdmin) {
       query.andWhere(
