@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { AxiosError } from "axios";
 import { useMemo } from "react";
 import { useFetchExam } from "@/hooks/use-fetch-exam";
+import { formatDateTime } from "@/utils/date";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import QueryErrorState from "@/components/shared/query-error-state";
@@ -131,10 +132,7 @@ export default function StudentExamDetail() {
         {exam.dueDate && (
           <p className="text-sm text-slate-500 mt-2">
             <span className="font-medium text-slate-300">Data de entrega:</span>{" "}
-            {new Date(exam.dueDate).toLocaleString("pt-BR", {
-              dateStyle: "short",
-              timeStyle: "short",
-            })}
+            {formatDateTime(exam.dueDate)}
           </p>
         )}
       </div>

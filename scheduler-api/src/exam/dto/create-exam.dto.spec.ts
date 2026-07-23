@@ -21,4 +21,22 @@ describe('CreateExamDto', () => {
     const errors = await validate(dto);
     expect(errors).toEqual([]);
   });
+
+  it('passes validation with a valid startDate', async () => {
+    const dto = Object.assign(new CreateExamDto(), {
+      title: 'Midterm',
+      startDate: '2026-08-15T12:00:00Z',
+    });
+    const errors = await validate(dto);
+    expect(errors).toEqual([]);
+  });
+
+  it('fails validation when startDate is not a valid ISO string', async () => {
+    const dto = Object.assign(new CreateExamDto(), {
+      title: 'Midterm',
+      startDate: 'not-a-date',
+    });
+    const errors = await validate(dto);
+    expect(errors.some((e) => e.property === 'startDate')).toBe(true);
+  });
 });

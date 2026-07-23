@@ -32,4 +32,9 @@ export class CreateExamDto {
   @IsDateString()
   @IsOptional()
   dueDate?: string;
+
+  @ApiPropertyOptional()
+  @IsDateString()
+  @IsOptional()
+  startDate?: string | null;
 }

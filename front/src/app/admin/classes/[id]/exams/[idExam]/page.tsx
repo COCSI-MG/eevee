@@ -28,14 +28,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-function formatDueDate(dueDate: string | undefined): string {
-  if (!dueDate) return "—";
-  return new Date(dueDate).toLocaleString("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
-}
+import { formatDateTime } from "@/utils/date";
 
 export default function ExamDetailsPage() {
   const { id, idExam } = useParams<{
@@ -318,7 +311,20 @@ export default function ExamDetailsPage() {
                 !exam.dueDate && "text-muted-foreground",
               )}
             >
-              {formatDueDate(exam.dueDate)}
+              {formatDateTime(exam.dueDate, { fallback: '—' })}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">
+              Data de início
+            </p>
+            <p
+              className={cn(
+                "mt-1",
+                !exam.startDate && "text-muted-foreground",
+              )}
+            >
+              {formatDateTime(exam.startDate, { fallback: '—' })}
             </p>
           </div>
         </CardContent>

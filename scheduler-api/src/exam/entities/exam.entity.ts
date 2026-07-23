@@ -35,6 +35,9 @@ export class Exam {
   @Column({ type: 'timestamp', nullable: true })
   dueDate?: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  startDate?: Date;
+
   @OneToMany(() => ExamAssignment, (examAssignment) => examAssignment.exam)
   examAssignments: ExamAssignment[];
 

@@ -13,6 +13,7 @@ export class AddExamAndExamAssignment1774600000000
         "description" character varying(255),
         "classId" integer,
         "dueDate" TIMESTAMP,
+        "startDate" TIMESTAMP,
         "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
         "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
         CONSTRAINT "PK_exam_id" PRIMARY KEY ("id")

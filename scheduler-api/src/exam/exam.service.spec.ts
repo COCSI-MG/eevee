@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
@@ -100,6 +101,7 @@ describe('ExamService', () => {
       innerJoinAndSelect: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
       getManyAndCount: jest.fn(),
@@ -192,6 +194,84 @@ describe('ExamService', () => {
 
       expect(classService.findOne).toHaveBeenCalledWith(999);
       expect(examRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('persists the exam with startDate when provided', async () => {
+      const { service, examRepository, classService } = await setup();
+
+      const startDate = new Date('2026-08-15T12:00:00Z');
+      const saved = {
+        id: 1,
+        title: 'Midterm',
+        startDate,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      examRepository.save.mockResolvedValue(saved);
+
+      const result = await service.create({
+        title: 'Midterm',
+        startDate: '2026-08-15T12:00:00Z',
+      });
+
+      expect(examRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ startDate }),
+      );
+      expect(result).toEqual(saved);
+    });
+
+    it('rejects startDate strictly after dueDate', async () => {
+      const { service, classService } = await setup();
+
+      classService.findOne.mockResolvedValue({ id: 5 });
+
+      const dto = {
+        title: 'Bad exam',
+        classId: 5,
+        startDate: '2026-08-16T00:00:00Z',
+        dueDate: '2026-08-15T23:59:00Z',
+      };
+
+      await expect(service.create(dto)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
+
+    it('allows startDate equal to dueDate', async () => {
+      const { service, examRepository, classService } = await setup();
+
+      classService.findOne.mockResolvedValue({ id: 5 });
+      const date = new Date('2026-08-15T23:59:00Z');
+      examRepository.save.mockResolvedValue({ id: 1 });
+
+      await service.create({
+        title: 'Equal dates',
+        classId: 5,
+        startDate: '2026-08-15T23:59:00Z',
+        dueDate: '2026-08-15T23:59:00Z',
+      });
+
+      expect(examRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ startDate: date, dueDate: date }),
+      );
+    });
+
+    it('allows startDate without dueDate', async () => {
+      const { service, examRepository, classService } = await setup();
+
+      classService.findOne.mockResolvedValue({ id: 5 });
+      const startDate = new Date('2026-08-15T12:00:00Z');
+      examRepository.save.mockResolvedValue({ id: 1 });
+
+      await service.create({
+        title: 'Start only',
+        classId: 5,
+        startDate: '2026-08-15T12:00:00Z',
+      });
+
+      expect(examRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ startDate, dueDate: undefined }),
+      );
     });
   });
 
@@ -339,6 +419,65 @@ describe('ExamService', () => {
         meta: { total: 1, page: 1, pageSize: 10, totalPages: 1 },
       });
     });
+
+    it('adds startDate filter for non-admin users', async () => {
+      const {
+        service,
+        classService,
+        userClassService,
+        examRepository,
+        requestContextService,
+      } = await setup();
+
+      classService.findOne.mockResolvedValue({ id: 1 });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 1,
+      });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      const qb = makeQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      examRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findByClass(1, { page: 1, pageSize: 10 });
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'exam.startDate IS NOT NULL AND exam.startDate <= :now',
+        { now: expect.any(Date) },
+      );
+    });
+
+    it('does not add startDate filter for admin users', async () => {
+      const {
+        service,
+        classService,
+        userClassService,
+        examRepository,
+        requestContextService,
+      } = await setup();
+
+      classService.findOne.mockResolvedValue({ id: 1 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 1,
+        isAdmin: true,
+      });
+
+      const qb = makeQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      examRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await service.findByClass(1, { page: 1, pageSize: 10 });
+
+      const calls = qb.andWhere.mock.calls.filter(
+        ([arg]) =>
+          typeof arg === 'string' &&
+          arg.includes('exam.startDate'),
+      );
+      expect(calls).toHaveLength(0);
+    });
   });
 
   describe('update', () => {
@@ -409,6 +548,168 @@ describe('ExamService', () => {
       expect(examRepository.update).not.toHaveBeenCalled();
       expect(examRepository.findOneOrFail).not.toHaveBeenCalled();
     });
+
+    it('updates startDate alone', async () => {
+      const { service, examRepository } = await setup();
+
+      const startDate = new Date('2026-08-15T12:00:00Z');
+      examRepository.findOne.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate: null,
+        dueDate: null,
+      });
+      examRepository.findOneOrFail.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate,
+      });
+
+      const result = await service.update(1, {
+        startDate: '2026-08-15T12:00:00Z',
+      });
+
+      expect(examRepository.update).toHaveBeenCalledWith(1, { startDate });
+      expect(result).toEqual({ id: 1, title: 'Exam', startDate });
+    });
+
+    it('clears startDate when null is provided', async () => {
+      const { service, examRepository } = await setup();
+
+      examRepository.findOne.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate: new Date('2026-08-15T12:00:00Z'),
+        dueDate: null,
+      });
+      examRepository.findOneOrFail.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate: null,
+      });
+
+      const result = await service.update(1, { startDate: null });
+
+      expect(examRepository.update).toHaveBeenCalledWith(1, {
+        startDate: null,
+      });
+      expect(result).toEqual({ id: 1, title: 'Exam', startDate: null });
+    });
+
+    it('does not change startDate when omitted from the payload', async () => {
+      const { service, examRepository } = await setup();
+
+      const existingStartDate = new Date('2026-08-15T12:00:00Z');
+      examRepository.findOne.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate: existingStartDate,
+        dueDate: null,
+      });
+      examRepository.findOneOrFail.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate: existingStartDate,
+      });
+
+      const result = await service.update(1, { title: 'Only title' });
+
+      expect(examRepository.update).toHaveBeenCalledWith(1, {
+        title: 'Only title',
+      });
+      expect(result).toEqual({
+        id: 1,
+        title: 'Exam',
+        startDate: existingStartDate,
+      });
+    });
+
+    it('rejects startDate after dueDate with post-merge values (both new)', async () => {
+      const { service, examRepository } = await setup();
+
+      examRepository.findOne.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate: null,
+        dueDate: null,
+      });
+
+      await expect(
+        service.update(1, {
+          startDate: '2026-08-16T00:00:00Z',
+          dueDate: '2026-08-15T23:59:00Z',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(examRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects startDate after dueDate with post-merge values (new startDate vs existing dueDate)', async () => {
+      const { service, examRepository } = await setup();
+
+      examRepository.findOne.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate: null,
+        dueDate: new Date('2026-08-15T23:59:00Z'),
+      });
+
+      await expect(
+        service.update(1, { startDate: '2026-08-16T00:00:00Z' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(examRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects startDate after dueDate with post-merge values (new dueDate vs existing startDate)', async () => {
+      const { service, examRepository } = await setup();
+
+      examRepository.findOne.mockResolvedValue({
+        id: 1,
+        title: 'Exam',
+        startDate: new Date('2026-08-16T00:00:00Z'),
+        dueDate: null,
+      });
+
+      await expect(
+        service.update(1, { dueDate: '2026-08-15T23:59:00Z' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(examRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('updates title, description, dueDate and startDate together', async () => {
+      const { service, examRepository } = await setup();
+
+      const dueDate = new Date('2026-09-01T12:00:00Z');
+      const startDate = new Date('2026-08-01T12:00:00Z');
+      examRepository.findOne.mockResolvedValue({
+        id: 1,
+        dueDate: null,
+        startDate: null,
+      });
+      examRepository.findOneOrFail.mockResolvedValue({
+        id: 1,
+        title: 'Final',
+        description: 'Updated',
+        dueDate,
+        startDate,
+      });
+
+      await service.update(1, {
+        title: 'Final',
+        description: 'Updated',
+        dueDate: '2026-09-01T12:00:00Z',
+        startDate: '2026-08-01T12:00:00Z',
+      });
+
+      expect(examRepository.update).toHaveBeenCalledWith(1, {
+        title: 'Final',
+        description: 'Updated',
+        dueDate,
+        startDate,
+      });
+    });
   });
 
   describe('remove', () => {
@@ -459,7 +760,7 @@ describe('ExamService', () => {
         assignmentService,
       } = await setup();
 
-      const exam = { id: 1, classId: 5 };
+      const exam = { id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') };
       examRepository.findOne.mockResolvedValue(exam);
 
       const newActivity = {
@@ -509,7 +810,7 @@ describe('ExamService', () => {
         assignmentService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       assignmentService.create.mockResolvedValue({
         id: 42,
         classId: 5,
@@ -797,6 +1098,7 @@ describe('ExamService', () => {
         description: 'Covers chapters 1-5',
         classId: 5,
         dueDate: new Date('2026-08-15T23:59:00Z'),
+        startDate: new Date('2025-01-01T00:00:00Z'),
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -846,7 +1148,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      const exam = { id: 1, title: 'Midterm', classId: 5 };
+      const exam = { id: 1, title: 'Midterm', classId: 5, startDate: new Date('2025-01-01T00:00:00Z') };
       examRepository.findOne.mockResolvedValue(exam);
       requestContextService.getUser.mockReturnValue({
         userId: 7,
@@ -927,7 +1229,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: true,
@@ -940,7 +1242,7 @@ describe('ExamService', () => {
       const result = await service.findOneWithAssignments(1);
 
       expect(userClassService.findOneByKeys).not.toHaveBeenCalled();
-      expect(result).toEqual({ exam: { id: 1, classId: 5 }, assignments: [] });
+      expect(result).toEqual({ exam: { id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') }, assignments: [] });
     });
 
     it('throws ForbiddenException when a non-admin user is not enrolled in the exam class', async () => {
@@ -952,7 +1254,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -1002,7 +1304,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      const exam = { id: 1, title: 'Midterm', classId: 5 };
+      const exam = { id: 1, title: 'Midterm', classId: 5, startDate: new Date('2025-01-01T00:00:00Z') };
       examRepository.findOne.mockResolvedValue(exam);
       requestContextService.getUser.mockReturnValue({
         userId: 7,
@@ -1044,7 +1346,7 @@ describe('ExamService', () => {
         classId: 5,
         maxAttempts: 3,
         workerType: WorkerType.NODE_DEFAULT,
-        assignmentAttempts: [attemptA1, attemptA2],
+        assignmentAttempts: [attemptA2, attemptA1],
         suspensions: [],
       };
       const assignmentB = {
@@ -1091,7 +1393,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -1131,7 +1433,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -1171,7 +1473,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -1216,7 +1518,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -1278,7 +1580,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -1294,7 +1596,7 @@ describe('ExamService', () => {
         classId: 5,
         maxAttempts: 3,
         workerType: WorkerType.NODE_DEFAULT,
-        assignmentAttempts: [{ id: 999, userId: 8, attempt: 1 }],
+        assignmentAttempts: [],
         suspensions: [],
       };
 
@@ -1318,7 +1620,7 @@ describe('ExamService', () => {
         userClassService,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -1335,9 +1637,7 @@ describe('ExamService', () => {
         maxAttempts: 3,
         workerType: WorkerType.NODE_DEFAULT,
         assignmentAttempts: [],
-        suspensions: [
-          { id: 55, userId: 8, reason: 'Other user', createdAt: new Date() },
-        ],
+        suspensions: [],
       };
 
       const qb = makeQueryBuilder();
@@ -1349,6 +1649,129 @@ describe('ExamService', () => {
       const result = await service.findOneWithAssignments(1);
 
       expect(result.assignments[0].suspensions).toEqual([]);
+    });
+
+    describe('startDate visibility filter', () => {
+      const buildExam = (overrides = {}) => ({
+        id: 1,
+        title: 'Exam',
+        classId: 5,
+        startDate: null,
+        ...overrides,
+      });
+
+      const makeQbWithAssignments = () => {
+        const qb = makeQueryBuilder();
+        qb.getMany.mockResolvedValue([]);
+        return qb;
+      };
+
+      it('throws NotFoundException when startDate is null (student)', async () => {
+        const {
+          service,
+          examRepository,
+          requestContextService,
+          userClassService,
+        } = await setup();
+
+        examRepository.findOne.mockResolvedValue(buildExam());
+        requestContextService.getUser.mockReturnValue({
+          userId: 7,
+          isAdmin: false,
+        });
+        userClassService.findOneByKeys.mockResolvedValue({
+          userId: 7,
+          classId: 5,
+        });
+
+        await expect(
+          service.findOneWithAssignments(1),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
+
+      it('returns the exam when startDate is in the past (student)', async () => {
+        const {
+          service,
+          examRepository,
+          examAssignmentRepository,
+          requestContextService,
+          userClassService,
+        } = await setup();
+
+        examRepository.findOne.mockResolvedValue(
+          buildExam({
+            startDate: new Date('2025-01-01T00:00:00Z'),
+          }),
+        );
+        requestContextService.getUser.mockReturnValue({
+          userId: 7,
+          isAdmin: false,
+        });
+        userClassService.findOneByKeys.mockResolvedValue({
+          userId: 7,
+          classId: 5,
+        });
+        examAssignmentRepository.createQueryBuilder.mockReturnValue(
+          makeQbWithAssignments(),
+        );
+
+        const result = await service.findOneWithAssignments(1);
+
+        expect(result.exam).toBeDefined();
+      });
+
+      it('throws NotFoundException when startDate is in the future (student)', async () => {
+        const {
+          service,
+          examRepository,
+          requestContextService,
+          userClassService,
+        } = await setup();
+
+        const futureDate = new Date();
+        futureDate.setFullYear(futureDate.getFullYear() + 1);
+        examRepository.findOne.mockResolvedValue(
+          buildExam({ startDate: futureDate }),
+        );
+        requestContextService.getUser.mockReturnValue({
+          userId: 7,
+          isAdmin: false,
+        });
+        userClassService.findOneByKeys.mockResolvedValue({
+          userId: 7,
+          classId: 5,
+        });
+
+        await expect(
+          service.findOneWithAssignments(1),
+        ).rejects.toBeInstanceOf(NotFoundException);
+      });
+
+      it('returns the exam when startDate is in the future but user is admin', async () => {
+        const {
+          service,
+          examRepository,
+          examAssignmentRepository,
+          requestContextService,
+        } = await setup();
+
+        const futureDate = new Date();
+        futureDate.setFullYear(futureDate.getFullYear() + 1);
+        examRepository.findOne.mockResolvedValue(
+          buildExam({ startDate: futureDate }),
+        );
+        requestContextService.getUser.mockReturnValue({
+          userId: 1,
+          isAdmin: true,
+        });
+        examAssignmentRepository.createQueryBuilder.mockReturnValue(
+          makeQbWithAssignments(),
+        );
+
+        const result = await service.findOneWithAssignments(1);
+
+        expect(result.exam).toBeDefined();
+      });
     });
   });
 });

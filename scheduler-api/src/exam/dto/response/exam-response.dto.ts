@@ -20,6 +20,13 @@ export class ExamResponseDto {
   })
   dueDate?: Date;
 
+  @ApiPropertyOptional({
+    type: String,
+    format: 'date-time',
+    example: '2026-08-10T08:00:00Z',
+  })
+  startDate?: Date;
+
   @ApiProperty({ type: String, format: 'date-time' })
   createdAt: Date;
 

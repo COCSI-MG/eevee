@@ -35,6 +35,7 @@ const createExamSchema = Yup.object().shape({
     .max(255, "Descrição deve ter no máximo 255 caracteres")
     .optional(),
   dueDate: Yup.string().optional(),
+  startDate: Yup.string().optional(),
 });
 
 function isoToLocalDatetime(iso: string | undefined): string {
@@ -95,31 +96,27 @@ export default function ExamFormDialog({
     title: isEdit && exam ? exam.title : "",
     description: isEdit && exam ? (exam.description ?? "") : "",
     dueDate: isEdit ? isoToLocalDatetime(exam?.dueDate) : "",
+    startDate: isEdit && exam?.startDate ? isoToLocalDatetime(exam?.startDate) : "",
   });
 
   const formik = useFormik({
     initialValues: getInitialValues(),
     validationSchema: createExamSchema,
     onSubmit: (values) => {
+      const common = {
+        title: values.title.trim(),
+        description: values.description?.trim() || undefined,
+        dueDate: values.dueDate
+          ? new Date(values.dueDate).toISOString()
+          : undefined,
+        startDate: values.startDate
+          ? new Date(values.startDate).toISOString()
+          : null,
+      };
       if (isEdit) {
-        const payload: UpdateExamRequest = {
-          title: values.title.trim(),
-          description: values.description?.trim() || undefined,
-          dueDate: values.dueDate
-            ? new Date(values.dueDate).toISOString()
-            : undefined,
-        };
-        void upsertExam(payload);
+        void upsertExam(common as UpdateExamRequest);
       } else {
-        const payload: CreateExamRequest = {
-          title: values.title.trim(),
-          description: values.description?.trim() || undefined,
-          dueDate: values.dueDate
-            ? new Date(values.dueDate).toISOString()
-            : undefined,
-          classId,
-        };
-        void upsertExam(payload);
+        void upsertExam({ ...common, classId } as CreateExamRequest);
       }
     },
   });
@@ -195,6 +192,24 @@ export default function ExamFormDialog({
             </p>
             {formik.touched.dueDate && formik.errors.dueDate && (
               <p className="text-sm text-red-500">{formik.errors.dueDate}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="startDate">Data de início</Label>
+            <Input
+              id="startDate"
+              name="startDate"
+              type="datetime-local"
+              value={formik.values.startDate}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+            <p className="text-xs text-muted-foreground">
+              Opcional. Sem esta data a prova não fica visível para os alunos.
+            </p>
+            {formik.touched.startDate && formik.errors.startDate && (
+              <p className="text-sm text-red-500">{formik.errors.startDate}</p>
             )}
           </div>
 

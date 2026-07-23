@@ -55,13 +55,24 @@ export class ExamService {
       }
     }
 
+    const startDate = createExamDto.startDate
+      ? new Date(createExamDto.startDate)
+      : undefined;
+
+    const dueDate = createExamDto.dueDate
+      ? new Date(createExamDto.dueDate)
+      : undefined;
+
+    if (startDate && dueDate && startDate > dueDate) {
+      throw new BadRequestException('startDate must not be after dueDate');
+    }
+
     return this.examRepository.save({
       title: createExamDto.title,
       description: createExamDto.description,
       classId: createExamDto.classId,
-      dueDate: createExamDto.dueDate
-        ? new Date(createExamDto.dueDate)
-        : undefined,
+      dueDate,
+      startDate,
     });
   }
 
@@ -81,6 +92,28 @@ export class ExamService {
         ? new Date(dto.dueDate)
         : (null as unknown as Date);
     }
+    if (dto.startDate !== undefined) {
+      fieldsToUpdate.startDate = dto.startDate
+        ? new Date(dto.startDate)
+        : (null as unknown as Date);
+    }
+
+    const effectiveStartDate =
+      fieldsToUpdate.startDate !== undefined
+        ? fieldsToUpdate.startDate
+        : exam.startDate;
+    const effectiveDueDate =
+      fieldsToUpdate.dueDate !== undefined
+        ? fieldsToUpdate.dueDate
+        : exam.dueDate;
+    if (
+      effectiveStartDate &&
+      effectiveDueDate &&
+      effectiveStartDate > effectiveDueDate
+    ) {
+      throw new BadRequestException('startDate must not be after dueDate');
+    }
+
     if (Object.keys(fieldsToUpdate).length > 0) {
       await this.examRepository.update(examId, fieldsToUpdate);
     }
@@ -112,7 +145,7 @@ export class ExamService {
     const sortDirection = (query.sort ?? 'asc').toUpperCase() as 'ASC' | 'DESC';
     const search = query.search?.trim();
 
-    const [rows, total] = await this.examRepository
+    const qb = this.examRepository
       .createQueryBuilder('exam')
       .where('exam.classId = :classId', { classId })
       .andWhere(
@@ -127,7 +160,16 @@ export class ExamService {
                 });
             })
           : '1 = 1',
-      )
+      );
+
+    if (!user.isAdmin) {
+      qb.andWhere(
+        'exam.startDate IS NOT NULL AND exam.startDate <= :now',
+        { now: new Date() },
+      );
+    }
+
+    const [rows, total] = await qb
       .orderBy('exam.dueDate', sortDirection)
       .skip(skip)
       .take(pageSize)
@@ -159,6 +201,10 @@ export class ExamService {
         throw new ForbiddenException(
           'You are not enrolled in the class of this exam.',
         );
+      }
+
+      if (!exam.startDate || new Date() < exam.startDate) {
+        throw new NotFoundException(`Exam with id ${examId} not found`);
       }
     }
 

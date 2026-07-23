@@ -14,21 +14,13 @@ import TableActions from "../table/table-actions";
 import { cn } from "@/lib/utils";
 import { Exam } from "@/app/interface/scheduler-api/exam";
 import { Pencil, Eye } from "lucide-react";
+import { formatDateTime } from "@/utils/date";
 
 interface AdminExamsTableProps {
   exams: Array<Exam> | undefined;
   emptyMessage?: string;
   onEdit: (exam: Exam) => void;
   onDelete: (exam: Exam) => void;
-}
-
-function formatDueDate(dueDate: string | undefined): string {
-  if (!dueDate) return "—";
-
-  return new Date(dueDate).toLocaleString("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
 }
 
 const EditExamComponent = ({
@@ -84,6 +76,9 @@ export default function AdminExamsTable({
             <div className="flex items-center">Data de Vencimento</div>
           </TableHead>
           <TableHead>
+            <div className="flex items-center">Data de Início</div>
+          </TableHead>
+          <TableHead>
             <div className="flex items-center">Ações</div>
           </TableHead>
         </TableRow>
@@ -92,7 +87,7 @@ export default function AdminExamsTable({
         {(exams ?? []).length === 0 && (
           <TableRow key={0}>
             <TableCell
-              colSpan={4}
+              colSpan={5}
               className="text-center text-muted-foreground"
             >
               {emptyMessage}
@@ -111,7 +106,12 @@ export default function AdminExamsTable({
               <TableCell
                 className={cn(!exam.dueDate && "text-muted")}
               >
-                {formatDueDate(exam.dueDate)}
+                {formatDateTime(exam.dueDate)}
+              </TableCell>
+              <TableCell
+                className={cn(!exam.startDate && "text-muted")}
+              >
+                {formatDateTime(exam.startDate)}
               </TableCell>
               <TableCell>
                 <TableActions

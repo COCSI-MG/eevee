@@ -11,23 +11,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Exam } from "@/app/interface/scheduler-api/exam";
+import { formatDateTime } from "@/utils/date";
 
 interface ExamCardProps {
   exam: Exam;
   classId: number;
 }
 
-function formatDueDate(dueDate: string | undefined): string | null {
-  if (!dueDate) return null;
-  return new Date(dueDate).toLocaleString("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  });
-}
-
 export default function ExamCard({ exam, classId }: ExamCardProps) {
   const { push } = useRouter();
-  const dueDate = formatDueDate(exam.dueDate);
+  const dueDate = formatDateTime(exam.dueDate);
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">

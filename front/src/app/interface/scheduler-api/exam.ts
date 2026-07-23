@@ -4,6 +4,7 @@ export interface Exam {
   description?: string;
   classId?: number;
   dueDate?: string;
+  startDate?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,8 +46,9 @@ export interface CreateExamRequest {
   description?: string;
   classId: number;
   dueDate?: string;
+  startDate?: string | null;
 }
 
 export type UpdateExamRequest = Partial<
-  Pick<CreateExamRequest, "title" | "description" | "dueDate">
+  Pick<CreateExamRequest, "title" | "description" | "dueDate" | "startDate">
 >;
