@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Plus, Pencil } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFetchExam } from "@/hooks/use-fetch-exam";
