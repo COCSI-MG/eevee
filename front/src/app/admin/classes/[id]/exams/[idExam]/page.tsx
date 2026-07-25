@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Pencil } from "lucide-react";
 import { AxiosError } from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFetchExam } from "@/hooks/use-fetch-exam";
@@ -16,6 +16,7 @@ import ListSearch from "@/components/shared/list-search";
 import Pagination from "@/components/shared/pagination";
 import ExamAssignmentsTable from "@/components/exam/exam-activities-table";
 import SelectFromListModal from "@/components/ui/select-from-list-modal";
+import { Input } from "@/components/ui/input";
 import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
 import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
@@ -26,6 +27,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatDateTime } from "@/utils/date";
@@ -145,6 +156,49 @@ export default function ExamDetailsPage() {
 
   const [isLinkOpen, setIsLinkOpen] = useState(false);
   const [linkPendingId, setLinkPendingId] = useState<number | null>(null);
+  const [scoresByAssignmentId, setScoresByAssignmentId] = useState<
+    Record<number, string>
+  >({});
+  const [linkError, setLinkError] = useState<string | null>(null);
+
+  const [editingAssignment, setEditingAssignment] = useState<AssignmentSummary | null>(null);
+  const [editScoreValue, setEditScoreValue] = useState("");
+  const [editScoreError, setEditScoreError] = useState<string | null>(null);
+
+  const { mutateAsync: updateScoreMutation, isPending: isUpdatingScore } =
+    useMutation({
+      mutationFn: ({
+        examId,
+        assignmentId,
+        score,
+      }: {
+        examId: number;
+        assignmentId: number;
+        score: number;
+      }) => ExamService.updateAssignmentScore(examId, assignmentId, score),
+      onSuccess: () => {
+        toast({
+          title: "Pontuação atualizada",
+          description: "A pontuação da atividade foi alterada com sucesso.",
+          duration: 4000,
+        });
+        queryClient.invalidateQueries({ queryKey: ["exam", examId] });
+        setEditingAssignment(null);
+        setEditScoreValue("");
+        setEditScoreError(null);
+      },
+      onError: (err: AxiosError) => {
+        const res = err.response?.data as { message: string };
+        const msg = res?.message || "Tente novamente mais tarde.";
+        setEditScoreError(msg);
+        toast({
+          title: "Não foi possível atualizar a pontuação",
+          description: msg,
+          variant: "destructive",
+          duration: 5000,
+        });
+      },
+    });
 
   const {
     data: linkableAssignments,
@@ -163,10 +217,12 @@ export default function ExamDetailsPage() {
     mutationFn: ({
       examId,
       assignmentId,
+      score,
     }: {
       examId: number;
       assignmentId: number;
-    }) => ExamService.linkAssignment(examId, assignmentId),
+      score: number;
+    }) => ExamService.linkAssignment(examId, assignmentId, score),
     onSuccess: () => {
       toast({
         title: "Atividade vinculada",
@@ -182,9 +238,11 @@ export default function ExamDetailsPage() {
     },
     onError: (err: AxiosError) => {
       const res = err.response?.data as { message: string };
+      const msg = res?.message || "Tente novamente mais tarde.";
+      setLinkError(msg);
       toast({
         title: "Não foi possível vincular a atividade",
-        description: res?.message || "Tente novamente mais tarde.",
+        description: msg,
         variant: "destructive",
         duration: 5000,
       });
@@ -193,11 +251,42 @@ export default function ExamDetailsPage() {
     },
   });
 
+  const isValidScore = (raw: string | undefined) => {
+    if (!raw || raw.trim() === "") return false;
+    const num = Number(raw);
+    return Number.isFinite(num) && num > 0;
+  };
+
+  const handleEditScoreRequest = (assignment: AssignmentSummary) => {
+    setEditScoreValue(String(Number(assignment.score).toFixed(2)));
+    setEditScoreError(null);
+    setEditingAssignment(assignment);
+  };
+
+  const handleSaveScore = () => {
+    if (!editingAssignment) return;
+    const raw = editScoreValue.trim();
+    if (!isValidScore(raw)) {
+      setEditScoreError("A pontuação deve ser um número positivo.");
+      return;
+    }
+    setEditScoreError(null);
+    void updateScoreMutation({
+      examId,
+      assignmentId: editingAssignment.id,
+      score: Number(raw),
+    });
+  };
+
   const handleLinkAssignment = (assignment: Assignment) => {
+    const raw = scoresByAssignmentId[assignment.id];
+    if (!isValidScore(raw)) return;
+    setLinkError(null);
     setLinkPendingId(assignment.id);
     void linkAssignmentMutation({
       examId,
       assignmentId: assignment.id,
+      score: Number(raw),
     });
   };
 
@@ -356,6 +445,7 @@ export default function ExamDetailsPage() {
               emptyMessage={assignmentsEmptyMessage}
               onDelete={handleDeleteAssignment}
               onUnlink={handleUnlinkAssignment}
+              onEditScore={handleEditScoreRequest}
             />
           </div>
           {total > 0 && (
@@ -375,13 +465,17 @@ export default function ExamDetailsPage() {
         open={isLinkOpen}
         onOpenChange={(o) => {
           setIsLinkOpen(o);
-          if (!o) setLinkPendingId(null);
+          if (!o) {
+            setLinkPendingId(null);
+            setScoresByAssignmentId({});
+            setLinkError(null);
+          }
         }}
         title="Vincular atividade"
         description="Selecione uma atividade da turma para vincular a esta prova. Atividades já vinculadas a outras provas não são listadas."
         items={linkableAssignments ?? []}
         isLoading={isLinkableFetching}
-        errorMessage={linkableErrorMessage}
+        errorMessage={linkableErrorMessage ?? linkError}
         emptyMessage="Nenhuma atividade disponível para vincular."
         searchPlaceholder="Filtrar por título da atividade"
         searchKeys={(a) => [a.title, a.description ?? ""]}
@@ -396,10 +490,90 @@ export default function ExamDetailsPage() {
             )}
           </div>
         )}
+        rowExtras={(a) => (
+          <div className="flex items-center gap-1 shrink-0">
+            <Input
+              type="number"
+              min={0.01}
+              step={0.01}
+              value={scoresByAssignmentId[a.id] ?? ""}
+              onChange={(e) => {
+                setScoresByAssignmentId((prev) => ({
+                  ...prev,
+                  [a.id]: e.target.value,
+                }));
+                setLinkError(null);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-20 h-8 text-sm tabular-nums text-right"
+            />
+            <span className="text-xs text-muted-foreground">pts</span>
+          </div>
+        )}
+        isRowActionDisabled={(a) => !isValidScore(scoresByAssignmentId[a.id])}
         actionLabel="Vincular"
         onSelect={handleLinkAssignment}
         actionPendingId={linkPendingId}
       />
+
+      <Dialog
+        open={editingAssignment !== null}
+        onOpenChange={(o) => {
+          if (!o) {
+            setEditingAssignment(null);
+            setEditScoreValue("");
+            setEditScoreError(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar pontuação</DialogTitle>
+            <DialogDescription>
+              Defina quantos pontos vale a atividade
+              &lsquo;{editingAssignment?.title}&rsquo; dentro desta prova.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="score" className="text-right">
+                Pontos
+              </Label>
+              <Input
+                id="score"
+                type="number"
+                min={0.01}
+                step={0.01}
+                placeholder="pts"
+                value={editScoreValue}
+                onChange={(e) => {
+                  setEditScoreValue(e.target.value);
+                  setEditScoreError(null);
+                }}
+                className="col-span-3 w-28 text-sm tabular-nums text-right"
+              />
+            </div>
+            {editScoreError && (
+              <p className="text-sm text-destructive col-span-4 text-right">
+                {editScoreError}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" disabled={isUpdatingScore}>
+                Cancelar
+              </Button>
+            </DialogClose>
+            <Button
+              onClick={handleSaveScore}
+              disabled={isUpdatingScore || !isValidScore(editScoreValue)}
+            >
+              {isUpdatingScore ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

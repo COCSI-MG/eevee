@@ -22,6 +22,7 @@ export interface SelectedTemplate {
     templateParamId: number;
     value: string;
   }[];
+  weight?: number;
 }
 
 export interface SelectedUser {

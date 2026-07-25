@@ -20,6 +20,9 @@ export class ExamAssignment {
   @Column({ unique: true })
   assignmentId: number;
 
+  @Column({ type: 'decimal', precision: 5, scale: 2 })
+  score: number;
+
   @ManyToOne(() => Exam, (exam) => exam.examAssignments, {
     onDelete: 'CASCADE',
   })

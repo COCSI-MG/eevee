@@ -789,6 +789,7 @@ describe('ExamService', () => {
         workerType: 'node_default' as any,
         validationScript: 'console.log("hi")',
         templates: [],
+        score: 5,
       };
 
       const result = await service.createAssignmentAndLink(1, dto);
@@ -798,8 +799,51 @@ describe('ExamService', () => {
       expect(manager.save).toHaveBeenCalledWith(ExamAssignment, {
         examId: 1,
         assignmentId: 42,
+        score: 5,
       });
-      expect(result).toEqual({ ...newActivity, exam });
+      expect(result).toEqual({ ...newActivity, exam, score: 5 });
+    });
+
+    it('throws BadRequestException when score is 0', async () => {
+      const { service, examRepository, assignmentService } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+
+      await expect(
+        service.createAssignmentAndLink(1, {
+          classId: 5,
+          title: 'A',
+          description: 'd',
+          maxAttempts: 1,
+          workerType: 'node_default' as any,
+          validationScript: undefined as any,
+          templates: [],
+          score: 0,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(assignmentService.create).not.toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when score is negative', async () => {
+      const { service, examRepository, assignmentService } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+
+      await expect(
+        service.createAssignmentAndLink(1, {
+          classId: 5,
+          title: 'A',
+          description: 'd',
+          maxAttempts: 1,
+          workerType: 'node_default' as any,
+          validationScript: undefined as any,
+          templates: [],
+          score: -2,
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(assignmentService.create).not.toHaveBeenCalled();
     });
 
     it('throws ConflictException and aborts the transaction when the assignment is already linked to another exam (unique violation 23505)', async () => {
@@ -840,6 +884,7 @@ describe('ExamService', () => {
         workerType: 'node_default' as any,
         validationScript: 'console.log("hi")',
         templates: [],
+        score: 5,
       };
 
       await expect(
@@ -862,7 +907,7 @@ describe('ExamService', () => {
 
       examRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.linkAssignment(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.linkAssignment(1, 2, 3)).rejects.toBeInstanceOf(
         NotFoundException,
       );
       expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
@@ -881,13 +926,35 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1 });
       assignmentRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.linkAssignment(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.linkAssignment(1, 2, 3)).rejects.toBeInstanceOf(
         NotFoundException,
       );
       expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
       expect(assignmentRepository.findOne).toHaveBeenCalledWith({
         where: { id: 2 },
       });
+      expect(examAssignmentRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when score is 0', async () => {
+      const { service, examRepository, examAssignmentRepository } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1 });
+
+      await expect(service.linkAssignment(1, 2, 0)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(examAssignmentRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when score is negative', async () => {
+      const { service, examRepository, examAssignmentRepository } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1 });
+
+      await expect(service.linkAssignment(1, 2, -1)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
       expect(examAssignmentRepository.save).not.toHaveBeenCalled();
     });
 
@@ -914,12 +981,13 @@ describe('ExamService', () => {
       dbError.code = '23505';
       examAssignmentRepository.save.mockRejectedValue(dbError);
 
-      await expect(service.linkAssignment(1, 2)).rejects.toBeInstanceOf(
+      await expect(service.linkAssignment(1, 2, 3)).rejects.toBeInstanceOf(
         ConflictException,
       );
       expect(examAssignmentRepository.save).toHaveBeenCalledWith({
         examId: 1,
         assignmentId: 2,
+        score: 3,
       });
       expect(examAssignmentRepository.findOneOrFail).not.toHaveBeenCalled();
     });
@@ -938,21 +1006,24 @@ describe('ExamService', () => {
         id: 99,
         examId: 1,
         assignmentId: 2,
+        score: 3,
       });
       const hydrated = {
         id: 99,
         examId: 1,
         assignmentId: 2,
+        score: 3,
         exam: { id: 1, title: 'Midterm' },
         assignment: { id: 2, title: 'Activity 2' },
       };
       examAssignmentRepository.findOneOrFail.mockResolvedValue(hydrated);
 
-      const result = await service.linkAssignment(1, 2);
+      const result = await service.linkAssignment(1, 2, 3);
 
       expect(examAssignmentRepository.save).toHaveBeenCalledWith({
         examId: 1,
         assignmentId: 2,
+        score: 3,
       });
       expect(examAssignmentRepository.findOneOrFail).toHaveBeenCalledWith({
         where: { id: 99 },
@@ -1052,6 +1123,133 @@ describe('ExamService', () => {
       });
       expect(examAssignmentRepository.delete).toHaveBeenCalledWith({ id: 99 });
       expect(result).toBeUndefined();
+    });
+  });
+
+  describe('updateAssignmentScore', () => {
+    it('throws BadRequestException when score is 0', async () => {
+      const { service, examRepository, examAssignmentRepository } = await setup();
+
+      await expect(
+        service.updateAssignmentScore(1, 2, 0),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(examRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when score is negative', async () => {
+      const { service, examRepository, examAssignmentRepository } = await setup();
+
+      await expect(
+        service.updateAssignmentScore(1, 2, -1),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(examRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the exam does not exist', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        assignmentRepository,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.updateAssignmentScore(1, 2, 3),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(assignmentRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the assignment does not exist', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        assignmentRepository,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1 });
+      assignmentRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.updateAssignmentScore(1, 2, 3),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(examRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(assignmentRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 2 },
+      });
+      expect(examAssignmentRepository.findOne).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when the link between exam and assignment does not exist', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        assignmentRepository,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examAssignmentRepository.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.updateAssignmentScore(1, 2, 3),
+      ).rejects.toBeInstanceOf(NotFoundException);
+      expect(examAssignmentRepository.findOne).toHaveBeenCalledWith({
+        where: { examId: 1, assignmentId: 2 },
+      });
+      expect(examAssignmentRepository.update).not.toHaveBeenCalled();
+      expect(examAssignmentRepository.findOneOrFail).not.toHaveBeenCalled();
+    });
+
+    it('updates the score and returns the link with relations when all checks pass', async () => {
+      const {
+        service,
+        examRepository,
+        examAssignmentRepository,
+        assignmentRepository,
+      } = await setup();
+
+      examRepository.findOne.mockResolvedValue({ id: 1 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examAssignmentRepository.findOne.mockResolvedValue({
+        id: 99,
+        examId: 1,
+        assignmentId: 2,
+        score: 3,
+      });
+      examAssignmentRepository.update.mockResolvedValue({ raw: [], affected: 1 });
+
+      const hydrated = {
+        id: 99,
+        examId: 1,
+        assignmentId: 2,
+        score: 5,
+        exam: { id: 1, title: 'Midterm' },
+        assignment: { id: 2, title: 'Activity 2' },
+      };
+      examAssignmentRepository.findOneOrFail.mockResolvedValue(hydrated);
+
+      const result = await service.updateAssignmentScore(1, 2, 5);
+
+      expect(examAssignmentRepository.update).toHaveBeenCalledWith(99, {
+        score: 5,
+      });
+      expect(examAssignmentRepository.findOneOrFail).toHaveBeenCalledWith({
+        where: { id: 99 },
+        relations: ['exam', 'assignment'],
+      });
+      expect(result).toEqual(hydrated);
     });
   });
 
@@ -1185,8 +1383,8 @@ describe('ExamService', () => {
 
       const qb = makeQueryBuilder();
       qb.getMany.mockResolvedValue([
-        { id: 2, examId: 1, assignmentId: 20, assignment: assignmentB },
-        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+        { id: 2, examId: 1, assignmentId: 20, score: 5, assignment: assignmentB },
+        { id: 1, examId: 1, assignmentId: 10, score: 3, assignment: assignmentA },
       ]);
       examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
@@ -1203,6 +1401,7 @@ describe('ExamService', () => {
           workerType: WorkerType.NODE_NESTJS,
           lastAttempt: null,
           suspensions: [],
+          score: 5,
         },
         {
           id: 10,
@@ -1213,6 +1412,7 @@ describe('ExamService', () => {
           workerType: WorkerType.NODE_DEFAULT,
           lastAttempt: null,
           suspensions: [],
+          score: 3,
         },
       ]);
       expect(result.assignments[0]).not.toHaveProperty('initSqlScript');
@@ -1362,8 +1562,8 @@ describe('ExamService', () => {
 
       const qb = makeQueryBuilder();
       qb.getMany.mockResolvedValue([
-        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
-        { id: 2, examId: 1, assignmentId: 20, assignment: assignmentB },
+        { id: 1, examId: 1, assignmentId: 10, score: 3, assignment: assignmentA },
+        { id: 2, examId: 1, assignmentId: 20, score: 5, assignment: assignmentB },
       ]);
       examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
@@ -1380,8 +1580,10 @@ describe('ExamService', () => {
         createdAt: createdAtLater,
       });
       expect(result.assignments[0].suspensions).toEqual([]);
+      expect(result.assignments[0].score).toBe(3);
       expect(result.assignments[1].lastAttempt).toBeNull();
       expect(result.assignments[1].suspensions).toEqual([]);
+      expect(result.assignments[1].score).toBe(5);
     });
 
     it('sets lastAttempt to null when the user has no attempts for an activity', async () => {
@@ -1415,7 +1617,7 @@ describe('ExamService', () => {
 
       const qb = makeQueryBuilder();
       qb.getMany.mockResolvedValue([
-        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+        { id: 1, examId: 1, assignmentId: 10, score: 3, assignment: assignmentA },
       ]);
       examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
@@ -1455,7 +1657,7 @@ describe('ExamService', () => {
 
       const qb = makeQueryBuilder();
       qb.getMany.mockResolvedValue([
-        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+        { id: 1, examId: 1, assignmentId: 10, score: 3, assignment: assignmentA },
       ]);
       examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
@@ -1498,7 +1700,7 @@ describe('ExamService', () => {
 
       const qb = makeQueryBuilder();
       qb.getMany.mockResolvedValue([
-        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+        { id: 1, examId: 1, assignmentId: 10, score: 3, assignment: assignmentA },
       ]);
       examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
@@ -1534,6 +1736,7 @@ describe('ExamService', () => {
           id: 1,
           examId: 1,
           assignmentId: 10,
+          score: 3,
           assignment: {
             id: 10,
             assignmentAttempts: [],
@@ -1544,6 +1747,7 @@ describe('ExamService', () => {
           id: 2,
           examId: 1,
           assignmentId: 20,
+          score: 5,
           assignment: {
             id: 20,
             assignmentAttempts: [],
@@ -1554,6 +1758,7 @@ describe('ExamService', () => {
           id: 3,
           examId: 1,
           assignmentId: 30,
+          score: 2,
           assignment: {
             id: 30,
             assignmentAttempts: [],
@@ -1602,7 +1807,7 @@ describe('ExamService', () => {
 
       const qb = makeQueryBuilder();
       qb.getMany.mockResolvedValue([
-        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+        { id: 1, examId: 1, assignmentId: 10, score: 3, assignment: assignmentA },
       ]);
       examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
@@ -1642,7 +1847,7 @@ describe('ExamService', () => {
 
       const qb = makeQueryBuilder();
       qb.getMany.mockResolvedValue([
-        { id: 1, examId: 1, assignmentId: 10, assignment: assignmentA },
+        { id: 1, examId: 1, assignmentId: 10, score: 3, assignment: assignmentA },
       ]);
       examAssignmentRepository.createQueryBuilder.mockReturnValue(qb);
 

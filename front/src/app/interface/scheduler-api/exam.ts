@@ -26,6 +26,7 @@ export interface AssignmentSummary {
   workerType: string;
   lastAttempt: AssignmentAttempt | null;
   suspensions: AssignmentUserSuspensionSummary[];
+  score: number;
 }
 
 export interface ExamWithAssignments {
@@ -37,6 +38,7 @@ export interface ExamAssignment {
   id: number;
   examId: number;
   assignmentId: number;
+  score: number;
   exam?: Exam;
   assignment?: AssignmentSummary;
 }

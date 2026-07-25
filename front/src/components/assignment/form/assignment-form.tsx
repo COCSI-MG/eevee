@@ -96,6 +96,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     selectedTemplates,
     setSelectedTemplates,
     upsertAssignment,
+    upsertError,
+    setUpsertError,
   } = useAssignmentForm(existingAssignmentId);
 
   const {
@@ -208,6 +210,52 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
             [values.workerType],
           );
 
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const handleWeightChange = (
+            templateId: number,
+            weight: number | undefined,
+          ) => {
+            setUpsertError(null);
+            setSelectedTemplates((prev) =>
+              (prev ?? []).map((t) =>
+                t.templateId === templateId ? { ...t, weight } : t,
+              ),
+            );
+          };
+
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const { weightError, hasWeightBlock } = useMemo(() => {
+            if (!selectedTemplates || selectedTemplates.length === 0) {
+              return {
+                weightError: upsertError?.message ?? null,
+                hasWeightBlock: false,
+              };
+            }
+            const allFilled = selectedTemplates.every(
+              (t) => t.weight !== undefined,
+            );
+            if (!allFilled) {
+              return {
+                weightError: upsertError?.message ?? null,
+                hasWeightBlock: false,
+              };
+            }
+            const sum = Math.round(
+              selectedTemplates.reduce((s, t) => s + (t.weight ?? 0), 0) *
+                100,
+            ) / 100;
+            if (sum !== 100) {
+              return {
+                weightError: `A soma dos pesos deve ser exatamente 100% (atual: ${sum.toFixed(2)}%).`,
+                hasWeightBlock: true,
+              };
+            }
+            return {
+              weightError: upsertError?.message ?? null,
+              hasWeightBlock: false,
+            };
+          }, [selectedTemplates, upsertError]);
+
           const totalSteps = steps.length;
           const currentStepDef = steps[currentStep - 1];
           const isLastStep = currentStep === totalSteps;
@@ -227,10 +275,10 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
               Boolean(values.workerType) &&
               Number(values.maxAttempts) >= 1 &&
               Number(values.classId) > 0,
-            templates: true,
+            templates: !hasWeightBlock,
             boilerplate: values.boilerplate?.trim() !== "",
             initSql: true,
-            review: isValid,
+            review: isValid && !hasWeightBlock,
           };
 
           const canProceedToNextStep =
@@ -252,6 +300,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       selectedTemplates={selectedTemplates}
                       setSelectedTemplates={setSelectedTemplates}
                       workerType={values.workerType as WorkerType}
+                      onWeightChange={handleWeightChange}
+                      weightError={weightError}
                     />
                   )}
                   {currentStepDef?.id === "boilerplate" && (
@@ -271,6 +321,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       values={values}
                       classes={classes ?? []}
                       selectedTemplates={selectedTemplates}
+                      weightError={weightError}
                     />
                   )}
 

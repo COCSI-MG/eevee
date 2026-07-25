@@ -1,5 +1,6 @@
 "use client";
 
+import { Pencil } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -9,6 +10,7 @@ import {
   TableCell,
 } from "../ui/table";
 import TableActions from "../table/table-actions";
+import { Button } from "../ui/button";
 import {
   WorkspaceLinkComponent,
   ViewUserSuspensionComponent,
@@ -21,6 +23,7 @@ interface ExamAssignmentsTableProps {
   emptyMessage?: string;
   onDelete: (assignment: AssignmentSummary) => void;
   onUnlink: (assignment: AssignmentSummary) => void;
+  onEditScore?: (assignment: AssignmentSummary) => void;
 }
 
 const DESCRIPTION_MAX_LENGTH = 100;
@@ -30,6 +33,7 @@ export default function ExamAssignmentsTable({
   emptyMessage = "Nenhuma atividade.",
   onDelete,
   onUnlink,
+  onEditScore,
 }: ExamAssignmentsTableProps) {
   const list = assignments ?? [];
 
@@ -44,6 +48,9 @@ export default function ExamAssignmentsTable({
             <div className="flex items-center">Descrição</div>
           </TableHead>
           <TableHead>
+            <div className="flex items-center">Pontuação</div>
+          </TableHead>
+          <TableHead>
             <div className="flex items-center">Tentativas Máximas</div>
           </TableHead>
           <TableHead>
@@ -56,7 +63,7 @@ export default function ExamAssignmentsTable({
         {list.length === 0 && (
           <TableRow>
             <TableCell
-              colSpan={5}
+              colSpan={6}
               className="text-center text-muted-foreground"
             >
               {emptyMessage}
@@ -80,6 +87,26 @@ export default function ExamAssignmentsTable({
                 {description.length > DESCRIPTION_MAX_LENGTH
                   ? `${description.slice(0, DESCRIPTION_MAX_LENGTH)}...`
                   : description}
+              </TableCell>
+              <TableCell className="tabular-nums">
+                <div className="flex items-center gap-1">
+                  <span>
+                    {!assignment.score
+                      ? "—"
+                      : Number(assignment.score).toFixed(2)}
+                  </span>
+                  {onEditScore && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => onEditScore(assignment)}
+                      aria-label="Editar pontuação"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </TableCell>
               <TableCell>{assignment.maxAttempts}</TableCell>
               <TableCell>{assignment.workerType}</TableCell>

@@ -29,6 +29,8 @@ interface TemplateCardProps {
     React.SetStateAction<SelectedTemplate[] | null>
   >;
   workerType: WorkerType;
+  onWeightChange: (templateId: number, weight: number | undefined) => void;
+  weightError: string | null;
 }
 
 interface State {
@@ -80,6 +82,8 @@ export default function TemplateCard({
   selectedTemplates,
   setSelectedTemplates,
   workerType,
+  onWeightChange,
+  weightError,
 }: TemplateCardProps) {
   const normalizedWorkerType = React.useMemo<WorkerType>(() => {
     if (
@@ -396,6 +400,8 @@ export default function TemplateCard({
                 templates={templates || []}
                 selectedTemplates={selectedTemplates}
                 handleRemoveTemplate={handleRemoveTemplate}
+                onWeightChange={onWeightChange}
+                weightError={weightError}
               />
             )}
 

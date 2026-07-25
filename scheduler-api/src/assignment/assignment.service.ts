@@ -1,11 +1,12 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateAssignmentDto } from './dto/create-assignment.dto';
+import { AssignmentTemplateDto, CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
@@ -89,6 +90,121 @@ export class AssignmentService {
           .join(', ')}`,
       );
     }
+  }
+
+  private normalizeTemplateWeights(templates: AssignmentTemplateDto[]): number[] {
+    if (templates.length === 0) return [];
+
+    this.assertWeightsInRange(templates);
+
+    const cents = templates.map((t) =>
+      t.weight != null ? this.toCents(t.weight) : null,
+    );
+
+    if (cents.every((c) => c === null)) {
+      return this.splitEvenlyAcross(templates.length);
+    }
+
+    const { explicitIndices, missingIndices } = this.partitionByPresence(cents);
+
+    if (missingIndices.length === 0) {
+      return this.assertSumIsExactly100(cents);
+    }
+
+    return this.distributeRemainder(cents, explicitIndices, missingIndices);
+  }
+
+  /** Converts a decimal weight (e.g. 33.33) to its cent representation (e.g. 3333). */
+  private toCents(weight: number): number {
+    return Math.round(weight * 100);
+  }
+
+  /** Formats a cent value as a human-readable percent string without trailing zeros (e.g. 9999 → "99.99", 10000 → "100"). */
+  private formatPercentForError(totalCents: number): string {
+    return (totalCents / 100).toFixed(2).replace(/\.?0+$/, '') || '0';
+  }
+
+  /** Validates that every explicit weight is within [0, 100]. */
+  private assertWeightsInRange(templates: AssignmentTemplateDto[]): void {
+    for (const t of templates) {
+      if (t.weight != null && (t.weight < 0 || t.weight > 100)) {
+        throw new BadRequestException(
+          `Template weight must be between 0 and 100, got ${t.weight}`,
+        );
+      }
+    }
+  }
+
+  /**
+   * Partitions the cents array into indices that have explicit values and those that are null.
+   * Indices with explicit values may also include zero (weight = 0).
+   */
+  private partitionByPresence(cents: (number | null)[]): {
+    explicitIndices: number[];
+    missingIndices: number[];
+  } {
+    const explicitIndices: number[] = [];
+    const missingIndices: number[] = [];
+    for (let i = 0; i < cents.length; i++) {
+      (cents[i] !== null ? explicitIndices : missingIndices).push(i);
+    }
+    return { explicitIndices, missingIndices };
+  }
+
+  /**
+   * Case A — All weights missing. Splits 100% evenly across N templates,
+   * using Math.floor and concentrating the rounding residual on the last one.
+   */
+  private splitEvenlyAcross(n: number): number[] {
+    const base = Math.floor(10000 / n);
+    const result = new Array<number>(n).fill(base);
+    result[n - 1] += 10000 - base * n;
+    return result.map((c) => c / 100);
+  }
+
+  /**
+   * Case C — All weights explicit. Asserts they sum to exactly 100%,
+   * otherwise throws BadRequestException with the current sum.
+   */
+  private assertSumIsExactly100(cents: (number | null)[]): number[] {
+    const total = cents.reduce<number>((s, c) => s + (c as number), 0);
+    if (total !== 10000) {
+      throw new BadRequestException(
+        `Template weights must sum to 100%, got ${this.formatPercentForError(total)}%`,
+      );
+    }
+    return cents.map((c) => (c as number) / 100);
+  }
+
+  /**
+   * Cases B & D — Some weights explicit, some missing.
+   * Computes the remainder (10000 − sum of explicit cents), throws if negative,
+   * then distributes the remainder as evenly as possible across the missing slots
+   * using Math.floor and concentrating the rounding residual on the last missing slot.
+   */
+  private distributeRemainder(
+    cents: (number | null)[],
+    explicitIndices: number[],
+    missingIndices: number[],
+  ): number[] {
+    const explicitTotal = explicitIndices.reduce<number>(
+      (s, i) => s + (cents[i] as number),
+      0,
+    );
+    const remainder = 10000 - explicitTotal;
+    if (remainder < 0) {
+      throw new BadRequestException(
+        `Template weights must sum to 100%, got ${this.formatPercentForError(explicitTotal)}%`,
+      );
+    }
+    const nMissing = missingIndices.length;
+    const base = Math.floor(remainder / nMissing);
+    for (let k = 0; k < nMissing; k++) {
+      cents[missingIndices[k]] = base;
+    }
+    const lastIdx = missingIndices[nMissing - 1];
+    cents[lastIdx] = (cents[lastIdx] as number) + (remainder - base * nMissing);
+    return cents.map((c) => (c as number) / 100);
   }
 
   private async readLegacyBoilerplateFileContent(
@@ -235,9 +351,12 @@ export class AssignmentService {
         templateRepo,
       });
 
-      const assignmentTemplateEntities = templates.map((template) => ({
+      const weights = this.normalizeTemplateWeights(templates);
+
+      const assignmentTemplateEntities = templates.map((template, i) => ({
         assignmentId: newAssignment.id,
         templateId: template.templateId,
+        weight: weights[i],
       }));
 
       const assignmentParamsEntities = templates.flatMap((template) =>
@@ -511,13 +630,16 @@ export class AssignmentService {
         workerType: effectiveWorkerType,
       });
 
+      const weights = this.normalizeTemplateWeights(updateAssignmentDto.templates);
+
       await this.assignmentTemplateRepository.delete({ assignmentId: id });
       await this.assignmentParamsRepository.delete({ assignmentId: id });
 
       const assignmentTemplateEntities = updateAssignmentDto.templates.map(
-        (template) => ({
+        (template, i) => ({
           assignmentId: id,
           templateId: template.templateId,
+          weight: weights[i],
         }),
       );
 

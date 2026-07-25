@@ -25,7 +25,9 @@ import {
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateAssignmentDto } from 'src/assignment/dto/create-assignment.dto';
+import { CreateAndLinkAssignmentDto } from './dto/create-and-link-assignment.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
+import { LinkAssignmentDto } from './dto/link-assignment.dto';
 import { ListExamsByClassQueryDto } from './dto/list-exams-by-class.query.dto';
 import { CreateAssignmentAndLinkResponseDto } from './dto/response/create-activity-and-link-response.dto';
 import { ExamAssignmentResponseDto } from './dto/response/exam-activity-response.dto';
@@ -38,7 +40,9 @@ import { ExamService } from './exam.service';
 @ApiTags('Exam')
 @Controller('exam')
 export class ExamController {
-  constructor(private readonly examService: ExamService) {}
+  constructor(
+    private readonly examService: ExamService,
+  ) {}
 
   @Post()
   @ApiCreatedResponse({
@@ -109,7 +113,7 @@ export class ExamController {
   @HttpCode(HttpStatus.CREATED)
   async createAssignmentAndLink(
     @Param('examId') examId: string,
-    @Body() createAssignmentDto: CreateAssignmentDto,
+    @Body() createAssignmentDto: CreateAndLinkAssignmentDto,
   ) {
     return this.examService.createAssignmentAndLink(+examId, createAssignmentDto);
   }
@@ -132,8 +136,9 @@ export class ExamController {
   async linkAssignment(
     @Param('examId') examId: string,
     @Param('assignmentId') assignmentId: string,
+    @Body() dto: LinkAssignmentDto,
   ) {
-    return this.examService.linkAssignment(+examId, +assignmentId);
+    return this.examService.linkAssignment(+examId, +assignmentId, dto.score);
   }
 
   @Delete(':idExam/assignments/:assignmentId')
@@ -153,6 +158,29 @@ export class ExamController {
     @Param('assignmentId') assignmentId: string,
   ): Promise<void> {
     await this.examService.unlinkAssignment(+idExam, +assignmentId);
+  }
+
+  @Patch(':examId/assignments/:assignmentId')
+  @ApiOkResponse({
+    type: ExamAssignmentResponseDto,
+    description: 'Assignment score updated successfully',
+  })
+  @ApiBadRequestResponse({
+    description: 'score must be greater than 0',
+  })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
+  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiNotFoundResponse({
+    description:
+      'Exam not found, Assignment not found, or the link between them does not exist',
+  })
+  @UseGuards(AdminGuard)
+  async updateAssignmentScore(
+    @Param('examId') examId: string,
+    @Param('assignmentId') assignmentId: string,
+    @Body() dto: LinkAssignmentDto,
+  ) {
+    return this.examService.updateAssignmentScore(+examId, +assignmentId, dto.score);
   }
 
   @Patch(':id')

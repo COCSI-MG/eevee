@@ -64,6 +64,9 @@ export class AssignmentSummaryResponseDto {
 
   @ApiProperty({ type: () => [AssignmentUserSuspensionSummaryDto] })
   suspensions: AssignmentUserSuspensionSummaryDto[];
+
+  @ApiProperty({ example: 3 })
+  score: number;
 }
 
 export class ExamWithAssignmentsResponseDto {

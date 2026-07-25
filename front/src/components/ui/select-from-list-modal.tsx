@@ -31,6 +31,8 @@ export interface SelectFromListModalProps<T> {
   actionLabel: string;
   onSelect: (item: T) => void;
   actionPendingId?: string | number | null;
+  rowExtras?: (item: T) => React.ReactNode;
+  isRowActionDisabled?: (item: T) => boolean;
 }
 
 export default function SelectFromListModal<T>({
@@ -49,6 +51,8 @@ export default function SelectFromListModal<T>({
   actionLabel,
   onSelect,
   actionPendingId,
+  rowExtras,
+  isRowActionDisabled,
 }: SelectFromListModalProps<T>) {
   const { search, debouncedSearch, setSearch } = usePaginatedSearch();
 
@@ -110,15 +114,19 @@ export default function SelectFromListModal<T>({
                 const id = getItemId(item);
                 const isPending = actionPendingId === id;
 
+                const isDisabled =
+                  hasAnyPending || (isRowActionDisabled?.(item) ?? false);
+
                 return (
                   <div
                     key={id}
                     className="flex items-center gap-3 rounded-lg border p-3"
                   >
                     <div className="flex-1 min-w-0">{renderRow(item)}</div>
+                    {rowExtras && <div className="shrink-0">{rowExtras(item)}</div>}
                     <Button
                       size="sm"
-                      disabled={hasAnyPending}
+                      disabled={isDisabled}
                       onClick={() => onSelect(item)}
                     >
                       {isPending && (

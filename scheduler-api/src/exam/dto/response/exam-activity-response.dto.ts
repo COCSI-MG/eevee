@@ -12,6 +12,9 @@ export class ExamAssignmentResponseDto {
   @ApiProperty({ example: 2 })
   assignmentId: number;
 
+  @ApiProperty({ example: 3 })
+  score: number;
+
   @ApiProperty({ type: () => ExamResponseDto })
   exam: ExamResponseDto;
 

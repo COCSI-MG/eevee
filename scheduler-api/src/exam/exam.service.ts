@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, DataSource, Repository } from 'typeorm';
 import { AssignmentService } from 'src/assignment/assignment.service';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
-import { CreateAssignmentDto } from 'src/assignment/dto/create-assignment.dto';
+import { CreateAndLinkAssignmentDto } from './dto/create-and-link-assignment.dto';
 import { ClassService } from 'src/class/class.service';
 import {
   PaginatedResult,
@@ -243,6 +243,7 @@ export class ExamService {
           classId: a.classId,
           maxAttempts: a.maxAttempts,
           workerType: a.workerType,
+          score: ea.score,
           lastAttempt: lastAttempt
             ? {
                 id: lastAttempt.id,
@@ -270,7 +271,12 @@ export class ExamService {
   async linkAssignment(
     examId: number,
     assignmentId: number,
+    score: number,
   ): Promise<ExamAssignment> {
+    if (score <= 0) {
+      throw new BadRequestException('score must be greater than 0');
+    }
+
     const exam = await this.examRepository.findOne({ where: { id: examId } });
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
@@ -285,7 +291,7 @@ export class ExamService {
 
     let saved: ExamAssignment;
     try {
-      saved = await this.examAssignmentRepository.save({ examId, assignmentId });
+      saved = await this.examAssignmentRepository.save({ examId, assignmentId, score });
     } catch (error) {
       if (error && (error as { code?: string }).code === '23505') {
         throw new ConflictException(
@@ -328,6 +334,46 @@ export class ExamService {
     await this.examAssignmentRepository.delete({ id: link.id });
   }
 
+  async updateAssignmentScore(
+    examId: number,
+    assignmentId: number,
+    score: number,
+  ): Promise<ExamAssignment> {
+    if (score <= 0) {
+      throw new BadRequestException('score must be greater than 0');
+    }
+
+    const exam = await this.examRepository.findOne({ where: { id: examId } });
+    if (!exam) {
+      throw new NotFoundException(`Exam with id ${examId} not found`);
+    }
+
+    const assignment = await this.assignmentRepository.findOne({
+      where: { id: assignmentId },
+    });
+    if (!assignment) {
+      throw new NotFoundException(
+        `Assignment with id ${assignmentId} not found`,
+      );
+    }
+
+    const link = await this.examAssignmentRepository.findOne({
+      where: { examId, assignmentId },
+    });
+    if (!link) {
+      throw new NotFoundException(
+        `Link between exam ${examId} and assignment ${assignmentId} does not exist`,
+      );
+    }
+
+    await this.examAssignmentRepository.update(link.id, { score });
+
+    return this.examAssignmentRepository.findOneOrFail({
+      where: { id: link.id },
+      relations: ['exam', 'assignment'],
+    });
+  }
+
   async remove(id: number) {
     const exam = await this.examRepository.findOne({ where: { id } });
     if (!exam) {
@@ -342,8 +388,12 @@ export class ExamService {
 
   async createAssignmentAndLink(
     examId: number,
-    createAssignmentDto: CreateAssignmentDto,
+    createAssignmentDto: CreateAndLinkAssignmentDto,
   ): Promise<CreateAssignmentAndLinkResponseDto> {
+    if (createAssignmentDto.score <= 0) {
+      throw new BadRequestException('score must be greater than 0');
+    }
+
     const exam = await this.examRepository.findOne({ where: { id: examId } });
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
@@ -365,6 +415,7 @@ export class ExamService {
         await manager.save(ExamAssignment, {
           examId,
           assignmentId: newAssignment.id,
+          score: createAssignmentDto.score,
         });
       } catch (error) {
         if (error && (error as { code?: string }).code === '23505') {
@@ -375,7 +426,7 @@ export class ExamService {
         throw error;
       }
 
-      return { ...newAssignment, exam };
+      return { ...newAssignment, exam, score: createAssignmentDto.score };
     });
   }
 }

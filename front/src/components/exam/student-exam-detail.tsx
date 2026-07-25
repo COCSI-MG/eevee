@@ -48,6 +48,7 @@ function summaryToAssignment(
     class: {} as Class,
     assignmentTemplates: [],
     assignmentParams: [],
+    score: s.score,
   };
 }
 

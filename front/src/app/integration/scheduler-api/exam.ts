@@ -49,9 +49,11 @@ export class ExamService {
   static async linkAssignment(
     examId: number,
     assignmentId: number,
+    score: number,
   ): Promise<ExamAssignment> {
     const response = await axiosClientWithAuth.post<ExamAssignment>(
       `/exam/${examId}/assignments/${assignmentId}`,
+      { score },
     );
     return response.data;
   }
@@ -63,5 +65,17 @@ export class ExamService {
     await axiosClientWithAuth.delete(
       `/exam/${examId}/assignments/${assignmentId}`,
     );
+  }
+
+  static async updateAssignmentScore(
+    examId: number,
+    assignmentId: number,
+    score: number,
+  ): Promise<ExamAssignment> {
+    const response = await axiosClientWithAuth.patch<ExamAssignment>(
+      `/exam/${examId}/assignments/${assignmentId}`,
+      { score },
+    );
+    return response.data;
   }
 }

@@ -25,6 +25,7 @@ export class AddExamAndExamAssignment1774600000000
         "id" SERIAL NOT NULL,
         "examId" integer NOT NULL,
         "assignmentId" integer NOT NULL,
+        "score" decimal(5,2) NOT NULL,
         CONSTRAINT "PK_exam_assignment_id" PRIMARY KEY ("id")
       )
     `);

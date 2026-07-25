@@ -33,6 +33,9 @@ export class CreateAssignmentAndLinkResponseDto {
   @ApiPropertyOptional()
   validationScript?: string;
 
+  @ApiProperty({ example: 3 })
+  score: number;
+
   @ApiProperty({ type: () => ExamResponseDto })
   exam: ExamResponseDto;
 }
