@@ -6,9 +6,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, DataSource, Repository } from 'typeorm';
+import { Brackets, DataSource, In, Repository } from 'typeorm';
 import { AssignmentService } from 'src/assignment/assignment.service';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
+import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { CreateAndLinkAssignmentDto } from './dto/create-and-link-assignment.dto';
 import { ClassService } from 'src/class/class.service';
 import {
@@ -17,10 +19,18 @@ import {
   buildPaginationParams,
 } from 'src/common/pagination/pagination';
 import { RequestContextService } from 'src/request-context/request-context.service';
+import { User } from 'src/user/entities/user.entity';
+import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { UserClassService } from 'src/user-class/user-class.service';
 import { CreateExamDto } from './dto/create-exam.dto';
+import { ListExamStudentsQueryDto } from './dto/list-exam-students.query.dto';
 import { ListExamsByClassQueryDto } from './dto/list-exams-by-class.query.dto';
 import { CreateAssignmentAndLinkResponseDto } from './dto/response/create-activity-and-link-response.dto';
+import {
+  ExamStudentAssignmentDto,
+  ExamStudentGradesResponseDto,
+} from './dto/response/exam-student-grades-response.dto';
+import { PaginatedExamStudentsResponseDto } from './dto/response/paginated-exam-students-response.dto';
 import {
   AssignmentSummaryResponseDto,
   ExamWithAssignmentsResponseDto,
@@ -38,6 +48,12 @@ export class ExamService {
     private readonly examAssignmentRepository: Repository<ExamAssignment>,
     @InjectRepository(Assignment)
     private readonly assignmentRepository: Repository<Assignment>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Attempt)
+    private readonly attemptRepository: Repository<Attempt>,
+    @InjectRepository(UserClass)
+    private readonly userClassRepository: Repository<UserClass>,
     private readonly classService: ClassService,
     private readonly userClassService: UserClassService,
     private readonly requestContextService: RequestContextService,
@@ -266,6 +282,142 @@ export class ExamService {
     );
 
     return { exam, assignments: mappedAssignments };
+  }
+
+  async findStudentsByExam(
+    examId: number,
+    query: ListExamStudentsQueryDto,
+  ): Promise<PaginatedExamStudentsResponseDto> {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+      relations: ['examAssignments', 'examAssignments.assignment'],
+    });
+
+    if (!exam) {
+      throw new NotFoundException(`Exam with id ${examId} not found`);
+    }
+
+    if (exam.classId == null) {
+      throw new BadRequestException(`Exam with id ${examId} has no class assigned`);
+    }
+
+    const examAssignments = exam.examAssignments ?? [];
+
+    if (examAssignments.length === 0) {
+      return { data: [], meta: buildPaginationMeta(0, query.page ?? 1, query.pageSize ?? 10) };
+    }
+
+    const assignmentIds = examAssignments.map((ea) => ea.assignmentId);
+
+    const { page, pageSize, skip } = buildPaginationParams(query);
+
+    const search = query.search?.trim();
+
+    const qb = this.userClassRepository
+      .createQueryBuilder('uc')
+      .innerJoinAndSelect('uc.user', 'user')
+      .where('uc.classId = :classId', { classId: exam.classId });
+
+    if (search) {
+      qb.andWhere('LOWER(user.name) LIKE LOWER(:search)', { search: `%${search}%` });
+    }
+
+    const [userClasses, total] = await qb
+      .orderBy('user.name', 'ASC')
+      .skip(skip)
+      .take(pageSize)
+      .getManyAndCount();
+
+    if (userClasses.length === 0) {
+      return { data: [], meta: buildPaginationMeta(total, page, pageSize) };
+    }
+
+    const studentIds = userClasses.map((uc) => uc.userId);
+    const studentMap = new Map(userClasses.map((uc) =>  {
+      return [
+        uc.userId,
+        {
+          name: uc.user?.name,
+          email: uc.user?.email
+        }
+      ]
+    }));
+
+    const { entities, raw } = await this.attemptRepository
+      .createQueryBuilder('attempt')
+      .distinctOn(['attempt.userId', 'attempt.assignmentId'])
+      .addSelect(
+        'COUNT(*) OVER (PARTITION BY attempt.userId, attempt.assignmentId)',
+        'attemptsCount',
+      )
+      .where('attempt.assignmentId IN (:...assignmentIds)', { assignmentIds })
+      .andWhere('attempt.userId IN (:...studentIds)', { studentIds })
+      .andWhere('attempt.status = :status', { status: AttemptStatus.COMPLETED })
+      .orderBy('attempt.userId', 'ASC')
+      .addOrderBy('attempt.assignmentId', 'ASC')
+      .addOrderBy('attempt.createdAt', 'DESC')
+      .getRawAndEntities();
+
+    const lastAttemptMap = new Map<string, Attempt>();
+    const attemptCountMap = new Map<string, number>();
+    entities.forEach((attempt, i) => {
+      const key = `${attempt.userId}:${attempt.assignmentId}`;
+      lastAttemptMap.set(key, attempt);
+      attemptCountMap.set(key, Number(raw[i].attemptsCount));
+    });
+
+    const examMaxGrade = examAssignments.reduce((sum, ea) => sum + Number(ea.score), 0);
+
+    const data: ExamStudentGradesResponseDto[] = studentIds.map((studentId) => {
+      const studentInfo = studentMap.get(studentId);
+      let examGrade = 0;
+
+      const assignments: ExamStudentAssignmentDto[] = examAssignments.map((ea) => {
+        const key = `${studentId}:${ea.assignmentId}`;
+        const attempt = lastAttemptMap.get(key);
+        const weight = Number(ea.score);
+
+        if (attempt) {
+          examGrade += weight * attempt.score;
+        }
+
+        return {
+          assignmentId: ea.assignmentId,
+          title: ea.assignment.title,
+          weight,
+          isAcceptable: attempt?.isAcceptable ?? false,
+          score: attempt?.score ?? 0,
+          passes: attempt?.passes ?? 0,
+          fails: attempt?.fails ?? 0,
+          attemptsCount: attemptCountMap.get(key) ?? 0,
+          lastAttempt: attempt
+            ? {
+                id: attempt.id,
+                status: attempt.status,
+                score: attempt.score,
+                isAcceptable: attempt.isAcceptable,
+                passes: attempt.passes,
+                fails: attempt.fails,
+                createdAt: attempt.createdAt,
+              }
+            : null,
+        };
+      });
+
+      return {
+        userId: studentId,
+        name: studentInfo?.name ?? '',
+        email: studentInfo?.email ?? '',
+        totalAssignments: examAssignments.length,
+        attemptedAssignments: assignments.filter((a) => a.attemptsCount > 0).length,
+        approvedAssignments: assignments.filter((a) => a.isAcceptable).length,
+        examGrade,
+        maxExamGrade: examMaxGrade,
+        assignments,
+      };
+    });
+
+    return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
   async linkAssignment(

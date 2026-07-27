@@ -28,9 +28,11 @@ import { CreateAssignmentDto } from 'src/assignment/dto/create-assignment.dto';
 import { CreateAndLinkAssignmentDto } from './dto/create-and-link-assignment.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { LinkAssignmentDto } from './dto/link-assignment.dto';
+import { ListExamStudentsQueryDto } from './dto/list-exam-students.query.dto';
 import { ListExamsByClassQueryDto } from './dto/list-exams-by-class.query.dto';
 import { CreateAssignmentAndLinkResponseDto } from './dto/response/create-activity-and-link-response.dto';
 import { ExamAssignmentResponseDto } from './dto/response/exam-activity-response.dto';
+import { PaginatedExamStudentsResponseDto } from './dto/response/paginated-exam-students-response.dto';
 import { ExamResponseDto } from './dto/response/exam-response.dto';
 import { ExamWithAssignmentsResponseDto } from './dto/response/exam-with-activities-response.dto';
 import { PaginatedExamsResponseDto } from './dto/response/paginated-exams-response.dto';
@@ -75,6 +77,19 @@ export class ExamController {
     @Query() query: ListExamsByClassQueryDto,
   ) {
     return this.examService.findByClass(+classId, query);
+  }
+
+  @Get(':idExam/student')
+  @ApiOkResponse({ type: PaginatedExamStudentsResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
+  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiNotFoundResponse({ description: 'Exam not found' })
+  @UseGuards(AdminGuard)
+  findStudents(
+    @Param('idExam') idExam: string,
+    @Query() query: ListExamStudentsQueryDto,
+  ) {
+    return this.examService.findStudentsByExam(+idExam, query);
   }
 
   @Get(':idExam')
