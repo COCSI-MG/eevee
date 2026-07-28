@@ -1,4 +1,5 @@
 import { CreateExamRequest, Exam, ExamAssignment, ExamWithAssignments, UpdateExamRequest } from "@/app/interface/scheduler-api/exam";
+import { ExamStudentGrades } from "@/app/interface/scheduler-api/exam-student-grades";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
 
@@ -75,6 +76,17 @@ export class ExamService {
     const response = await axiosClientWithAuth.patch<ExamAssignment>(
       `/exam/${examId}/assignments/${assignmentId}`,
       { score },
+    );
+    return response.data;
+  }
+
+  static async listStudents(
+    examId: number,
+    params: { page?: number; pageSize?: number; search?: string },
+  ): Promise<PaginatedResponse<ExamStudentGrades>> {
+    const response = await axiosClientWithAuth.get<PaginatedResponse<ExamStudentGrades>>(
+      `/exam/${examId}/student`,
+      { params },
     );
     return response.data;
   }

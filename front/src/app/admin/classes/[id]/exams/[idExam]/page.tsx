@@ -1,45 +1,28 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
+import { useMemo } from "react";
+import { ArrowLeft } from "lucide-react";
 import { AxiosError } from "axios";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useFetchExam } from "@/hooks/use-fetch-exam";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
-import { ExamService } from "@/app/integration/scheduler-api/exam";
+import { useExamDetailsData } from "@/hooks/use-exam-details-data";
+import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
 import Loader from "@/components/loader";
 import QueryErrorState from "@/components/shared/query-error-state";
-import ListSearch from "@/components/shared/list-search";
-import Pagination from "@/components/shared/pagination";
-import ExamAssignmentsTable from "@/components/exam/exam-activities-table";
-import SelectFromListModal from "@/components/ui/select-from-list-modal";
-import { Input } from "@/components/ui/input";
-import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
-import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import ExamDetailsHeader from "@/components/exam/exam-details-header";
+import ExamInfoCard from "@/components/exam/exam-info-card";
+import ExamActivitiesSection from "@/components/exam/exam-activities-section";
+import ExamStudentsSection from "@/components/exam/exam-students-section";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { formatDateTime } from "@/utils/date";
+
+type ExamView = "activities" | "students";
+
+function getViewFromSearch(searchParams: URLSearchParams): ExamView {
+  const v = searchParams.get("view");
+  return v === "students" ? "students" : "activities";
+}
 
 export default function ExamDetailsPage() {
   const { id, idExam } = useParams<{
@@ -47,8 +30,16 @@ export default function ExamDetailsPage() {
     idExam: string;
   }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const examId = Number(idExam);
   const classId = Number(id);
+  const currentView = getViewFromSearch(searchParams);
+
+  const setView = (view: ExamView) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", view);
+    router.replace(`?${params.toString()}`);
+  };
 
   const {
     data: examData,
@@ -59,33 +50,10 @@ export default function ExamDetailsPage() {
   } = useFetchExam(examId);
   const exam = examData?.exam;
 
-  const queryClient = useQueryClient();
   const { page, search, debouncedSearch, setPage, setSearch } =
     usePaginatedSearch();
 
-  const { mutateAsync: deleteAssignment } = useMutation({
-    mutationFn: AssignmentService.DeleteAssignment,
-    onSuccess: () => {
-      toast({
-        title: "Atividade excluída",
-        description: "A atividade foi removida com sucesso.",
-        duration: 4000,
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["exam", examId],
-      });
-    },
-    onError: (err: AxiosError) => {
-      const res = err.response?.data as { message: string };
-      toast({
-        title: "Não foi possível excluir a atividade",
-        description: res?.message || "Tente novamente mais tarde.",
-        variant: "destructive",
-        duration: 5000,
-      });
-      throw err;
-    },
-  });
+  const data = useExamDetailsData({ examId, classId });
 
   const filteredAssignments = useMemo(() => {
     const all = examData?.assignments ?? [];
@@ -114,190 +82,6 @@ export default function ExamDetailsPage() {
     }
     return "Nenhuma atividade.";
   }, [total, debouncedSearch]);
-
-  const handleDeleteAssignment = (assignment: AssignmentSummary) => {
-    void deleteAssignment(assignment.id);
-  };
-
-  const { mutateAsync: unlinkAssignmentMutation } = useMutation({
-    mutationFn: ({
-      examId,
-      assignmentId,
-    }: {
-      examId: number;
-      assignmentId: number;
-    }) => ExamService.unlinkAssignment(examId, assignmentId),
-    onSuccess: () => {
-      toast({
-        title: "Atividade desvinculada",
-        description: "A atividade foi removida desta prova.",
-        duration: 4000,
-      });
-      queryClient.invalidateQueries({ queryKey: ["exam", examId] });
-    },
-    onError: (err: AxiosError) => {
-      const res = err.response?.data as { message: string };
-      toast({
-        title: "Não foi possível desvincular a atividade",
-        description: res?.message || "Tente novamente mais tarde.",
-        variant: "destructive",
-        duration: 5000,
-      });
-      throw err;
-    },
-  });
-
-  const handleUnlinkAssignment = (assignment: AssignmentSummary) => {
-    void unlinkAssignmentMutation({
-      examId,
-      assignmentId: assignment.id,
-    });
-  };
-
-  const [isLinkOpen, setIsLinkOpen] = useState(false);
-  const [linkPendingId, setLinkPendingId] = useState<number | null>(null);
-  const [scoresByAssignmentId, setScoresByAssignmentId] = useState<
-    Record<number, string>
-  >({});
-  const [linkError, setLinkError] = useState<string | null>(null);
-
-  const [editingAssignment, setEditingAssignment] = useState<AssignmentSummary | null>(null);
-  const [editScoreValue, setEditScoreValue] = useState("");
-  const [editScoreError, setEditScoreError] = useState<string | null>(null);
-
-  const { mutateAsync: updateScoreMutation, isPending: isUpdatingScore } =
-    useMutation({
-      mutationFn: ({
-        examId,
-        assignmentId,
-        score,
-      }: {
-        examId: number;
-        assignmentId: number;
-        score: number;
-      }) => ExamService.updateAssignmentScore(examId, assignmentId, score),
-      onSuccess: () => {
-        toast({
-          title: "Pontuação atualizada",
-          description: "A pontuação da atividade foi alterada com sucesso.",
-          duration: 4000,
-        });
-        queryClient.invalidateQueries({ queryKey: ["exam", examId] });
-        setEditingAssignment(null);
-        setEditScoreValue("");
-        setEditScoreError(null);
-      },
-      onError: (err: AxiosError) => {
-        const res = err.response?.data as { message: string };
-        const msg = res?.message || "Tente novamente mais tarde.";
-        setEditScoreError(msg);
-        toast({
-          title: "Não foi possível atualizar a pontuação",
-          description: msg,
-          variant: "destructive",
-          duration: 5000,
-        });
-      },
-    });
-
-  const {
-    data: linkableAssignments,
-    isFetching: isLinkableFetching,
-    isError: isLinkableError,
-    error: linkableError,
-    refetch: refetchLinkable,
-  } = useQuery<Assignment[]>({
-    queryKey: ["linkable-assignments", classId],
-    queryFn: () => AssignmentService.getLinkableByClassId(classId),
-    enabled: isLinkOpen && Number.isFinite(classId),
-    refetchOnWindowFocus: false,
-  });
-
-  const { mutateAsync: linkAssignmentMutation } = useMutation({
-    mutationFn: ({
-      examId,
-      assignmentId,
-      score,
-    }: {
-      examId: number;
-      assignmentId: number;
-      score: number;
-    }) => ExamService.linkAssignment(examId, assignmentId, score),
-    onSuccess: () => {
-      toast({
-        title: "Atividade vinculada",
-        description: "A atividade foi vinculada à prova com sucesso.",
-        duration: 4000,
-      });
-      queryClient.invalidateQueries({ queryKey: ["exam", examId] });
-      queryClient.invalidateQueries({
-        queryKey: ["linkable-assignments", classId],
-      });
-      setIsLinkOpen(false);
-      setLinkPendingId(null);
-    },
-    onError: (err: AxiosError) => {
-      const res = err.response?.data as { message: string };
-      const msg = res?.message || "Tente novamente mais tarde.";
-      setLinkError(msg);
-      toast({
-        title: "Não foi possível vincular a atividade",
-        description: msg,
-        variant: "destructive",
-        duration: 5000,
-      });
-      setLinkPendingId(null);
-      void refetchLinkable();
-    },
-  });
-
-  const isValidScore = (raw: string | undefined) => {
-    if (!raw || raw.trim() === "") return false;
-    const num = Number(raw);
-    return Number.isFinite(num) && num > 0;
-  };
-
-  const handleEditScoreRequest = (assignment: AssignmentSummary) => {
-    setEditScoreValue(String(Number(assignment.score).toFixed(2)));
-    setEditScoreError(null);
-    setEditingAssignment(assignment);
-  };
-
-  const handleSaveScore = () => {
-    if (!editingAssignment) return;
-    const raw = editScoreValue.trim();
-    if (!isValidScore(raw)) {
-      setEditScoreError("A pontuação deve ser um número positivo.");
-      return;
-    }
-    setEditScoreError(null);
-    void updateScoreMutation({
-      examId,
-      assignmentId: editingAssignment.id,
-      score: Number(raw),
-    });
-  };
-
-  const handleLinkAssignment = (assignment: Assignment) => {
-    const raw = scoresByAssignmentId[assignment.id];
-    if (!isValidScore(raw)) return;
-    setLinkError(null);
-    setLinkPendingId(assignment.id);
-    void linkAssignmentMutation({
-      examId,
-      assignmentId: assignment.id,
-      score: Number(raw),
-    });
-  };
-
-  const linkableErrorMessage = isLinkableError
-    ? linkableError instanceof AxiosError
-      ? (
-          (linkableError.response?.data as { message?: string })?.message ??
-          "Erro ao buscar atividades disponíveis."
-        )
-      : "Erro ao buscar atividades disponíveis."
-    : null;
 
   if (isNaN(examId) || isNaN(classId)) {
     return (
@@ -362,218 +146,38 @@ export default function ExamDetailsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" asChild>
-          <Link href={`/admin/classes/${classId}`}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar para a turma
-          </Link>
-        </Button>
-        <h1 className="text-3xl font-bold tracking-tight">{exam.title}</h1>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações da prova</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Descrição
-            </p>
-            <p
-              className={cn(
-                "mt-1",
-                !exam.description && "text-muted-foreground",
-              )}
-            >
-              {exam.description ?? "Sem descrição"}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Data de vencimento
-            </p>
-            <p
-              className={cn(
-                "mt-1",
-                !exam.dueDate && "text-muted-foreground",
-              )}
-            >
-              {formatDateTime(exam.dueDate)}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">
-              Data de início
-            </p>
-            <p
-              className={cn(
-                "mt-1",
-                !exam.startDate && "text-muted-foreground",
-              )}
-            >
-              {formatDateTime(exam.startDate)}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle>Atividades</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsLinkOpen(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Vincular atividade
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <ListSearch
-            value={search}
-            onChange={setSearch}
-            placeholder="Filtrar por título da atividade"
-            ariaLabel="Filtrar atividades pelo título"
-            className="max-w-md"
-          />
-          <div className="border rounded-md">
-            <ExamAssignmentsTable
-              assignments={pagedAssignments}
-              emptyMessage={assignmentsEmptyMessage}
-              onDelete={handleDeleteAssignment}
-              onUnlink={handleUnlinkAssignment}
-              onEditScore={handleEditScoreRequest}
-            />
-          </div>
-          {total > 0 && (
-            <Pagination
-              page={safePage}
-              totalPages={totalPages}
-              pageSize={ADMIN_LIST_PAGE_SIZE}
-              total={total}
-              onPageChange={setPage}
-              itemLabel={{ singular: "atividade", plural: "atividades" }}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      <SelectFromListModal
-        open={isLinkOpen}
-        onOpenChange={(o) => {
-          setIsLinkOpen(o);
-          if (!o) {
-            setLinkPendingId(null);
-            setScoresByAssignmentId({});
-            setLinkError(null);
-          }
-        }}
-        title="Vincular atividade"
-        description="Selecione uma atividade da turma para vincular a esta prova. Atividades já vinculadas a outras provas não são listadas."
-        items={linkableAssignments ?? []}
-        isLoading={isLinkableFetching}
-        errorMessage={linkableErrorMessage ?? linkError}
-        emptyMessage="Nenhuma atividade disponível para vincular."
-        searchPlaceholder="Filtrar por título da atividade"
-        searchKeys={(a) => [a.title, a.description ?? ""]}
-        getItemId={(a) => a.id}
-        renderRow={(a) => (
-          <div className="flex flex-col gap-1">
-            <span className="font-medium">{a.title}</span>
-            {a.description && (
-              <span className="text-xs text-muted-foreground line-clamp-2">
-                {a.description}
-              </span>
-            )}
-          </div>
-        )}
-        rowExtras={(a) => (
-          <div className="flex items-center gap-1 shrink-0">
-            <Input
-              type="number"
-              min={0.01}
-              step={0.01}
-              value={scoresByAssignmentId[a.id] ?? ""}
-              onChange={(e) => {
-                setScoresByAssignmentId((prev) => ({
-                  ...prev,
-                  [a.id]: e.target.value,
-                }));
-                setLinkError(null);
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-20 h-8 text-sm tabular-nums text-right"
-            />
-            <span className="text-xs text-muted-foreground">pts</span>
-          </div>
-        )}
-        isRowActionDisabled={(a) => !isValidScore(scoresByAssignmentId[a.id])}
-        actionLabel="Vincular"
-        onSelect={handleLinkAssignment}
-        actionPendingId={linkPendingId}
+      <ExamDetailsHeader
+        exam={exam}
+        classId={classId}
+        currentView={currentView}
+        onChangeView={setView}
       />
-
-      <Dialog
-        open={editingAssignment !== null}
-        onOpenChange={(o) => {
-          if (!o) {
-            setEditingAssignment(null);
-            setEditScoreValue("");
-            setEditScoreError(null);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Editar pontuação</DialogTitle>
-            <DialogDescription>
-              Defina quantos pontos vale a atividade
-              &lsquo;{editingAssignment?.title}&rsquo; dentro desta prova.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="score" className="text-right">
-                Pontos
-              </Label>
-              <Input
-                id="score"
-                type="number"
-                min={0.01}
-                step={0.01}
-                placeholder="pts"
-                value={editScoreValue}
-                onChange={(e) => {
-                  setEditScoreValue(e.target.value);
-                  setEditScoreError(null);
-                }}
-                className="col-span-3 w-28 text-sm tabular-nums text-right"
-              />
-            </div>
-            {editScoreError && (
-              <p className="text-sm text-destructive col-span-4 text-right">
-                {editScoreError}
-              </p>
-            )}
-          </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline" disabled={isUpdatingScore}>
-                Cancelar
-              </Button>
-            </DialogClose>
-            <Button
-              onClick={handleSaveScore}
-              disabled={isUpdatingScore || !isValidScore(editScoreValue)}
-            >
-              {isUpdatingScore ? "Salvando..." : "Salvar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ExamInfoCard exam={exam} />
+      {currentView === "activities" && (
+        <ExamActivitiesSection
+          examId={examId}
+          classId={classId}
+          pagedAssignments={pagedAssignments}
+          total={total}
+          totalPages={totalPages}
+          safePage={safePage}
+          search={search}
+          setSearch={setSearch}
+          debouncedSearch={debouncedSearch}
+          emptyMessage={assignmentsEmptyMessage}
+          activitiesData={data.activities}
+          editScore={data.editScore}
+          link={data.link}
+          onRefetch={() => void refetch()}
+        />
+      )}
+      {currentView === "students" && (
+        <ExamStudentsSection
+          students={data.students}
+          retry={data.retry}
+          details={data.details}
+        />
+      )}
     </div>
   );
 }

@@ -12,13 +12,15 @@ import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { ClassService } from 'src/class/class.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { UserClassService } from 'src/user-class/user-class.service';
+import { UserClass } from 'src/user-class/entities/user-class.entity';
+import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { CreateExamDto } from './dto/create-exam.dto';
-import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamAssignment } from './entities/exam-assignment.entity';
 import { Exam } from './entities/exam.entity';
 import { ExamService } from './exam.service';
+import { User } from 'src/user/entities/user.entity';
 
 describe('ExamService', () => {
   let service: ExamService;
@@ -37,6 +39,9 @@ describe('ExamService', () => {
     const examRepository = createRepositoryMock();
     const examAssignmentRepository = createRepositoryMock();
     const assignmentRepository = createRepositoryMock();
+    const userRepository = createRepositoryMock();
+    const attemptRepository = createRepositoryMock();
+    const userClassRepository = createRepositoryMock();
     const classService = { findOne: jest.fn() };
     const userClassService = { findOneByKeys: jest.fn() };
     const requestContextService = { getUser: jest.fn() };
@@ -78,6 +83,18 @@ describe('ExamService', () => {
           provide: AssignmentService,
           useValue: assignmentService,
         },
+        {
+          provide: getRepositoryToken(User),
+          useValue: userRepository,
+        },
+        {
+          provide: getRepositoryToken(Attempt),
+          useValue: attemptRepository,
+        },
+        {
+          provide: getRepositoryToken(UserClass),
+          useValue: userClassRepository,
+        },
       ],
     }).compile();
 
@@ -86,7 +103,9 @@ describe('ExamService', () => {
       examRepository,
       examAssignmentRepository,
       assignmentRepository,
-      classService,
+      attemptRepository,
+      userClassRepository,
+        classService,
       userClassService,
       requestContextService,
       dataSource,
