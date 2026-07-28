@@ -50,7 +50,7 @@ export default function ExamDetailsPage() {
   } = useFetchExam(examId);
   const exam = examData?.exam;
 
-  const { page, search, debouncedSearch, setPage, setSearch } =
+  const { page, search, debouncedSearch,setSearch } =
     usePaginatedSearch();
 
   const data = useExamDetailsData({ examId, classId });
@@ -155,20 +155,16 @@ export default function ExamDetailsPage() {
       <ExamInfoCard exam={exam} />
       {currentView === "activities" && (
         <ExamActivitiesSection
-          examId={examId}
-          classId={classId}
           pagedAssignments={pagedAssignments}
           total={total}
           totalPages={totalPages}
           safePage={safePage}
           search={search}
           setSearch={setSearch}
-          debouncedSearch={debouncedSearch}
           emptyMessage={assignmentsEmptyMessage}
           activitiesData={data.activities}
           editScore={data.editScore}
           link={data.link}
-          onRefetch={() => void refetch()}
         />
       )}
       {currentView === "students" && (

@@ -28,15 +28,12 @@ import {
 import { Label } from "@/components/ui/label";
 
 interface ExamActivitiesSectionProps {
-  examId: number;
-  classId: number;
   pagedAssignments: AssignmentSummary[];
   total: number;
   totalPages: number;
   safePage: number;
   search: string;
   setSearch: (value: string) => void;
-  debouncedSearch: string;
   emptyMessage: string;
   activitiesData: {
     deleteAssignment: (assignment: AssignmentSummary) => void;
@@ -66,24 +63,19 @@ interface ExamActivitiesSectionProps {
     link: (assignment: Assignment) => void;
     isValidScore: (raw: string | undefined) => boolean;
   };
-  onRefetch: () => void;
 }
 
 export default function ExamActivitiesSection({
-  examId,
-  classId,
   pagedAssignments,
   total,
   totalPages,
   safePage,
   search,
   setSearch,
-  debouncedSearch,
   emptyMessage,
   activitiesData,
   editScore,
   link,
-  onRefetch,
 }: ExamActivitiesSectionProps) {
   return (
     <>
