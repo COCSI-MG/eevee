@@ -1,0 +1,21 @@
+# Ignore file for `docker build -f front/Dockerfile .` (repo-root context).
+# BuildKit uses <dockerfile>.dockerignore when present, keeping the context
+# small even though it spans the whole repository.
+
+**/node_modules
+**/.git
+**/.next
+**/dist
+**/coverage
+**/*.tsbuildinfo
+
+# Generated type packs are rebuilt inside the image; never ship host copies.
+front/public/type-packs
+
+# Everything outside front/ and node-worker-images/ is irrelevant to this image.
+scheduler-api
+eevee-infrastructure
+scripts
+*.drawio
+**/.env
+**/.env.*

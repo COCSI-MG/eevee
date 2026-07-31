@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# generated monaco type packs (run `npm run build:type-packs`)
+/public/type-packs
+
 # next.js
 /.next/
 /out/

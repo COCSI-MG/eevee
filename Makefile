@@ -79,7 +79,7 @@ push-scheduler-api:
 
 .PHONY: build-front push-front
 build-front:
-	docker build -t $(GHCR_NAMESPACE)/front:$(TAG) front
+	docker build -t $(GHCR_NAMESPACE)/front:$(TAG) -f front/Dockerfile .
 push-front:
 	docker push $(GHCR_NAMESPACE)/front:$(TAG)
 
