@@ -16,6 +16,13 @@ export class SchedulingJobConsumer extends WorkerHost {
     this.logger.debug(
       `Received scheduling job id=${job.id} name=${job.name} attemptId=${job.data?.attemptId}`,
     );
-    await this.schedulingService.processJobAndWait(job.data);
+    await this.schedulingService.processJobAndWait(job.data, (status) =>
+      job.updateProgress({
+        kind: 'attempt',
+        id: job.data.attemptId,
+        userId: job.data.userId,
+        status,
+      }),
+    );
   }
 }

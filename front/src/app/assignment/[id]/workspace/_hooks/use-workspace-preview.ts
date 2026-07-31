@@ -10,8 +10,9 @@ import {
   mapPreviewRunToResponse,
 } from "@/app/assignment/[id]/workspace/_utils/workspace-scheduling.utils";
 import { runWorkspacePreflight } from "@/app/assignment/[id]/workspace/_utils/workspace-preflight.utils";
+import { useSchedulingRealtimeEvent } from "@/hooks/use-scheduling-realtime";
 import { toast } from "@/hooks/use-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React from "react";
 
 interface UseWorkspacePreviewParams {
@@ -26,6 +27,7 @@ export function useWorkspacePreview({
   workerType,
 }: UseWorkspacePreviewParams) {
   const CANCELLED_FEEDBACK_DELAY_MS = 1200;
+  const queryClient = useQueryClient();
   const [previewOpen, setPreviewOpen] = React.useState(false);
   const [previewRunId, setPreviewRunId] = React.useState<number | null>(null);
   const [showCancelledFeedback, setShowCancelledFeedback] =
@@ -68,6 +70,18 @@ export function useWorkspacePreview({
     refetchOnWindowFocus: true,
     retry: false,
   });
+
+  useSchedulingRealtimeEvent(
+    "preview:update",
+    (payload) => {
+      if (payload.id === previewRunId) {
+        void queryClient.invalidateQueries({
+          queryKey: ["preview-run", previewRunId],
+        });
+      }
+    },
+    previewRunId !== null,
+  );
 
   React.useEffect(() => {
     if (!previewStorageKey || typeof window === "undefined" || !previewRun) {
