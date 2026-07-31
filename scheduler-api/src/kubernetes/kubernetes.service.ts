@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Client1_13 } from 'kubernetes-client';
-import { config } from 'kubernetes-client';
-import { DEFAULT_NAMESPACE, K8S_JOB_STATUS } from './kubernetes.constants';
+import { Client1_13, config } from 'kubernetes-client';
+import {
+  DEFAULT_NAMESPACE,
+  JOB_IMAGE_PULL_POLICY,
+  JOB_IMAGE_PULL_SECRETS,
+  JOB_NODE_SELECTOR,
+  K8S_JOB_STATUS,
+} from './kubernetes.constants';
 import {
   KubernetesJobOptions,
   KubernetesJobResult,
@@ -58,12 +63,30 @@ export class KubernetesService {
     });
   }
 
+  private appendSecretVolumesAndMounts(
+    secretVolumes: NonNullable<KubernetesJobOptions['secretVolumes']>,
+    volumes: any[],
+    volumeMounts: any[],
+  ) {
+    secretVolumes.forEach((sv) => {
+      volumes.push({
+        name: sv.volumeName,
+        secret: { secretName: sv.secretName },
+      });
+      volumeMounts.push({
+        name: sv.volumeName,
+        mountPath: sv.mountPath,
+        readOnly: true,
+      });
+    });
+  }
+
   private buildInitContainers(options?: KubernetesJobOptions) {
     return (
       options?.initContainers?.map((container) => ({
         name: container.name,
         image: container.image,
-        imagePullPolicy: container.imagePullPolicy || 'Never',
+        imagePullPolicy: container.imagePullPolicy || JOB_IMAGE_PULL_POLICY,
         ...(container.restartPolicy
           ? { restartPolicy: container.restartPolicy }
           : {}),
@@ -235,26 +258,54 @@ export class KubernetesService {
       );
     }
 
+    if (options?.secretVolumes?.length) {
+      this.appendSecretVolumesAndMounts(
+        options.secretVolumes,
+        volumes,
+        volumeMounts,
+      );
+    }
+
     const initContainers = this.buildInitContainers(options);
+    const podLabels = options?.podLabels || {};
 
     const jobManifest = {
       apiVersion: 'batch/v1',
       kind: 'Job',
       metadata: {
         name: jobName,
+        ...(Object.keys(podLabels).length ? { labels: podLabels } : {}),
       },
       spec: {
         restartPolicy: 'Never', //
         template: {
+          ...(Object.keys(podLabels).length
+            ? {
+                metadata: {
+                  labels: podLabels,
+                },
+              }
+            : {}),
           spec: {
             ...(initContainers.length ? { initContainers } : {}),
             automountServiceAccountToken: false, // security best practice
+            ...(JOB_NODE_SELECTOR ? { nodeSelector: JOB_NODE_SELECTOR } : {}),
+            ...(JOB_IMAGE_PULL_SECRETS.length
+              ? {
+                  imagePullSecrets: JOB_IMAGE_PULL_SECRETS.map((name) => ({
+                    name,
+                  })),
+                }
+              : {}),
             containers: [
               {
                 name: jobName,
-                imagePullPolicy: 'Never',
+                imagePullPolicy: JOB_IMAGE_PULL_POLICY,
                 image: imageName,
                 ...(command.length > 0 && { command: command }),
+                ...(options?.mainContainerEnv?.length
+                  ? { env: options.mainContainerEnv }
+                  : {}),
                 volumeMounts: volumeMounts,
               },
             ],
@@ -299,6 +350,13 @@ export class KubernetesService {
         // so we need to check the job status every few seconds
         await new Promise((resolve) => setTimeout(resolve, iterationWaitTime)); // Wait for 5 seconds before checking again
         const response = await this.getJob(jobName);
+
+        if (!response?.body?.status) {
+          throw new Error(
+            `Job ${jobName} was not found while waiting for completion. It may have been deleted or cancelled.`,
+          );
+        }
+
         jobStatus = response.body.status;
       } while (!jobStatus.succeeded && !jobStatus.failed && i++ < maxRetries);
 
@@ -314,6 +372,10 @@ export class KubernetesService {
 
       // Get the pods created by the job
       const [pod] = await this.getJobPods(jobName);
+
+      if (!pod?.metadata?.name) {
+        throw new Error(`No pod found for job ${jobName}.`);
+      }
 
       // Get the name of the first pod
       const podName = pod.metadata.name;

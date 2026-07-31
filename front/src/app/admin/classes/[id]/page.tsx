@@ -29,11 +29,11 @@ import QueryErrorState from "@/components/admin/query-error-state";
 
 const classUpsertSchema = Yup.object().shape({
   id: Yup.number().optional(),
-  name: Yup.string().required("Class name is required"),
+  name: Yup.string().required("Nome da turma é obrigatório"),
   description: Yup.string(),
   students: Yup.array()
     .of(Yup.number())
-    .required("At least one student must be selected"),
+    .required("Pelo menos um aluno deve ser selecionado"),
 });
 
 export default function ClassEditPage() {
@@ -77,10 +77,8 @@ export default function ClassEditPage() {
     },
     onSuccess: () => {
       toast({
-        title: isNewClass ? "Class created" : "Class updated",
-        description: `Successfully ${
-          isNewClass ? "created" : "updated"
-        } class ${formik.values.name}`,
+        title: isNewClass ? "Turma criada" : "Turma atualizada",
+        description: `Turma ${formik.values.name} ${isNewClass ? "criada" : "atualizada"} com sucesso`,
         duration: 5000,
       });
       router.push("/admin/classes");
@@ -89,10 +87,10 @@ export default function ClassEditPage() {
       const res = error.response?.data as { message: string } | undefined;
 
       toast({
-        title: "Error",
+        title: "Erro",
         description:
           res?.message ||
-          `Failed to ${isNewClass ? "create" : "update"} class.`,
+          `Falha ao ${isNewClass ? "criar" : "atualizar"} turma.`,
         variant: "destructive",
       });
     },
@@ -113,7 +111,7 @@ export default function ClassEditPage() {
       if (values.students.length === 0) {
         formik.setFieldError(
           "students",
-          "At least one student must be selected"
+          "Pelo menos um aluno deve ser selecionado"
         );
         return;
       }
@@ -167,10 +165,10 @@ export default function ClassEditPage() {
     <div className="flex items-center">
       <Button variant="ghost" onClick={() => router.back()} className="mr-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back
+        Voltar
       </Button>
       <h1 className="text-3xl font-bold tracking-tight">
-        {isNewClass ? "Create Class" : "Edit Class"}
+        {isNewClass ? "Criar Turma" : "Editar Turma"}
       </h1>
     </div>
   );
@@ -196,7 +194,7 @@ export default function ClassEditPage() {
     return (
       <div className="space-y-6">
         {header}
-        <div>Loading...</div>
+        <div>Carregando...</div>
       </div>
     );
   }
@@ -210,23 +208,23 @@ export default function ClassEditPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {isNewClass ? "New Class Information" : "Class Information"}
+                {isNewClass ? "Informações da Nova Turma" : "Informações da Turma"}
               </CardTitle>
               <CardDescription>
                 {isNewClass
-                  ? "Add a new class to the system"
-                  : "Update the class information"}
+                  ? "Adicione uma nova turma ao sistema"
+                  : "Atualize as informações da turma"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Class Name</Label>
+                <Label htmlFor="name">Nome da Turma</Label>
                 <Input
                   id="name"
                   name="name"
                   value={formik.values.name}
                   onChange={formik.handleChange}
-                  placeholder="Enter class name"
+                  placeholder="Insira o nome da turma"
                   required
                 />
                 {formik.errors.name && (
@@ -234,13 +232,14 @@ export default function ClassEditPage() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="description">Class Description</Label>
+                <Label htmlFor="description">Descrição da Turma</Label>
                 <Textarea
                   id="description"
                   name="description"
+                  rows={5}
                   value={formik.values.description}
                   onChange={formik.handleChange}
-                  placeholder="Enter class description"
+                  placeholder="Insira a descrição da turma"
                 />
                 {formik.errors.description && (
                   <div className="text-red-500">
@@ -253,14 +252,14 @@ export default function ClassEditPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Students</CardTitle>
+              <CardTitle>Alunos</CardTitle>
               <CardDescription>
-                Select students who will be enrolled in this class
+                Selecione os alunos que serão matriculados nesta turma
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {formik.errors.students && (
-                <div className="text-red-500">No students selected.</div>
+                <div className="text-red-500">Nenhum aluno selecionado.</div>
               )}
 
               <UsersCard
@@ -279,11 +278,11 @@ export default function ClassEditPage() {
             onClick={() => router.back()}
             className="mr-2"
           >
-            Cancel
+            Cancelar
           </Button>
           <Button type="submit" variant="default">
             <Save className="h-4 w-4 mr-2" />
-            {isNewClass ? "Create Class" : "Save Changes"}
+            {isNewClass ? "Criar Turma" : "Salvar Alterações"}
           </Button>
         </div>
       </form>

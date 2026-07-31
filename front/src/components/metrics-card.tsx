@@ -53,7 +53,7 @@ export function MetricsCard() {
   });
 
   if (isFetchingUser || isFetchingClasses || isFetchingAssignments) {
-    return <div>Loading...</div>;
+    return <div>Carregando...</div>;
   }
 
   if (isUsersError || isClassesError || isAssignmentsError) {
@@ -81,23 +81,23 @@ export function MetricsCard() {
 
   const metrics: Metric[] = [
     {
-      title: "Total Users",
+      title: "Total de Usuários",
       value: usersCount.toString(),
-      description: "Number of registered users",
+      description: "Número de usuários cadastrados",
       icon: Users,
       href: "/admin/users",
     },
     {
-      title: "Total Classes",
+      title: "Total de Turmas",
       value: classesCount.toString(),
-      description: "Number of available classes",
+      description: "Número de turmas disponíveis",
       icon: GraduationCap,
       href: "/admin/classes",
     },
     {
-      title: "Total Assignments",
+      title: "Total de Atividades",
       value: assignmentsCount.toString(),
-      description: "Number of assignments created",
+      description: "Número de atividades criadas",
       icon: FileText,
       href: "/admin/assignments",
     },
@@ -114,7 +114,7 @@ export function MetricsCard() {
         <p className="text-xs text-muted-foreground">{metric.description}</p>
         <Link href={metric.href} className="block mt-4">
           <Button variant="outline" size="sm" className="w-full">
-            View Details
+            Ver Detalhes
           </Button>
         </Link>
       </CardContent>

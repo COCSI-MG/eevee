@@ -30,10 +30,24 @@ export interface KubernetesJobSharedEmptyDir {
   }[];
 }
 
+export interface KubernetesJobSecretVolume {
+  secretName: string;
+  volumeName: string;
+  mountPath: string;
+}
+
+export interface KubernetesJobEnvVar {
+  name: string;
+  value: string;
+}
+
 export interface KubernetesJobOptions {
   configMap?: KubernetesJobConfigMap[];
   initContainers?: KubernetesJobInitContainer[];
   sharedEmptyDir?: KubernetesJobSharedEmptyDir;
+  secretVolumes?: KubernetesJobSecretVolume[];
+  podLabels?: Record<string, string>;
+  mainContainerEnv?: KubernetesJobEnvVar[];
   command?: string[];
   backoffLimit?: number;
 }

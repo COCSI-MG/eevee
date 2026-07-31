@@ -31,7 +31,7 @@ export default function TemplatePage() {
 
   const templatesEmptyMessage = useMemo(() => {
     if (!meta || meta.total === 0) {
-      return debouncedSearch.trim() ? "No templates match your search." : undefined;
+      return debouncedSearch.trim() ? "Nenhum template corresponde a sua busca." : undefined;
     }
     return undefined;
   }, [meta, debouncedSearch]);
@@ -122,8 +122,8 @@ export default function TemplatePage() {
       <AdminListSearch
         value={search}
         onChange={setSearch}
-        placeholder="Filter by title, description, or worker type"
-        ariaLabel="Filter templates by title, description, or worker type"
+        placeholder="Filtrar por titulo, descricao ou tipo de worker"
+        ariaLabel="Filtrar templates por titulo, descricao ou tipo de worker"
         className="max-w-md"
       />
       <div className="border rounded-md">

@@ -3,13 +3,13 @@
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Route } from "@/app/routes";
-import { useWorkspaceContext } from "@/app/assignment/[id]/workspace/_providers/workspace-provider";
 import {
   buildSchedulingPayloadFromFileTree,
   createWorkspaceStorageKey,
   getLatestAssignmentAttempt,
   isProcessingAttemptStatus,
 } from "@/app/assignment/[id]/workspace/_utils/workspace-scheduling.utils";
+import { runWorkspacePreflight } from "@/app/assignment/[id]/workspace/_utils/workspace-preflight.utils";
 import { getFileTree } from "@/app/integration/filestash";
 import { toast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
@@ -27,7 +27,6 @@ export function useWorkspaceCorrection({
   user,
 }: UseWorkspaceCorrectionParams) {
   const router = useRouter();
-  const { selectedItem } = useWorkspaceContext();
   const [
     hasPersistedCorrectionInProgress,
     setHasPersistedCorrectionInProgress,
@@ -84,7 +83,7 @@ export function useWorkspaceCorrection({
     useMutation({
       mutationKey: ["submit-assignment"],
       mutationFn: async () => {
-        if (!assignment?.id || !user?.userId || !selectedItem.path) {
+        if (!assignment?.id || !user?.userId) {
           throw new Error("Missing required data");
         }
 
@@ -97,12 +96,30 @@ export function useWorkspaceCorrection({
           assignment.id,
           fileTree,
         );
+
+        const preflightResult = await runWorkspacePreflight({
+          workerType: assignment.workerType,
+          files: payload.files,
+        });
+
+        if (!preflightResult.ok) {
+          throw new Error(
+            [preflightResult.message, ...(preflightResult.details ?? [])]
+              .filter(Boolean)
+              .join("\n"),
+          );
+        }
+
         return SchedulingService.createSchedulingInBackground(payload);
       },
       onError: (error) => {
         console.error("Error submiting assignment", error);
         toast({
-          title: "Ocorreu um erro ao submeter sua tarefa",
+          title: "Falha na validação antes do envio",
+          description:
+            error instanceof Error
+              ? error.message
+              : "Ocorreu um erro ao submeter sua tarefa",
           variant: "destructive",
         });
       },

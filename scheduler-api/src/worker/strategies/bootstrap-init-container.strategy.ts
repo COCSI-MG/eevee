@@ -1,9 +1,15 @@
 import { KubernetesJobOptions } from 'src/kubernetes/kubernetes.interfaces';
-import { WorkerExecutionStrategy, WorkerConfig } from './worker-execution-strategy';
+import {
+  WorkerExecutionStrategy,
+  WorkerConfig,
+} from './worker-execution-strategy';
 import { WorkerType } from '../enum/worker-type.enum';
 import { WorkerResponse } from '../worker.interfaces';
 import { CreateWorkerDto } from '../dto/create-worker.dto';
-import { WORKER_DEFINITION_B64_ENV_NAME } from '../worker.constants';
+import {
+  WORKER_BOOTSTRAP_IMAGE_NAME,
+  WORKER_DEFINITION_B64_ENV_NAME,
+} from '../worker.constants';
 import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
 import { buildSharedEmptyDirMounts } from 'src/worker/utils/shared-empty-dir.utils';
 
@@ -16,14 +22,23 @@ import { buildSharedEmptyDirMounts } from 'src/worker/utils/shared-empty-dir.uti
  * `buildJobOptions` to append additional init containers (e.g. Postgres).
  */
 export abstract class BootstrapInitContainerStrategy
-  implements WorkerExecutionStrategy {
+  implements WorkerExecutionStrategy
+{
   abstract readonly workerType: WorkerType;
   abstract readonly workerConfig: WorkerConfig;
   abstract processLogResult(log: string): WorkerResponse;
 
-  abstract buildJobCommand(createWorkerData: CreateWorkerDto, dependencies: string[]): string[];
-  abstract buildExecutionJobCommand(createWorkerData: CreateWorkerDto): string[];
-  abstract buildWorkerPayload(createWorkerData: CreateWorkerDto, dependencies: string[]): WorkerJobPayload;
+  abstract buildJobCommand(
+    createWorkerData: CreateWorkerDto,
+    dependencies: string[],
+  ): string[];
+  abstract buildExecutionJobCommand(
+    createWorkerData: CreateWorkerDto,
+  ): string[];
+  abstract buildWorkerPayload(
+    createWorkerData: CreateWorkerDto,
+    dependencies: string[],
+  ): WorkerJobPayload;
 
   buildJobOptions(
     encodedDefinition: string,
@@ -42,7 +57,7 @@ export abstract class BootstrapInitContainerStrategy
       initContainers: [
         {
           name: 'eevee-worker-bootstrap',
-          image: 'eevee-worker-bootstrap',
+          image: WORKER_BOOTSTRAP_IMAGE_NAME,
           env: [
             {
               name: WORKER_DEFINITION_B64_ENV_NAME,

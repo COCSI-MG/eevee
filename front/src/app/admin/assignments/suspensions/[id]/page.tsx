@@ -37,16 +37,16 @@ export default function Page() {
       AssignmentUserSuspensionService.removeSuspensionFromAssignment(userId, assignmentId),
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Suspension removed successfully",
+        title: "Sucesso",
+        description: "Suspensão removida com sucesso",
       });
       refetchSuspensions();
     },
     onError: (error: unknown) => {
       console.error("Failed to remove suspension:", error);
       toast({
-        title: "Error",
-        description: "Failed to remove suspension. Please try again.",
+        title: "Erro",
+        description: "Falha ao remover suspensão. Por favor, tente novamente.",
         variant: "destructive",
       });
     },
@@ -57,7 +57,7 @@ export default function Page() {
   };
 
   const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString("pt-BR", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -71,7 +71,7 @@ export default function Page() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading suspensions...</p>
+          <p className="mt-2 text-sm text-gray-600">Carregando suspensões...</p>
         </div>
       </div>
     );
@@ -82,7 +82,7 @@ export default function Page() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">Failed to load suspensions</p>
+          <p className="text-sm text-gray-600">Falha ao carregar suspensões</p>
         </div>
       </div>
     );
@@ -94,44 +94,44 @@ export default function Page() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserX className="h-5 w-5" />
-            Assignment Suspensions
+            Suspensões da Atividade
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Manage user suspensions for assignment ID: {assignmentId}
+            Gerenciar suspensões de usuários para a atividade ID: {assignmentId}
           </p>
         </CardHeader>
         <CardContent>
           {!suspensions || suspensions.length === 0 ? (
             <div className="text-center py-8">
               <UserX className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">No suspensions</h3>
+              <h3 className="text-lg font-medium text-gray-900">Nenhuma suspensão</h3>
               <p className="text-sm text-gray-500">
-                There are currently no suspended users for this assignment.
+                Não há usuários suspensos para esta atividade no momento.
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Suspended At</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>E-mail</TableHead>
+                  <TableHead>Motivo</TableHead>
+                  <TableHead>Suspenso Em</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {suspensions.map((suspension) => (
                   <TableRow key={suspension.id}>
                     <TableCell className="font-medium">
-                      {suspension.user?.name || `User ${suspension.userId}`}
+                      {suspension.user?.name || `Usuário ${suspension.userId}`}
                     </TableCell>
-                    <TableCell>{suspension.user?.email || "Unknown"}</TableCell>
+                    <TableCell>{suspension.user?.email || "Desconhecido"}</TableCell>
                     <TableCell>
                       {suspension.reason ? (
                         <span className="text-sm">{suspension.reason}</span>
                       ) : (
-                        <span className="text-sm text-gray-400 italic">No reason provided</span>
+                        <span className="text-sm text-gray-400 italic">Nenhum motivo fornecido</span>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">
@@ -146,7 +146,7 @@ export default function Page() {
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
-                        Remove
+                        Remover
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -79,12 +79,12 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         <Dialog>
           <DialogTrigger asChild>
             <button
-              className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-slate-600 hover:border-slate-400 hover:bg-slate-700/50 transition-all duration-200 group"
-              title="Visualizar descrição completa da tarefa"
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600/20 border border-blue-500 hover:border-blue-400 hover:bg-blue-600/30 transition-all duration-200 group font-medium"
+              title="Visualizar a pergunta/descrição completa da tarefa"
             >
-              <Info className="h-4 w-4 text-slate-400 group-hover:text-slate-200 transition-colors" />
-              <span className="text-xs font-medium text-slate-400 group-hover:text-slate-200 transition-colors">
-                Ver Descrição
+              <Info className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
+              <span className="text-sm text-blue-300 group-hover:text-blue-200 transition-colors">
+                Ver Pergunta
               </span>
             </button>
           </DialogTrigger>
@@ -172,7 +172,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             ) : (
               <Play className="w-4 h-4 mr-1" />
             )}
-            {isRunningSync ? "Running..." : "Run"}
+            {isRunningSync ? "Executando..." : "Executar"}
           </Button>
 
           <Button

@@ -27,17 +27,17 @@ export default function ClassesPage() {
 
   const classesEmptyMessage = useMemo(() => {
     if (!meta || meta.total === 0) {
-      return debouncedSearch.trim() ? "No classes match your search." : "No classes found.";
+      return debouncedSearch.trim() ? "Nenhuma turma corresponde a sua busca." : "Nenhuma turma encontrada.";
     }
-    return "No classes found.";
+    return "Nenhuma turma encontrada.";
   }, [meta, debouncedSearch]);
 
   const handleDelete = async (id: number) => {
     try {
       await ClassesService.remove(id);
       toast({
-        title: "Class deleted",
-        description: "The class has been successfully deleted.",
+        title: "Turma excluída",
+        description: "A turma foi excluída com sucesso.",
         duration: 4000,
       });
       refetch();
@@ -47,20 +47,20 @@ export default function ClassesPage() {
       if (err instanceof AxiosError && err.response) {
         const apiMessage = err.response.data?.message;
         if (apiMessage) {
-          toast({
-            title: "Error",
-            description: apiMessage,
-            variant: "destructive",
-            duration: 4000,
-          });
+      toast({
+        title: "Erro",
+        description: apiMessage,
+        variant: "destructive",
+        duration: 4000,
+      });
           return;
         }
       }
 
       toast({
-        title: "Error",
+        title: "Erro",
         description:
-          err instanceof Error ? err.message : "Failed to delete class.",
+          err instanceof Error ? err.message : "Falha ao excluir turma.",
         variant: "destructive",
         duration: 4000,
       });
@@ -71,11 +71,11 @@ export default function ClassesPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Classes</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Turmas</h1>
           <Link href="/admin/classes/new">
             <Button variant={"outline"}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Class
+              Adicionar Turma
             </Button>
           </Link>
         </div>
@@ -100,19 +100,19 @@ export default function ClassesPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Classes</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Turmas</h1>
         <Link href="/admin/classes/new">
           <Button variant={"outline"}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Class
+            Adicionar Turma
           </Button>
         </Link>
       </div>
       <AdminListSearch
         value={search}
         onChange={setSearch}
-        placeholder="Filter by class name or description"
-        ariaLabel="Filter classes by name or description"
+        placeholder="Filtrar por nome da turma ou descrição"
+        ariaLabel="Filtrar turmas por nome ou descrição"
         className="max-w-md"
       />
       <div className="border rounded-md">

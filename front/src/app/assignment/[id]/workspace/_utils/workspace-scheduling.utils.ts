@@ -63,10 +63,18 @@ export function buildSchedulingPayloadFromFileTree(
   assignmentId: number,
   fileTree: FileNode,
 ): Scheduling {
+  const files = flattenFileTreeToSchedulingFiles(fileTree);
+
+  const applicationFileContent =
+    files["app.ts"] ??
+    files["src/app.ts"] ??
+    files["app.js"] ??
+    files["src/app.js"];
+
   return {
     assignmentId,
-    applicationFileContent: undefined,
-    files: flattenFileTreeToSchedulingFiles(fileTree),
+    applicationFileContent,
+    files,
   };
 }
 

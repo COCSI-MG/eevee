@@ -42,7 +42,7 @@ export default function UserAssignmentsCard() {
         <div className="flex flex-col items-center justify-center h-full">
           <h2 className="text-2xl font-bold">Nenhuma tarefa encontrada</h2>
           <p className="text-muted-foreground mt-1">
-            Voce ainda não possui nenhuma tarefa atribuída.
+            Você ainda não possui nenhuma tarefa atribuída.
           </p>
         </div>
       )}

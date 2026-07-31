@@ -1,0 +1,60 @@
+{{- if .Values.schedulerApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: scheduler-api-service
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app: scheduler-api
+  ports:
+    - port: {{ .Values.schedulerApi.containerPort }}
+      targetPort: {{ .Values.schedulerApi.containerPort }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler-api-deployment
+  labels:
+    app: scheduler-api
+    tier: backend
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.schedulerApi.replicas }}
+  selector:
+    matchLabels:
+      app: scheduler-api
+  template:
+    metadata:
+      labels:
+        app: scheduler-api
+    spec:
+      {{- if .Values.serviceAccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
+      containers:
+        - name: scheduler-api
+          image: "{{ .Values.schedulerApi.image.repository }}:{{ .Values.schedulerApi.image.tag }}"
+          imagePullPolicy: {{ .Values.schedulerApi.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.schedulerApi.containerPort }}
+          env:
+            - name: ENV
+              value: {{ .Values.schedulerApi.env | quote }}
+            {{- include "eevee.appEnv" . | nindent 12 }}
+            {{- include "eevee.workerImageEnv" . | nindent 12 }}
+            {{- include "eevee.jobRuntimeEnv" . | nindent 12 }}
+            - name: PORT
+              value: {{ .Values.schedulerApi.containerPort | quote }}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: JWT_SECRET
+          resources:
+            {{- toYaml .Values.schedulerApi.resources | nindent 12 }}
+      {{- include "eevee.imagePullSecrets" . | nindent 6 }}
+      {{- include "eevee.nodeSelector" . | nindent 6 }}
+{{- end }}

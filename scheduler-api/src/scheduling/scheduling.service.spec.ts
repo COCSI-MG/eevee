@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { SchedulingService } from './scheduling.service';
 import { WorkerService } from 'src/worker/worker.service';
 import { AttemptService } from 'src/attempt/attempt.service';
@@ -22,7 +26,9 @@ describe('SchedulingService', () => {
   let workerService: jest.Mocked<
     Pick<
       WorkerService,
-      'createWorkerWithInitContainer' | 'createSynchronousWorker' | 'cancelWorkerJob'
+      | 'createWorkerWithInitContainer'
+      | 'createSynchronousWorker'
+      | 'cancelWorkerJob'
     >
   >;
   let attemptService: jest.Mocked<
@@ -39,16 +45,25 @@ describe('SchedulingService', () => {
     >
   >;
   let assignmentService: jest.Mocked<Pick<AssignmentService, 'findOne'>>;
-  let scorePolicyService: jest.Mocked<Pick<ScorePolicyService, 'calculateScore' | 'isAcceptable'>>;
-  let schedulingWorkerPreparationService: jest.Mocked<Pick<SchedulingWorkerPreparationService, 'prepare'>>;
+  let scorePolicyService: jest.Mocked<
+    Pick<ScorePolicyService, 'calculateScore' | 'isAcceptable'>
+  >;
+  let schedulingWorkerPreparationService: jest.Mocked<
+    Pick<SchedulingWorkerPreparationService, 'prepare'>
+  >;
   let schedulingAttemptTransitionService: jest.Mocked<
     Pick<
       SchedulingAttemptTransitionService,
-      'markRunning' | 'markFailedNoTests' | 'markCompleted' | 'markFailedWorkerError'
+      | 'markRunning'
+      | 'markFailedNoTests'
+      | 'markCompleted'
+      | 'markFailedWorkerError'
     >
   >;
   let schedulingQueue: jest.Mocked<Pick<Queue, 'add'>>;
-  let requestContextService: jest.Mocked<Pick<RequestContextService, 'getUser'>>;
+  let requestContextService: jest.Mocked<
+    Pick<RequestContextService, 'getUser'>
+  >;
   let schedulingPreviewRunRepository: jest.Mocked<
     Pick<Repository<SchedulingPreviewRun>, 'findOne' | 'save' | 'update'>
   >;
@@ -178,7 +193,9 @@ describe('SchedulingService', () => {
   });
 
   it('fails sync preview when assignment does not exist', async () => {
-    assignmentService.findOne.mockResolvedValue(null);
+    assignmentService.findOne.mockRejectedValue(
+      new NotFoundException('Assignment not found'),
+    );
 
     await expect(
       service.createAndWait({
@@ -186,7 +203,7 @@ describe('SchedulingService', () => {
         applicationFileContent: '',
         files: {},
       }),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('creates async scheduling job and queues it', async () => {

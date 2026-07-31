@@ -5,18 +5,22 @@ import { AssignmentUserSuspensionService } from "@/app/integration/scheduler-api
 import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
 import { FileNode, SelectedItem } from "@/types/shared";
 import { useEffect } from "react";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { useFetchAssignment } from "@/hooks/use-assignments";
 import { initStash } from "@/app/integration/filestash";
 import {
   createDefaultFileNode,
   DEFAULT_FILE_NODE,
 } from "@/app/assignment/worker-templates";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { SecurityViolationReason } from "@/hooks/user-actions/types";
+import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 
 interface WorkspaceContextType {
   selectedItem: SelectedItem;
   fileTreeData: FileNode;
+  workerType?: WorkerType | string;
   selectItem: (item: SelectedItem) => void;
   clearSelection: () => void;
   replaceFileTree: (fileTree: FileNode) => void;
@@ -48,9 +52,20 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   boilerplate,
 }) => {
   const params = useParams();
-  const queryClient = useQueryClient();
+  const { user } = useAuthContext();
+  const userId = user?.userId;
   const assignmentId = Number(params.id);
-  const hasRequestedClipboardSuspension = React.useRef(false);
+  const requestedSuspensionReasons = React.useRef(new Set<string>());
+  const { data: assignmentData } = useFetchAssignment(assignmentId);
+  const isUserSuspended = Boolean(
+    userId &&
+    assignmentData?.suspensions?.some(
+      (suspension) => suspension.userId === userId,
+    ),
+  );
+  const shouldPreventUserActions = Boolean(
+    userId && assignmentData && !isUserSuspended,
+  );
   const emptySelectedItem = React.useMemo<SelectedItem>(
     () => ({
       id: "",
@@ -98,41 +113,46 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     initializeStashFn();
   }, []);
 
-  const { mutate: suspendUserFromAssignment } = useMutation({
-    mutationFn: async () => {
+  const { mutateAsync: suspendUserFromAssignment } = useMutation({
+    mutationFn: async (reason: SecurityViolationReason) => {
       if (!Number.isFinite(assignmentId)) {
         return;
       }
 
       return AssignmentUserSuspensionService.suspendUserFromAssignment(
         assignmentId,
-        "clipboard_attempt_limit",
+        reason,
       );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["assignment", assignmentId],
-      });
     },
   });
 
-  const handleClipboardViolationLimit = React.useCallback(() => {
-    if (hasRequestedClipboardSuspension.current) {
-      return;
-    }
+  const handleSecurityViolation = React.useCallback(
+    async (reason: SecurityViolationReason) => {
+      if (isUserSuspended || requestedSuspensionReasons.current.has(reason)) {
+        return;
+      }
 
-    hasRequestedClipboardSuspension.current = true;
-    suspendUserFromAssignment();
-  }, [suspendUserFromAssignment]);
+      requestedSuspensionReasons.current.add(reason);
+      await suspendUserFromAssignment(reason);
+    },
+    [isUserSuspended, suspendUserFromAssignment],
+  );
+
+  const handleClipboardViolationLimit = React.useCallback(() => {
+    handleSecurityViolation("clipboard_attempt_limit");
+  }, [handleSecurityViolation]);
 
   usePreventUserActions({
+    enabled: shouldPreventUserActions,
     clipboardViolationLimit: 10,
     onClipboardViolationLimit: handleClipboardViolationLimit,
+    onSecurityViolation: handleSecurityViolation,
   });
 
   const value: WorkspaceContextType = {
     selectedItem,
     fileTreeData: treeData,
+    workerType: workerType ?? assignmentData?.workerType,
     selectItem,
     clearSelection,
     replaceFileTree,

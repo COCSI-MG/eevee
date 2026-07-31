@@ -40,7 +40,7 @@ export default function DeleteAlertDialog({
             variant={"destructive"}
             onClick={() => void Promise.resolve(onDelete())}
           >
-            Delete
+            Excluir
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

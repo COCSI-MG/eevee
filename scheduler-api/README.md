@@ -17,9 +17,20 @@ $ npm run start
 # watch mode
 $ npm run start:dev
 
+# queue worker (required to process scheduling attempts)
+$ npm run start:worker:dev
+
 # production mode
 $ npm run start:prod
+
+# queue worker (production)
+$ npm run start:worker:prod
 ```
+
+When running locally, keep both processes alive in separate terminals:
+
+1. API server (`start:dev`)
+2. Queue worker (`start:worker:dev`)
 
 ## Run tests
 

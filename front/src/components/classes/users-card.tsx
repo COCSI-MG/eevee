@@ -67,7 +67,7 @@ export default function UsersCard({
   if (isUsersFetching) {
     return (
       <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-muted-foreground">Loading Users...</p>
+        <p className="text-sm text-muted-foreground">Carregando usuários...</p>
       </div>
     );
   }
@@ -98,7 +98,7 @@ export default function UsersCard({
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-full justify-start">
             <Plus className="mr-2 h-4 w-4" />
-            Add Users
+            Adicionar Usuários
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -109,12 +109,12 @@ export default function UsersCard({
         >
           <Command shouldFilter={false}>
             <CommandInput
-              placeholder="Search Users..."
+              placeholder="Buscar usuários..."
               value={searchTerm}
               onValueChange={setSearchTerm}
             />
             <CommandList>
-              <CommandEmpty>No Users found.</CommandEmpty>
+              <CommandEmpty>Nenhum usuário encontrado.</CommandEmpty>
               <CommandGroup>
                 {filteredUsers.map((user) => (
                   <CommandItem
@@ -151,7 +151,7 @@ export default function UsersCard({
         <div className="p-3 border-b">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">
-              Selected Users ({selectedUsers.length})
+              Usuários Selecionados ({selectedUsers.length})
             </h3>
             {selectedUsers.length > 0 && (
               <Button
@@ -162,7 +162,7 @@ export default function UsersCard({
                 }}
                 className="h-8 px-2 text-xs"
               >
-                Clear All
+                Limpar Tudo
               </Button>
             )}
           </div>
@@ -171,9 +171,9 @@ export default function UsersCard({
           {selectedUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[200px] text-center p-4">
               <User className="h-10 w-10 text-muted-foreground mb-2 opacity-20" />
-              <p className="text-sm text-muted-foreground">No Users selected</p>
+              <p className="text-sm text-muted-foreground">Nenhum usuário selecionado</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Use the Add Users button to enroll Users in this class
+                Use o botão Adicionar Usuários para matricular alunos nesta turma
               </p>
             </div>
           ) : (
