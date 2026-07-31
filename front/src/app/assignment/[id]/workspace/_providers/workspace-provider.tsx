@@ -20,6 +20,7 @@ import { useParams } from "next/navigation";
 interface WorkspaceContextType {
   selectedItem: SelectedItem;
   fileTreeData: FileNode;
+  workerType?: WorkerType | string;
   selectItem: (item: SelectedItem) => void;
   clearSelection: () => void;
   replaceFileTree: (fileTree: FileNode) => void;
@@ -58,9 +59,9 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const { data: assignmentData } = useFetchAssignment(assignmentId);
   const isUserSuspended = Boolean(
     userId &&
-      assignmentData?.suspensions?.some(
-        (suspension) => suspension.userId === userId,
-      ),
+    assignmentData?.suspensions?.some(
+      (suspension) => suspension.userId === userId,
+    ),
   );
   const shouldPreventUserActions = Boolean(
     userId && assignmentData && !isUserSuspended,
@@ -125,14 +126,17 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     },
   });
 
-  const handleSecurityViolation = React.useCallback(async (reason: SecurityViolationReason) => {
-    if (isUserSuspended || requestedSuspensionReasons.current.has(reason)) {
-      return;
-    }
+  const handleSecurityViolation = React.useCallback(
+    async (reason: SecurityViolationReason) => {
+      if (isUserSuspended || requestedSuspensionReasons.current.has(reason)) {
+        return;
+      }
 
-    requestedSuspensionReasons.current.add(reason);
-    await suspendUserFromAssignment(reason);
-  }, [isUserSuspended, suspendUserFromAssignment]);
+      requestedSuspensionReasons.current.add(reason);
+      await suspendUserFromAssignment(reason);
+    },
+    [isUserSuspended, suspendUserFromAssignment],
+  );
 
   const handleClipboardViolationLimit = React.useCallback(() => {
     handleSecurityViolation("clipboard_attempt_limit");
@@ -148,6 +152,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const value: WorkspaceContextType = {
     selectedItem,
     fileTreeData: treeData,
+    workerType: workerType ?? assignmentData?.workerType,
     selectItem,
     clearSelection,
     replaceFileTree,
