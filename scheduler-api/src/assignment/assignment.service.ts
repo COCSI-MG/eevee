@@ -371,10 +371,8 @@ export class AssignmentService {
     return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
   }
 
-  async findOne(id: number) {
-    const user = this.requestContextService.getUser();
-
-    const query = this.assignmentRepository
+  private createAssignmentDetailsQuery(id: number) {
+    return this.assignmentRepository
       .createQueryBuilder('assignment')
       .leftJoinAndSelect('assignment.class', 'class')
       .leftJoinAndSelect('assignment.assignmentParams', 'assignmentParams')
@@ -385,8 +383,16 @@ export class AssignmentService {
       .leftJoinAndSelect('assignmentTemplates.template', 'template')
       .leftJoinAndSelect('template.templateParams', 'templateParams')
       .leftJoinAndSelect('assignment.suspensions', 'suspensions')
-      .where('assignment.id = :id', { id })
-      .orderBy('assignmentAttempts.createdAt', 'DESC');
+      .where('assignment.id = :id', { id });
+  }
+
+  async findOne(id: number) {
+    const user = this.requestContextService.getUser();
+
+    const query = this.createAssignmentDetailsQuery(id).orderBy(
+      'assignmentAttempts.createdAt',
+      'DESC',
+    );
 
     if (user.isAdmin) {
       query
@@ -424,6 +430,16 @@ export class AssignmentService {
     }
 
     return await this.attachBoilerplate(response);
+  }
+
+  async findOneForExecution(id: number) {
+    const assignment = await this.createAssignmentDetailsQuery(id).getOne();
+
+    if (!assignment) {
+      return null;
+    }
+
+    return await this.attachBoilerplate(assignment);
   }
 
   async update(id: number, updateAssignmentDto: UpdateAssignmentDto) {

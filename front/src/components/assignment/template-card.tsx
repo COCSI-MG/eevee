@@ -22,6 +22,7 @@ import { SelectedTemplate } from "@/types/shared";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import QueryErrorState from "../admin/query-error-state";
+import { Tooltip } from "../ui/tooltip";
 
 interface TemplateCardProps {
   selectedTemplates: SelectedTemplate[] | null;
@@ -276,7 +277,7 @@ export default function TemplateCard({
             {/* Available Templates */}
             <div className="space-y-4">
               <h4 className="text-white font-medium text-sm uppercase tracking-wide">
-                Templates Disponíveis
+                Templates Disponíveis <Tooltip message="Template de teste usado para corrigir as provas, selecione e adicione seus parâmetros" />
               </h4>
               <ScrollArea className="h-[300px] space-y-3">
                 {visibleTemplates.map((template) => (

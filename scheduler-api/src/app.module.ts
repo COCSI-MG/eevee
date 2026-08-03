@@ -32,6 +32,8 @@ import { ThrottlerBehindProxyGuard } from './auth/guards/throttler-behind-proxy.
 import { InterviewResponseModule } from './interview-response/interview-response.module';
 import { MailModule } from './mail/mail.module';
 
+import { RealtimeModule } from './realtime/realtime.module';
+import { TemplateTestModule } from './template-test/template-test.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -73,6 +75,8 @@ import { MailModule } from './mail/mail.module';
     AssignmentUserSuspensionModule,
     InterviewResponseModule,
     MailModule,
+    RealtimeModule,
+    TemplateTestModule,
   ],
   controllers: [AppController],
   providers: [

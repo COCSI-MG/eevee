@@ -3,6 +3,7 @@ import { Class } from "@/app/interface/scheduler-api/class";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Tooltip } from "@/components/ui/tooltip";
 import { ErrorMessage, Field } from "formik";
 import {
   ExpandableDialog,

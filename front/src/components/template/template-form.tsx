@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Code, Loader2Icon, Save } from "lucide-react";
+import { Code, FlaskConical, Loader2Icon, Save } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CreateTemplateRequest as UpsertTemplateRequest,
@@ -344,7 +344,7 @@ export default function TemplateForm() {
 
                   <div className="space-y-2">
                     <Label htmlFor="workerType" className="text-slate-200">
-                      {TEMPLATE_FORM_TEXT.workerTypeLabel}
+                      {TEMPLATE_FORM_TEXT.workerTypeLabel} <Tooltip message="Escolha o tipo de ambiente de execução que será utilizado no template" />
                     </Label>
                     <Select
                       value={formik.values.workerType as string}
@@ -376,7 +376,7 @@ export default function TemplateForm() {
                   <div className="space-y-2">
                     <Label htmlFor="params" className="text-slate-200">
                       {TEMPLATE_FORM_TEXT.paramsLabel} <br />
-                      {TEMPLATE_FORM_TEXT.paramsHelper}
+                      {TEMPLATE_FORM_TEXT.paramsHelper} <Tooltip message="Parâmetros que serão passados para o template" />
                     </Label>
                     <Input
                       id="params"
@@ -478,6 +478,16 @@ export default function TemplateForm() {
                       {TEMPLATE_FORM_TEXT.clearButton}
                     </Button>
                     <Button
+                      type="button"
+                      variant="outline"
+                      className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                      onClick={() => setTestDialogOpen(true)}
+                      title="Testar o conteúdo do template contra um app.ts de exemplo em um pod efêmero. Nada é persistido."
+                    >
+                      <FlaskConical className="w-4 h-4 mr-2" />
+                      Testar
+                    </Button>
+                    <Button
                       type="submit"
                       className="flex-1 hover:bg-slate-700"
                       variant={"outline"}
@@ -523,7 +533,7 @@ export default function TemplateForm() {
                       {formik.errors.content}
                     </div>
                   )}
-                </CardContent>
+                 </CardContent>
               </Card>
             </div>
           </div>

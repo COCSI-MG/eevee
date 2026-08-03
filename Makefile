@@ -8,7 +8,7 @@ NAMESPACE    ?= eevee-cefetrj
 CHART        ?= eevee-infrastructure/helm/eevee
 VALUES       ?= eevee-infrastructure/helm/eevee/values.yaml
 
-up: up-minikube up-docker up-scheduler
+up: up-minikube up-docker up-scheduler up-front up-queue-worker
 
 up-infra: up-minikube up-docker
 
@@ -79,7 +79,7 @@ push-scheduler-api:
 
 .PHONY: build-front push-front
 build-front:
-	docker build -t $(GHCR_NAMESPACE)/front:$(TAG) front
+	docker build -t $(GHCR_NAMESPACE)/front:$(TAG) -f front/Dockerfile .
 push-front:
 	docker push $(GHCR_NAMESPACE)/front:$(TAG)
 
