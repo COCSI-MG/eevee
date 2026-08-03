@@ -3,6 +3,7 @@ import { Class } from "@/app/interface/scheduler-api/class";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Tooltip } from "@/components/ui/tooltip";
 import { ErrorMessage, Field } from "formik";
 
 export interface AssignmentConfigFormProps {
@@ -76,7 +77,7 @@ export const AssignmentConfigForm = ({
       </div>
       <div className="space-y-2">
         <Label htmlFor="workerType" className="block text-sm font-medium">
-          Tipo de Worker
+          Tipo de Worker <Tooltip message="Kit de ferramentas para corrigir os exercícios" />
         </Label>
         <p className="block text-sm font-medium ">
           Selecione o tipo de worker que será utilizado para corrigir os
@@ -103,7 +104,7 @@ export const AssignmentConfigForm = ({
       </div>
       <div className="space-y-2">
         <Label htmlFor="maxAttempts" className="block text-sm font-medium">
-          Máximo de Tentativas
+          Máximo de Tentativas <Tooltip message="Quantidade de tentativas para realizar a tarefa" />
         </Label>
         <Field
           type="number"

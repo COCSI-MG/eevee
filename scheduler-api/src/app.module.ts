@@ -31,7 +31,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerBehindProxyGuard } from './auth/guards/throttler-behind-proxy.guard';
 import { InterviewResponseModule } from './interview-response/interview-response.module';
 import { RealtimeModule } from './realtime/realtime.module';
-
+import { TemplateTestModule } from './template-test/template-test.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -73,6 +73,7 @@ import { RealtimeModule } from './realtime/realtime.module';
     AssignmentUserSuspensionModule,
     InterviewResponseModule,
     RealtimeModule,
+    TemplateTestModule,
   ],
   controllers: [AppController],
   providers: [
