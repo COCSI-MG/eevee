@@ -1,4 +1,8 @@
-import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
@@ -102,6 +106,32 @@ describe('AssignmentService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('loads assignment details for execution without request context', async () => {
+    const { service, assignmentRepository, requestContextService } =
+      await setup();
+    const assignment = { id: 42 } as Assignment;
+    const query = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(assignment),
+    };
+    assignmentRepository.createQueryBuilder.mockReturnValue(query);
+    jest
+      .spyOn(service as any, 'attachBoilerplate')
+      .mockResolvedValue(assignment);
+
+    await expect(service.findOneForExecution(42)).resolves.toBe(assignment);
+
+    expect(query.where).toHaveBeenCalledWith('assignment.id = :id', {
+      id: 42,
+    });
+    expect(query.leftJoinAndSelect).toHaveBeenCalledWith(
+      'template.templateParams',
+      'templateParams',
+    );
+    expect(requestContextService.getUser).not.toHaveBeenCalled();
   });
 
   it('create throws when class does not exist', async () => {
@@ -349,7 +379,8 @@ describe('AssignmentService', () => {
     };
 
     it('paginates assignments with search across title, class.name and workerType', async () => {
-      const { service, assignmentRepository, requestContextService } = await setup();
+      const { service, assignmentRepository, requestContextService } =
+        await setup();
       const qb = makeQueryBuilder();
       qb.getManyAndCount.mockResolvedValue([
         [
@@ -365,7 +396,10 @@ describe('AssignmentService', () => {
         1,
       ]);
       assignmentRepository.createQueryBuilder.mockReturnValue(qb);
-      requestContextService.getUser.mockReturnValue({ userId: 10, isAdmin: true });
+      requestContextService.getUser.mockReturnValue({
+        userId: 10,
+        isAdmin: true,
+      });
       jest
         .spyOn(service as any, 'attachBoilerplate')
         .mockImplementation(async (assignment) => assignment);
@@ -378,7 +412,12 @@ describe('AssignmentService', () => {
 
       expect(qb.skip).toHaveBeenCalledWith(0);
       expect(qb.take).toHaveBeenCalledWith(10);
-      expect(result.meta).toEqual({ total: 1, page: 1, pageSize: 10, totalPages: 1 });
+      expect(result.meta).toEqual({
+        total: 1,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+      });
     });
   });
 });

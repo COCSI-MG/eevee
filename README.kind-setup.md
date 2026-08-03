@@ -11,7 +11,7 @@ This README is the **local setup using [kind](https://kind.sigs.k8s.io/)** (the 
 - **`front/`** — Next.js 15 UI (port `3001`).
 - **`scheduler-api/`** — NestJS HTTP API (port `3010`, prefix `/v1`) + a separate NestJS process that consumes the BullMQ queue and creates K8s Jobs.
 - **`node-worker-images/`** — Container images for each `WorkerType`: `node`, `nest.js`, `grpc`, `next.js-cypress`, `reactjs-cypress`, `node-teraorm`, plus the shared `worker-bootstrap` init container.
-- **`eevee-infrastructure/`** — `docker compose` for Postgres + Redis + (optional) Kafka.
+- **`eevee-infrastructure/`** — `docker compose` for Postgres + Redis.
 
 Submission flow:
 
@@ -32,13 +32,13 @@ front → POST /v1/scheduling → DB row (attempt: pending)
 
 ## 0. Prerequisites
 
-| Tool        | Required version                           |
-| ----------- | ------------------------------------------ |
-| Docker      | latest, user in the `docker` group         |
-| kind        | latest                                     |
-| kubectl     | latest                                     |
-| Node.js     | **22** (via nvm — system Node 18 is too old) |
-| gcloud (opt)| only if you regenerate the BigQuery SA key |
+| Tool         | Required version                             |
+| ------------ | -------------------------------------------- |
+| Docker       | latest, user in the `docker` group           |
+| kind         | latest                                       |
+| kubectl      | latest                                       |
+| Node.js      | **22** (via nvm — system Node 18 is too old) |
+| gcloud (opt) | only if you regenerate the BigQuery SA key   |
 
 ```bash
 node -v
@@ -140,9 +140,6 @@ PG_DATABASE=eevee_db
 REDIS_HOST=localhost
 REDIS_PORT=6379
 
-# Kafka (only if file-saver is enabled)
-KAFKA_BROKER=localhost:9092
-
 # JWT — generate with: npm run script:generate-jwt-key
 JWT_SECRET=...
 
@@ -206,10 +203,10 @@ npm run dev      # http://localhost:3001
 
 Default logins:
 
-| Role    | Email                  | Password    |
-| ------- | ---------------------- | ----------- |
-| Admin   | `admin@example.com`    | `admin123`  |
-| Student | `student@example.com`  | `student123`|
+| Role    | Email                 | Password     |
+| ------- | --------------------- | ------------ |
+| Admin   | `admin@example.com`   | `admin123`   |
+| Student | `student@example.com` | `student123` |
 
 ---
 
@@ -258,16 +255,16 @@ Each exercise runs against **real BigQuery** (dataset `eevee_ab_validation`, eph
 
 ## Common gotchas
 
-| Symptom | Cause / Fix |
-| --- | --- |
-| Attempt is stuck `pending`, UI shows "Em execução" forever | `npm run start:worker:dev` (Terminal B) isn't running. Start it — BullMQ picks up waiting jobs immediately. |
-| Worker pod `ImagePullBackOff` | Image not loaded into kind after rebuild. Re-run `kind load docker-image <name> --name eevee`. |
-| `kubectl` shows the wrong cluster | `sg docker -c "kubectl config use-context kind-eevee"`. |
-| Migration error about `assignment_workertype_enum` not having a value | Run `npm run migration:run` **before** `npm run seed:teraorm-study`. |
-| Postgres connection refused on `:5433` | `docker compose up -d` in `eevee-infrastructure/` wasn't run, or the container is stopped. |
-| `redis: getaddrinfo ENOTFOUND` from scheduler-api | `REDIS_HOST`/`REDIS_PORT` missing from `.env`. |
-| BQ worker logs `Permission denied` | The `teraorm-survey` SA needs `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` on the project (or dataset-scoped on `eevee_ab_validation`). |
-| Kind control-plane container disappeared after reboot | `sg docker -c "docker start eevee-control-plane"`, then re-load every worker image. |
+| Symptom                                                               | Cause / Fix                                                                                                                                       |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Attempt is stuck `pending`, UI shows "Em execução" forever            | `npm run start:worker:dev` (Terminal B) isn't running. Start it — BullMQ picks up waiting jobs immediately.                                       |
+| Worker pod `ImagePullBackOff`                                         | Image not loaded into kind after rebuild. Re-run `kind load docker-image <name> --name eevee`.                                                    |
+| `kubectl` shows the wrong cluster                                     | `sg docker -c "kubectl config use-context kind-eevee"`.                                                                                           |
+| Migration error about `assignment_workertype_enum` not having a value | Run `npm run migration:run` **before** `npm run seed:teraorm-study`.                                                                              |
+| Postgres connection refused on `:5433`                                | `docker compose up -d` in `eevee-infrastructure/` wasn't run, or the container is stopped.                                                        |
+| `redis: getaddrinfo ENOTFOUND` from scheduler-api                     | `REDIS_HOST`/`REDIS_PORT` missing from `.env`.                                                                                                    |
+| BQ worker logs `Permission denied`                                    | The `teraorm-survey` SA needs `roles/bigquery.dataEditor` + `roles/bigquery.jobUser` on the project (or dataset-scoped on `eevee_ab_validation`). |
+| Kind control-plane container disappeared after reboot                 | `sg docker -c "docker start eevee-control-plane"`, then re-load every worker image.                                                               |
 
 ---
 

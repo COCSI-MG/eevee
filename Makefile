@@ -8,7 +8,7 @@ NAMESPACE    ?= eevee-cefetrj
 CHART        ?= eevee-infrastructure/helm/eevee
 VALUES       ?= eevee-infrastructure/helm/eevee/values.yaml
 
-up: up-minikube up-docker up-scheduler
+up: up-minikube up-docker up-scheduler up-front up-queue-worker
 
 up-infra: up-minikube up-docker
 
