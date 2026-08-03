@@ -16,12 +16,12 @@ import ExamInfoCard from "@/components/exam/exam-info-card";
 import ExamActivitiesSection from "@/components/exam/exam-activities-section";
 import ExamStudentsSection from "@/components/exam/exam-students-section";
 import { Button } from "@/components/ui/button";
-
-type ExamView = "activities" | "students";
+import { ExamView } from "@/app/interface/scheduler-api/exam";
+import { QueryParam } from "@/types/pagination";
 
 function getViewFromSearch(searchParams: URLSearchParams): ExamView {
-  const v = searchParams.get("view");
-  return v === "students" ? "students" : "activities";
+  const v = searchParams.get(QueryParam.View);
+  return v === ExamView.Students ? ExamView.Students : ExamView.Activities;
 }
 
 export default function ExamDetailsPage() {
@@ -37,7 +37,7 @@ export default function ExamDetailsPage() {
 
   const setView = (view: ExamView) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("view", view);
+    params.set(QueryParam.View, view);
     router.replace(`?${params.toString()}`);
   };
 
@@ -153,7 +153,7 @@ export default function ExamDetailsPage() {
         onChangeView={setView}
       />
       <ExamInfoCard exam={exam} />
-      {currentView === "activities" && (
+      {currentView === ExamView.Activities && (
         <ExamActivitiesSection
           pagedAssignments={pagedAssignments}
           total={total}
@@ -167,7 +167,7 @@ export default function ExamDetailsPage() {
           link={data.link}
         />
       )}
-      {currentView === "students" && (
+      {currentView === ExamView.Students && (
         <ExamStudentsSection
           students={data.students}
           retry={data.retry}

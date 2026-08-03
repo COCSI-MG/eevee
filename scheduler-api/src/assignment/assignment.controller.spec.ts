@@ -58,16 +58,12 @@ describe('AssignmentController', () => {
     expect(assignmentService.update).toHaveBeenCalledWith(4, dto);
   });
 
-  it('delegates findAssignmentsByClass with classId and query params', async () => {
-    const query = { linkedToExam: true } as any;
+  it('delegates findAssignmentsByClass with a numeric classId', async () => {
     assignmentService.findAssignmentsByClass.mockResolvedValue([{ id: 1 }]);
 
-    await expect(
-      controller.findAssignmentsByClass('5', query),
-    ).resolves.toEqual([{ id: 1 }]);
-    expect(assignmentService.findAssignmentsByClass).toHaveBeenCalledWith(
-      5,
-      query,
-    );
+    await expect(controller.findAssignmentsByClass('5')).resolves.toEqual([
+      { id: 1 },
+    ]);
+    expect(assignmentService.findAssignmentsByClass).toHaveBeenCalledWith(5);
   });
 });

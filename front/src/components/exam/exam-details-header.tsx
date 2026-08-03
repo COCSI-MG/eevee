@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Exam } from "@/app/interface/scheduler-api/exam";
-
-type ExamView = "activities" | "students";
+import { Exam, ExamView } from "@/app/interface/scheduler-api/exam";
 
 interface ExamDetailsHeaderProps {
   exam: Exam;
@@ -34,14 +32,14 @@ export default function ExamDetailsHeader({
 
       <div className="flex gap-2">
         <Button
-          variant={currentView === "activities" ? "default" : "outline"}
-          onClick={() => onChangeView("activities")}
+          variant={currentView === ExamView.Activities ? "default" : "outline"}
+          onClick={() => onChangeView(ExamView.Activities)}
         >
           Atividades
         </Button>
         <Button
-          variant={currentView === "students" ? "default" : "outline"}
-          onClick={() => onChangeView("students")}
+          variant={currentView === ExamView.Students ? "default" : "outline"}
+          onClick={() => onChangeView(ExamView.Students)}
         >
           Alunos
         </Button>

@@ -28,7 +28,6 @@ import { Template } from 'src/template/entities/template.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
-import { ListAssignmentsByClassQueryDto } from './dto/list-assignments-by-class.query.dto';
 import { ListAssignmentsQueryDto } from './dto/list-assignments.query.dto';
 import {
   PaginatedResult,
@@ -431,6 +430,7 @@ export class AssignmentService {
       .leftJoinAndSelect('assignment.class', 'class')
       .leftJoinAndSelect('class.userClasses', 'userClasses')
       .leftJoinAndSelect('assignment.suspensions', 'suspensions')
+      .leftJoin('assignment.examAssignment', 'examAssignment')
       .orderBy('assignment.id', 'DESC');
 
     if (visibilityWhere) {
@@ -467,10 +467,7 @@ export class AssignmentService {
     return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
-  async findAssignmentsByClass(
-    classId: number,
-    queryParams?: ListAssignmentsByClassQueryDto,
-  ) {
+  async findAssignmentsByClass(classId: number) {
     const user = this.requestContextService.getUser()!;
 
     if (!user.isAdmin) {
@@ -498,13 +495,8 @@ export class AssignmentService {
       )
       .leftJoinAndSelect('assignment.suspensions', 'suspensions')
       .leftJoin('assignment.examAssignment', 'examAssignment')
-      .where('assignment.classId = :classId', { classId });
-
-      if (queryParams?.linkedToExam !== undefined) {
-        query.andWhere(
-          `examAssignment.id IS ${queryParams.linkedToExam ? 'NULL' : 'NOT NULL'}`
-        );
-      }
+      .where('assignment.classId = :classId', { classId })
+      .andWhere('examAssignment.id IS NULL');
 
     if (user?.isAdmin) {
       query.andWhere(

@@ -412,6 +412,11 @@ describe('AssignmentService', () => {
 
       expect(qb.skip).toHaveBeenCalledWith(0);
       expect(qb.take).toHaveBeenCalledWith(10);
+      expect(qb.leftJoin).toHaveBeenCalledWith(
+        'assignment.examAssignment',
+        'examAssignment',
+      );
+      expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
       expect(result.meta).toEqual({
         total: 1,
         page: 1,
@@ -433,7 +438,7 @@ describe('AssignmentService', () => {
       return qb;
     };
 
-    it('does not apply an exam link filter when linkedToExam is not provided', async () => {
+    it('always filters to assignments not linked to an exam', async () => {
       const {
         service,
         assignmentRepository,
@@ -449,62 +454,14 @@ describe('AssignmentService', () => {
       const qb = makeFindQueryBuilder();
       assignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
-      const result = await service.findAssignmentsByClass(1, {});
+      const result = await service.findAssignmentsByClass(1);
 
       expect(qb.leftJoin).toHaveBeenCalledWith(
         'assignment.examAssignment',
         'examAssignment',
       );
-      const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
-      expect(andWhereCalls).not.toContain('examAssignment.id IS NOT NULL');
-      expect(andWhereCalls).not.toContain('examAssignment.id IS NULL');
-      expect(result).toEqual([]);
-    });
-
-    it('filters to assignments linked to an exam when linkedToExam=true', async () => {
-      const {
-        service,
-        assignmentRepository,
-        userClassRepository,
-        requestContextService,
-      } = await setup();
-
-      requestContextService.getUser.mockReturnValue({
-        userId: 7,
-        isAdmin: false,
-      });
-      userClassRepository.findOne.mockResolvedValue({ userId: 7, classId: 1 });
-      const qb = makeFindQueryBuilder();
-      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
-
-      await service.findAssignmentsByClass(1, { linkedToExam: true });
-
       expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
-      const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
-      expect(andWhereCalls).not.toContain('examAssignment.id IS NOT NULL');
-    });
-
-    it('filters to assignments NOT linked to an exam when linkedToExam=false', async () => {
-      const {
-        service,
-        assignmentRepository,
-        userClassRepository,
-        requestContextService,
-      } = await setup();
-
-      requestContextService.getUser.mockReturnValue({
-        userId: 7,
-        isAdmin: false,
-      });
-      userClassRepository.findOne.mockResolvedValue({ userId: 7, classId: 1 });
-      const qb = makeFindQueryBuilder();
-      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
-
-      await service.findAssignmentsByClass(1, { linkedToExam: false });
-
-      expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NOT NULL');
-      const andWhereCalls = qb.andWhere.mock.calls.map((c) => c[0]);
-      expect(andWhereCalls).not.toContain('examAssignment.id IS NULL');
+      expect(result).toEqual([]);
     });
 
     it('throws ForbiddenException for a non-admin user not enrolled in the class', async () => {
@@ -521,14 +478,14 @@ describe('AssignmentService', () => {
       });
       userClassRepository.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.findAssignmentsByClass(1, { linkedToExam: true }),
-      ).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(service.findAssignmentsByClass(1)).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
 
       expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
     });
 
-    it('applies linkedToExam filter together with the admin createdById branch', async () => {
+    it('applies the exam filter together with the admin createdById branch', async () => {
       const {
         service,
         assignmentRepository,
@@ -544,7 +501,7 @@ describe('AssignmentService', () => {
       const qb = makeFindQueryBuilder();
       assignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
-      await service.findAssignmentsByClass(1, { linkedToExam: true });
+      await service.findAssignmentsByClass(1);
 
       expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
       const createdByCall = qb.andWhere.mock.calls.find(

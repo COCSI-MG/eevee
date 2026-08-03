@@ -60,3 +60,8 @@ export enum ExamDialogMode {
   Create = "create",
   Edit = "edit",
 }
+
+export enum ExamView {
+  Activities = "activities",
+  Students = "students",
+}
