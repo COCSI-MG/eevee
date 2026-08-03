@@ -27,7 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  ExpandableDialog,
   ExpandableTrigger,
   useExpandable,
 } from "@/components/ui/expandable";
