@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { OnMount } from "@monaco-editor/react";
 import React from "react";
-import { editor, IDisposable } from "monaco-editor";
+import { editor, IDisposable, Position } from "monaco-editor";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { FileNode } from "@/types/shared";
 
@@ -260,8 +260,8 @@ export default function WorkspaceCodeEditor({
     const provideImportCompletionItems: Parameters<
       typeof monaco.languages.registerCompletionItemProvider
       >[1]["provideCompletionItems"] = (
-        model: typeof monaco.editor.ITextModel,
-        position: typeof monaco.Position
+        model: editor.ITextModel,
+        position: Position
       ) => {
       const lineContent = model.getLineContent(position.lineNumber);
       const lineUntilCursor = lineContent.slice(0, position.column - 1);
