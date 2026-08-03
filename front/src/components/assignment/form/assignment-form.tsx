@@ -225,34 +225,22 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
           // eslint-disable-next-line react-hooks/rules-of-hooks
           const { weightError, hasWeightBlock } = useMemo(() => {
-            if (!selectedTemplates || selectedTemplates.length === 0) {
-              return {
-                weightError: upsertError?.message ?? null,
-                hasWeightBlock: false,
-              };
-            }
-            const allFilled = selectedTemplates.every(
-              (t) => t.weight !== undefined,
-            );
-            if (!allFilled) {
-              return {
-                weightError: upsertError?.message ?? null,
-                hasWeightBlock: false,
-              };
-            }
-            const sum = Math.round(
-              selectedTemplates.reduce((s, t) => s + (t.weight ?? 0), 0) *
-                100,
-            ) / 100;
-            if (sum !== 100) {
-              return {
-                weightError: `A soma dos pesos deve ser exatamente 100% (atual: ${sum.toFixed(2)}%).`,
-                hasWeightBlock: true,
-              };
-            }
+
+            const allFilled = !!selectedTemplates?.length && selectedTemplates.every((t) => t.weight !== undefined);
+
+            const sum = allFilled
+              ? Math.round(
+                  selectedTemplates!.reduce((s, t) => s + (t.weight ?? 0), 0) * 100,
+                ) / 100
+              : null;
+
+            const sumInvalid = (sum !== null) && (sum !== 100);
+
             return {
-              weightError: upsertError?.message ?? null,
-              hasWeightBlock: false,
+              weightError: sumInvalid
+                ? `A soma dos pesos deve ser exatamente 100% (atual: ${sum.toFixed(2)}%).`
+                : (upsertError?.message ?? null),
+              hasWeightBlock: sumInvalid,
             };
           }, [selectedTemplates, upsertError]);
 

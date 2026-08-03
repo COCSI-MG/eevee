@@ -25,13 +25,13 @@ function getViewFromSearch(searchParams: URLSearchParams): ExamView {
 }
 
 export default function ExamDetailsPage() {
-  const { id, idExam } = useParams<{
+  const { id, examId } = useParams<{
     id: string;
-    idExam: string;
+    examId: string;
   }>();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const examId = Number(idExam);
+  const examIdNumber = Number(examId);
   const classId = Number(id);
   const currentView = getViewFromSearch(searchParams);
 
@@ -47,13 +47,13 @@ export default function ExamDetailsPage() {
     isError,
     error,
     refetch,
-  } = useFetchExam(examId);
+  } = useFetchExam(examIdNumber);
   const exam = examData?.exam;
 
   const { page, search, debouncedSearch,setSearch } =
     usePaginatedSearch();
 
-  const data = useExamDetailsData({ examId, classId });
+  const data = useExamDetailsData({ examId: examIdNumber, classId });
 
   const filteredAssignments = useMemo(() => {
     const all = examData?.assignments ?? [];
@@ -83,7 +83,7 @@ export default function ExamDetailsPage() {
     return "Nenhuma atividade.";
   }, [total, debouncedSearch]);
 
-  if (isNaN(examId) || isNaN(classId)) {
+  if (isNaN(examIdNumber) || isNaN(classId)) {
     return (
       <div className="space-y-6">
         <QueryErrorState

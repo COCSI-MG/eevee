@@ -137,7 +137,7 @@ function ExamsPageContent() {
       <h1 className="text-3xl font-bold tracking-tight">
         {isClassFetching
           ? "Provas"
-          : `Provas — ${classData?.name ?? "Unknown Class"}`}
+          : `Provas — ${classData?.name ?? "Classe desconhecida"}`}
       </h1>
     </div>
   );
