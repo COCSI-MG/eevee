@@ -3,7 +3,7 @@ import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-
 import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
-import { ExamAssignment } from 'src/exam/entities/exam-assignment.entity';]
+import { ExamAssignment } from 'src/exam/entities/exam-assignment.entity';
 import { User } from 'src/user/entities/user.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import {
