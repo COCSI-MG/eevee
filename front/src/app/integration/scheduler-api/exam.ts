@@ -2,13 +2,14 @@ import { CreateExamRequest, Exam, ExamAssignment, ExamWithAssignments, UpdateExa
 import { ExamStudentGrades } from "@/app/interface/scheduler-api/exam-student-grades";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
+import { SortDirection } from "@/types/pagination";
 
 interface ListByClassParams {
   classId: number;
   page?: number;
   pageSize?: number;
   search?: string;
-  sort?: "asc" | "desc";
+  sort?: SortDirection;
 }
 
 export class ExamService {

@@ -7,13 +7,14 @@ import {
 } from "@/app/interface/scheduler-api/pagination";
 import { Exam } from "@/app/interface/scheduler-api/exam";
 import { useQuery } from "@tanstack/react-query";
+import { SortDirection } from "@/types/pagination";
 
 interface UsePaginatedExamsParams {
   classId: number;
   page: number;
   search?: string;
   pageSize?: number;
-  sort?: "asc" | "desc";
+  sort?: SortDirection;
 }
 
 export const usePaginatedExams = ({
@@ -21,7 +22,7 @@ export const usePaginatedExams = ({
   page,
   search,
   pageSize = ADMIN_LIST_PAGE_SIZE,
-  sort = "asc",
+  sort = SortDirection.Asc,
 }: UsePaginatedExamsParams) => {
   return useQuery<PaginatedResponse<Exam>>({
     queryKey: ["paginatedExams", classId, page, search, pageSize, sort],

@@ -23,6 +23,7 @@ import { ExamService } from "@/app/integration/scheduler-api/exam";
 import {
   CreateExamRequest,
   Exam,
+  ExamDialogMode,
   UpdateExamRequest,
 } from "@/app/interface/scheduler-api/exam";
 
@@ -48,7 +49,7 @@ function isoToLocalDatetime(iso: string | undefined): string {
 interface ExamFormDialogProps {
   open: boolean;
   classId: number;
-  mode: "create" | "edit";
+  mode: ExamDialogMode.Create | ExamDialogMode.Edit;
   exam?: Exam;
   onOpenChange: (open: boolean) => void;
 }
@@ -61,7 +62,7 @@ export default function ExamFormDialog({
   onOpenChange,
 }: ExamFormDialogProps) {
   const queryClient = useQueryClient();
-  const isEdit = mode === "edit";
+  const isEdit = mode === ExamDialogMode.Edit;
 
   const { mutateAsync: upsertExam, isPending } = useMutation({
     mutationFn: (data: CreateExamRequest | UpdateExamRequest) =>
@@ -178,24 +179,6 @@ export default function ExamFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dueDate">Data de vencimento</Label>
-            <Input
-              id="dueDate"
-              name="dueDate"
-              type="datetime-local"
-              value={formik.values.dueDate}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            />
-            <p className="text-xs text-muted-foreground">
-              Opcional. Prazo final para a prova.
-            </p>
-            {formik.touched.dueDate && formik.errors.dueDate && (
-              <p className="text-sm text-red-500">{formik.errors.dueDate}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="startDate">Data de início</Label>
             <Input
               id="startDate"
@@ -210,6 +193,24 @@ export default function ExamFormDialog({
             </p>
             {formik.touched.startDate && formik.errors.startDate && (
               <p className="text-sm text-red-500">{formik.errors.startDate}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dueDate">Data de vencimento</Label>
+            <Input
+              id="dueDate"
+              name="dueDate"
+              type="datetime-local"
+              value={formik.values.dueDate}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+            <p className="text-xs text-muted-foreground">
+              Opcional. Prazo final para a prova.
+            </p>
+            {formik.touched.dueDate && formik.errors.dueDate && (
+              <p className="text-sm text-red-500">{formik.errors.dueDate}</p>
             )}
           </div>
 

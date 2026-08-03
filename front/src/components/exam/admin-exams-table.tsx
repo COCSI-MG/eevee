@@ -73,10 +73,10 @@ export default function AdminExamsTable({
             <div className="flex items-center">Descrição</div>
           </TableHead>
           <TableHead>
-            <div className="flex items-center">Data de Vencimento</div>
+            <div className="flex items-center">Data de Início</div>
           </TableHead>
           <TableHead>
-            <div className="flex items-center">Data de Início</div>
+            <div className="flex items-center">Data de Vencimento</div>
           </TableHead>
           <TableHead>
             <div className="flex items-center">Ações</div>

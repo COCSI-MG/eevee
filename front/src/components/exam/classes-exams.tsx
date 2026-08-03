@@ -11,6 +11,7 @@ import ListSearch from "@/components/shared/list-search";
 import Pagination from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import ExamCard from "./exam-card";
+import { QueryParam, SortDirection } from "@/types/pagination";
 
 export default function ClassesExams() {
   const { id } = useParams<{ id: string }>();
@@ -19,12 +20,12 @@ export default function ClassesExams() {
   const classId = Number(id);
 
   const [initialPage] = useState(() => {
-    const p = searchParams.get("page");
+    const p = searchParams.get(QueryParam.Page);
     return p ? parseInt(p, 10) : 1;
   });
-  const [initialSearch] = useState(() => searchParams.get("search") || "");
-  const [sort, setSort] = useState<"asc" | "desc">(
-    () => (searchParams.get("sort") as "asc" | "desc") || "asc",
+  const [initialSearch] = useState(() => searchParams.get(QueryParam.Search) || "");
+  const [sort, setSort] = useState<SortDirection>(
+    () => (searchParams.get(QueryParam.Sort) as SortDirection) || SortDirection.Asc,
   );
 
   const { page, search, debouncedSearch, setPage, setSearch } =
@@ -47,10 +48,10 @@ export default function ClassesExams() {
 
   useEffect(() => {
     const params = new URLSearchParams();
-    params.set("view", "exams");
-    if (page > 1) params.set("page", String(page));
-    if (debouncedSearch) params.set("search", debouncedSearch);
-    if (sort !== "asc") params.set("sort", sort);
+    params.set(QueryParam.View, "exams");
+    if (page > 1) params.set(QueryParam.Page, String(page));
+    if (debouncedSearch) params.set(QueryParam.Search, debouncedSearch);
+    if (sort !== SortDirection.Asc) params.set(QueryParam.Sort, sort);
 
     const qs = params.toString();
     router.replace(`/classes/${id}${qs ? `?${qs}` : ""}`, { scroll: false });
@@ -112,14 +113,19 @@ export default function ClassesExams() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setSort((s) => (s === "asc" ? "desc" : "asc"))}
+          onClick={() =>
+            setSort((s) =>
+              s === SortDirection.Asc ? SortDirection.Desc : SortDirection.Asc,
+            )
+          }
         >
-          {sort === "asc" ? (
+          {sort === SortDirection.Asc ? (
             <ArrowUp className="h-4 w-4 mr-2" />
           ) : (
             <ArrowDown className="h-4 w-4 mr-2" />
           )}
-          Data Vencimento: {sort === "asc" ? "crescente" : "decrescente"}
+          Data Vencimento:{" "}
+          {sort === SortDirection.Asc ? "crescente" : "decrescente"}
         </Button>
       </div>
 

@@ -15,7 +15,8 @@ import AdminExamsTable from "@/components/exam/admin-exams-table";
 import ExamFormDialog from "@/components/exam/exam-form-dialog";
 import { usePaginatedExams } from "@/hooks/use-paginated-exams";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
-import { Exam } from "@/app/interface/scheduler-api/exam";
+import { Exam, ExamDialogMode } from "@/app/interface/scheduler-api/exam";
+import { QueryParam, SortDirection } from "@/types/pagination";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 
@@ -26,22 +27,22 @@ function ExamsPageContent() {
   const classId = Number(id);
 
   const [initialPage] = useState(() => {
-    const p = searchParams.get("page");
+    const p = searchParams.get(QueryParam.Page);
     return p ? parseInt(p, 10) : 1;
   });
-  const [initialSearch] = useState(() => searchParams.get("search") || "");
-  const [sort, setSort] = useState<"asc" | "desc">(
-    () => (searchParams.get("sort") as "asc" | "desc") || "asc",
+  const [initialSearch] = useState(() => searchParams.get(QueryParam.Search) || "");
+  const [sort, setSort] = useState<SortDirection>(
+    () => (searchParams.get(QueryParam.Sort) as SortDirection) || SortDirection.Asc,
   );
 
   const { page, search, debouncedSearch, setPage, setSearch } =
     usePaginatedSearch({ initialPage, initialSearch });
 
   type DialogState =
-    | { type: "closed" }
-    | { type: "create" }
-    | { type: "edit"; exam: Exam };
-  const [dialog, setDialog] = useState<DialogState>({ type: "closed" });
+    | { type: ExamDialogMode.Closed }
+    | { type: ExamDialogMode.Create }
+    | { type: ExamDialogMode.Edit; exam: Exam };
+  const [dialog, setDialog] = useState<DialogState>({ type: ExamDialogMode.Closed });
 
   const queryClient = useQueryClient();
 
@@ -110,9 +111,9 @@ function ExamsPageContent() {
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (page > 1) params.set("page", String(page));
-    if (debouncedSearch) params.set("search", debouncedSearch);
-    if (sort !== "asc") params.set("sort", sort);
+    if (page > 1) params.set(QueryParam.Page, String(page));
+    if (debouncedSearch) params.set(QueryParam.Search, debouncedSearch);
+    if (sort !== SortDirection.Asc) params.set(QueryParam.Sort, sort);
 
     const qs = params.toString();
     const path = `/admin/classes/${id}/exams${qs ? `?${qs}` : ""}`;
@@ -222,7 +223,7 @@ function ExamsPageContent() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => setDialog({ type: "create" })}
+            onClick={() => setDialog({ type: ExamDialogMode.Create })}
           >
             <Plus className="h-4 w-4 mr-2" />
             Nova prova
@@ -232,15 +233,18 @@ function ExamsPageContent() {
             variant="outline"
             size="sm"
             onClick={() =>
-              setSort((s) => (s === "asc" ? "desc" : "asc"))
+              setSort((s) =>
+                s === SortDirection.Asc ? SortDirection.Desc : SortDirection.Asc,
+              )
             }
           >
-            {sort === "asc" ? (
+            {sort === SortDirection.Asc ? (
               <ArrowUp className="h-4 w-4 mr-2" />
             ) : (
               <ArrowDown className="h-4 w-4 mr-2" />
             )}
-            Data Vencimento: {sort === "asc" ? "crescente" : "decrescente"}
+            Data Vencimento:{" "}
+            {sort === SortDirection.Asc ? "crescente" : "decrescente"}
           </Button>
         </div>
       </div>
@@ -249,7 +253,7 @@ function ExamsPageContent() {
         <AdminExamsTable
           exams={exams}
           emptyMessage={examsEmptyMessage}
-          onEdit={(exam) => setDialog({ type: "edit", exam })}
+          onEdit={(exam) => setDialog({ type: ExamDialogMode.Edit, exam })}
           onDelete={(exam) => handleDelete(exam.id)}
         />
       </div>
@@ -267,11 +271,11 @@ function ExamsPageContent() {
 
       <ExamFormDialog
         classId={classId}
-        mode={dialog.type === "edit" ? "edit" : "create"}
-        exam={dialog.type === "edit" ? dialog.exam : undefined}
-        open={dialog.type !== "closed"}
+        mode={dialog.type === ExamDialogMode.Edit ? ExamDialogMode.Edit : ExamDialogMode.Create}
+        exam={dialog.type === ExamDialogMode.Edit ? dialog.exam : undefined}
+        open={dialog.type !== ExamDialogMode.Closed}
         onOpenChange={(o) => {
-          if (!o) setDialog({ type: "closed" });
+          if (!o) setDialog({ type: ExamDialogMode.Closed });
         }}
       />
 

@@ -1,3 +1,5 @@
+import { AssignmentAttempt } from "./assignment-attempt";
+
 export interface Exam {
   id: number;
   title: string;
@@ -8,8 +10,6 @@ export interface Exam {
   createdAt: string;
   updatedAt: string;
 }
-
-import { AssignmentAttempt } from "./assignment-attempt";
 
 export interface AssignmentUserSuspensionSummary {
   id: number;
@@ -54,3 +54,9 @@ export interface CreateExamRequest {
 export type UpdateExamRequest = Partial<
   Pick<CreateExamRequest, "title" | "description" | "dueDate" | "startDate">
 >;
+
+export enum ExamDialogMode {
+  Closed = "closed",
+  Create = "create",
+  Edit = "edit",
+}
