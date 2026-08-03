@@ -30,6 +30,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerBehindProxyGuard } from './auth/guards/throttler-behind-proxy.guard';
 import { InterviewResponseModule } from './interview-response/interview-response.module';
+import { RealtimeModule } from './realtime/realtime.module';
+import { TemplateTestModule } from './template-test/template-test.module';
 import { ExamModule } from './exam/exam.module';
 
 @Module({
@@ -72,6 +74,8 @@ import { ExamModule } from './exam/exam.module';
     GithubModule,
     AssignmentUserSuspensionModule,
     InterviewResponseModule,
+    RealtimeModule,
+    TemplateTestModule,
     ExamModule,
   ],
   controllers: [AppController],

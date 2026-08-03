@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorMessage } from "formik";
 import { FileText } from "lucide-react";
 import dynamic from "next/dynamic";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -22,8 +23,7 @@ export const AssignmentBoilerplateForm: React.FC<
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
           <FileText className="w-5 h-5" />
-          Código Boilerplate (arquivo que será fornecido ao aluno no início do
-          trabalho)
+          Código Boilerplate <Tooltip message="Código que será fornecido ao aluno no início do trabalho para ser usado como base para o desenvolvimento dos exercícios." />
         </CardTitle>
       </CardHeader>
       <CardContent>

@@ -4,6 +4,7 @@ import "./globals.css";
 import { ReactQueryProvider } from "./provider/react-query-provider";
 import React from "react";
 import { ThemeProvider } from "./provider/theme-provider";
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./provider/auth-provider";
 
@@ -35,8 +36,10 @@ export default function RootLayout({
         <ReactQueryProvider>
           <AuthProvider>
             <ThemeProvider>
-              {children}
-              <Toaster />
+              <TooltipProvider delayDuration={300}>
+                {children}
+                <Toaster />
+              </TooltipProvider>
             </ThemeProvider>
           </AuthProvider>
         </ReactQueryProvider>
