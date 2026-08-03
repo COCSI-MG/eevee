@@ -34,6 +34,7 @@ import { MailModule } from './mail/mail.module';
 
 import { RealtimeModule } from './realtime/realtime.module';
 import { TemplateTestModule } from './template-test/template-test.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -77,6 +78,7 @@ import { TemplateTestModule } from './template-test/template-test.module';
     MailModule,
     RealtimeModule,
     TemplateTestModule,
+    MailModule,
   ],
   controllers: [AppController],
   providers: [

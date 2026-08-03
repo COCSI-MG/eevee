@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Code, FlaskConical, Loader2Icon, Save } from "lucide-react";
+import { FlaskConical, Loader2Icon, Save } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CreateTemplateRequest as UpsertTemplateRequest,
@@ -40,6 +40,8 @@ import {
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
 import QueryErrorState from "../admin/query-error-state";
+import { Tooltip } from "../ui/tooltip";
+import { TemplateTestDialog } from "./template-test-dialog";
 import TemplateCodeEditor from "./template-code-editor";
 
 const upsertTemplateSchema = Yup.object().shape({
@@ -88,6 +90,7 @@ export default function TemplateForm() {
     Record<string, TemplateParamType>
   >({});
   const [dependenciesInput, setDependenciesInput] = useState("");
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
   const codeExpandable = useExpandable();
   const descriptionExpandable = useExpandable();
 
@@ -540,55 +543,15 @@ export default function TemplateForm() {
         </form>
       </div>
 
-      <ExpandableDialog
-        open={codeExpandable.isOpen}
-        onOpenChange={codeExpandable.setIsOpen}
-        title={
-          <span className="flex items-center gap-2">
-            <Code className="h-5 w-5" />
-            {TEMPLATE_FORM_TEXT.codeDialogTitle}
-          </span>
-        }
-        minimizeLabel={TEMPLATE_FORM_TEXT.codeMinimizeButton}
-      >
-        <TemplateCodeEditor
-          value={formik.values.content}
-          onChange={(value) => formik.setFieldValue("content", value)}
-          height="100%"
-          className="bg-slate-700 border-slate-600 text-white"
-        />
-        {(formik.touched.content || formik.submitCount > 0) &&
-          formik.errors.content && (
-          <div className="px-4 pb-4 text-red-500">
-            {formik.errors.content}
-          </div>
-        )}
-      </ExpandableDialog>
-
-      <ExpandableDialog
-        open={descriptionExpandable.isOpen}
-        onOpenChange={descriptionExpandable.setIsOpen}
-        title="Descrição"
-        minimizeLabel="Minimizar"
-        contentClassName="flex flex-col"
-      >
-        <Textarea
-          id="description-expanded"
-          name="description"
-          value={formik.values.description}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          autoFocus
-          className="flex-1 w-full p-3 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
-          placeholder={TEMPLATE_FORM_TEXT.descriptionPlaceholder}
-        />
-        {(formik.touched.description || formik.submitCount > 0) &&
-          formik.errors.description && (
-          <div className="text-red-500 text-sm mt-2">
-            {formik.errors.description}
-          </div>
-        )}
-      </ExpandableDialog>
+      <TemplateTestDialog
+        open={testDialogOpen}
+        onOpenChange={setTestDialogOpen}
+        workerType={formik.values.workerType as WorkerType}
+        templateContent={formik.values.content}
+        paramNames={formik.values.params}
+        paramTypesByName={paramTypesByName}
+        dependencies={formik.values.dependencies}
+      />
     </div>
   );
 }
