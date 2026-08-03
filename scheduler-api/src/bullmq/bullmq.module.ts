@@ -14,6 +14,9 @@ import { BullModule } from '@nestjs/bullmq';
         name: 'scheduling-queue',
       },
       {
+        name: 'preview-queue',
+      },
+      {
         name: 'ai-report-queue',
       },
       {

@@ -12,6 +12,7 @@ import { AssignmentService } from 'src/assignment/assignment.service';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
+import { CreatePreviewJobMessageDto } from './dto/create-preview-job-message.dto';
 import { plainToClass } from 'class-transformer';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -34,6 +35,12 @@ import {
 import { Repository, In } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 
+/**
+ * Callback invoked by the scheduling processors whenever a queued job
+ * transitions to a new status, so realtime consumers can be notified.
+ */
+export type SchedulingStatusReporter = (status: string) => Promise<void> | void;
+
 @Injectable()
 export class SchedulingService {
   private readonly logger = new Logger(SchedulingService.name);
@@ -50,6 +57,7 @@ export class SchedulingService {
     @InjectRepository(SchedulingPreviewRun)
     private readonly schedulingPreviewRunRepository: Repository<SchedulingPreviewRun>,
     @InjectQueue('scheduling-queue') private readonly schedulingQueue: Queue,
+    @InjectQueue('preview-queue') private readonly previewQueue: Queue,
     @InjectQueue('ai-report-queue') private readonly aiReportQueue: Queue,
   ) {}
 
@@ -154,6 +162,7 @@ export class SchedulingService {
 
     const message = plainToClass(CreateSchedulingJobMessageDto, {
       attemptId: newAttempt.id,
+      userId: newAttempt.userId,
       workerData,
     });
 
@@ -200,7 +209,19 @@ export class SchedulingService {
       report: '',
     });
 
-    void this.processPreviewRun(previewRun.id, assignment, createSchedulingDto);
+    const message = plainToClass(CreatePreviewJobMessageDto, {
+      previewRunId: previewRun.id,
+      userId: user.userId,
+      createSchedulingDto,
+    });
+
+    await this.previewQueue.add('process-preview-job', message, {
+      jobId: `preview-run-${previewRun.id}`,
+    });
+
+    this.logger.log(
+      `Preview job created with preview run ID: ${previewRun.id}`,
+    );
 
     return previewRun;
   }
@@ -283,6 +304,7 @@ export class SchedulingService {
 
     const message = plainToClass(CreateSchedulingJobMessageDto, {
       attemptId: newAttempt.id,
+      userId: originalAttempt.userId,
       workerData,
     });
 
@@ -300,7 +322,10 @@ export class SchedulingService {
    *
    * @param payload - The message containing the scheduling job details.
    */
-  async processJobAndWait(payload: CreateSchedulingJobMessageDto) {
+  async processJobAndWait(
+    payload: CreateSchedulingJobMessageDto,
+    onStatus?: SchedulingStatusReporter,
+  ) {
     const { attemptId } = payload;
     this.logger.log(`Processing scheduling job for attempt ID: ${attemptId}`);
 
@@ -325,6 +350,7 @@ export class SchedulingService {
     );
 
     await this.schedulingAttemptTransitionService.markRunning(attempt.id);
+    await onStatus?.(AttemptStatus.RUNNING);
 
     try {
       const workerResult = await this.prepareAndRunWorker({
@@ -336,6 +362,7 @@ export class SchedulingService {
         jobName: `attempt-${attempt.id}-worker`,
       });
       if (!workerResult) {
+        await onStatus?.(AttemptStatus.FAILED);
         return;
       }
 
@@ -365,6 +392,7 @@ export class SchedulingService {
         `Attempt updated successfully with status: ${AttemptStatus.COMPLETED}`,
         `ATTEMPT_ID: ${attempt.id}`,
       );
+      await onStatus?.(AttemptStatus.COMPLETED);
     } catch (err) {
       const errMessage = err instanceof Error ? err.message : 'Unknown error';
 
@@ -377,6 +405,7 @@ export class SchedulingService {
         attempt.id,
         errMessage,
       );
+      await onStatus?.(AttemptStatus.FAILED);
     }
   }
 
@@ -477,17 +506,64 @@ export class SchedulingService {
     workerType?: WorkerType,
   ): Promise<string | undefined> {
     try {
-      return await this.aiReportService.refineReport(rawReport, assignmentDescription, files, workerType);
+      return await this.aiReportService.refineReport(
+        rawReport,
+        assignmentDescription,
+        files,
+        workerType,
+      );
     } catch (error) {
-      this.logger.error(`AI report generation failed: ${error instanceof Error ? error.message : error}`);
+      this.logger.error(
+        `AI report generation failed: ${error instanceof Error ? error.message : error}`,
+      );
       return undefined;
     }
+  }
+
+  async processPreviewJob(
+    payload: CreatePreviewJobMessageDto,
+    onStatus?: SchedulingStatusReporter,
+  ) {
+    const { previewRunId, createSchedulingDto } = payload;
+    this.logger.log(
+      `Processing preview job for preview run ID: ${previewRunId}`,
+    );
+
+    const assignment = await this.assignmentService.findOneForExecution(
+      createSchedulingDto.assignmentId,
+    );
+    if (!assignment) {
+      this.logger.fatal(
+        `Assignment ${createSchedulingDto.assignmentId} not found for preview run ${previewRunId}`,
+      );
+      await this.schedulingPreviewRunRepository.update(
+        {
+          id: previewRunId,
+          status: SchedulingPreviewRunStatus.PENDING,
+        },
+        {
+          status: SchedulingPreviewRunStatus.FAILED,
+          errorMessage: 'Assignment not found',
+          completedAt: new Date(),
+        },
+      );
+      await onStatus?.(SchedulingPreviewRunStatus.FAILED);
+      return;
+    }
+
+    await this.processPreviewRun(
+      previewRunId,
+      assignment,
+      createSchedulingDto,
+      onStatus,
+    );
   }
 
   private async processPreviewRun(
     previewRunId: number,
     assignment: Assignment,
     createSchedulingDto: CreateSchedulingDto,
+    onStatus?: SchedulingStatusReporter,
   ) {
     const jobName = `preview-run-${previewRunId}-worker`;
 
@@ -511,6 +587,8 @@ export class SchedulingService {
       return;
     }
 
+    await onStatus?.(SchedulingPreviewRunStatus.RUNNING);
+
     try {
       const workerResult = await this.prepareAndRunWorker({
         assignment,
@@ -526,6 +604,7 @@ export class SchedulingService {
           errorMessage: 'No test files available for execution.',
           completedAt: new Date(),
         });
+        await onStatus?.(SchedulingPreviewRunStatus.FAILED);
         return;
       }
 
@@ -547,12 +626,14 @@ export class SchedulingService {
           completedAt: new Date(),
         },
       );
+      await onStatus?.(SchedulingPreviewRunStatus.COMPLETED);
     } catch (error) {
       const previewRun = await this.schedulingPreviewRunRepository.findOne({
         where: { id: previewRunId },
       });
 
       if (previewRun?.status === SchedulingPreviewRunStatus.CANCELLED) {
+        await onStatus?.(SchedulingPreviewRunStatus.CANCELLED);
         return;
       }
 
@@ -568,6 +649,7 @@ export class SchedulingService {
           completedAt: new Date(),
         },
       );
+      await onStatus?.(SchedulingPreviewRunStatus.FAILED);
     }
   }
 }

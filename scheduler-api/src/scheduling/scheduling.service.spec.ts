@@ -44,7 +44,9 @@ describe('SchedulingService', () => {
       | 'update'
     >
   >;
-  let assignmentService: jest.Mocked<Pick<AssignmentService, 'findOne'>>;
+  let assignmentService: jest.Mocked<
+    Pick<AssignmentService, 'findOne' | 'findOneForExecution'>
+  >;
   let scorePolicyService: jest.Mocked<
     Pick<ScorePolicyService, 'calculateScore' | 'isAcceptable'>
   >;
@@ -61,6 +63,7 @@ describe('SchedulingService', () => {
     >
   >;
   let schedulingQueue: jest.Mocked<Pick<Queue, 'add'>>;
+  let previewQueue: jest.Mocked<Pick<Queue, 'add'>>;
   let requestContextService: jest.Mocked<
     Pick<RequestContextService, 'getUser'>
   >;
@@ -90,6 +93,7 @@ describe('SchedulingService', () => {
 
     assignmentService = {
       findOne: jest.fn(),
+      findOneForExecution: jest.fn(),
     };
 
     scorePolicyService = {
@@ -109,6 +113,10 @@ describe('SchedulingService', () => {
     };
 
     schedulingQueue = {
+      add: jest.fn(),
+    };
+
+    previewQueue = {
       add: jest.fn(),
     };
 
@@ -141,6 +149,7 @@ describe('SchedulingService', () => {
       aiReportService as unknown as AiReportService,
       schedulingPreviewRunRepository as unknown as Repository<SchedulingPreviewRun>,
       schedulingQueue as unknown as Queue,
+      previewQueue as unknown as Queue,
       aiReportQueue as unknown as Queue,
     );
 
@@ -475,6 +484,7 @@ describe('SchedulingService', () => {
     await expect(
       service.processJobAndWait({
         attemptId: 31,
+        userId: 42,
         workerData: {
           applicationFileContent: '',
           files: { 'src/index.ts': 'content' },
