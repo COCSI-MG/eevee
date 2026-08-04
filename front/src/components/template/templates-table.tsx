@@ -27,6 +27,7 @@ import {
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
 import { readOnlyMonacoOptions } from "@/lib/monaco-options";
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -114,8 +115,8 @@ export default function TemplatesTable({
                   <div className="space-y-4">
                     <div className="bg-slate-900 border border-slate-600 rounded-md p-4 max-h-[50vh] overflow-auto min-w-0">
                       <Editor
-                        path={`template-${template.id}.ts`}
-                        defaultLanguage="typescript"
+                        path={`template-${template.id}${getWorkerLanguageConfig(template.workerType).fileExtension}`}
+                        defaultLanguage={getWorkerLanguageConfig(template.workerType).editorLanguage}
                         theme="vs-dark"
                         value={template.content}
                         keepCurrentModel={true}

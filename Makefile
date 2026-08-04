@@ -57,7 +57,8 @@ build-workers: \
 	build-worker-nestjs-default \
 	build-worker-node-grpcjs \
 	build-worker-node-nextjs-cypress \
-	build-worker-react-cypress
+	build-worker-react-cypress \
+	build-worker-python-default
 
 push-workers: \
 	push-eevee-worker-bootstrap \
@@ -66,7 +67,8 @@ push-workers: \
 	push-worker-nestjs-default \
 	push-worker-node-grpcjs \
 	push-worker-node-nextjs-cypress \
-	push-worker-react-cypress
+	push-worker-react-cypress \
+	push-worker-python-default
 
 # Per-image targets ----------------------------------------------------------
 # Each app/worker has a `build-*` and `push-*` target so a single image can be
@@ -124,6 +126,12 @@ build-worker-react-cypress:
 	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG) node-worker-images/reactjs-cypress
 push-worker-react-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
+
+.PHONY: build-worker-python-default push-worker-python-default
+build-worker-python-default:
+	docker build -t $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG) node-worker-images/python-default
+push-worker-python-default:
+	docker push $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG)
 
 proxy:
 	@echo Starting backup VM reverse-proxy tunnel to single entrypoint NodePort
