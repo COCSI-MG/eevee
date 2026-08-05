@@ -277,10 +277,7 @@ export default function WorkspaceCodeEditor({
 
     const provideImportCompletionItems: Parameters<
       typeof monaco.languages.registerCompletionItemProvider
-    >[1]["provideCompletionItems"] = (
-        model: typeof monaco.editor.ITextModel,
-        position: typeof monaco.Position
-      ) => {
+    >[1]["provideCompletionItems"] = (model, position) => {
       const lineContent = model.getLineContent(position.lineNumber);
       const lineUntilCursor = lineContent.slice(0, position.column - 1);
       const match = lineUntilCursor.match(importLinePattern);

@@ -44,7 +44,7 @@
     "tailwindcss-animate": "^1.0.7",
     "yup": "^1.6.1"
   },
-  "overrides": {
+  "resolutions": {
     "@radix-ui/react-focus-scope": "1.1.1"
   },
   "devDependencies": {

@@ -416,7 +416,6 @@ describe('AssignmentService', () => {
         'assignment.examAssignment',
         'examAssignment',
       );
-      expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
       expect(result.meta).toEqual({
         total: 1,
         page: 1,

@@ -123,7 +123,7 @@ export default function TemplatesTable({
                         saveViewState={false}
                         options={{
                           ...readOnlyMonacoOptions,
-                          hover: { enabled: 'off' },
+                          hover: { enabled: false },
                           links: false,
                         }}
                       />
