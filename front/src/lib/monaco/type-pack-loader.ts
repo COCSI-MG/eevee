@@ -1,5 +1,6 @@
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { resolvePackDir } from "./worker-intellisense";
+import WORKER_SOURCE_MAP from "./worker-source-map.json";
 
 type MonacoNamespace = typeof import("monaco-editor");
 
@@ -14,6 +15,8 @@ const loadedPackDirs = new Set<string>();
 /** In-memory cache of fetched packs, keyed by pack dir. */
 const packCache = new Map<string, TypePackEntry[]>();
 
+const sourceMap = WORKER_SOURCE_MAP as Record<string, string>;
+
 function toExtraLib(entry: TypePackEntry) {
   const filePath = `file:///${entry.path.replace(/^\/+/, "")}`;
   return { content: entry.content, filePath };
@@ -23,6 +26,8 @@ export async function applyTypePack(
   monaco: MonacoNamespace,
   workerType?: WorkerType | string,
 ): Promise<void> {
+  if (workerType && !sourceMap[workerType]) return;
+
   const dir = resolvePackDir(workerType);
   if (loadedPackDirs.has(dir)) return;
 
