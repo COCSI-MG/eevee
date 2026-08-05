@@ -38,7 +38,6 @@ import {
 import QueryErrorState from "../admin/query-error-state";
 import { Tooltip } from "../ui/tooltip";
 import { TemplateTestDialog } from "./template-test-dialog";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -212,10 +211,6 @@ export default function TemplateForm() {
     setLastWorkerTypeForDefault(currentWorkerType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.workerType, isNewTemplate]);
-
-  const editorLanguage = getWorkerLanguageConfig(
-    formik.values.workerType,
-  ).editorLanguage;
 
   const handleParamsBlur = (value: string) => {
     const paramsArray = parseParamsInput(value);
@@ -511,7 +506,7 @@ export default function TemplateForm() {
                   <div style={{ height: "600px" }}>
                     <Editor
                       height="600px"
-                      defaultLanguage={editorLanguage}
+                      defaultLanguage="typescript"
                       value={formik.values.content}
                       theme="vs-dark"
                       onChange={(value) =>

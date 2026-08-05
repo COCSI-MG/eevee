@@ -1,16 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
 import { WorkerService } from 'src/worker/worker.service';
 import { buildTemplateVariablesModuleFromParams } from 'src/utils/template-variables.utils';
 import { TestTemplateDto } from './dto/test-template.dto';
 
-const APP_FILE_EXTENSION_BY_WORKER_TYPE: Partial<Record<WorkerType, string>> = {
-  [WorkerType.PYTHON_DEFAULT]: '.py',
-};
-
-const APP_FILE_EXTENSION_DEFAULT = '.ts';
+const APP_FILE_NAME = 'app.ts';
+const APP_FILE_IN_TEST_DIR = '../test/app.ts';
 
 @Injectable()
 export class TemplateTestService {
@@ -33,18 +29,12 @@ export class TemplateTestService {
     // we mirror the app under srcPath/../test/app.ts → /app/test/app.ts.
     // Tests can then import from `../src/app` (canonical) or `./app`
     // (legacy, same dir as the test).
-    const extension =
-      APP_FILE_EXTENSION_BY_WORKER_TYPE[body.workerType] ??
-      APP_FILE_EXTENSION_DEFAULT;
-    const appFileName = `app${extension}`;
-    const appFileInTestDir = `../test/${appFileName}`;
-
     const userFiles = body.files ?? {};
     const files: Record<string, string> = { ...userFiles };
 
     if (body.applicationFileContent) {
-      files[appFileName] = body.applicationFileContent;
-      files[appFileInTestDir] = body.applicationFileContent;
+      files[APP_FILE_NAME] = body.applicationFileContent;
+      files[APP_FILE_IN_TEST_DIR] = body.applicationFileContent;
     }
 
     const workerData: CreateWorkerDto = {

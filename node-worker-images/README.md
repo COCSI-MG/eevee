@@ -32,7 +32,7 @@ Posteriormente é feito o merge entre os arquivos enviados pelo cliente e a estr
 
 - Só executa um comando de teste
 - Inicializa a aplicação em modo de desenvolvimento (dev)
-- Suporta Node.js e Python como motores de execução
+- Suporta apenas Node.js como motor de execução
 - Só inicia a aplicação para um worker baseado em cypress (React.js + Cypress, por exemplo)
 
 ### Utilizando banco de dados
@@ -46,7 +46,7 @@ minikube image load postgres:16
 
 ## Imagens Disponíveis
 
-Atualmente, as imagens disponíveis suportam motores de execução baseados em Node.js e Python. Cada imagem é otimizada para o motor de execução do worker, permitindo que os workers sejam executados de forma apropriada conforme necessário.
+Atualmente, as imagens disponívels suportam apenas motores de execução baseados em Node.js. Cada imagem é otimizada para diferentes versões do Node.js, permitindo que os workers sejam executados com a versão apropriada conforme necessário.
 
 - [Worker Bootstrap](./worker-bootstrap/Dockerfile) - Imagem base para o processo de bootstrap dos workers. Esta imagem é responsável por preparar o ambiente de execução, criar os arquivos de source code e testes, e garantir que o worker tenha acesso a esses arquivos para iniciar a aplicação e rodar os testes.
 
@@ -59,8 +59,6 @@ Atualmente, as imagens disponíveis suportam motores de execução baseados em N
 - [NestJs](./nest.js/Dockerfile) - Imagem configurada para executar aplicações desenvolvidas com o framework NestJs. Esta imagem inclui todas as dependências necessárias para rodar aplicações NestJs de forma eficiente.
 
 - [Next.Js](./next.js/Dockerfile) - Imagem especializada para execução de aplicações Next.js. Esta imagem inclui todas as dependências necessárias para rodar aplicações Next.js de forma eficiente.
-
-- [Python + pytest](./python-default/Dockerfile) - Imagem para execução de exercícios em Python, rodando os testes com pytest. O trigger emite um resumo compatível com o Jest, então o parser de logs do scheduler continua funcionando sem alterações.
 
 ## Como Utilizar
 

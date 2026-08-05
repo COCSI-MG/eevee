@@ -7,5 +7,4 @@ export enum WorkerType {
   NODE_DEFAULT_POSTGRESQL = 'node_default_postgresql',
   NODE_NESTJS_POSTGRESQL = 'node_nestjs_postgresql',
   NODE_TERAORM = 'node_teraorm',
-  PYTHON_DEFAULT = 'python_default',
 }

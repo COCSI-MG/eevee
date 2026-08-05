@@ -4,7 +4,6 @@ import { Separator } from '../ui/separator';
 import { Code } from 'lucide-react';
 import { Template } from '@/app/interface/scheduler-api/template';
 import { readOnlyMonacoOptions } from '@/lib/monaco-options';
-import { getWorkerLanguageConfig } from '@/lib/monaco/worker-language';
 
 interface TemplatePreviewDialogProps {
   template: Template | null;
@@ -31,9 +30,9 @@ export default function TemplatePreviewDialog({ template, open, onOpenChange }: 
             <h4 className="text-sm font-medium text-slate-300 mb-2">Conteúdo do Template</h4>
             <div className="bg-slate-900 border border-slate-600 rounded-md overflow-auto min-w-0">
               <Editor
-                path={`template-${template.id}${getWorkerLanguageConfig(template.workerType).fileExtension}`}
+                path={`template-${template.id}.ts`}
                 value={template.content}
-                language={getWorkerLanguageConfig(template.workerType).editorLanguage}
+                language="typescript"
                 theme="vs-dark"
                 height="300px"
                 options={readOnlyMonacoOptions}

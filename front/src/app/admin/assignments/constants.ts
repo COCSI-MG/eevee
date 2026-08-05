@@ -6,55 +6,6 @@ export function main() {
   console.log('Hello, world!');
 }`;
 
-export const DEFAULT_PYTHON_DEFAULT_ASSIGNMENT_TEMPLATE = `
-# PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
-def main():
-    # YOUR CODE HERE
-    print('Hello, world!')`;
-
-export const DEFAULT_PYTHON_DEFAULT_VALIDATION_SCRIPT = `from app import main
-
-
-def math_add(a, b):
-    return a + b
-
-
-def math_sub(a, b):
-    return a - b
-
-
-def math_mul(a, b):
-    return a * b
-
-
-def math_div(a, b):
-    return a / b
-
-
-def test_main_can_sum():
-    correct_result = math_add(2, 3)
-    provided_result = main(2, 3)
-    assert provided_result[0] == correct_result
-
-
-def test_main_can_subtract():
-    correct_result = math_sub(2, 3)
-    provided_result = main(2, 3)
-    assert provided_result[1] == correct_result
-
-
-def test_main_can_multiply():
-    correct_result = math_mul(2, 3)
-    provided_result = main(2, 3)
-    assert provided_result[2] == correct_result
-
-
-def test_main_can_divide():
-    correct_result = math_div(2, 3)
-    provided_result = main(2, 3)
-    assert provided_result[3] == correct_result`;
-
-
 export const DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE = `import React from 'react';
 
 export default function StudentApp() {
@@ -498,7 +449,6 @@ export const WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS = "Next.js + Cypress";
 export const WORKER_EXHIBTION_REACTJS_CYPRESS = "React.js + Cypress";
 export const WORKER_EXHIBITION_NODE_DEFAULT_POSTGRESQL = "Node.js + PostgreSQL";
 export const WORKER_EXHIBITION_NODE_NESTJS_POSTGRESQL = "Node NestJS + PostgreSQL";
-export const WORKER_EXHIBITION_PYTHON_DEFAULT = "Python + pytest";
 
 export const DEFAULT_NODE_DEFAULT_POSTGRESQL_ASSIGNMENT_TEMPLATE = `// PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
 export function main() {
@@ -567,7 +517,6 @@ export const WorkerExibitionMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: WORKER_EXHIBITION_NODE_DEFAULT_POSTGRESQL,
   [WorkerType.NODE_NESTJS_POSTGRESQL]: WORKER_EXHIBITION_NODE_NESTJS_POSTGRESQL,
   [WorkerType.NODE_TERAORM]: WORKER_EXHIBITION_NODE_DEFAULT,
-  [WorkerType.PYTHON_DEFAULT]: WORKER_EXHIBITION_PYTHON_DEFAULT,
 };
 
 export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
@@ -579,7 +528,6 @@ export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: DEFAULT_NODE_DEFAULT_POSTGRESQL_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NESTJS_POSTGRESQL]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_TERAORM]: DEFAULT_ASSIGNMENT_TEMPLATE,
-  [WorkerType.PYTHON_DEFAULT]: DEFAULT_PYTHON_DEFAULT_ASSIGNMENT_TEMPLATE,
 };
 
 export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
@@ -591,7 +539,6 @@ export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: DEFAULT_VALIDATION_SCRIPT,
   [WorkerType.NODE_NESTJS_POSTGRESQL]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_TERAORM]: DEFAULT_VALIDATION_SCRIPT,
-  [WorkerType.PYTHON_DEFAULT]: DEFAULT_PYTHON_DEFAULT_VALIDATION_SCRIPT,
 };
 
 /**
@@ -608,5 +555,4 @@ export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
   [WorkerType.NODE_NESTJS_POSTGRESQL]: DEFAULT_TEMPLATE_CONTENT_NODE_NESTJS,
   [WorkerType.NODE_TERAORM]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
-  [WorkerType.PYTHON_DEFAULT]: DEFAULT_PYTHON_DEFAULT_VALIDATION_SCRIPT,
 };

@@ -45,7 +45,6 @@ function getMonacoLanguage(language: string | undefined): string {
   if (normalized === "ts" || normalized === "tsx") return "typescript";
   if (normalized === "js" || normalized === "jsx") return "javascript";
   if (normalized === "yml") return "yaml";
-  if (normalized === "py") return "python";
 
   return normalized || "typescript";
 }

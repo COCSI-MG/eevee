@@ -13,7 +13,6 @@ export const WORKER_JOB_PREFIX: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: 'worker-node-default-pg',
   [WorkerType.NODE_NESTJS_POSTGRESQL]: 'worker-node-nestjs-pg',
   [WorkerType.NODE_TERAORM]: 'worker-node-teraorm',
-  [WorkerType.PYTHON_DEFAULT]: 'worker-python-default',
 };
 
 export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
@@ -48,10 +47,6 @@ export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
   [WorkerType.NODE_TERAORM]: getImageFromEnv(
     'WORKER_IMAGE_NODE_TERAORM',
     'docker.io/library/worker-node-teraorm-img:latest',
-  ),
-  [WorkerType.PYTHON_DEFAULT]: getImageFromEnv(
-    'WORKER_IMAGE_PYTHON_DEFAULT',
-    'docker.io/library/worker-python-default-img:latest',
   ),
 };
 

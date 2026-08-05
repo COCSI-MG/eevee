@@ -20,7 +20,6 @@ import { NodeNestJsStrategy } from './strategies/node-nestjs.strategy';
 import { NodeNextJsCypressStrategy } from './strategies/node-nextjs-cypress.strategy';
 import { NodeReactJsCypressIsolatedLogStrategy } from './strategies/node-reactjs-cypress-isolated-log.strategy';
 import { NodeTeraormJestStrategy } from './strategies/node-teraorm-jest.strategy';
-import { PythonDefaultStrategy } from './strategies/python-default.strategy';
 import { WorkerExecutionStrategy } from './strategies/worker-execution-strategy';
 import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
 
@@ -44,7 +43,6 @@ export class WorkerService {
       new NodeDefaultPostgresqlJestStrategy(),
     [WorkerType.NODE_NESTJS_POSTGRESQL]: new NodeNestJsPostgresqlJestStrategy(), // Reuse NodeNestJsStrategy with Postgres support enabled
     [WorkerType.NODE_TERAORM]: new NodeTeraormJestStrategy(),
-    [WorkerType.PYTHON_DEFAULT]: new PythonDefaultStrategy(),
   };
 
   getStrategy(workerType: WorkerType): WorkerExecutionStrategy {

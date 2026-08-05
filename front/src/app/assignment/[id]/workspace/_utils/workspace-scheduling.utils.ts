@@ -69,9 +69,7 @@ export function buildSchedulingPayloadFromFileTree(
     files["app.ts"] ??
     files["src/app.ts"] ??
     files["app.js"] ??
-    files["src/app.js"] ??
-    files["app.py"] ??
-    files["src/app.py"];
+    files["src/app.js"];
 
   return {
     assignmentId,
