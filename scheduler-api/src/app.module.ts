@@ -32,6 +32,7 @@ import { ThrottlerBehindProxyGuard } from './auth/guards/throttler-behind-proxy.
 import { InterviewResponseModule } from './interview-response/interview-response.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { TemplateTestModule } from './template-test/template-test.module';
+import { AnswerKeyModule } from './answer-key/answer-key.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -74,6 +75,7 @@ import { TemplateTestModule } from './template-test/template-test.module';
     InterviewResponseModule,
     RealtimeModule,
     TemplateTestModule,
+    AnswerKeyModule,
   ],
   controllers: [AppController],
   providers: [
