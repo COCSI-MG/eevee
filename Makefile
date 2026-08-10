@@ -103,6 +103,13 @@ build-worker-node-default:
 push-worker-node-default:
 	docker push $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG)
 
+.PHONY: reproduce-node-default
+reproduce-node-default: build-worker-node-default ## Run the deterministic node-default example and print the standardized result summary
+	docker run --rm \
+		-v "$(CURDIR)/images/node/node-default/examples/reproduce:/reproduce:ro" \
+		$(GHCR_NAMESPACE)/worker-node-default-img:$(TAG) \
+		sh -c "cp /reproduce/app.ts /reproduce/validation.test.ts /app/ && npm start"
+
 .PHONY: build-worker-node-teraorm push-worker-node-teraorm
 build-worker-node-teraorm:
 	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG) images/node/node-teraorm
