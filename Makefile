@@ -5,10 +5,10 @@ PRIVATE_KEY_PATH ?= secrets/id_iee_cluster
 
 HELM_RELEASE ?= eevee
 NAMESPACE    ?= eevee-cefetrj
-CHART        ?= eevee-infrastructure/helm/eevee
-VALUES       ?= eevee-infrastructure/helm/eevee/values.yaml
+CHART        ?= infrastructure/helm/eevee
+VALUES       ?= infrastructure/helm/eevee/values.yaml
 
-up: up-minikube up-docker up-scheduler up-front up-queue-worker
+up: up-minikube up-docker up-platform-api up-front up-code-evaluator-engine
 
 up-infra: up-minikube up-docker
 
@@ -18,11 +18,15 @@ up-minikube:
 
 up-docker:
 	@echo Starting all services with Docker
-	cd eevee-infrastructure && docker compose up -d
+	cd infrastructure && docker compose up -d
 
-up-scheduler:
-	@echo Starting only the scheduler-api service
-	cd scheduler-api && npm run start:dev
+up-platform-api:
+	@echo Starting the Platform API
+	cd platform-api && npm run start:dev
+
+up-code-evaluator-engine:
+	@echo Starting the Code Evaluator Engine
+	cd code-evaluator-engine && npm run start:dev
 
 up-front:
 	@echo Starting front-end service
@@ -31,22 +35,20 @@ up-front:
 down:
 	@echo Stopping all services
 	minikube stop
-	cd eevee-infrastructure && docker compose down
-
-up-queue-worker:
-	@echo Starting queue worker 
-	cd scheduler-api && npm run start:worker:dev
+	cd infrastructure && docker compose down
 
 .PHONY: images build-images push-images build-workers push-workers
 images: build-images push-images
 
 build-images: \
-	build-scheduler-api \
+	build-platform-api \
+	build-code-evaluator-engine \
 	build-front \
 	build-workers
 
 push-images: \
-	push-scheduler-api \
+	push-platform-api \
+	push-code-evaluator-engine \
 	push-front \
 	push-workers
 
@@ -71,11 +73,17 @@ push-workers: \
 # Per-image targets ----------------------------------------------------------
 # Each app/worker has a `build-*` and `push-*` target so a single image can be
 # rebuilt without re-running the whole pipeline.
-.PHONY: build-scheduler-api push-scheduler-api
-build-scheduler-api:
-	docker build -t $(GHCR_NAMESPACE)/scheduler-api:$(TAG) scheduler-api
-push-scheduler-api:
-	docker push $(GHCR_NAMESPACE)/scheduler-api:$(TAG)
+.PHONY: build-platform-api push-platform-api
+build-platform-api:
+	docker build -t $(GHCR_NAMESPACE)/platform-api:$(TAG) platform-api
+push-platform-api:
+	docker push $(GHCR_NAMESPACE)/platform-api:$(TAG)
+
+.PHONY: build-code-evaluator-engine push-code-evaluator-engine
+build-code-evaluator-engine:
+	docker build -t $(GHCR_NAMESPACE)/code-evaluator-engine:$(TAG) code-evaluator-engine
+push-code-evaluator-engine:
+	docker push $(GHCR_NAMESPACE)/code-evaluator-engine:$(TAG)
 
 .PHONY: build-front push-front
 build-front:
@@ -85,43 +93,43 @@ push-front:
 
 .PHONY: build-eevee-worker-bootstrap push-eevee-worker-bootstrap
 build-eevee-worker-bootstrap:
-	docker build -t $(GHCR_NAMESPACE)/eevee-worker-bootstrap:$(TAG) node-worker-images/worker-bootstrap
+	docker build -t $(GHCR_NAMESPACE)/eevee-worker-bootstrap:$(TAG) images/worker-bootstrap
 push-eevee-worker-bootstrap:
 	docker push $(GHCR_NAMESPACE)/eevee-worker-bootstrap:$(TAG)
 
 .PHONY: build-worker-node-default push-worker-node-default
 build-worker-node-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG) node-worker-images/node
+	docker build -t $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG) images/node/node-default
 push-worker-node-default:
 	docker push $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG)
 
 .PHONY: build-worker-node-teraorm push-worker-node-teraorm
 build-worker-node-teraorm:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG) node-worker-images/node-teraorm
+	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG) images/node/node-teraorm
 push-worker-node-teraorm:
 	docker push $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG)
 
 .PHONY: build-worker-nestjs-default push-worker-nestjs-default
 build-worker-nestjs-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-nestjs-default-img:$(TAG) node-worker-images/nest.js
+	docker build -t $(GHCR_NAMESPACE)/worker-nestjs-default-img:$(TAG) images/node/nest.js
 push-worker-nestjs-default:
 	docker push $(GHCR_NAMESPACE)/worker-nestjs-default-img:$(TAG)
 
 .PHONY: build-worker-node-grpcjs push-worker-node-grpcjs
 build-worker-node-grpcjs:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG) -f node-worker-images/grpc/Dockerfile node-worker-images
+	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG) -f images/node/grpc/Dockerfile images/node
 push-worker-node-grpcjs:
 	docker push $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG)
 
 .PHONY: build-worker-node-nextjs-cypress push-worker-node-nextjs-cypress
 build-worker-node-nextjs-cypress:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:$(TAG) node-worker-images/next.js-cypress
+	docker build -t $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:$(TAG) images/node/next.js-cypress
 push-worker-node-nextjs-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:$(TAG)
 
 .PHONY: build-worker-react-cypress push-worker-react-cypress
 build-worker-react-cypress:
-	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG) node-worker-images/reactjs-cypress
+	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG) images/node/reactjs-cypress
 push-worker-react-cypress:
 	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
 
