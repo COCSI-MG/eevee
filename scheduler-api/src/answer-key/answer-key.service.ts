@@ -40,7 +40,7 @@ export class AnswerKeyService {
       return await this.dataSource.transaction(async (manager) => {
         const answerKey = await manager.save(AnswerKey, {
           assignmentId,
-          content: { questions: dto.questions },
+          content: dto.content,
         });
 
         await manager.update(Assignment, assignmentId, {
@@ -88,10 +88,8 @@ export class AnswerKeyService {
 
     return this.dataSource.transaction(async (manager) => {
 
-      if (dto.questions) {
-        answerKey.content = {
-          questions: dto.questions
-        };
+      if (dto.content) {
+        answerKey.content = dto.content;
       }
 
       const updated = await manager.save(AnswerKey, answerKey);

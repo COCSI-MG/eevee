@@ -52,6 +52,7 @@ function getMonacoLanguage(language: string | undefined): string {
 
 interface WorkspaceCodeEditorProps {
   onEditorChange: (value: string | undefined) => void;
+  readOnly?: boolean;
   file: {
     name: string;
     path: string;
@@ -63,6 +64,7 @@ interface WorkspaceCodeEditorProps {
 export default function WorkspaceCodeEditor({
   file,
   onEditorChange,
+  readOnly = false,
 }: WorkspaceCodeEditorProps) {
   const { fileTreeData, workerType } = useWorkspaceContext();
   const editorRef = React.useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -360,7 +362,7 @@ export default function WorkspaceCodeEditor({
           onChange={onEditorChange}
           onMount={handleEditorDidMount}
           options={{
-            readOnly: false,
+             readOnly,
             automaticLayout: true,
             dragAndDrop: false,
             dropIntoEditor: { enabled: false },

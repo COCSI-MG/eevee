@@ -37,7 +37,9 @@ describe('AnswerKeyService', () => {
     answerKeyRepository.findOne.mockResolvedValue({ id: 4 });
 
     await expect(
-      service.create(1, { questions: [] }),
+      service.create(1, {
+        content: { id: "root", path: "", isSelectable: false },
+      }),
     ).rejects.toBeInstanceOf(ConflictException);
     expect(dataSource.transaction).not.toHaveBeenCalled();
   });
@@ -92,8 +94,10 @@ describe('AnswerKeyService', () => {
   it('returns not found when updating a missing answer key', async () => {
     answerKeyRepository.findOne.mockResolvedValue(null);
 
-    await expect(service.update(1, { questions: [] })).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.update(1, {
+        content: { id: "root", path: "", isSelectable: false },
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

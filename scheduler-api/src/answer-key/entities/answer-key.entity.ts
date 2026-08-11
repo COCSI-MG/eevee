@@ -10,14 +10,17 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export interface AnswerKeyQuestion {
-  key: string;
-  label: string;
+export interface AnswerKeyFileNode {
+  id: string;
+  isSelectable: boolean;
+  path: string;
+  isFile?: boolean;
+  content?: string;
+  updatedAt?: string;
+  children?: AnswerKeyFileNode[];
 }
 
-export interface AnswerKeyContent {
-  questions: AnswerKeyQuestion[];
-}
+export type AnswerKeyContent = AnswerKeyFileNode;
 
 @Entity('answer_key')
 @Index(['assignmentId'], { unique: true })

@@ -3,7 +3,7 @@
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { Code, UserCog } from "lucide-react";
+import { BookOpenCheck, Code, UserCog } from "lucide-react";
 import {
   Table,
   TableHeader,
@@ -50,6 +50,19 @@ const ViewUserSuspensionComponent = ({
       <DropdownMenuItem>
         <UserCog className="h-4 w-4" />
         Usuários Suspensos
+      </DropdownMenuItem>
+    </Link>
+  );
+};
+
+const AnswerKeyLinkComponent = ({ assignmentId }: { assignmentId: string }) => {
+  return (
+    <Link
+      href={`/${AppRoutes.Assignment}/${assignmentId}/${AppRoutes.Workspace}/${AppRoutes.AnswerKey}`}
+    >
+      <DropdownMenuItem>
+        <BookOpenCheck className="h-4 w-4" />
+        Gabarito
       </DropdownMenuItem>
     </Link>
   );
@@ -138,6 +151,10 @@ export default function AssignmentsTable({
                   otherActions={[
                     <WorkspaceLinkComponent
                       key={assignment.id}
+                      assignmentId={assignment.id.toString()}
+                    />,
+                    <AnswerKeyLinkComponent
+                      key={`${assignment.id}-answer-key`}
                       assignmentId={assignment.id.toString()}
                     />,
                     <ViewUserSuspensionComponent

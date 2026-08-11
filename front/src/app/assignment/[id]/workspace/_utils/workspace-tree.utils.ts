@@ -55,6 +55,32 @@ export function findNodeByPath(
   return null;
 }
 
+export function updateFileContent(
+  node: FileNode,
+  filePath: string,
+  content: string,
+): FileNode {
+  if (node.path === filePath && node.isFile) {
+    return {
+      ...node,
+      content,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  if (!node.children?.length) return node;
+
+  const updatedChildren = node.children.map((child) =>
+    updateFileContent(child, filePath, content),
+  );
+
+  const hasChanges = updatedChildren.some(
+    (child, index) => child !== node.children![index],
+  );
+
+  return hasChanges ? { ...node, children: updatedChildren } : node;
+}
+
 export function fileNameExistsInNode(
   node: FileNode,
   targetPath: string,

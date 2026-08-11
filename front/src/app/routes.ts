@@ -2,6 +2,7 @@ export enum Route {
   Assignment = "assignment",
   Login = "login",
   Workspace = "workspace",
+  AnswerKey = "answer-key",
   Admin = "admin",
   AdminAssignments = "/admin/assignments",
   AdminUsers = "admin/users",

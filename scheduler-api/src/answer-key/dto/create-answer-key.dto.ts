@@ -1,28 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
-  ArrayNotEmpty,
-  IsNotEmpty,
-  IsString,
-  ValidateNested,
+  IsObject,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-
-export class AnswerKeyQuestionDto {
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  key: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  label: string;
-}
+import { AnswerKeyContent } from '../entities/answer-key.entity';
 
 export class CreateAnswerKeyDto {
-  @ApiProperty({ type: [AnswerKeyQuestionDto] })
-  @ArrayNotEmpty()
-  @ValidateNested({ each: true })
-  @Type(() => AnswerKeyQuestionDto)
-  questions: AnswerKeyQuestionDto[];
+  @ApiProperty({ type: Object })
+  @IsObject()
+  content: AnswerKeyContent;
 }

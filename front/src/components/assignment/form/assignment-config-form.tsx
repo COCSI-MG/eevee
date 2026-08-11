@@ -1,14 +1,41 @@
 import { WorkerExibitionMap } from "@/app/admin/assignments/constants";
 import { Class } from "@/app/interface/scheduler-api/class";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Tooltip } from "@/components/ui/tooltip";
-import { ErrorMessage, Field } from "formik";
+import { ErrorMessage, Field, useField } from "formik";
 
 export interface AssignmentConfigFormProps {
   classes: Class[];
 }
+
+const AnswerKeyVisibilityControl = () => {
+  const [field, , helpers] = useField<boolean>("answerKeyVisible");
+  const isVisible = Boolean(field.value);
+
+  return (
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="maxAttempts" className="block text-sm font-medium">
+            Visibilidade do gabarito <Tooltip message="Deixe Ativado quando desejar que os alunos visualizem" />
+          </Label>
+
+          <Button
+            id="answerKeyVisible"
+            type="button"
+            role="switch"
+            aria-checked={isVisible}
+            onClick={() => void helpers.setValue(!isVisible)}
+            className={`rounded-md border px-4 text-sm font-medium transition-colors`}
+          >
+          {isVisible ? "Ativado" : "Desativado"}
+        </Button>
+        </div>
+      </div>
+  );
+};
 
 export const AssignmentConfigForm = ({
   classes,
@@ -118,6 +145,7 @@ export const AssignmentConfigForm = ({
           className="text-red-500 text-sm"
         />
       </div>
+      <AnswerKeyVisibilityControl />
     </CardContent>
   </Card>
 );

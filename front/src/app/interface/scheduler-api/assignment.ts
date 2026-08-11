@@ -36,6 +36,14 @@ export interface AssignmentInterviewConfig {
   questions: AssignmentInterviewQuestion[];
 }
 
+export interface AnswerKey {
+  id: number;
+  assignmentId: number;
+  content: FileNode;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Assignment {
   id: number;
   classId: number;
@@ -58,6 +66,8 @@ export interface Assignment {
   assignmentParams: AssignmentParam[];
   suspensions?: AssignmentUserSuspension[];
   interviewConfig?: AssignmentInterviewConfig;
+  answerKeyId?: number | null;
+  answerKeyVisible: boolean;
 }
 
 export interface CreateAssignmentRequest {
@@ -75,6 +85,7 @@ export interface CreateAssignmentRequest {
   maxAttempts: number;
   workerType: string;
   workerDefinition: WorkerDefinition;
+  answerKeyVisible?: boolean;
 }
 
 export interface UpdateAssignmentRequest {
@@ -95,4 +106,5 @@ export interface UpdateAssignmentRequest {
       value: string;
     }[];
   }[];
+  answerKeyVisible?: boolean;
 }
