@@ -7,15 +7,17 @@ import {
   Delete,
   UseGuards,
   Query,
+  Patch,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateOrUpdateUserDto } from './dto/request/create-or-update-user.dto';
+import { CreateUserDto } from './dto/request/create-user.dto';
 import { ListUsersQueryDto } from './dto/request/list-users.query.dto';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserResponseDto } from './dto/response/user-response.dto';
 import { PaginatedUsersResponseDto } from './dto/response/paginated-users-response.dto';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { instanceToPlain } from 'class-transformer';
+import { UpdateUserDto } from './dto/request/update-user.dto';
 
 @Controller('user')
 @UseGuards(AdminGuard)
@@ -25,7 +27,7 @@ export class UserController {
 
   @Post()
   @ApiOkResponse({ type: UserResponseDto })
-  create(@Body() createUserDto: CreateOrUpdateUserDto) {
+  create(@Body() createUserDto: CreateUserDto) {
     return this.userService.createOrReplace(createUserDto);
   }
 
@@ -45,6 +47,12 @@ export class UserController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return instanceToPlain(this.userService.findOne(+id));
+  }
+
+  @Patch(':id')
+  @ApiOkResponse({ type: UserResponseDto })
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(+id, updateUserDto);
   }
 
   @Delete(':id')

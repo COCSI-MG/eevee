@@ -8,6 +8,7 @@ describe('UserService', () => {
   let service: UserService;
   let userRepository: {
     upsert: jest.Mock;
+    update: jest.Mock;
     findOne: jest.Mock;
     delete: jest.Mock;
     createQueryBuilder: jest.Mock;
@@ -16,6 +17,7 @@ describe('UserService', () => {
   beforeEach(async () => {
     userRepository = {
       upsert: jest.fn(),
+      update: jest.fn(),
       findOne: jest.fn(),
       delete: jest.fn(),
       createQueryBuilder: jest.fn(),
@@ -65,7 +67,6 @@ describe('UserService', () => {
       expect.objectContaining({
         email: dto.email,
         name: dto.name,
-        password: dto.password,
         isAdmin: dto.isAdmin,
         passwordHash: 'hashed-password',
       }),
@@ -74,6 +75,9 @@ describe('UserService', () => {
         skipUpdateIfNoValuesChanged: true,
         upsertType: 'on-conflict-do-update',
       }),
+    );
+    expect(userRepository.upsert.mock.calls[0][0]).not.toHaveProperty(
+      'password',
     );
     expect(userRepository.findOne).toHaveBeenCalledWith({
       where: { id: 10 },
@@ -111,6 +115,48 @@ describe('UserService', () => {
     });
   });
 
+  it('updates an admin flag without replacing the current password', async () => {
+    const existingUser = {
+      id: 7,
+      email: 'student@example.com',
+      name: 'Student',
+      isAdmin: false,
+      passwordHash: 'current-hash',
+    } as User;
+    const updatedUser = { ...existingUser, isAdmin: true };
+
+    userRepository.findOne
+      .mockResolvedValueOnce(existingUser)
+      .mockResolvedValueOnce(updatedUser);
+    userRepository.update.mockResolvedValue({ affected: 1 } as any);
+    const hashPassword = jest.spyOn(HashUtils, 'hashPassword');
+
+    const result = await service.update(7, { isAdmin: true });
+
+    expect(hashPassword).not.toHaveBeenCalled();
+    expect(userRepository.update).toHaveBeenCalledWith(7, {
+      isAdmin: true,
+    });
+    expect(userRepository.update.mock.calls[0][1]).not.toHaveProperty(
+      'passwordHash',
+    );
+    expect(result).toEqual({
+      id: 7,
+      email: 'student@example.com',
+      name: 'Student',
+      userClasses: undefined,
+    });
+  });
+
+  it('throws when updating a missing user', async () => {
+    userRepository.findOne.mockResolvedValue(null);
+
+    await expect(service.update(99, { isAdmin: true })).rejects.toThrow(
+      'User not found',
+    );
+    expect(userRepository.update).not.toHaveBeenCalled();
+  });
+
   it('throws when removing a missing user', async () => {
     userRepository.findOne.mockResolvedValue(null);
 
@@ -124,9 +170,7 @@ describe('UserService', () => {
       isAdmin: true,
     } as unknown as User);
 
-    await expect(service.remove(1)).rejects.toThrow(
-      'Cannot delete admin user',
-    );
+    await expect(service.remove(1)).rejects.toThrow('Cannot delete admin user');
     expect(userRepository.delete).not.toHaveBeenCalled();
   });
 
@@ -161,18 +205,38 @@ describe('UserService', () => {
     it('returns paginated users with default page size and search filter', async () => {
       const qb = makeQueryBuilder();
       qb.getManyAndCount.mockResolvedValue([
-        [{ id: 1, name: 'Alice', email: 'a@x.com', isAdmin: false, userClasses: [] }],
+        [
+          {
+            id: 1,
+            name: 'Alice',
+            email: 'a@x.com',
+            isAdmin: false,
+            userClasses: [],
+          },
+        ],
         23,
       ]);
       userRepository.createQueryBuilder.mockReturnValue(qb);
 
-      const result = await service.findAllPaginated({ page: 2, pageSize: 10, search: 'ali' });
+      const result = await service.findAllPaginated({
+        page: 2,
+        pageSize: 10,
+        search: 'ali',
+      });
 
       expect(qb.skip).toHaveBeenCalledWith(10);
       expect(qb.take).toHaveBeenCalledWith(10);
       expect(qb.andWhere).toHaveBeenCalled(); // brackets call
       expect(result).toEqual({
-        data: [{ id: 1, name: 'Alice', email: 'a@x.com', isAdmin: false, userClasses: [] }],
+        data: [
+          {
+            id: 1,
+            name: 'Alice',
+            email: 'a@x.com',
+            isAdmin: false,
+            userClasses: [],
+          },
+        ],
         meta: { total: 23, page: 2, pageSize: 10, totalPages: 3 },
       });
     });
@@ -186,7 +250,12 @@ describe('UserService', () => {
 
       expect(qb.skip).toHaveBeenCalledWith(0);
       expect(qb.take).toHaveBeenCalledWith(10);
-      expect(result.meta).toEqual({ total: 0, page: 1, pageSize: 10, totalPages: 1 });
+      expect(result.meta).toEqual({
+        total: 0,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1,
+      });
     });
 
     it('skips the search clause when no search is provided', async () => {

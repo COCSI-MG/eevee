@@ -1,4 +1,8 @@
-import { UpsertUser, User } from "@/app/interface/scheduler-api/user";
+import {
+  CreateUserRequest,
+  UpdateUserRequest,
+  User,
+} from "@/app/interface/scheduler-api/user";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
 
@@ -19,8 +23,13 @@ export class UsersService {
     return response.data;
   }
 
-  static async upsertUser(user: UpsertUser) {
+  static async createUser(user: CreateUserRequest) {
     const response = await axiosClientWithAuth.post<User>("/user", user);
+    return response.data;
+  }
+
+  static async updateUser(id: number, user: UpdateUserRequest) {
+    const response = await axiosClientWithAuth.patch<User>(`/user/${id}`, user);
     return response.data;
   }
 

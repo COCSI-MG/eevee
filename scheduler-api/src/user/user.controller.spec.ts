@@ -8,6 +8,7 @@ describe('UserController', () => {
     createOrReplace: jest.Mock;
     findAll: jest.Mock;
     findOne: jest.Mock;
+    update: jest.Mock;
     remove: jest.Mock;
   };
 
@@ -16,6 +17,7 @@ describe('UserController', () => {
       createOrReplace: jest.fn(),
       findAll: jest.fn(),
       findOne: jest.fn(),
+      update: jest.fn(),
       remove: jest.fn(),
     };
 
@@ -49,5 +51,16 @@ describe('UserController', () => {
 
     await expect(controller.remove('7')).resolves.toEqual({ affected: 1 });
     expect(userService.remove).toHaveBeenCalledWith(7);
+  });
+
+  it('delegates update with a numeric id', async () => {
+    const dto = { isAdmin: true };
+    userService.update.mockResolvedValue({ id: 7, isAdmin: true });
+
+    await expect(controller.update('7', dto)).resolves.toEqual({
+      id: 7,
+      isAdmin: true,
+    });
+    expect(userService.update).toHaveBeenCalledWith(7, dto);
   });
 });
