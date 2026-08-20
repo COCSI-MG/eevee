@@ -11,7 +11,10 @@ export interface AssignmentTemplateParam {
 }
 
 export interface WorkerDefinition {
-  files: Pick<FileNode , 'id' | 'children' | 'content'> & { type: 'file' | 'folder' }[] | null;
+  files:
+    | (Pick<FileNode, "id" | "children" | "content"> &
+        { type: "file" | "folder" }[])
+    | null;
   startCommands: string[];
   testCommands: string[];
   dependencies: string[];
@@ -25,7 +28,7 @@ export interface AssignmentTemplate {
   weight?: number | null;
 }
 
-export type AssignmentInterviewQuestionType = 'likert_1_5' | 'short_text';
+export type AssignmentInterviewQuestionType = "likert_1_5" | "short_text";
 
 export interface AssignmentInterviewQuestion {
   key: string;
@@ -80,11 +83,13 @@ export interface CreateAssignmentRequest {
   boilerplate?: string;
   validationScript?: string;
   initSqlScript?: string;
-  templates: {
-    templateId: number;
-    params: AssignmentTemplateParam[];
-    weight?: number;
-  }[] | null;
+  templates:
+    | {
+        templateId: number;
+        params: AssignmentTemplateParam[];
+        weight?: number;
+      }[]
+    | null;
   maxAttempts: number;
   workerType: string;
   workerDefinition: WorkerDefinition;

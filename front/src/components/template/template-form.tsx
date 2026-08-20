@@ -27,10 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  ExpandableTrigger,
-  useExpandable,
-} from "@/components/ui/expandable";
+import { ExpandableTrigger, useExpandable } from "@/components/ui/expandable";
 import { WorkerDefaultTemplateContentMap } from "@/app/admin/assignments/constants";
 import {
   TEMPLATE_FORM_TEXT,
@@ -49,23 +46,25 @@ const Editor = dynamic(() => import("@monaco-editor/react"), {
 });
 
 const upsertTemplateSchema = Yup.object().shape({
-  title: Yup
-    .string()
+  title: Yup.string()
     .trim()
     .required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
-  description: Yup
-    .string()
+  description: Yup.string()
     .trim()
     .required(TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired),
   workerType: Yup.string().required(
-    TEMPLATE_FORM_VALIDATION_MESSAGES.workerTypeRequired
+    TEMPLATE_FORM_VALIDATION_MESSAGES.workerTypeRequired,
   ),
-  content: Yup
-    .string()
-    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.templateContentRequired),
+  content: Yup.string().required(
+    TEMPLATE_FORM_VALIDATION_MESSAGES.templateContentRequired,
+  ),
   params: Yup.array().of(Yup.string()).optional(),
   dependencies: Yup.array()
-    .of(Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.dependencyNameRequired))
+    .of(
+      Yup.string().required(
+        TEMPLATE_FORM_VALIDATION_MESSAGES.dependencyNameRequired,
+      ),
+    )
     .notRequired(),
 });
 
@@ -118,7 +117,8 @@ export default function TemplateForm() {
       toast({
         title: TEMPLATE_FORM_TOAST_MESSAGES.saveErrorTitle,
         description:
-          res?.message || TEMPLATE_FORM_TOAST_MESSAGES.saveErrorFallbackDescription,
+          res?.message ||
+          TEMPLATE_FORM_TOAST_MESSAGES.saveErrorFallbackDescription,
         variant: "destructive",
         duration: 5000,
       });
@@ -173,7 +173,7 @@ export default function TemplateForm() {
       }
 
       const templateParamsInputAsArray = template.templateParams.map(
-        (t) => t.name
+        (t) => t.name,
       );
 
       const typesMap: Record<string, TemplateParamType> = {};
@@ -200,9 +200,8 @@ export default function TemplateForm() {
   });
 
   // Keep default template content in sync with workerType while the user hasn't edited it.
-  const [lastWorkerTypeForDefault, setLastWorkerTypeForDefault] = useState<
-    WorkerType
-  >(WorkerType.NODE_DEFAULT);
+  const [lastWorkerTypeForDefault, setLastWorkerTypeForDefault] =
+    useState<WorkerType>(WorkerType.NODE_DEFAULT);
 
   useEffect(() => {
     if (!isNewTemplate) return;
@@ -322,8 +321,10 @@ export default function TemplateForm() {
                     />
                     {(formik.touched.title || formik.submitCount > 0) &&
                       formik.errors.title && (
-                      <div className="text-red-500">{formik.errors.title}</div>
-                    )}
+                        <div className="text-red-500">
+                          {formik.errors.title}
+                        </div>
+                      )}
                   </div>
 
                   <div className="space-y-2">
@@ -347,15 +348,16 @@ export default function TemplateForm() {
                     />
                     {(formik.touched.description || formik.submitCount > 0) &&
                       formik.errors.description && (
-                      <div className="text-red-500">
-                        {formik.errors.description}
-                      </div>
-                    )}
+                        <div className="text-red-500">
+                          {formik.errors.description}
+                        </div>
+                      )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="workerType" className="text-slate-200">
-                      {TEMPLATE_FORM_TEXT.workerTypeLabel} <Tooltip message="Escolha o tipo de ambiente de execução que será utilizado no template" />
+                      {TEMPLATE_FORM_TEXT.workerTypeLabel}{" "}
+                      <Tooltip message="Escolha o tipo de ambiente de execução que será utilizado no template" />
                     </Label>
                     <Select
                       value={formik.values.workerType as string}
@@ -378,16 +380,17 @@ export default function TemplateForm() {
                     </Select>
                     {(formik.touched.workerType || formik.submitCount > 0) &&
                       formik.errors.workerType && (
-                      <div className="text-red-500">
-                        {formik.errors.workerType as string}
-                      </div>
-                    )}
+                        <div className="text-red-500">
+                          {formik.errors.workerType as string}
+                        </div>
+                      )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="params" className="text-slate-200">
                       {TEMPLATE_FORM_TEXT.paramsLabel} <br />
-                      {TEMPLATE_FORM_TEXT.paramsHelper} <Tooltip message="Parâmetros que serão passados para o template" />
+                      {TEMPLATE_FORM_TEXT.paramsHelper}{" "}
+                      <Tooltip message="Parâmetros que serão passados para o template" />
                     </Label>
                     <Input
                       id="params"
@@ -399,8 +402,10 @@ export default function TemplateForm() {
                     />
                     {(formik.touched.params || formik.submitCount > 0) &&
                       formik.errors.params && (
-                      <div className="text-red-500">{formik.errors.params}</div>
-                    )}
+                        <div className="text-red-500">
+                          {formik.errors.params}
+                        </div>
+                      )}
                   </div>
 
                   {!!formik.values.params.length && (
@@ -430,7 +435,7 @@ export default function TemplateForm() {
                                 onValueChange={(value) =>
                                   handleParamTypeChange(
                                     name,
-                                    value as TemplateParamType
+                                    value as TemplateParamType,
                                   )
                                 }
                               >
@@ -470,7 +475,9 @@ export default function TemplateForm() {
                       placeholder={TEMPLATE_FORM_TEXT.dependenciesPlaceholder}
                     />
                     {formik.errors.dependencies && (
-                      <div className="text-red-500">{formik.errors.dependencies}</div>
+                      <div className="text-red-500">
+                        {formik.errors.dependencies}
+                      </div>
                     )}
                   </div>
 
@@ -553,26 +560,30 @@ export default function TemplateForm() {
                         "semanticHighlighting.enabled": false,
                       }}
                       beforeMount={(monaco) => {
-                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-                          noSemanticValidation: true,
-                          noSyntaxValidation: true,
-                          noSuggestionDiagnostics: true,
-                        });
-                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-                          noSemanticValidation: true,
-                          noSyntaxValidation: true,
-                          noSuggestionDiagnostics: true,
-                        });
+                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
+                          {
+                            noSemanticValidation: true,
+                            noSyntaxValidation: true,
+                            noSuggestionDiagnostics: true,
+                          },
+                        );
+                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
+                          {
+                            noSemanticValidation: true,
+                            noSyntaxValidation: true,
+                            noSuggestionDiagnostics: true,
+                          },
+                        );
                       }}
                     />
                   </div>
                   {(formik.touched.content || formik.submitCount > 0) &&
                     formik.errors.content && (
-                    <div className="text-red-500">
-                      {formik.errors.content}
-                    </div>
-                  )}
-                 </CardContent>
+                      <div className="text-red-500">
+                        {formik.errors.content}
+                      </div>
+                    )}
+                </CardContent>
               </Card>
             </div>
           </div>

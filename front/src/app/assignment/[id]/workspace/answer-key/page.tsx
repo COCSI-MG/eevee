@@ -14,7 +14,10 @@ import {
 import WorkspaceExplorer from "@/app/assignment/[id]/workspace/_components/workspace-explorer";
 import WorkspaceCodeEditor from "@/app/assignment/[id]/workspace/_components/workspace-code-editor";
 import WorkspaceQuestionPanel from "@/app/assignment/[id]/workspace/_components/workspace-question-panel";
-import { WorkspaceProvider, useWorkspaceContext } from "@/app/assignment/[id]/workspace/_providers/workspace-provider";
+import {
+  WorkspaceProvider,
+  useWorkspaceContext,
+} from "@/app/assignment/[id]/workspace/_providers/workspace-provider";
 import { createInitialWorkspaceTree } from "@/app/assignment/[id]/workspace/_utils/workspace.utils";
 import { useWorkspaceFileEditor } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-file-editor";
 import { AnswerKeyService } from "@/app/integration/scheduler-api/answer-key";
@@ -27,7 +30,7 @@ import {
 } from "@/app/interface/scheduler-api/assignment";
 import { FileNode } from "@/types/shared";
 import Loader from "@/components/loader";
-import QueryErrorState from "@/components/admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 import { Button } from "@/components/ui/button";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { useAnswerKeyTest } from "@/hooks/use-answer-key-test";
@@ -58,7 +61,6 @@ function AnswerKeyEditor({
   assignment,
   answerKey,
 }: AnswerKeyEditorProps) {
-
   const router = useRouter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -66,8 +68,10 @@ function AnswerKeyEditor({
   const { explorerWidth, startResize } = useWorskpaceResizing();
   const [showExplorer, setShowExplorer] = React.useState(false);
   const [testDialogOpen, setTestDialogOpen] = React.useState(false);
-  const { fileTreeData, selectedItem, selectItem, replaceFileTree } = useWorkspaceContext();
-  const { activeFile, handleEditorChange, handleFileSelect } = useWorkspaceFileEditor({ selectedItem, selectItem });
+  const { fileTreeData, selectedItem, selectItem, replaceFileTree } =
+    useWorkspaceContext();
+  const { activeFile, handleEditorChange, handleFileSelect } =
+    useWorkspaceFileEditor({ selectedItem, selectItem });
   const answerKeyTest = useAnswerKeyTest();
 
   const handleRun = () => {
@@ -133,7 +137,6 @@ function AnswerKeyEditor({
               {assignment.title}
             </h1>
           </div>
-
         </div>
 
         <div className="flex items-center gap-2">
@@ -243,15 +246,12 @@ export default function AnswerKeyPage() {
       !isAdmin &&
       assignment &&
       (!assignment.answerKeyVisible || answerKeyQuery.isError)
-    ) router.replace("/classes");
-
+    )
+      router.replace("/classes");
   }, [answerKeyQuery.isError, assignment, isAdmin, router]);
 
-  if (
-    !user ||
-    isLoadingAssignment ||
-    (assignment && answerKeyQuery.isLoading)
-  ) return <Loader />
+  if (!user || isLoadingAssignment || (assignment && answerKeyQuery.isLoading))
+    return <Loader />;
 
   if (!assignment || isAssignmentError) {
     return (

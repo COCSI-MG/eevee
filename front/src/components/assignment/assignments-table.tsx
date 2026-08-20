@@ -70,7 +70,10 @@ export default function AssignmentsTable({
       <TableBody>
         {list.length === 0 && (
           <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground">
+            <TableCell
+              colSpan={5}
+              className="text-center text-muted-foreground"
+            >
               {emptyMessage}
             </TableCell>
           </TableRow>
