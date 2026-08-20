@@ -12,7 +12,10 @@ import { Button } from "@/components/ui/button";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import AssignmentsCard from "@/components/assignment/assignments-card";
-import { Assignment, WorkerDefinition } from "@/app/interface/scheduler-api/assignment";
+import {
+  Assignment,
+  WorkerDefinition,
+} from "@/app/interface/scheduler-api/assignment";
 import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
 import { AssignmentUserSuspension } from "@/app/interface/scheduler-api/assignment-user-suspension";
 import { Class } from "@/app/interface/scheduler-api/class";
@@ -30,24 +33,31 @@ function summaryToAssignment(
     maxAttempts: s.maxAttempts,
     workerType: s.workerType,
     assignmentAttempts: s.lastAttempt ? [s.lastAttempt] : [],
-    suspensions: s.suspensions.length > 0 && currentUserId
-      ? s.suspensions.map(
-          (susp): AssignmentUserSuspension => ({
-            id: susp.id,
-            assignmentId: s.id,
-            userId: currentUserId,
-            reason: susp.reason ?? undefined,
-            createdAt: new Date(susp.createdAt),
-            isActive: true,
-            user: {} as User,
-            assignment: {} as Assignment,
-          }),
-        )
-      : [],
-    workerDefinition: { files: null, startCommands: [], testCommands: [], dependencies: [] } as WorkerDefinition,
+    suspensions:
+      s.suspensions.length > 0 && currentUserId
+        ? s.suspensions.map(
+            (susp): AssignmentUserSuspension => ({
+              id: susp.id,
+              assignmentId: s.id,
+              userId: currentUserId,
+              reason: susp.reason ?? undefined,
+              createdAt: new Date(susp.createdAt),
+              isActive: true,
+              user: {} as User,
+              assignment: {} as Assignment,
+            }),
+          )
+        : [],
+    workerDefinition: {
+      files: null,
+      startCommands: [],
+      testCommands: [],
+      dependencies: [],
+    } as WorkerDefinition,
     class: {} as Class,
     assignmentTemplates: [],
     assignmentParams: [],
+    answerKeyVisible: false,
     score: s.score,
   };
 }
@@ -123,9 +133,7 @@ export default function StudentExamDetail() {
             Voltar
           </Link>
         </Button>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">
-          {exam.title}
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-2">{exam.title}</h1>
         <p className="text-muted-foreground mt-1">
           {exam.description ??
             "Esta prova contém as atividades listadas abaixo."}

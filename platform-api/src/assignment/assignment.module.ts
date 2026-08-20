@@ -10,12 +10,21 @@ import { ClassModule } from 'src/class/class.module';
 import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
 import { Template } from 'src/template/entities/template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { AnswerKey } from 'src/answer-key/entities/answer-key.entity';
 
 @Module({
   controllers: [AssignmentController],
-  imports: [TypeOrmModule.forFeature([Assignment]), TypeOrmModule.forFeature([UserClass]), TypeOrmModule.forFeature([AssignmentTemplate]), 
-  TypeOrmModule.forFeature([AssignmentParam]), TypeOrmModule.forFeature([Template]), TypeOrmModule.forFeature([Attempt]),
-  RequestContextModule, ClassModule],
+  imports: [
+    TypeOrmModule.forFeature([Assignment]),
+    TypeOrmModule.forFeature([UserClass]),
+    TypeOrmModule.forFeature([AssignmentTemplate]),
+    TypeOrmModule.forFeature([AssignmentParam]),
+    TypeOrmModule.forFeature([Template]),
+    TypeOrmModule.forFeature([Attempt]),
+    TypeOrmModule.forFeature([AnswerKey]),
+    RequestContextModule,
+    ClassModule
+  ],
   providers: [AssignmentService],
   exports: [AssignmentService],
 })

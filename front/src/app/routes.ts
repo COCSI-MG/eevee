@@ -4,6 +4,7 @@ export enum Route {
   ForgotPassword = "forgot-password",
   ResetPassword = "reset-password",
   Workspace = "workspace",
+  AnswerKey = "answer-key",
   Admin = "admin",
   AdminAssignments = "/admin/assignments",
   AdminUsers = "admin/users",

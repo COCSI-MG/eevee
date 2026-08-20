@@ -1,6 +1,7 @@
 "use client";
 
 import { AssignmentAttempt } from "@/app/interface/scheduler-api/assignment-attempt";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import {
   Scheduling,
   SchedulingPreviewRun,
@@ -57,6 +58,22 @@ export function flattenFileTreeToSchedulingFiles(
   });
 
   return acc;
+}
+
+export function getApplicationFileContentForTemplateTest(
+  workerType: string | undefined,
+  files: Record<string, string>,
+): string {
+  const candidatePaths =
+    workerType === WorkerType.PYTHON_DEFAULT
+      ? ["src/app.py", "app.py"]
+      : workerType === WorkerType.NODE_REACTJS_CYPRESS
+        ? ["src/App.tsx", "src/App.jsx"]
+        : workerType === WorkerType.NODE_NEXTJS_CYPRESS
+          ? ["src/page.tsx", "src/page.jsx"]
+          : ["src/app.ts", "src/app.js", "app.ts", "app.js"];
+
+  return candidatePaths.map((path) => files[path]).find(Boolean) ?? "";
 }
 
 export function buildSchedulingPayloadFromFileTree(

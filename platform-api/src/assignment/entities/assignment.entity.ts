@@ -2,6 +2,7 @@ import { AssignmentParam } from 'src/assignment-params/entities/assignment-param
 import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
 import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { AnswerKey } from 'src/answer-key/entities/answer-key.entity';
 import { Class } from 'src/class/entities/class.entity';
 import { ExamAssignment } from 'src/exam/entities/exam-assignment.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -87,6 +88,19 @@ export class Assignment {
 
   @Column({ nullable: true })
   boilerplateFilePath?: string;
+
+  @Column({ nullable: true })
+  answerKeyId?: number | null;
+
+  @ManyToOne(() => AnswerKey, (answerKey) => answerKey.assignment, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({ name: 'answerKeyId' })
+  answerKey?: AnswerKey | null;
+
+  @Column({ default: false })
+  answerKeyVisible: boolean;
 
   @Column({ type: 'text', nullable: true })
   boilerplateContent?: string;

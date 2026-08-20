@@ -34,6 +34,7 @@ import { MailModule } from './mail/mail.module';
 
 import { RealtimeModule } from './realtime/realtime.module';
 import { TemplateTestModule } from './template-test/template-test.module';
+import { AnswerKeyModule } from './answer-key/answer-key.module';
 import { ExecutionPlatformEventsModule } from './execution/execution-platform-events.module';
 import { ExamModule } from './exam/exam.module';
 @Module({
@@ -80,6 +81,7 @@ import { ExamModule } from './exam/exam.module';
     RealtimeModule,
     ExecutionPlatformEventsModule,
     TemplateTestModule,
+    AnswerKeyModule,
     ExamModule,
   ],
   controllers: [AppController],
