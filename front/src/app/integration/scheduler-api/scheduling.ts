@@ -9,7 +9,8 @@ export class SchedulingService {
   static async createScheduling(newScheduling: Scheduling) {
     const response = await axiosClientWithAuth.post<SchedulingResponse>(
       "/scheduling/wait",
-      newScheduling
+      newScheduling,
+      { timeout: 180_000 },
     );
     return response.data;
   }

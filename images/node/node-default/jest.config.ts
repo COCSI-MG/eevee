@@ -6,7 +6,7 @@ const config: Config = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   testMatch: ['**/*.spec.ts', '**/*.test.ts'],
   transform: {
-    '^.+\\.ts$': [
+    '^.+\\.[tj]s$': [
       'ts-jest',
       {
         diagnostics: false,
