@@ -66,7 +66,9 @@ COPY --from=builder --chown=eevee:nodejs /usr/app/packages ./packages
 COPY --from=builder --chown=eevee:nodejs /usr/app/next.config.ts ./next.config.ts
 
 COPY --chown=eevee:nodejs front/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Strip any CR so a CRLF checkout doesn't leave `\r` in the shebang, which
+# would make the kernel fail to exec the interpreter.
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 USER eevee
 
