@@ -1,4 +1,4 @@
-{{- if .Values.queueWorker.rbac.create }}
+{{- if .Values.assignmentRunner.rbac.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -39,41 +39,40 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
 ---
-{{- if .Values.queueWorker.enabled }}
+{{- if .Values.assignmentRunner.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: queue-worker-deployment
+  name: assignment-runner-deployment
   labels:
-    app: queue-worker
+    app: assignment-runner
     tier: backend
     {{- include "eevee.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.queueWorker.replicas }}
+  replicas: {{ .Values.assignmentRunner.replicas }}
   selector:
     matchLabels:
-      app: queue-worker
+      app: assignment-runner
   template:
     metadata:
       labels:
-        app: queue-worker
+        app: assignment-runner
     spec:
       {{- if .Values.serviceAccount.name }}
       serviceAccountName: {{ .Values.serviceAccount.name }}
       {{- end }}
       containers:
-        - name: queue-worker
-          image: "{{ .Values.queueWorker.image.repository }}:{{ .Values.queueWorker.image.tag }}"
-          imagePullPolicy: {{ .Values.queueWorker.image.pullPolicy }}
-          args: {{ toJson .Values.queueWorker.args }}
+        - name: assignment-runner
+          image: "{{ .Values.assignmentRunner.image.repository }}:{{ .Values.assignmentRunner.image.tag }}"
+          imagePullPolicy: {{ .Values.assignmentRunner.image.pullPolicy }}
           env:
             - name: ENV
-              value: {{ .Values.queueWorker.env | quote }}
+              value: {{ .Values.assignmentRunner.env | quote }}
             {{- include "eevee.appEnv" . | nindent 12 }}
             {{- include "eevee.workerImageEnv" . | nindent 12 }}
             {{- include "eevee.jobRuntimeEnv" . | nindent 12 }}
           resources:
-            {{- toYaml .Values.queueWorker.resources | nindent 12 }}
+            {{- toYaml .Values.assignmentRunner.resources | nindent 12 }}
       {{- include "eevee.imagePullSecrets" . | nindent 6 }}
       {{- include "eevee.nodeSelector" . | nindent 6 }}
 {{- end }}

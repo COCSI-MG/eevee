@@ -79,12 +79,12 @@ redis:
       memory: 256Mi
 
 # -----------------------------------------------------------------------------
-# Scheduler API (NestJS)
+# Platform API (NestJS)
 # -----------------------------------------------------------------------------
-schedulerApi:
+platformApi:
   enabled: true
   image:
-    repository: ghcr.io/cocsi-mg/scheduler-api
+    repository: ghcr.io/cocsi-mg/platform-api
     tag: develop
     pullPolicy: Always
   env: "production"
@@ -97,17 +97,16 @@ schedulerApi:
       memory: 384Mi
 
 # -----------------------------------------------------------------------------
-# Queue Worker (same image as scheduler-api, different args)
+# Assignment Runner (BullMQ consumer)
 # -----------------------------------------------------------------------------
-queueWorker:
+assignmentRunner:
   enabled: true
   image:
-    repository: ghcr.io/cocsi-mg/scheduler-api
+    repository: ghcr.io/cocsi-mg/assignment-runner
     tag: develop
     pullPolicy: Always
   env: "production"
   replicas: 1
-  args: ["start:worker:prod"]
   resources:
     requests:
       memory: 128Mi
@@ -119,14 +118,14 @@ queueWorker:
     # `serviceAccount.name` below instead.
     create: false
 
-# ServiceAccount used by scheduler-api and queue-worker. The default reuses
+# ServiceAccount used by platform-api and assignment-runner. The default reuses
 # the `ns-admin` SA that already exists in the eevee-cefetrj namespace and
 # has Jobs/Pods permissions. Set name="" to use the pod's default SA.
 serviceAccount:
   name: ns-admin
 
 # -----------------------------------------------------------------------------
-# Worker job images (used by scheduler-api / queue-worker at runtime to spawn
+# Worker job images used by the assignment-runner at runtime to spawn
 # Kubernetes Jobs). Each value is consumed as an env var by both deployments.
 # -----------------------------------------------------------------------------
 workerImages:
@@ -155,10 +154,10 @@ front:
   serviceType: ClusterIP
   servicePort: 80
   nodePort: null
-  # Browser calls same-origin API path, then Next.js rewrites to scheduler.
+  # Browser calls same-origin API path, then Next.js rewrites to platform API.
   apiUrl: "/api/v1"
   # Internal service DNS used by Next.js rewrite target.
-  schedulerInternalUrl: "http://scheduler-api-service:3000"
+  platformApiInternalUrl: "http://platform-api-service:3000"
   appEnv: "production"
   resources:
     requests:

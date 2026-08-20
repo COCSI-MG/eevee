@@ -32,9 +32,9 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: scheduler-api-service
+                name: platform-api-service
                 port:
-                  number: {{ .Values.schedulerApi.containerPort }}
+                  number: {{ .Values.platformApi.containerPort }}
     - host: {{ .Values.ingress.hosts.front | quote }}
       http:
         paths:

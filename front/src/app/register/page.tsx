@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { RegisterService } from '../integration/scheduler-api/register-service';
 import { RegisterRequest } from '../interface/scheduler-api/auth';
-import { ErrorMessage, Form, Formik, FormikHelpers } from 'formik';
+import { Form, Formik, FormikHelpers } from 'formik';
 import * as Yup from 'yup';
 import AuthContainer from '@/components/auth/container';
 import {
@@ -89,7 +89,11 @@ export default function Register() {
                       value={values.name}
                       disabled={isPending}
                     />
-                    {errors.name && <ErrorMessage name="name" />}
+                    {errors.name && (
+                      <p className="text-red-500 text-sm">
+                        {errors.name}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">E-mail</Label>
@@ -101,7 +105,11 @@ export default function Register() {
                       value={values.email}
                       disabled={isPending}
                     />
-                    {errors.email && <ErrorMessage name="email" />}
+                    {errors.email && (
+                      <p className="text-red-500 text-sm">
+                        {errors.email}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="passowrd">Senha</Label>
@@ -130,7 +138,11 @@ export default function Register() {
                         )}
                       </button>
                     </div>
-                    {errors.password && <ErrorMessage name="password" />}
+                    {errors.password && (
+                      <p className="text-red-500 text-sm">
+                        {errors.password}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter>

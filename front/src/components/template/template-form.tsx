@@ -16,7 +16,6 @@ import { TemplatesService } from "@/app/integration/scheduler-api/templates";
 import { toast } from "@/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import dynamic from "next/dynamic";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { AxiosError } from "axios";
@@ -27,6 +26,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ExpandableTrigger,
+  useExpandable,
+} from "@/components/ui/expandable";
 import { WorkerDefaultTemplateContentMap } from "@/app/admin/assignments/constants";
 import {
   TEMPLATE_FORM_TEXT,
@@ -38,16 +41,17 @@ import {
 import QueryErrorState from "../admin/query-error-state";
 import { Tooltip } from "../ui/tooltip";
 import { TemplateTestDialog } from "./template-test-dialog";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
-});
+import TemplateCodeEditor from "./template-code-editor";
 
 const upsertTemplateSchema = Yup.object().shape({
-  title: Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
-  description: Yup.string().required(
-    TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired
-  ),
+  title: Yup
+    .string()
+    .trim()
+    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
+  description: Yup
+    .string()
+    .trim()
+    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired),
   workerType: Yup.string().required(
     TEMPLATE_FORM_VALIDATION_MESSAGES.workerTypeRequired
   ),
@@ -86,6 +90,8 @@ export default function TemplateForm() {
   >({});
   const [dependenciesInput, setDependenciesInput] = useState("");
   const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const codeExpandable = useExpandable();
+  const descriptionExpandable = useExpandable();
 
   const { mutate: upsertTemplate, status: mutationStatus } = useMutation({
     mutationKey: ["upsertTemplate", id],
@@ -312,9 +318,15 @@ export default function TemplateForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-slate-200">
-                      {TEMPLATE_FORM_TEXT.descriptionLabel}
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="description" className="text-slate-200">
+                        {TEMPLATE_FORM_TEXT.descriptionLabel}
+                      </Label>
+                      <ExpandableTrigger
+                        onClick={descriptionExpandable.open}
+                        label="Expandir"
+                      />
+                    </div>
                     <Textarea
                       id="description"
                       name="description"
@@ -497,53 +509,24 @@ export default function TemplateForm() {
 
             <div className="space-y-6">
               <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-white">
                     {TEMPLATE_FORM_TEXT.codeCardTitle}
                   </CardTitle>
+                  <ExpandableTrigger
+                    onClick={codeExpandable.open}
+                    label={TEMPLATE_FORM_TEXT.codeExpandButton}
+                  />
                 </CardHeader>
                 <CardContent className="pb-6">
                   <div style={{ height: "600px" }}>
-                    <Editor
-                      height="600px"
-                      defaultLanguage="typescript"
+                    <TemplateCodeEditor
                       value={formik.values.content}
-                      theme="vs-dark"
                       onChange={(value) =>
-                        formik.setFieldValue("content", value || "")
+                        formik.setFieldValue("content", value)
                       }
+                      height="600px"
                       className="bg-slate-700 border-slate-600 text-white"
-                      options={{
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        wordWrap: "on",
-                        wrappingIndent: "indent",
-                        fontSize: 14,
-                        lineNumbers: "on",
-                        quickSuggestions: false,
-                        suggest: {
-                          showWords: false,
-                          showSnippets: false,
-                        },
-                        "semanticHighlighting.enabled": false,
-                      }}
-                      beforeMount={(monaco) => {
-                        // Disable all diagnostics for TypeScript/JavaScript
-                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          }
-                        );
-                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          }
-                        );
-                      }}
                     />
                   </div>
                   {(formik.touched.content || formik.submitCount > 0) &&
