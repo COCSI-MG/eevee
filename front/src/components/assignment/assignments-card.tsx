@@ -102,6 +102,12 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
               <CardTitle className="flex items-center justify-between space-x-2 text-white">
                 {assignment.title}
 
+                {assignment.score != null && (
+                  <Badge className="bg-blue-600 text-white">
+                    Vale {assignment.score} pts
+                  </Badge>
+                )}
+
                 {!canAccess && (
                   <Badge
                     variant={"destructive"}

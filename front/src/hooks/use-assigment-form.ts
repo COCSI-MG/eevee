@@ -8,12 +8,15 @@ import { Route } from "@/app/routes";
 import { SelectedTemplate } from "@/types/shared";
 import { TemplateParam } from "@/app/interface/scheduler-api/template";
 
+type UpsertError = { message: string } | null;
+
 export const useAssignmentForm = (existingAssignmentId?: number) => {
   const { push } = useRouter();
 
   const [selectedTemplates, setSelectedTemplates] = useState<
     SelectedTemplate[] | null
   >([]);
+  const [upsertError, setUpsertError] = useState<UpsertError>(null);
 
   const {
     data: existingAssignment,
@@ -48,30 +51,38 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
       newAssignment: Assignment;
       templates: typeof selectedTemplates;
     }) => {
+      const serializedTemplates = (templates ?? []).map((t) => ({
+        templateId: t.templateId,
+        params: t.params,
+        ...(t.weight !== undefined ? { weight: t.weight } : {}),
+      }));
+
       if (!existingAssignmentId) {
         return AssignmentService.CreateAssignment({
           ...newAssignment,
-          templates,
+          templates: serializedTemplates,
         });
       }
       return AssignmentService.UpdateAssignment(existingAssignmentId!, {
         ...newAssignment,
-        templates,
+        templates: serializedTemplates,
       });
     },
     onSuccess: () => {
+      setUpsertError(null);
       toast({
         title: "Assignment saved successfully",
         description: "The assignment has been created/updated successfully.",
       });
       push(Route.AdminAssignments);
     },
-    onError: () => {
+    onError: (err: Error) => {
+      setUpsertError({ message: err.message });
       toast({
         title: `Error ${
           existingAssignmentId ? "updating" : "creating"
         } assignment`,
-        description: "Please try again later.",
+        description: err.message,
         variant: "destructive",
       });
     },
@@ -116,6 +127,9 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
                 assignmentParamValueByTemplateParamId.get(Number(param.id)) ??
                 "",
             })),
+            weight: relationOrTemplate?.weight != null
+              ? Number(relationOrTemplate.weight)
+              : undefined,
           };
         })
         .filter((t): t is SelectedTemplate => t !== null);
@@ -133,5 +147,7 @@ export const useAssignmentForm = (existingAssignmentId?: number) => {
     selectedTemplates,
     setSelectedTemplates,
     upsertAssignment,
+    upsertError,
+    setUpsertError,
   };
 };

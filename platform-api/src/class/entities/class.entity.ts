@@ -1,4 +1,5 @@
 import { Assignment } from 'src/assignment/entities/assignment.entity';
+import { Exam } from 'src/exam/entities/exam.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -20,4 +21,7 @@ export class Class {
 
   @OneToMany(() => Assignment, (assignment) => assignment.class)
   assignments: Assignment[];
+
+  @OneToMany(() => Exam, (exam) => exam.class)
+  exams: Exam[];
 }

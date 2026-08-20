@@ -22,7 +22,7 @@ import { UsersService } from "@/app/integration/scheduler-api/user";
 import { UpsertUser } from "@/app/interface/scheduler-api/user";
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import QueryErrorState from "@/components/admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 
 const usersUpsertSchema = Yup.object().shape({
   name: Yup.string().required("Nome é obrigatório"),

@@ -22,6 +22,7 @@ export interface AssignmentTemplate {
   assignmentId: number;
   templateId: number;
   template: Template;
+  weight?: number | null;
 }
 
 export type AssignmentInterviewQuestionType = 'likert_1_5' | 'short_text';
@@ -58,6 +59,7 @@ export interface Assignment {
   assignmentParams: AssignmentParam[];
   suspensions?: AssignmentUserSuspension[];
   interviewConfig?: AssignmentInterviewConfig;
+  score?: number;
 }
 
 export interface CreateAssignmentRequest {
@@ -71,6 +73,7 @@ export interface CreateAssignmentRequest {
   templates: {
     templateId: number;
     params: AssignmentTemplateParam[];
+    weight?: number;
   }[] | null;
   maxAttempts: number;
   workerType: string;
@@ -94,5 +97,6 @@ export interface UpdateAssignmentRequest {
       templateParamId: number;
       value: string;
     }[];
+    weight?: number;
   }[];
 }

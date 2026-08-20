@@ -25,7 +25,7 @@ import { useFormik } from "formik";
 import { SelectedUser } from "@/types/shared";
 import { AxiosError } from "axios";
 import * as Yup from "yup";
-import QueryErrorState from "@/components/admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 
 const classUpsertSchema = Yup.object().shape({
   id: Yup.number().optional(),

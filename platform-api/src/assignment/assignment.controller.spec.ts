@@ -57,4 +57,13 @@ describe('AssignmentController', () => {
     await expect(controller.update('4', dto)).resolves.toEqual({ id: 4 });
     expect(assignmentService.update).toHaveBeenCalledWith(4, dto);
   });
+
+  it('delegates findAssignmentsByClass with a numeric classId', async () => {
+    assignmentService.findAssignmentsByClass.mockResolvedValue([{ id: 1 }]);
+
+    await expect(controller.findAssignmentsByClass('5')).resolves.toEqual([
+      { id: 1 },
+    ]);
+    expect(assignmentService.findAssignmentsByClass).toHaveBeenCalledWith(5);
+  });
 });

@@ -28,7 +28,7 @@ import AssignmentFormReview from "@/components/assignment/form/assignment-review
 import { AssignmentConfigForm } from "./assignment-config-form";
 import { AssignmentBoilerplateForm } from "./assignment-boilerplate-form";
 import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
-import QueryErrorState from "@/components/admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 
 const validationSchema = Yup.object({
   title: Yup.string().required("Título é obrigatório"),
@@ -96,6 +96,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     selectedTemplates,
     setSelectedTemplates,
     upsertAssignment,
+    upsertError,
+    setUpsertError,
   } = useAssignmentForm(existingAssignmentId);
 
   const {
@@ -120,6 +122,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     classId: existingAssignment?.classId ?? 0,
     initSqlScript: existingAssignment?.initSqlScript ?? "",
   };
+
+  console.log(initialValues);
 
   const handleSubmit = (values: typeof initialValues) => {
     return upsertAssignment({
@@ -187,18 +191,25 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
         {({ isSubmitting, values, setFieldValue, isValid }) => {
           // eslint-disable-next-line react-hooks/rules-of-hooks
           useEffect(() => {
+            console.log("Worker type changed:", values.workerType);
+            console.log("steps:", currentStepDef?.id );
             if (
               values.workerType &&
               Object.values(WorkerType).includes(
-                values.workerType as WorkerType,
+                values.workerType as WorkerType
               ) &&
-              values.boilerplate.trim() === ""
+              currentStepDef?.id !== STEP_BOILERPLATE.id &&
+              (
+                !existingAssignment?.workerType ||
+                existingAssignment?.workerType !== values.workerType
+              )
             ) {
               const safeWorkerType = values.workerType as WorkerType;
               setFieldValue(
                 "boilerplate",
                 WorkerDefaultTemplateMap[safeWorkerType],
               );
+              console.log("boilerplate updated:", values.boilerplate);
             }
           }, [values.workerType, setFieldValue, values.boilerplate]);
 
@@ -207,6 +218,40 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
             () => buildSteps(values.workerType),
             [values.workerType],
           );
+
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const handleWeightChange = (
+            templateId: number,
+            weight: number | undefined,
+          ) => {
+            setUpsertError(null);
+            setSelectedTemplates((prev) =>
+              (prev ?? []).map((t) =>
+                t.templateId === templateId ? { ...t, weight } : t,
+              ),
+            );
+          };
+
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          const { weightError, hasWeightBlock } = useMemo(() => {
+
+            const allFilled = !!selectedTemplates?.length && selectedTemplates.every((t) => t.weight !== undefined);
+
+            const sum = allFilled
+              ? Math.round(
+                  selectedTemplates!.reduce((s, t) => s + (t.weight ?? 0), 0) * 100,
+                ) / 100
+              : null;
+
+            const sumInvalid = (sum !== null) && (sum !== 100);
+
+            return {
+              weightError: sumInvalid
+                ? `A soma dos pesos deve ser exatamente 100% (atual: ${sum.toFixed(2)}%).`
+                : (upsertError?.message ?? null),
+              hasWeightBlock: sumInvalid,
+            };
+          }, [selectedTemplates, upsertError]);
 
           const totalSteps = steps.length;
           const currentStepDef = steps[currentStep - 1];
@@ -227,10 +272,10 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
               Boolean(values.workerType) &&
               Number(values.maxAttempts) >= 1 &&
               Number(values.classId) > 0,
-            templates: true,
+            templates: !hasWeightBlock,
             boilerplate: values.boilerplate?.trim() !== "",
             initSql: true,
-            review: isValid,
+            review: isValid && !hasWeightBlock,
           };
 
           const canProceedToNextStep =
@@ -252,6 +297,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       selectedTemplates={selectedTemplates}
                       setSelectedTemplates={setSelectedTemplates}
                       workerType={values.workerType as WorkerType}
+                      onWeightChange={handleWeightChange}
+                      weightError={weightError}
                     />
                   )}
                   {currentStepDef?.id === "boilerplate" && (
@@ -271,6 +318,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       values={values}
                       classes={classes ?? []}
                       selectedTemplates={selectedTemplates}
+                      weightError={weightError}
                     />
                   )}
 

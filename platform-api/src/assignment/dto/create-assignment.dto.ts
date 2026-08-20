@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  ArrayNotEmpty,
   IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  Max,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
@@ -35,6 +36,13 @@ export class AssignmentTemplateDto {
   @ValidateNested({ each: true })
   @Type(() => TemplateParamDto)
   params: TemplateParamDto[];
+
+  @ApiProperty({ required: false, description: 'Weight of this template as a percentage of the assignment total grade (0-100). When omitted the backend normalizes weights automatically.' })
+  @IsOptional()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100)
+  weight?: number;
 }
 
 export class CreateAssignmentDto {

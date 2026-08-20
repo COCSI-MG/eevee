@@ -16,6 +16,7 @@ import { TemplatesService } from "@/app/integration/scheduler-api/templates";
 import { toast } from "@/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import dynamic from "next/dynamic";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { AxiosError } from "axios";
@@ -38,10 +39,14 @@ import {
   TemplateParamTypeLabelMap,
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
-import QueryErrorState from "../admin/query-error-state";
 import { Tooltip } from "../ui/tooltip";
 import { TemplateTestDialog } from "./template-test-dialog";
-import TemplateCodeEditor from "./template-code-editor";
+import QueryErrorState from "@/components/shared/query-error-state";
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
+
+const Editor = dynamic(() => import("@monaco-editor/react"), {
+  ssr: false,
+});
 
 const upsertTemplateSchema = Yup.object().shape({
   title: Yup
@@ -217,6 +222,10 @@ export default function TemplateForm() {
     setLastWorkerTypeForDefault(currentWorkerType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.workerType, isNewTemplate]);
+
+  const editorLanguage = getWorkerLanguageConfig(
+    formik.values.workerType,
+  ).editorLanguage;
 
   const handleParamsBlur = (value: string) => {
     const paramsArray = parseParamsInput(value);
@@ -520,13 +529,41 @@ export default function TemplateForm() {
                 </CardHeader>
                 <CardContent className="pb-6">
                   <div style={{ height: "600px" }}>
-                    <TemplateCodeEditor
+                    <Editor
+                      height="600px"
+                      defaultLanguage={editorLanguage}
                       value={formik.values.content}
                       onChange={(value) =>
-                        formik.setFieldValue("content", value)
+                        formik.setFieldValue("content", value || "")
                       }
-                      height="600px"
+                      theme="vs-dark"
                       className="bg-slate-700 border-slate-600 text-white"
+                      options={{
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        wordWrap: "on",
+                        wrappingIndent: "indent",
+                        fontSize: 14,
+                        lineNumbers: "on",
+                        quickSuggestions: false,
+                        suggest: {
+                          showWords: false,
+                          showSnippets: false,
+                        },
+                        "semanticHighlighting.enabled": false,
+                      }}
+                      beforeMount={(monaco) => {
+                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+                          noSemanticValidation: true,
+                          noSyntaxValidation: true,
+                          noSuggestionDiagnostics: true,
+                        });
+                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+                          noSemanticValidation: true,
+                          noSyntaxValidation: true,
+                          noSuggestionDiagnostics: true,
+                        });
+                      }}
                     />
                   </div>
                   {(formik.touched.content || formik.submitCount > 0) &&

@@ -35,6 +35,7 @@ import { MailModule } from './mail/mail.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { TemplateTestModule } from './template-test/template-test.module';
 import { ExecutionPlatformEventsModule } from './execution/execution-platform-events.module';
+import { ExamModule } from './exam/exam.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -79,6 +80,7 @@ import { ExecutionPlatformEventsModule } from './execution/execution-platform-ev
     RealtimeModule,
     ExecutionPlatformEventsModule,
     TemplateTestModule,
+    ExamModule,
   ],
   controllers: [AppController],
   providers: [

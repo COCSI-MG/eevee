@@ -33,6 +33,7 @@ import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { TemplateParamType } from "@/app/interface/scheduler-api/template";
 import { WorkerDefaultTemplateContentMap } from "@/app/admin/assignments/constants";
 import { Tooltip } from "../ui/tooltip";
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -138,12 +139,12 @@ export function TemplateTestDialog({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="flex items-baseline justify-between">
-              <Label className="text-slate-200">app.ts (código de aplicação)</Label>
+              <Label className="text-slate-200">{`app${getWorkerLanguageConfig(workerType).fileExtension} (código de aplicação)`}</Label>
             </div>
             <div className="rounded-md border border-slate-700 overflow-hidden">
               <Editor
                 height="320px"
-                defaultLanguage="typescript"
+                defaultLanguage={getWorkerLanguageConfig(workerType).editorLanguage}
                 theme="vs-dark"
                 value={applicationFileContent}
                 onChange={(value) => setApplicationFileContent(value ?? "")}

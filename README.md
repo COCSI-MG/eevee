@@ -126,6 +126,19 @@ Agora é necessário incluir a imagem no minikube
 minikube image load worker-node-nextjs-cypress-img:latest
 ```
 
+### Python + Pytest Worker
+
+```
+cd node-worker-images\python-default
+docker build . -t worker-python-default-img:latest
+```
+
+Agora é necessário incluir a imagem no minikube
+
+```
+minikube image load worker-python-default-img:latest
+```
+
 ## Modulo de exercicios TeraORM AB
 
 Foi adicionado um seed de modulo com um conjunto de exercicios pareados (A = SDK nativo, B = TeraORM), para validacao de prototipo em ambiente controlado.

@@ -8,9 +8,9 @@ import { Route } from "@/app/routes";
 import { usePaginatedAssignments } from "@/hooks/use-paginated-assignments";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import Loader from "@/components/loader";
-import QueryErrorState from "@/components/admin/query-error-state";
-import AdminListSearch from "@/components/admin/admin-list-search";
-import AdminPagination from "@/components/admin/admin-pagination";
+import QueryErrorState from "@/components/shared/query-error-state";
+import ListSearch from "@/components/shared/list-search";
+import Pagination from "@/components/shared/pagination";
 import { useMemo } from "react";
 
 export default function AssignmentsAdminPage() {
@@ -74,7 +74,7 @@ export default function AssignmentsAdminPage() {
           </Button>
         </Link>
       </div>
-      <AdminListSearch
+      <ListSearch
         value={search}
         onChange={setSearch}
         placeholder="Filtrar por título, turma ou tipo de worker"
@@ -89,7 +89,7 @@ export default function AssignmentsAdminPage() {
       </div>
 
       {meta && (
-        <AdminPagination
+        <Pagination
           page={meta.page}
           totalPages={meta.totalPages}
           pageSize={meta.pageSize}

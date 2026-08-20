@@ -14,6 +14,9 @@ export class AssignmentTemplate {
     @Column()
     templateId: number;
 
+    @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true })
+    weight: number | null;
+
     @ManyToOne(() => Assignment, (assignment) => assignment.assignmentTemplates)
     assignment: Assignment;
   
