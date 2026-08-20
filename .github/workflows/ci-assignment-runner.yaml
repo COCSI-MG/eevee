@@ -1,0 +1,33 @@
+name: CI Assignment Runner
+
+on:
+    pull_request:
+        branches:
+            - develop
+            - main
+        paths:
+            - "assignment-runner/**"
+            - "packages/execution-contracts/**"
+            - ".github/workflows/ci-assignment-runner.yaml"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: assignment-runner
+        steps:
+            - uses: actions/checkout@v4
+            - name: Node.js Setup
+              uses: actions/setup-node@v4
+              with:
+                node-version: "22"
+                cache: "npm"
+                cache-dependency-path: assignment-runner/package-lock.json
+            - run: npm ci
+            - name: Build execution contracts
+              run: ./node_modules/.bin/tsc -p ../packages/execution-contracts/tsconfig.json
+            - name: Tests
+              run: npm test
+            - name: Build
+              run: npm run build
