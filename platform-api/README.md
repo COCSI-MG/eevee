@@ -70,6 +70,61 @@ It will create an initial user with admin role and user role, the users has the 
 npm run seed
 ```
 
+## Seed de exemplos Python
+
+O seed `seed:python-examples` cria ou atualiza, de forma idempotente:
+
+- a turma `Introdução à Programação com Python`;
+- seis atividades graduais (`PY01` a `PY06`);
+- um template privado de testes `pytest` para cada atividade;
+- os vínculos entre turma, professor, alunos, atividades e templates.
+
+Os exemplos cobrem saudação e strings, condicionais, repetição, listas,
+dicionários, normalização de texto e leitura de arquivos. O seed não cria
+usuários nem altera senhas. O professor deve ser uma conta administradora já
+existente; a matrícula de alunos é opcional.
+
+Antes de executar, implante o worker Python e garanta que
+`python_default` esteja presente nos enums do banco. O seed interrompe a
+execução sem gravar dados quando o schema não está pronto.
+
+```bash
+export PYTHON_SEED_TEACHER_EMAIL='professor@cefet-rj.br'
+export PYTHON_SEED_STUDENT_EMAILS='aluno1@cefet-rj.br,aluno2@cefet-rj.br'
+
+# valida schema, enum e usuários sem criar/atualizar registros
+PYTHON_SEED_DRY_RUN=true npm run seed:python-examples
+
+# cria ou atualiza o módulo dentro de uma transação
+npm run seed:python-examples
+```
+
+Dentro da imagem de produção já compilada, use a variante que não depende de
+`ts-node`:
+
+```bash
+# primeiro valide usando as mesmas variáveis PG_* do scheduler
+PYTHON_SEED_DRY_RUN=true npm run seed:python-examples:prod
+
+# depois aplique
+npm run seed:python-examples:prod
+```
+
+Configurações opcionais:
+
+- `PYTHON_SEED_CLASS_NAME`: nome da turma;
+- `PYTHON_SEED_CLASS_DESCRIPTION`: descrição da turma;
+- `PYTHON_SEED_STUDENT_EMAILS`: lista de alunos separada por vírgulas;
+- `PYTHON_SEED_DRY_RUN=true`: executa somente as verificações prévias.
+
+Para construir localmente a mesma imagem utilizada pelo worker:
+
+```bash
+docker build -t worker-python-default-img:latest \
+  -f ../node-worker-images/python-default/Dockerfile \
+  ../node-worker-images/python-default
+```
+
 ## Debug execution
 
 Insert this into the launch.json file in the .vscode folder of the project:

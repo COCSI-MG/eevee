@@ -8,7 +8,7 @@ NAMESPACE    ?= eevee-cefetrj
 CHART        ?= infrastructure/helm/eevee
 VALUES       ?= infrastructure/helm/eevee/values.yaml
 
-up: up-minikube up-docker up-platform-api up-front up-code-evaluator-engine
+up: up-minikube up-docker up-platform-api up-front up-assignment-runner
 
 up-infra: up-minikube up-docker
 
@@ -24,9 +24,9 @@ up-platform-api:
 	@echo Starting the Platform API
 	cd platform-api && npm run start:dev
 
-up-code-evaluator-engine:
+up-assignment-runner:
 	@echo Starting the Code Evaluator Engine
-	cd code-evaluator-engine && npm run start:dev
+	cd assignment-runner && npm run start:dev
 
 up-front:
 	@echo Starting front-end service
@@ -42,13 +42,13 @@ images: build-images push-images
 
 build-images: \
 	build-platform-api \
-	build-code-evaluator-engine \
+	build-assignment-runner \
 	build-front \
 	build-workers
 
 push-images: \
 	push-platform-api \
-	push-code-evaluator-engine \
+	push-assignment-runner \
 	push-front \
 	push-workers
 
@@ -79,11 +79,11 @@ build-platform-api:
 push-platform-api:
 	docker push $(GHCR_NAMESPACE)/platform-api:$(TAG)
 
-.PHONY: build-code-evaluator-engine push-code-evaluator-engine
-build-code-evaluator-engine:
-	docker build -t $(GHCR_NAMESPACE)/code-evaluator-engine:$(TAG) code-evaluator-engine
-push-code-evaluator-engine:
-	docker push $(GHCR_NAMESPACE)/code-evaluator-engine:$(TAG)
+.PHONY: build-assignment-runner push-assignment-runner
+build-assignment-runner:
+	docker build -t $(GHCR_NAMESPACE)/assignment-runner:$(TAG) assignment-runner
+push-assignment-runner:
+	docker push $(GHCR_NAMESPACE)/assignment-runner:$(TAG)
 
 .PHONY: build-front push-front
 build-front:
