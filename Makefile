@@ -40,6 +40,12 @@ down:
 .PHONY: images build-images push-images build-workers push-workers
 images: build-images push-images
 
+ .PHONY: build-packages build-execution-contracts
+build-packages: build-execution-contracts
+
+build-execution-contracts:
+	cd packages/execution-contracts && npm install --no-package-lock && npm run build
+
 build-images: \
 	build-platform-api \
 	build-assignment-runner \
