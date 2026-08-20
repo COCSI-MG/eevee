@@ -27,6 +27,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ExpandableTrigger,
+  useExpandable,
+} from "@/components/ui/expandable";
 import { WorkerDefaultTemplateContentMap } from "@/app/admin/assignments/constants";
 import {
   TEMPLATE_FORM_TEXT,
@@ -45,10 +49,14 @@ const Editor = dynamic(() => import("@monaco-editor/react"), {
 });
 
 const upsertTemplateSchema = Yup.object().shape({
-  title: Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
-  description: Yup.string().required(
-    TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired
-  ),
+  title: Yup
+    .string()
+    .trim()
+    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
+  description: Yup
+    .string()
+    .trim()
+    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired),
   workerType: Yup.string().required(
     TEMPLATE_FORM_VALIDATION_MESSAGES.workerTypeRequired
   ),
@@ -87,6 +95,8 @@ export default function TemplateForm() {
   >({});
   const [dependenciesInput, setDependenciesInput] = useState("");
   const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const codeExpandable = useExpandable();
+  const descriptionExpandable = useExpandable();
 
   const { mutate: upsertTemplate, status: mutationStatus } = useMutation({
     mutationKey: ["upsertTemplate", id],
@@ -317,9 +327,15 @@ export default function TemplateForm() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-slate-200">
-                      {TEMPLATE_FORM_TEXT.descriptionLabel}
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="description" className="text-slate-200">
+                        {TEMPLATE_FORM_TEXT.descriptionLabel}
+                      </Label>
+                      <ExpandableTrigger
+                        onClick={descriptionExpandable.open}
+                        label="Expandir"
+                      />
+                    </div>
                     <Textarea
                       id="description"
                       name="description"
@@ -502,10 +518,14 @@ export default function TemplateForm() {
 
             <div className="space-y-6">
               <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-white">
                     {TEMPLATE_FORM_TEXT.codeCardTitle}
                   </CardTitle>
+                  <ExpandableTrigger
+                    onClick={codeExpandable.open}
+                    label={TEMPLATE_FORM_TEXT.codeExpandButton}
+                  />
                 </CardHeader>
                 <CardContent className="pb-6">
                   <div style={{ height: "600px" }}>
@@ -513,10 +533,10 @@ export default function TemplateForm() {
                       height="600px"
                       defaultLanguage={editorLanguage}
                       value={formik.values.content}
-                      theme="vs-dark"
                       onChange={(value) =>
                         formik.setFieldValue("content", value || "")
                       }
+                      theme="vs-dark"
                       className="bg-slate-700 border-slate-600 text-white"
                       options={{
                         minimap: { enabled: false },
@@ -533,21 +553,16 @@ export default function TemplateForm() {
                         "semanticHighlighting.enabled": false,
                       }}
                       beforeMount={(monaco) => {
-                        // Disable all diagnostics for TypeScript/JavaScript
-                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          }
-                        );
-                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          }
-                        );
+                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+                          noSemanticValidation: true,
+                          noSyntaxValidation: true,
+                          noSuggestionDiagnostics: true,
+                        });
+                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+                          noSemanticValidation: true,
+                          noSyntaxValidation: true,
+                          noSuggestionDiagnostics: true,
+                        });
                       }}
                     />
                   </div>

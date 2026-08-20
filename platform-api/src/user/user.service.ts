@@ -77,6 +77,12 @@ export class UserService {
     return this.userRepository.findOne({ where: { email } });
   }
 
+  async updatePassword(userId: number, newPassword: string): Promise<void> {
+    await this.userRepository.update(userId, {
+      passwordHash: HashUtils.hashPassword(newPassword),
+    });
+  }
+
   async remove(id: number) {
     const user = await this.findOne(id);
     if (!user) {

@@ -30,6 +30,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerBehindProxyGuard } from './auth/guards/throttler-behind-proxy.guard';
 import { InterviewResponseModule } from './interview-response/interview-response.module';
+import { MailModule } from './mail/mail.module';
+
 import { RealtimeModule } from './realtime/realtime.module';
 import { TemplateTestModule } from './template-test/template-test.module';
 import { ExecutionPlatformEventsModule } from './execution/execution-platform-events.module';
@@ -74,6 +76,7 @@ import { ExamModule } from './exam/exam.module';
     GithubModule,
     AssignmentUserSuspensionModule,
     InterviewResponseModule,
+    MailModule,
     RealtimeModule,
     ExecutionPlatformEventsModule,
     TemplateTestModule,
@@ -100,6 +103,14 @@ export class AppModule {
         },
         {
           path: 'auth/login',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'auth/forgot-password',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'auth/reset-password',
           method: RequestMethod.POST,
         },
       )

@@ -45,8 +45,8 @@ spec:
               value: {{ .Values.front.apiUrl | quote }}
             - name: APP_ENV
               value: {{ .Values.front.appEnv | quote }}
-            - name: SCHEDULER_API_INTERNAL_URL
-              value: {{ .Values.front.schedulerInternalUrl | quote }}
+            - name: PLATFORM_API_INTERNAL_URL
+              value: {{ .Values.front.platformApiInternalUrl | quote }}
           resources:
             {{- toYaml .Values.front.resources | nindent 12 }}
       {{- include "eevee.imagePullSecrets" . | nindent 6 }}

@@ -77,13 +77,13 @@ push-workers: \
 # rebuilt without re-running the whole pipeline.
 .PHONY: build-platform-api push-platform-api
 build-platform-api:
-	docker build -t $(GHCR_NAMESPACE)/platform-api:$(TAG) platform-api
+	docker build -t $(GHCR_NAMESPACE)/platform-api:$(TAG) -f platform-api/Dockerfile .
 push-platform-api:
 	docker push $(GHCR_NAMESPACE)/platform-api:$(TAG)
 
 .PHONY: build-assignment-runner push-assignment-runner
 build-assignment-runner:
-	docker build -t $(GHCR_NAMESPACE)/assignment-runner:$(TAG) assignment-runner
+	docker build -t $(GHCR_NAMESPACE)/assignment-runner:$(TAG) -f assignment-runner/Dockerfile .
 push-assignment-runner:
 	docker push $(GHCR_NAMESPACE)/assignment-runner:$(TAG)
 
@@ -159,8 +159,8 @@ template:
 install:
 	helm upgrade --install $(HELM_RELEASE) $(CHART) -n $(NAMESPACE) \
 		--set front.image.pullPolicy=Always \
-		--set schedulerApi.image.pullPolicy=Always \
-		--set queueWorker.image.pullPolicy=Always \
+		--set platformApi.image.pullPolicy=Always \
+		--set assignmentRunner.image.pullPolicy=Always \
 		$(if $(wildcard $(VALUES)),-f $(VALUES))
 
 uninstall:
