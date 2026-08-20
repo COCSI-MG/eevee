@@ -13,7 +13,8 @@ import {
 interface AssignmentFormReviewProps {
   values: Partial<Assignment>;
   classes: { id: number; name: string }[];
-  selectedTemplates: SelectedTemplate[] | null; 
+  selectedTemplates: SelectedTemplate[] | null;
+  weightError: string | null;
 }
 
 const AssigmentReview = ({
@@ -73,8 +74,10 @@ const AssigmentReview = ({
 
 const TemplateReview = ({
   selectedTemplates,
+  weightError,
 }: {
   selectedTemplates: AssignmentFormReviewProps["selectedTemplates"];
+  weightError: AssignmentFormReviewProps["weightError"];
 }) => {
   return (
     <div>
@@ -90,9 +93,16 @@ const TemplateReview = ({
       <div className="space-y-3">
         {selectedTemplates?.map((template, index) => (
           <div key={index} className="bg-slate-700/30 p-4 rounded-lg">
-            <h5 className="text-white font-medium mb-2">
-              {template.name} 
-            </h5>
+            <div className="flex items-center justify-between mb-2">
+              <h5 className="text-white font-medium">
+                {template.name}
+              </h5>
+              {template.weight !== undefined && (
+                <span className="text-xs text-green-400 font-medium tabular-nums">
+                  {template.weight.toFixed(2)}%
+                </span>
+              )}
+            </div>
             <div className="space-y-2">
               {template.params.map((param) => (
                 <div
@@ -108,6 +118,10 @@ const TemplateReview = ({
           </div>
         ))}
       </div>
+
+      {weightError && (
+        <p className="text-sm text-red-400 mt-3">{weightError}</p>
+      )}
     </div>
   );
 };
@@ -116,6 +130,7 @@ export default function AssignmentFormReview({
   values,
   classes,
   selectedTemplates,
+  weightError,
 }: AssignmentFormReviewProps) {
   return (
     <div className="max-w-8xl mx-auto max-h-[500px]">
@@ -136,7 +151,10 @@ export default function AssignmentFormReview({
               <AssigmentReview values={values} classes={classes} />
 
               {/* Templates */}
-              <TemplateReview selectedTemplates={selectedTemplates} />
+              <TemplateReview
+                selectedTemplates={selectedTemplates}
+                weightError={weightError}
+              />
 
               {/* Boilerplate */}
               <div>

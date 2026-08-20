@@ -7,6 +7,7 @@ import { useFetchAssignment } from "@/hooks/use-assignments";
 import { Badge } from "../ui/badge";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "../ui/button";
+import { formatDateTime } from "@/utils/date";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -149,7 +150,7 @@ export default function AttemptsCard() {
                   <div className="flex flex-col space-y-2">
                     {attempt.createdAt && (
                       <p className="text-xs text-muted-foreground">
-                        {new Date(attempt.createdAt).toLocaleString("pt-BR")}
+                        {formatDateTime(attempt.createdAt)}
                       </p>
                     )}
                     <p className="text-sm text-white">

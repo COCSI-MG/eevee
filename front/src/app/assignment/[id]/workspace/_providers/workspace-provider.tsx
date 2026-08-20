@@ -44,12 +44,16 @@ interface WorkspaceProviderProps {
   children: React.ReactNode;
   workerType?: WorkerType;
   boilerplate?: string;
+  initialFileTree?: FileNode;
+  enableSecurityGuards?: boolean;
 }
 
 export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   children,
   workerType,
   boilerplate,
+  initialFileTree,
+  enableSecurityGuards = true,
 }) => {
   const params = useParams();
   const { user } = useAuthContext();
@@ -82,11 +86,16 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   });
 
   const initialFileNode = React.useMemo(() => {
+    if (initialFileTree) {
+      return initialFileTree;
+    }
+
     if (workerType) {
       return createDefaultFileNode(workerType, boilerplate);
     }
+
     return DEFAULT_FILE_NODE;
-  }, [workerType, boilerplate]);
+  }, [boilerplate, initialFileTree, workerType]);
 
   const [treeData, setTreeData] = React.useState<FileNode>(initialFileNode);
 
@@ -143,7 +152,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   }, [handleSecurityViolation]);
 
   usePreventUserActions({
-    enabled: shouldPreventUserActions,
+    enabled: enableSecurityGuards && shouldPreventUserActions,
     clipboardViolationLimit: 10,
     onClipboardViolationLimit: handleClipboardViolationLimit,
     onSecurityViolation: handleSecurityViolation,

@@ -10,9 +10,9 @@ import { usePaginatedClasses } from "@/hooks/use-paginated-classes";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import Loader from "@/components/loader";
 import AdminClassesTable from "@/components/classes/admin-classes-table";
-import QueryErrorState from "@/components/admin/query-error-state";
-import AdminListSearch from "@/components/admin/admin-list-search";
-import AdminPagination from "@/components/admin/admin-pagination";
+import QueryErrorState from "@/components/shared/query-error-state";
+import ListSearch from "@/components/shared/list-search";
+import Pagination from "@/components/shared/pagination";
 import { useMemo } from "react";
 
 export default function ClassesPage() {
@@ -108,7 +108,7 @@ export default function ClassesPage() {
           </Button>
         </Link>
       </div>
-      <AdminListSearch
+      <ListSearch
         value={search}
         onChange={setSearch}
         placeholder="Filtrar por nome da turma ou descrição"
@@ -124,7 +124,7 @@ export default function ClassesPage() {
       </div>
 
       {meta && (
-        <AdminPagination
+        <Pagination
           page={meta.page}
           totalPages={meta.totalPages}
           pageSize={meta.pageSize}

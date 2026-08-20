@@ -37,7 +37,7 @@ jobs:
 
       - name: Apply shared config
         run: |
-          kubectl apply -f eevee-infrastructure/k8s/config/db-configmap.yaml
+          kubectl apply -f infrastructure/k8s/config/db-configmap.yaml
 
       - name: Apply application secrets
         run: |
@@ -68,14 +68,14 @@ jobs:
 
       - name: Apply PostgreSQL manifests
         run: |
-          kubectl apply -f eevee-infrastructure/k8s/postgres/pvc.yaml
-          kubectl apply -f eevee-infrastructure/k8s/postgres/service.yaml
-          kubectl apply -f eevee-infrastructure/k8s/postgres/deployment.yaml
+          kubectl apply -f infrastructure/k8s/postgres/pvc.yaml
+          kubectl apply -f infrastructure/k8s/postgres/service.yaml
+          kubectl apply -f infrastructure/k8s/postgres/deployment.yaml
 
       - name: Apply Redis manifests
         run: |
-          kubectl apply -f eevee-infrastructure/k8s/redis/service.yaml
-          kubectl apply -f eevee-infrastructure/k8s/redis/deployment.yaml
+          kubectl apply -f infrastructure/k8s/redis/service.yaml
+          kubectl apply -f infrastructure/k8s/redis/deployment.yaml
 
       - name: Render and apply production overlay
         env:
@@ -88,7 +88,7 @@ jobs:
           K8S_FRONT_WWW_HOST: ${{ env.K8S_FRONT_WWW_HOST }}
         run: |
           rm -rf /tmp/eevee-k8s
-          cp -R eevee-infrastructure/k8s /tmp/eevee-k8s
+          cp -R infrastructure/k8s /tmp/eevee-k8s
 
           sed -i "s|acmeEmail=change-me@example.com|acmeEmail=${K8S_ACME_EMAIL}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml
           sed -i "s|cloudflareEmail=change-me@example.com|cloudflareEmail=${K8S_CLOUDFLARE_EMAIL}|g" /tmp/eevee-k8s/overlays/prod/kustomization.yaml

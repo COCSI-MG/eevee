@@ -13,6 +13,7 @@ import { Badge } from "../ui/badge";
 import dynamic from "next/dynamic";
 import { Template, TemplateParamType } from "@/app/interface/scheduler-api/template";
 import { Tooltip } from "../ui/tooltip";
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -77,7 +78,7 @@ export default function TemplateConfigDialog({
                             handleSetParamsValues(param.id, value || "");
                           }}
                           theme="vs-dark"
-                          defaultLanguage="typescript"
+                          defaultLanguage={getWorkerLanguageConfig(configTemplateDialog?.workerType).editorLanguage}
                           height="100px"
                           className="sm:h-[120px] lg:h-[140px]"
                           options={{

@@ -42,6 +42,10 @@ function hasMainExport(content: string): boolean {
   return mainExportPatterns.some((pattern) => pattern.test(content));
 }
 
+function hasPythonMain(content: string): boolean {
+  return /^\s*def\s+main\s*\(/m.test(content);
+}
+
 function formatDiagnostics(
   filePath: string,
   content: string,
@@ -210,6 +214,31 @@ function validateWorkerRequiredFiles(
           ok: false,
           message: "Entry point da aplicação não encontrado",
           details: ["Esperado arquivo src/main.tsx (ou src/main.jsx)."],
+        };
+      }
+
+      return { ok: true };
+    }
+
+    case WorkerType.PYTHON_DEFAULT: {
+      if (!hasAnyFile(files, ["src/app.py"])) {
+        return {
+          ok: false,
+          message: "Arquivo principal ausente",
+          details: [
+            "Esperado um arquivo src/app.py para este tipo de worker.",
+          ],
+        };
+      }
+
+      const mainContent = files["src/app.py"] ?? "";
+      if (!hasPythonMain(mainContent)) {
+        return {
+          ok: false,
+          message: "Função principal não encontrada",
+          details: [
+            "Seu código precisa definir uma função main para que os testes consigam importar o módulo.",
+          ],
         };
       }
 

@@ -5,9 +5,10 @@
 **EEVEE** is an Educational Exercises and Video-based E-learning Environment built as a microservices architecture:
 
 - **`front/`** (Next.js 15) - Web UI for assignments and code submission
-- **`scheduler-api/`** (NestJS) - Core orchestrator: manages users, assignments, attempts, and worker execution
-- **`node-worker-images/`** - Containerized execution environments for student code (Node, NestJS, gRPC, Next.js+Cypress)
-- **`eevee-infrastructure/`** - Docker Compose services (Redis, PostgreSQL, Minikube config)
+- **`platform-api/`** (NestJS) - Public API: manages users, assignments, attempts, and realtime updates
+- **`code-evaluator-engine/`** (NestJS) - Internal consumer that evaluates prepared code submissions in Kubernetes
+- **`images/`** - Containerized execution environments; runtime workers are grouped in `images/node/`
+- **`infrastructure/`** - Docker Compose services (Redis, PostgreSQL, Helm and Minikube config)
 
 **Data flow:** Frontend → Scheduler API → BullMQ (Redis) → Worker pods (via Kubernetes) → logs/results back to API
 
@@ -18,17 +19,18 @@ Always start infrastructure in this order:
 ```bash
 # Terminal 1: Kubernetes & Worker images
 minikube start --driver=docker
-cd node-worker-images/node && docker build . -t worker-node-default-img:latest
+cd images/node/node-default && docker build . -t worker-node-default-img:latest
 minikube image load worker-node-default-img:latest
 # (Repeat for other workers: nest.js, grpc, next.js-cypress)
 
 # Terminal 2: Core services (Redis, PostgreSQL)
-cd eevee-infrastructure && docker compose up -d
+cd infrastructure && docker compose up -d
 
 # Terminal 3: Scheduler API
-cd scheduler-api && npm install && npm run start:dev
+cd platform-api && npm install && npm run start:dev
 
 # Terminal 4: Frontend
+cd code-evaluator-engine && npm install && npm run start:dev
 cd front && npm install && npm run dev
 ```
 
@@ -61,7 +63,7 @@ Use `ClsModule` for request context (user ID injection across services via middl
 ## Testing & Debugging
 
 ```bash
-cd scheduler-api
+cd platform-api
 npm run test         # Unit tests (Jest)
 npm run test:e2e     # E2E tests
 npm run test:cov     # Coverage report

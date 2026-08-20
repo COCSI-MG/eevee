@@ -11,7 +11,10 @@ export interface AssignmentTemplateParam {
 }
 
 export interface WorkerDefinition {
-  files: Pick<FileNode , 'id' | 'children' | 'content'> & { type: 'file' | 'folder' }[] | null;
+  files:
+    | (Pick<FileNode, "id" | "children" | "content"> &
+        { type: "file" | "folder" }[])
+    | null;
   startCommands: string[];
   testCommands: string[];
   dependencies: string[];
@@ -22,9 +25,10 @@ export interface AssignmentTemplate {
   assignmentId: number;
   templateId: number;
   template: Template;
+  weight?: number | null;
 }
 
-export type AssignmentInterviewQuestionType = 'likert_1_5' | 'short_text';
+export type AssignmentInterviewQuestionType = "likert_1_5" | "short_text";
 
 export interface AssignmentInterviewQuestion {
   key: string;
@@ -34,6 +38,14 @@ export interface AssignmentInterviewQuestion {
 
 export interface AssignmentInterviewConfig {
   questions: AssignmentInterviewQuestion[];
+}
+
+export interface AnswerKey {
+  id: number;
+  assignmentId: number;
+  content: FileNode;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Assignment {
@@ -58,6 +70,9 @@ export interface Assignment {
   assignmentParams: AssignmentParam[];
   suspensions?: AssignmentUserSuspension[];
   interviewConfig?: AssignmentInterviewConfig;
+  answerKeyId?: number | null;
+  answerKeyVisible: boolean;
+  score?: number;
 }
 
 export interface CreateAssignmentRequest {
@@ -68,13 +83,17 @@ export interface CreateAssignmentRequest {
   boilerplate?: string;
   validationScript?: string;
   initSqlScript?: string;
-  templates: {
-    templateId: number;
-    params: AssignmentTemplateParam[];
-  }[] | null;
+  templates:
+    | {
+        templateId: number;
+        params: AssignmentTemplateParam[];
+        weight?: number;
+      }[]
+    | null;
   maxAttempts: number;
   workerType: string;
   workerDefinition: WorkerDefinition;
+  answerKeyVisible?: boolean;
 }
 
 export interface UpdateAssignmentRequest {
@@ -94,5 +113,7 @@ export interface UpdateAssignmentRequest {
       templateParamId: number;
       value: string;
     }[];
+    weight?: number;
   }[];
+  answerKeyVisible?: boolean;
 }

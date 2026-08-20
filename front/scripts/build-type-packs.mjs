@@ -1,7 +1,7 @@
 // @ts-check
 /**
  * Generates offline TypeScript type packs for the Monaco editor, derived
- * entirely from the real worker images in `node-worker-images/`.
+ * entirely from the real worker images in `images/node/`.
  *
  * For each unique worker directory it:
  *   1. reads the worker's own `package.json` (deps + devDeps),
@@ -31,7 +31,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const FRONT_DIR = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(FRONT_DIR, "..");
-const WORKERS_ROOT = path.join(REPO_ROOT, "node-worker-images");
+const WORKERS_ROOT = path.join(REPO_ROOT, "images", "node");
 const OUTPUT_ROOT = path.join(FRONT_DIR, "public", "type-packs");
 
 const sourceMap = JSON.parse(

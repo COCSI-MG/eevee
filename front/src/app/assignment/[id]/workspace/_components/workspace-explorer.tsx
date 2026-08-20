@@ -22,6 +22,7 @@ interface WorkspaceExplorerProps {
   onOpenInSecondary?: (node: FileNode) => void;
   maxDepth?: number;
   maxFiles?: number;
+  readOnly?: boolean;
 }
 
 export default function WorkspaceExplorer({
@@ -30,6 +31,7 @@ export default function WorkspaceExplorer({
   onOpenInSecondary,
   maxDepth = 5,
   maxFiles = 50,
+  readOnly = false,
 }: WorkspaceExplorerProps) {
   const {
     selectedItem,
@@ -120,7 +122,7 @@ export default function WorkspaceExplorer({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 border-border">
+        {!readOnly && <div className="flex items-center gap-1 border-border">
           <Button
             variant="ghost"
             size="sm"
@@ -155,7 +157,7 @@ export default function WorkspaceExplorer({
           >
             <TrashIcon className="w-4 h-4" />
           </Button>
-        </div>
+        </div>}
 
         <Dialog
           open={isCreateDialogOpen}
@@ -313,15 +315,15 @@ export default function WorkspaceExplorer({
           onOpenInSecondary={onOpenInSecondary}
           selectedItem={selectedItem}
           onSelectItem={selectItem}
-          onRenameRequest={handleRenameRequest}
-          onDeleteRequest={handleDeleteRequest}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
+           onRenameRequest={readOnly ? undefined : handleRenameRequest}
+           onDeleteRequest={readOnly ? undefined : handleDeleteRequest}
+           onDragStart={readOnly ? undefined : handleDragStart}
+           onDragOver={readOnly ? undefined : handleDragOver}
+           onDragLeave={readOnly ? undefined : handleDragLeave}
+           onDrop={readOnly ? undefined : handleDrop}
         />
 
-        {backgroundContextMenu && (
+        {backgroundContextMenu && !readOnly && (
           <WorkspaceExplorerContextMenu
             position={backgroundContextMenu}
             onCreateFile={() => openCreateItemDialog("file")}
