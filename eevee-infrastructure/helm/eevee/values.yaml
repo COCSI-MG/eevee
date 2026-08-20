@@ -7,8 +7,7 @@
 
 # Pin every pod (including spawned worker Jobs) to a single node by default.
 # Leave the map empty ({}) to schedule freely across the cluster.
-nodeSelector:
-  kubernetes.io/hostname: whx-rn
+nodeSelector: {}
 
 # Image registry pull secret (e.g. for GHCR). The secret MUST be created out-of-band
 # (see README) — Helm only references it by name and never manages its lifecycle.
