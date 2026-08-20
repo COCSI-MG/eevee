@@ -13,6 +13,7 @@ import {
 import { WorkerResponse } from './worker.interfaces';
 
 import { NodeDefaultJestStrategy } from './strategies/node-default-jest.strategy';
+import { JavascriptDefaultJestStrategy } from './strategies/javascript-default-jest.strategy';
 import { NodeDefaultPostgresqlJestStrategy } from './strategies/node-default-postgresql-jest.strategy';
 import { NodeGrpcJsJestStrategy } from './strategies/node-grpcjs-jest.strategy';
 import { NodeNestJsPostgresqlJestStrategy } from './strategies/node-nestjs-postgresql-jest.strategy';
@@ -35,6 +36,7 @@ export class WorkerService {
     WorkerExecutionStrategy
   > = {
     [WorkerType.NODE_DEFAULT]: new NodeDefaultJestStrategy(),
+    [WorkerType.JAVASCRIPT_DEFAULT]: new JavascriptDefaultJestStrategy(),
     [WorkerType.NODE_GRPCJS]: new NodeGrpcJsJestStrategy(),
     [WorkerType.NODE_NESTJS]: new NodeNestJsStrategy(),
     [WorkerType.NODE_NEXTJS_CYPRESS]: new NodeNextJsCypressStrategy(),

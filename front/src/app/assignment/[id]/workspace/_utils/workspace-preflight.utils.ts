@@ -46,6 +46,16 @@ function hasPythonMain(content: string): boolean {
   return /^\s*def\s+main\s*\(/m.test(content);
 }
 
+function hasEsmMainExport(content: string): boolean {
+  const esmMainExportPatterns = [
+    /export\s+(?:async\s+)?function\s+main\b/,
+    /export\s+(?:const|let|var)\s+main\b/,
+    /export\s*\{[^}]*\bmain\b[^}]*\}/,
+  ];
+
+  return esmMainExportPatterns.some((pattern) => pattern.test(content));
+}
+
 function formatDiagnostics(
   filePath: string,
   content: string,
@@ -144,6 +154,42 @@ function validateWorkerRequiredFiles(
   files: SchedulingFiles,
 ): WorkspacePreflightResult {
   switch (workerType) {
+    case WorkerType.JAVASCRIPT_DEFAULT: {
+      const typescriptFile = Object.keys(files).find(
+        (path) => path.startsWith("src/") && /\.(?:ts|tsx)$/i.test(path),
+      );
+
+      if (typescriptFile) {
+        return {
+          ok: false,
+          message: "Arquivo TypeScript não permitido",
+          details: [
+            `O worker JavaScript aceita somente arquivos .js; remova ou renomeie ${typescriptFile}.`,
+          ],
+        };
+      }
+
+      if (!hasAnyFile(files, ["src/app.js"])) {
+        return {
+          ok: false,
+          message: "Arquivo principal ausente",
+          details: ["Esperado o arquivo src/app.js para este worker."],
+        };
+      }
+
+      if (!hasEsmMainExport(files["src/app.js"] ?? "")) {
+        return {
+          ok: false,
+          message: "Export principal não encontrado",
+          details: [
+            "Use export function main(...) ou export const main = ... em src/app.js.",
+          ],
+        };
+      }
+
+      return { ok: true };
+    }
+
     case WorkerType.NODE_DEFAULT:
     case WorkerType.NODE_DEFAULT_POSTGRESQL:
     case WorkerType.NODE_GRPCJS: {

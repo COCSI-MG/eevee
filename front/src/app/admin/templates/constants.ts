@@ -150,6 +150,7 @@ export const TEMPLATE_TABLE_TEXT = {
 // but centralized so future renames/translations are one-liners.
 export const WorkerTypeLabelMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: WorkerType.NODE_DEFAULT,
+  [WorkerType.JAVASCRIPT_DEFAULT]: WorkerType.JAVASCRIPT_DEFAULT,
   [WorkerType.NODE_NESTJS]: WorkerType.NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: WorkerType.NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: WorkerType.NODE_NEXTJS_CYPRESS,
