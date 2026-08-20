@@ -27,7 +27,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ExpandableTrigger, useExpandable } from "@/components/ui/expandable";
+import {
+  ExpandableDialog,
+  ExpandableTrigger,
+  useExpandable,
+} from "@/components/ui/expandable";
 import { WorkerDefaultTemplateContentMap } from "@/app/admin/assignments/constants";
 import {
   TEMPLATE_FORM_TEXT,
@@ -599,6 +603,82 @@ export default function TemplateForm() {
         paramTypesByName={paramTypesByName}
         dependencies={formik.values.dependencies}
       />
+
+      <ExpandableDialog
+        open={descriptionExpandable.isOpen}
+        onOpenChange={descriptionExpandable.setIsOpen}
+        title={TEMPLATE_FORM_TEXT.descriptionLabel}
+        minimizeLabel="Minimizar"
+        contentClassName="flex flex-col"
+      >
+        <Textarea
+          id="expanded-description"
+          name="description"
+          autoFocus
+          value={formik.values.description}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          className="flex-1 w-full bg-slate-700 border-slate-600 text-white resize-none"
+          placeholder={TEMPLATE_FORM_TEXT.descriptionPlaceholder}
+        />
+        {(formik.touched.description || formik.submitCount > 0) &&
+          formik.errors.description && (
+            <div className="text-red-500 mt-2">
+              {formik.errors.description}
+            </div>
+          )}
+      </ExpandableDialog>
+
+      <ExpandableDialog
+        open={codeExpandable.isOpen}
+        onOpenChange={codeExpandable.setIsOpen}
+        title={TEMPLATE_FORM_TEXT.codeCardTitle}
+        minimizeLabel="Minimizar"
+        contentClassName="flex flex-col"
+      >
+        <Editor
+          height="100%"
+          defaultLanguage={editorLanguage}
+          value={formik.values.content}
+          onChange={(value) => formik.setFieldValue("content", value || "")}
+          theme="vs-dark"
+          className="flex-1 min-h-0 bg-slate-700 border-slate-600 text-white"
+          options={{
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            wordWrap: "on",
+            wrappingIndent: "indent",
+            fontSize: 14,
+            lineNumbers: "on",
+            quickSuggestions: false,
+            suggest: {
+              showWords: false,
+              showSnippets: false,
+            },
+            "semanticHighlighting.enabled": false,
+          }}
+          beforeMount={(monaco) => {
+            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
+              {
+                noSemanticValidation: true,
+                noSyntaxValidation: true,
+                noSuggestionDiagnostics: true,
+              },
+            );
+            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
+              {
+                noSemanticValidation: true,
+                noSyntaxValidation: true,
+                noSuggestionDiagnostics: true,
+              },
+            );
+          }}
+        />
+        {(formik.touched.content || formik.submitCount > 0) &&
+          formik.errors.content && (
+            <div className="text-red-500 mt-2">{formik.errors.content}</div>
+          )}
+      </ExpandableDialog>
     </div>
   );
 }

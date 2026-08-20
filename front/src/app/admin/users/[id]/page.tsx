@@ -25,7 +25,7 @@ import {
 } from "@/app/interface/scheduler-api/user";
 import * as Yup from "yup";
 import { useFormik } from "formik";
-import QueryErrorState from "@/components/admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_MIN_LENGTH_MESSAGE,
