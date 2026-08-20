@@ -1,0 +1,54 @@
+{{- if .Values.front.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: eevee-front-service
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.front.serviceType }}
+  selector:
+    app: eevee-front
+  ports:
+    - port: {{ .Values.front.servicePort }}
+      targetPort: {{ .Values.front.containerPort }}
+      {{- if and (eq .Values.front.serviceType "NodePort") .Values.front.nodePort }}
+      nodePort: {{ .Values.front.nodePort }}
+      {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eevee-front-deployment
+  labels:
+    app: eevee-front
+    tier: frontend
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.front.replicas }}
+  selector:
+    matchLabels:
+      app: eevee-front
+  template:
+    metadata:
+      labels:
+        app: eevee-front
+    spec:
+      containers:
+        - name: eevee-front
+          image: "{{ .Values.front.image.repository }}:{{ .Values.front.image.tag }}"
+          imagePullPolicy: {{ .Values.front.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.front.containerPort }}
+          env:
+            - name: NEXT_PUBLIC_API_URL
+              value: {{ .Values.front.apiUrl | quote }}
+            - name: APP_ENV
+              value: {{ .Values.front.appEnv | quote }}
+            - name: PLATFORM_API_INTERNAL_URL
+              value: {{ .Values.front.platformApiInternalUrl | quote }}
+          resources:
+            {{- toYaml .Values.front.resources | nindent 12 }}
+      {{- include "eevee.imagePullSecrets" . | nindent 6 }}
+      {{- include "eevee.nodeSelector" . | nindent 6 }}
+{{- end }}

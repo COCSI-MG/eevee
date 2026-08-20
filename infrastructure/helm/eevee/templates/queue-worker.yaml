@@ -1,0 +1,78 @@
+{{- if .Values.assignmentRunner.rbac.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: worker-sa
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: job-manager-role
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+rules:
+  - apiGroups: ["batch", "extensions"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete", "patch"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: worker-job-manager-binding
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: worker-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: job-manager-role
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
+---
+{{- if .Values.assignmentRunner.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assignment-runner-deployment
+  labels:
+    app: assignment-runner
+    tier: backend
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.assignmentRunner.replicas }}
+  selector:
+    matchLabels:
+      app: assignment-runner
+  template:
+    metadata:
+      labels:
+        app: assignment-runner
+    spec:
+      {{- if .Values.serviceAccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
+      containers:
+        - name: assignment-runner
+          image: "{{ .Values.assignmentRunner.image.repository }}:{{ .Values.assignmentRunner.image.tag }}"
+          imagePullPolicy: {{ .Values.assignmentRunner.image.pullPolicy }}
+          env:
+            - name: ENV
+              value: {{ .Values.assignmentRunner.env | quote }}
+            {{- include "eevee.appEnv" . | nindent 12 }}
+            {{- include "eevee.workerImageEnv" . | nindent 12 }}
+            {{- include "eevee.jobRuntimeEnv" . | nindent 12 }}
+          resources:
+            {{- toYaml .Values.assignmentRunner.resources | nindent 12 }}
+      {{- include "eevee.imagePullSecrets" . | nindent 6 }}
+      {{- include "eevee.nodeSelector" . | nindent 6 }}
+{{- end }}

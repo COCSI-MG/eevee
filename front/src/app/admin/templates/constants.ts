@@ -65,6 +65,10 @@ export const TEMPLATE_FORM_DEPENDENCIES_PLACEHOLDER = "Ex: dep1, dep2, dep3";
 export const TEMPLATE_FORM_CLEAR_BUTTON = "Limpar";
 export const TEMPLATE_FORM_SAVE_BUTTON = "Salvar Template";
 export const TEMPLATE_FORM_CODE_CARD_TITLE = "Código do Template *";
+export const TEMPLATE_FORM_CODE_EXPAND_BUTTON = "Expandir";
+export const TEMPLATE_FORM_CODE_MINIMIZE_BUTTON = "Minimizar";
+export const TEMPLATE_FORM_CODE_DIALOG_TITLE = "Código do Template";
+export const TEMPLATE_FORM_CODE_DIALOG_CLOSE = "Fechar";
 
 export const TEMPLATE_FORM_TEXT = {
   loading: TEMPLATE_FORM_LOADING_TEXT,
@@ -87,6 +91,10 @@ export const TEMPLATE_FORM_TEXT = {
   clearButton: TEMPLATE_FORM_CLEAR_BUTTON,
   saveButton: TEMPLATE_FORM_SAVE_BUTTON,
   codeCardTitle: TEMPLATE_FORM_CODE_CARD_TITLE,
+  codeExpandButton: TEMPLATE_FORM_CODE_EXPAND_BUTTON,
+  codeMinimizeButton: TEMPLATE_FORM_CODE_MINIMIZE_BUTTON,
+  codeDialogTitle: TEMPLATE_FORM_CODE_DIALOG_TITLE,
+  codeDialogClose: TEMPLATE_FORM_CODE_DIALOG_CLOSE,
 } as const;
 
 export const TEMPLATE_PAGE_BACK_BUTTON = "Voltar";

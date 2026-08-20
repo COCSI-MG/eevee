@@ -3,7 +3,9 @@
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { BookOpenCheck, Code, UserCog } from "lucide-react";
+import { BookOpenCheck } from "lucide-react";
+import Link from "next/link";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
 import {
   Table,
   TableHeader,
@@ -13,9 +15,11 @@ import {
   TableCell,
 } from "../ui/table";
 import TableActions from "../table/table-actions";
-import { DropdownMenuItem } from "../ui/dropdown-menu";
+import {
+  WorkspaceLinkComponent,
+  ViewUserSuspensionComponent,
+} from "./activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
-import Link from "next/link";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 
 interface AssignmentsTableProps {
@@ -24,36 +28,6 @@ interface AssignmentsTableProps {
 }
 
 const ASSIGNMENT_DESCRIPTION_MAX_LENGTH = 100;
-
-const WorkspaceLinkComponent = ({ assignmentId }: { assignmentId: string }) => {
-  return (
-    <Link
-      href={`/${AppRoutes.Assignment}/${assignmentId}/${AppRoutes.Workspace}`}
-    >
-      <DropdownMenuItem>
-        <Code className="h-4 w-4" />
-        Workspace
-      </DropdownMenuItem>
-    </Link>
-  );
-};
-
-const ViewUserSuspensionComponent = ({
-  assignmentId,
-}: {
-  assignmentId: string;
-}) => {
-  return (
-    <Link
-      href={`${AppRoutes.AdminAssignments}/${AppRoutes.AssignmenstUsersSuspensions}/${assignmentId}`}
-    >
-      <DropdownMenuItem>
-        <UserCog className="h-4 w-4" />
-        Usuários Suspensos
-      </DropdownMenuItem>
-    </Link>
-  );
-};
 
 const AnswerKeyLinkComponent = ({ assignmentId }: { assignmentId: string }) => {
   return (
@@ -67,7 +41,6 @@ const AnswerKeyLinkComponent = ({ assignmentId }: { assignmentId: string }) => {
     </Link>
   );
 };
-
 export default function AssignmentsTable({
   assignments,
   emptyMessage = "Nenhuma atividade encontrada.",

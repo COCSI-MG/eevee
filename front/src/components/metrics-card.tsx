@@ -8,7 +8,7 @@ import { useClasses } from "@/hooks/use-classes";
 import { useQuery } from "@tanstack/react-query";
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
 import Link from "next/link";
-import QueryErrorState from "./admin/query-error-state";
+import QueryErrorState from "@/components/shared/query-error-state";
 
 interface Metric {
   title: string;
