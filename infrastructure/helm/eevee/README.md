@@ -3,16 +3,16 @@
 Umbrella chart that deploys the whole EEVEE platform onto Kubernetes in a
 single release:
 
-| Component       | Templates                               |
-| --------------- | --------------------------------------- |
-| Postgres        | Deployment + Service + PVC              |
-| Redis           | Deployment + Service                    |
-| Scheduler API   | Deployment + Service                    |
-| Queue Worker    | Deployment + RBAC (ServiceAccount/Role) |
-| Frontend        | Deployment + Service                    |
-| Entrypoint      | Nginx gateway + NodePort Service        |
-| Ingress (nginx) | Ingress with optional TLS               |
-| cert-manager    | Namespace-scoped `Issuer` (optional)    |
+| Component       | Templates                                         |
+| --------------- | ------------------------------------------------- |
+| Postgres        | Deployment + Service + PVC                        |
+| Redis           | Deployment + Service                              |
+| Scheduler API   | Deployment + Service                              |
+| Queue Worker    | Deployment + RBAC (ServiceAccount/Role)           |
+| Frontend        | Deployment + Service                              |
+| Entrypoint      | Nginx gateway + NodePort Service                  |
+| Ingress (nginx) | Ingress with optional TLS                         |
+| cert-manager    | Namespace-scoped `Issuer` (optional)              |
 | Config / Secret | `eevee-config` ConfigMap + `eevee-secrets` Secret |
 
 This replaces the previous raw manifests under `k8s/` and the Kustomize
@@ -123,7 +123,7 @@ make proxy
 ```
 
 3. Point the public machine's reverse proxy at the SSH tunnel endpoint that
-  forwards to local `127.0.0.1:30001`.
+   forwards to local `127.0.0.1:30001`.
 
 If you change the external setup, update:
 

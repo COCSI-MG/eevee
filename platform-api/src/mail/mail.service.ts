@@ -18,7 +18,8 @@ export class MailService {
     const { to, subject, text, html, cc, bcc, attachments, replyTo } = params;
 
     if (!to || !subject || (!text && !html)) {
-      const error = 'Parâmetros inválidos: "to", "subject" e ("text" ou "html") são obrigatórios.';
+      const error =
+        'Parâmetros inválidos: "to", "subject" e ("text" ou "html") são obrigatórios.';
       this.logger.warn(`Falha na validação de envio de e-mail: ${error}`);
       return { success: false, error };
     }
@@ -39,8 +40,15 @@ export class MailService {
       this.logger.log('E-mail enviado com sucesso.');
       return { success: true };
     } catch (error) {
-      const message = error instanceof Error ? error.message : typeof error === 'string' ? error : JSON.stringify(error);
-      this.logger.error(`Ocorreu um erro ao enviar e-mail. Detalhes: ${message}`);
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+            ? error
+            : JSON.stringify(error);
+      this.logger.error(
+        `Ocorreu um erro ao enviar e-mail. Detalhes: ${message}`,
+      );
       return { success: false, error: message };
     }
   }
