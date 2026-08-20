@@ -1,4 +1,4 @@
-name: CI Scheduler API
+name: CI Platform API
 
 on:
     pull_request:
@@ -6,7 +6,8 @@ on:
             - develop
             - main
         paths:
-            - "scheduler-api/**"
+            - "platform-api/**"
+            - "packages/execution-contracts/**"
             - ".github/workflows/ci-scheduler-api.yaml"
 
 jobs:
@@ -14,7 +15,7 @@ jobs:
         runs-on: ubuntu-latest
         defaults:
             run:
-              working-directory: scheduler-api
+              working-directory: platform-api
         steps:
             - uses: actions/checkout@v4
             - name: Node.js Setup
@@ -22,7 +23,7 @@ jobs:
               with:
                 node-version: "22"
                 cache: "npm"
-                cache-dependency-path: scheduler-api/package-lock.json
+                cache-dependency-path: platform-api/package-lock.json
             - run: npm ci
             - name: Tests
               run: npm test

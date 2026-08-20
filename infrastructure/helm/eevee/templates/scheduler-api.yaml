@@ -1,0 +1,60 @@
+{{- if .Values.platformApi.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-api-service
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app: platform-api
+  ports:
+    - port: {{ .Values.platformApi.containerPort }}
+      targetPort: {{ .Values.platformApi.containerPort }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-api-deployment
+  labels:
+    app: platform-api
+    tier: backend
+    {{- include "eevee.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.platformApi.replicas }}
+  selector:
+    matchLabels:
+      app: platform-api
+  template:
+    metadata:
+      labels:
+        app: platform-api
+    spec:
+      {{- if .Values.serviceAccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
+      containers:
+        - name: platform-api
+          image: "{{ .Values.platformApi.image.repository }}:{{ .Values.platformApi.image.tag }}"
+          imagePullPolicy: {{ .Values.platformApi.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.platformApi.containerPort }}
+          env:
+            - name: ENV
+              value: {{ .Values.platformApi.env | quote }}
+            {{- include "eevee.appEnv" . | nindent 12 }}
+            {{- include "eevee.workerImageEnv" . | nindent 12 }}
+            {{- include "eevee.jobRuntimeEnv" . | nindent 12 }}
+            - name: PORT
+              value: {{ .Values.platformApi.containerPort | quote }}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: JWT_SECRET
+          resources:
+            {{- toYaml .Values.platformApi.resources | nindent 12 }}
+      {{- include "eevee.imagePullSecrets" . | nindent 6 }}
+      {{- include "eevee.nodeSelector" . | nindent 6 }}
+{{- end }}

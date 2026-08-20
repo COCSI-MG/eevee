@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
-const schedulerApiInternalUrl = (
-  process.env.SCHEDULER_API_INTERNAL_URL ?? "http://scheduler-api-service:3000"
+const platformApiInternalUrl = (
+  process.env.PLATFORM_API_INTERNAL_URL ?? "http://platform-api-service:3000"
 ).replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: `${schedulerApiInternalUrl}/:path*`,
+        destination: `${platformApiInternalUrl}/:path*`,
       },
     ];
   },

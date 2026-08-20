@@ -5,7 +5,7 @@ on:
         branches:
         - main
         paths:
-        - 'scheduler-api/**'
+        - 'platform-api/**'
         - '.github/workflows/deploy-scheduler-api.yaml'
 
 env:
@@ -30,7 +30,7 @@ jobs:
             - name: Build e Push da Imagem Docker
               uses: docker/build-push-action@v3
               with:
-                context: ./scheduler-api
+                context: ./platform-api
                 push: true
                 tags: |
                     ${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:latest

@@ -12,9 +12,10 @@
 # Generated type packs are rebuilt inside the image; never ship host copies.
 front/public/type-packs
 
-# Everything outside front/ and node-worker-images/ is irrelevant to this image.
-scheduler-api
-eevee-infrastructure
+# Everything outside front/ and images/ is irrelevant to this image.
+platform-api
+code-evaluator-engine
+infrastructure
 scripts
 *.drawio
 **/.env
