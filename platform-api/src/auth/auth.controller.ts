@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Body,
+  BadRequestException,
   UnauthorizedException,
   InternalServerErrorException,
   Res,
@@ -11,7 +12,10 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { PasswordResetService } from './password-reset.service';
 import { LoginRequestDto } from './dto/request/login-request.dto';
+import { ResetPasswordRequestDto } from './dto/request/reset-password-request.dto';
+import { ResetPasswordConfirmDto } from './dto/request/reset-password-confirm.dto';
 import { ApiInternalServerErrorResponse, ApiNoContentResponse, ApiOkResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { LoginResponseDto } from './dto/response/login-response.dto';
 import { RegisterRequestDto } from './dto/request/register-request.dto';
@@ -27,6 +31,7 @@ import { SkipThrottle, Throttle } from '@nestjs/throttler';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    private readonly passwordResetService: PasswordResetService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -64,6 +69,33 @@ export class AuthController {
     throw new InternalServerErrorException(
       'An error occurred while trying to register the user. Please try again later.',
     );
+  }
+
+  @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOkResponse({ schema: { properties: { message: { type: 'string' } } } })
+  async forgotPassword(@Body() resetPasswordDto: ResetPasswordRequestDto) {
+    return this.passwordResetService.requestReset(resetPasswordDto.email);
+  }
+
+  @Post('reset-password')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOkResponse({ schema: { properties: { message: { type: 'string' } } } })
+  async resetPassword(@Body() dto: ResetPasswordConfirmDto) {
+    if (dto.newPassword !== dto.confirmPassword) {
+      throw new BadRequestException('As senhas não conferem');
+    }
+
+    const result = await this.passwordResetService.resetPassword(
+      dto.token,
+      dto.newPassword,
+    );
+
+    if (!result.success) {
+      throw new BadRequestException('Token inválido ou expirado');
+    }
+
+    return { message: 'Senha alterada com sucesso' };
   }
 
   @Get('me')

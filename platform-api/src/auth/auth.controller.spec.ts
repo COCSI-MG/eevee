@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -7,6 +8,7 @@ import {
 } from '@nestjs/throttler/dist/throttler.constants';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { PasswordResetService } from './password-reset.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -15,6 +17,11 @@ describe('AuthController', () => {
     validateUserAndLogin: jest.fn(),
     registerUser: jest.fn(),
     buildSession: jest.fn(),
+  };
+
+  const passwordResetService = {
+    requestReset: jest.fn(),
+    resetPassword: jest.fn(),
   };
 
   const configService = {
@@ -26,6 +33,7 @@ describe('AuthController', () => {
       controllers: [AuthController],
       providers: [
         { provide: AuthService, useValue: authService },
+        { provide: PasswordResetService, useValue: passwordResetService },
         { provide: ConfigService, useValue: configService },
       ],
     }).compile();
@@ -150,7 +158,65 @@ describe('AuthController', () => {
     expect(authService.buildSession).not.toHaveBeenCalled();
   });
 
-  it('applies a strong throttle to login and register', () => {
+  it('forwards the email to the service on forgot-password', async () => {
+    passwordResetService.requestReset.mockResolvedValue({
+      message: 'Um email será enviado para o endereço fornecido',
+    });
+
+    const result = await controller.forgotPassword({
+      email: 'user@example.com',
+    } as never);
+
+    expect(result).toEqual({
+      message: 'Um email será enviado para o endereço fornecido',
+    });
+    expect(passwordResetService.requestReset).toHaveBeenCalledWith('user@example.com');
+  });
+
+  it('throws when passwords do not match on reset-password', async () => {
+    await expect(
+      controller.resetPassword({
+        token: 'some-token',
+        newPassword: 'abc12345',
+        confirmPassword: 'different',
+      } as never),
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('throws when token is invalid or expired on reset-password', async () => {
+    passwordResetService.resetPassword.mockResolvedValue({ success: false });
+
+    await expect(
+      controller.resetPassword({
+        token: 'invalid-token',
+        newPassword: 'novaSenha1',
+        confirmPassword: 'novaSenha1',
+      } as never),
+    ).rejects.toThrow(BadRequestException);
+
+    expect(passwordResetService.resetPassword).toHaveBeenCalledWith(
+      'invalid-token',
+      'novaSenha1',
+    );
+  });
+
+  it('returns a success message when the password is reset', async () => {
+    passwordResetService.resetPassword.mockResolvedValue({ success: true });
+
+    const result = await controller.resetPassword({
+      token: 'valid-token',
+      newPassword: 'novaSenha1',
+      confirmPassword: 'novaSenha1',
+    } as never);
+
+    expect(result).toEqual({ message: 'Senha alterada com sucesso' });
+    expect(passwordResetService.resetPassword).toHaveBeenCalledWith(
+      'valid-token',
+      'novaSenha1',
+    );
+  });
+
+  it('applies a strong throttle to login, register, forgot-password, and reset-password', () => {
     expect(
       Reflect.getMetadata(
         THROTTLER_LIMIT + 'default',
@@ -173,6 +239,30 @@ describe('AuthController', () => {
       Reflect.getMetadata(
         THROTTLER_TTL + 'default',
         AuthController.prototype.register,
+      ),
+    ).toBe(60000);
+    expect(
+      Reflect.getMetadata(
+        THROTTLER_LIMIT + 'default',
+        AuthController.prototype.forgotPassword,
+      ),
+    ).toBe(3);
+    expect(
+      Reflect.getMetadata(
+        THROTTLER_TTL + 'default',
+        AuthController.prototype.forgotPassword,
+      ),
+    ).toBe(60000);
+    expect(
+      Reflect.getMetadata(
+        THROTTLER_LIMIT + 'default',
+        AuthController.prototype.resetPassword,
+      ),
+    ).toBe(5);
+    expect(
+      Reflect.getMetadata(
+        THROTTLER_TTL + 'default',
+        AuthController.prototype.resetPassword,
       ),
     ).toBe(60000);
   });

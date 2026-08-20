@@ -25,6 +25,8 @@ jobs:
                 cache: "npm"
                 cache-dependency-path: platform-api/package-lock.json
             - run: npm ci
+            - name: Build execution contracts
+              run: ./node_modules/.bin/tsc -p ../packages/execution-contracts/tsconfig.json
             - name: Tests
               run: npm test
             - name: Build

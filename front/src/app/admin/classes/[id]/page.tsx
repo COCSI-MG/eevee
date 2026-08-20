@@ -29,10 +29,11 @@ import QueryErrorState from "@/components/admin/query-error-state";
 
 const classUpsertSchema = Yup.object().shape({
   id: Yup.number().optional(),
-  name: Yup.string().required("Nome da turma é obrigatório"),
+  name: Yup.string().trim().required("Nome da turma é obrigatório"),
   description: Yup.string(),
   students: Yup.array()
     .of(Yup.number())
+    .min(1, "Pelo menos um aluno deve ser selecionado")
     .required("Pelo menos um aluno deve ser selecionado"),
 });
 
@@ -225,7 +226,6 @@ export default function ClassEditPage() {
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   placeholder="Insira o nome da turma"
-                  required
                 />
                 {formik.errors.name && (
                   <div className="text-red-500">{formik.errors.name}</div>
