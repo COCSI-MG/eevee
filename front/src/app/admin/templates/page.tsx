@@ -14,9 +14,9 @@ import {
   TEMPLATE_LIST_TEXT,
   TEMPLATE_LIST_TOAST_MESSAGES,
 } from "@/app/admin/templates/constants";
-import QueryErrorState from "@/components/admin/query-error-state";
-import AdminListSearch from "@/components/admin/admin-list-search";
-import AdminPagination from "@/components/admin/admin-pagination";
+import QueryErrorState from "@/components/shared/query-error-state";
+import ListSearch from "@/components/shared/list-search";
+import Pagination from "@/components/shared/pagination";
 import { useMemo } from "react";
 
 export default function TemplatePage() {
@@ -119,7 +119,7 @@ export default function TemplatePage() {
         </Link>
       </div>
 
-      <AdminListSearch
+      <ListSearch
         value={search}
         onChange={setSearch}
         placeholder="Filtrar por titulo, descricao ou tipo de worker"
@@ -135,7 +135,7 @@ export default function TemplatePage() {
       </div>
 
       {meta && (
-        <AdminPagination
+        <Pagination
           page={meta.page}
           totalPages={meta.totalPages}
           pageSize={meta.pageSize}

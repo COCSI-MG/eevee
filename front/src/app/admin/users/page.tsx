@@ -10,9 +10,9 @@ import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
 import { UsersService } from "@/app/integration/scheduler-api/user";
-import QueryErrorState from "@/components/admin/query-error-state";
-import AdminListSearch from "@/components/admin/admin-list-search";
-import AdminPagination from "@/components/admin/admin-pagination";
+import QueryErrorState from "@/components/shared/query-error-state";
+import ListSearch from "@/components/shared/list-search";
+import Pagination from "@/components/shared/pagination";
 import { useMemo } from "react";
 
 export default function UsersPage() {
@@ -109,7 +109,7 @@ export default function UsersPage() {
         </Link>
       </div>
 
-      <AdminListSearch
+      <ListSearch
         value={search}
         onChange={setSearch}
         placeholder="Filtrar por nome ou email"
@@ -125,7 +125,7 @@ export default function UsersPage() {
       </div>
 
       {meta && (
-        <AdminPagination
+        <Pagination
           page={meta.page}
           totalPages={meta.totalPages}
           pageSize={meta.pageSize}

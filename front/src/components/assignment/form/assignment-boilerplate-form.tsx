@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorMessage } from "formik";
 import { FileText } from "lucide-react";
 import dynamic from "next/dynamic";
+import { Tooltip } from "@/components/ui/tooltip";
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 
@@ -17,13 +19,14 @@ export interface AssignmentBoilerplateFormProps {
 export const AssignmentBoilerplateForm: React.FC<
   AssignmentBoilerplateFormProps
 > = ({ values, setFieldValue }) => {
+  const langConfig = getWorkerLanguageConfig(values.workerType);
+
   return (
     <Card className="bg-slate-800 border-slate-700 max-h-[600px]">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
           <FileText className="w-5 h-5" />
-          Código Boilerplate (arquivo que será fornecido ao aluno no início do
-          trabalho)
+          Código Boilerplate <Tooltip message="Código que será fornecido ao aluno no início do trabalho para ser usado como base para o desenvolvimento dos exercícios." />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -36,9 +39,9 @@ export const AssignmentBoilerplateForm: React.FC<
           &quot;:
         </span>
         <Editor
-          path={"boilerplate.ts"}
+          path={`boilerplate${langConfig.fileExtension}`}
           height={400}
-          defaultLanguage="typescript"
+          defaultLanguage={langConfig.editorLanguage}
           theme="vs-dark"
           value={values.boilerplate}
           onChange={(value) => setFieldValue("boilerplate", value)}

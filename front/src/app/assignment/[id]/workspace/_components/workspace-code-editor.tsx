@@ -3,18 +3,9 @@
 import dynamic from "next/dynamic";
 import { OnMount } from "@monaco-editor/react";
 import React from "react";
-import { editor, IDisposable } from "monaco-editor";
+import { editor, IDisposable, Position } from "monaco-editor";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { FileNode } from "@/types/shared";
-import { applyLanguageDefaults } from "@/lib/monaco/worker-intellisense";
-import {
-  disposeWorkspaceModels,
-  syncWorkspaceModels,
-  workspaceModelPath,
-} from "@/lib/monaco/workspace-models";
-import { applyTypePack, clearTypePacks } from "@/lib/monaco/type-pack-loader";
-
-type MonacoNamespace = typeof import("monaco-editor");
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -45,12 +36,14 @@ function getMonacoLanguage(language: string | undefined): string {
   if (normalized === "ts" || normalized === "tsx") return "typescript";
   if (normalized === "js" || normalized === "jsx") return "javascript";
   if (normalized === "yml") return "yaml";
+  if (normalized === "py") return "python";
 
   return normalized || "typescript";
 }
 
 interface WorkspaceCodeEditorProps {
   onEditorChange: (value: string | undefined) => void;
+  readOnly?: boolean;
   file: {
     name: string;
     path: string;
@@ -62,10 +55,10 @@ interface WorkspaceCodeEditorProps {
 export default function WorkspaceCodeEditor({
   file,
   onEditorChange,
+  readOnly = false,
 }: WorkspaceCodeEditorProps) {
-  const { fileTreeData, workerType } = useWorkspaceContext();
+  const { fileTreeData } = useWorkspaceContext();
   const editorRef = React.useRef<editor.IStandaloneCodeEditor | null>(null);
-  const monacoRef = React.useRef<MonacoNamespace | null>(null);
   const treeRef = React.useRef<FileNode | null>(null);
   const currentFilePathRef = React.useRef("");
   const importCompletionDisposableRef = React.useRef<IDisposable[]>([]);
@@ -83,21 +76,6 @@ export default function WorkspaceCodeEditor({
   }, [file?.path]);
 
   React.useEffect(() => {
-    if (!monacoRef.current) return;
-    syncWorkspaceModels(
-      monacoRef.current,
-      fileTreeData,
-      currentFilePathRef.current,
-    );
-  }, [fileTreeData, file?.path]);
-
-  React.useEffect(() => {
-    if (!monacoRef.current) return;
-    applyLanguageDefaults(monacoRef.current, workerType);
-    void applyTypePack(monacoRef.current, workerType);
-  }, [workerType]);
-
-  React.useEffect(() => {
     return () => {
       importCompletionDisposableRef.current.forEach((disposable) =>
         disposable.dispose(),
@@ -108,12 +86,6 @@ export default function WorkspaceCodeEditor({
       editorDragGuardCleanupRef.current?.();
       editorDragGuardCleanupRef.current = null;
       importCompletionRegisteredRef.current = false;
-
-      if (monacoRef.current) {
-        disposeWorkspaceModels(monacoRef.current);
-        clearTypePacks(monacoRef.current);
-        monacoRef.current = null;
-      }
     };
   }, []);
 
@@ -233,12 +205,25 @@ export default function WorkspaceCodeEditor({
       };
     }
 
-    // Configurar IntelliSense derivada do worker: opcoes de compilacao,
-    // modelos de todos os arquivos do workspace e type packs offline.
-    monacoRef.current = monaco;
-    applyLanguageDefaults(monaco, workerType);
-    syncWorkspaceModels(monaco, treeRef.current, currentFilePathRef.current);
-    void applyTypePack(monaco, workerType);
+    // Configurar TypeScript para suportar JSX/TSX
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      jsx: monaco.languages.typescript.JsxEmit.React,
+      reactNamespace: "React",
+    });
+
+    // Habilitar validação
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+      diagnosticCodesToIgnore: [2307, 2580, 2451, 1206],
+    });
+
+    // Mesmo para JavaScript
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false,
+      diagnosticCodesToIgnore: [2307, 2580, 2451, 1206],
+    });
 
     // Configurar editor
     editor.updateOptions({
@@ -277,7 +262,10 @@ export default function WorkspaceCodeEditor({
 
     const provideImportCompletionItems: Parameters<
       typeof monaco.languages.registerCompletionItemProvider
-    >[1]["provideCompletionItems"] = (model, position) => {
+      >[1]["provideCompletionItems"] = (
+        model: editor.ITextModel,
+        position: Position
+      ) => {
       const lineContent = model.getLineContent(position.lineNumber);
       const lineUntilCursor = lineContent.slice(0, position.column - 1);
       const match = lineUntilCursor.match(importLinePattern);
@@ -351,7 +339,7 @@ export default function WorkspaceCodeEditor({
         <Editor
           height="100%"
           theme="vs-dark"
-          path={workspaceModelPath(file.path)}
+          path={file.path}
           value={file.value}
           language={monacoLanguage}
           saveViewState={false}
@@ -359,7 +347,7 @@ export default function WorkspaceCodeEditor({
           onChange={onEditorChange}
           onMount={handleEditorDidMount}
           options={{
-            readOnly: false,
+             readOnly,
             automaticLayout: true,
             dragAndDrop: false,
             dropIntoEditor: { enabled: false },

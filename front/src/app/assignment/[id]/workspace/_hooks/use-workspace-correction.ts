@@ -11,8 +11,9 @@ import {
 } from "@/app/assignment/[id]/workspace/_utils/workspace-scheduling.utils";
 import { runWorkspacePreflight } from "@/app/assignment/[id]/workspace/_utils/workspace-preflight.utils";
 import { getFileTree } from "@/app/integration/filestash";
+import { useSchedulingRealtimeEvent } from "@/hooks/use-scheduling-realtime";
 import { toast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
@@ -27,10 +28,23 @@ export function useWorkspaceCorrection({
   user,
 }: UseWorkspaceCorrectionParams) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [
     hasPersistedCorrectionInProgress,
     setHasPersistedCorrectionInProgress,
   ] = React.useState(false);
+
+  useSchedulingRealtimeEvent(
+    "attempt:update",
+    () => {
+      if (assignment?.id) {
+        void queryClient.invalidateQueries({
+          queryKey: ["assignment", assignment.id],
+        });
+      }
+    },
+    Boolean(assignment?.id),
+  );
 
   const correctionStorageKey = React.useMemo(() => {
     if (!assignment?.id || !user?.userId) {

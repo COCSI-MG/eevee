@@ -1,4 +1,4 @@
-import { Code, CodeSquare } from "lucide-react";
+import { BookOpenCheck, Code, CodeSquare } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -78,6 +78,8 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
         const isProcessing = lastAttemptStatus
           ? PROCESSING_ATTEMPT_STATUSES.has(lastAttemptStatus)
           : false;
+        const canViewAnswerKey =
+          Boolean(assignment.answerKeyId) && assignment.answerKeyVisible;
 
         return (
           <Card
@@ -101,6 +103,12 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
             <CardHeader>
               <CardTitle className="flex items-center justify-between space-x-2 text-white">
                 {assignment.title}
+
+                {assignment.score != null && (
+                  <Badge className="bg-blue-600 text-white">
+                    Vale {assignment.score} pts
+                  </Badge>
+                )}
 
                 {!canAccess && (
                   <Badge
@@ -170,6 +178,21 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     >
                       <CodeSquare className="h-4 w-4 mr-2" />
                       Visualizar Resultados
+                    </Button>
+                  )}
+
+                  {canViewAnswerKey && (
+                    <Button
+                      className="w-full bg-zinc-500 hover:bg-zinc-700 text-white disabled:bg-slate-700 disabled:text-slate-400"
+                      onClick={() =>
+                        push(
+                          `/${Route.Assignment}/${assignment.id}/${Route.Workspace}/${Route.AnswerKey}`,
+                        )
+                      }
+                      disabled={!canAccess}
+                    >
+                      <BookOpenCheck className="h-4 w-4 mr-2" />
+                      Gabarito
                     </Button>
                   )}
 

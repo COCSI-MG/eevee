@@ -7,13 +7,13 @@ import WorkspaceQuestionPanel from "./workspace-question-panel";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
-import { useActiveWorkspaceFile } from "../_hooks/use-active-workspace-file";
+import { useWorkspaceFileEditor } from "../_hooks/use-workspace-file-editor";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { FileNode, SelectedItem } from "@/types/shared";
-import { getFileLanguage } from "../_utils/workspace.utils";
+import { updateFileContent, findNodeByPath } from "../_utils/workspace-tree.utils";
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { Button } from "@/components/ui/button";
 
@@ -37,81 +37,28 @@ export default function Workspace({
   const userId = user.userId;
   const { explorerWidth, startResize } = useWorskpaceResizing();
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+  const [, setActiveFileContent] = React.useState("");
   const [isSplitView, setIsSplitView] = React.useState(false);
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
 
-  const {
-    activeFile,
-    handleEditorChange,
-    handleFileSelect,
-    setActiveFileContent,
-  } = useActiveWorkspaceFile({
-    assignment,
-    user,
-    selectedItem,
-    selectItem,
-  });
+  const { activeFile, handleEditorChange, handleFileSelect } =
+    useWorkspaceFileEditor({
+      selectedItem,
+      selectItem,
+      onTreeChange: async (tree) => {
+        await saveFileTreeAsync({
+          assignmentId: assignment.id,
+          userId: user.userId,
+          fileTree: tree,
+        });
+      },
+    });
 
   const { handleTreeChange } = useWorkspaceTreeActions({
     assignment,
     user,
   });
-
-  const findNodeByPath = React.useCallback(
-    (node: FileNode, filePath: string): FileNode | null => {
-      if (node.path === filePath) {
-        return node;
-      }
-
-      if (!node.children?.length) {
-        return null;
-      }
-
-      for (const child of node.children) {
-        const found = findNodeByPath(child, filePath);
-        if (found) {
-          return found;
-        }
-      }
-
-      return null;
-    },
-    [],
-  );
-
-  const buildUpdatedTree = React.useCallback(
-    (node: FileNode, filePath: string, content: string): FileNode => {
-      if (node.path === filePath && node.isFile) {
-        return {
-          ...node,
-          content,
-          updatedAt: new Date().toISOString(),
-        };
-      }
-
-      if (!node.children?.length) {
-        return node;
-      }
-
-      const updatedChildren = node.children.map((child) =>
-        buildUpdatedTree(child, filePath, content),
-      );
-      const hasChanges = updatedChildren.some(
-        (child, index) => child !== node.children![index],
-      );
-
-      if (!hasChanges) {
-        return node;
-      }
-
-      return {
-        ...node,
-        children: updatedChildren,
-      };
-    },
-    [],
-  );
 
   const secondaryFile = React.useMemo(() => {
     if (!secondarySelectedItem?.path || secondarySelectedItem.type !== "file") {
@@ -126,10 +73,10 @@ export default function Workspace({
     return {
       name: fileNode.id,
       path: fileNode.path,
-      language: getFileLanguage(fileNode.id),
+      language: fileNode.id.split(".").pop() || "",
       value: fileNode.content || "",
     };
-  }, [fileTreeData, findNodeByPath, secondarySelectedItem]);
+  }, [fileTreeData, secondarySelectedItem]);
 
   const handleSecondaryEditorChange = React.useCallback(
     (value: string | undefined) => {
@@ -137,7 +84,7 @@ export default function Workspace({
         return;
       }
 
-      const updatedTree = buildUpdatedTree(
+      const updatedTree = updateFileContent(
         fileTreeData,
         secondaryFile.path,
         value,
@@ -156,7 +103,6 @@ export default function Workspace({
     },
     [
       assignment.id,
-      buildUpdatedTree,
       fileTreeData,
       replaceFileTree,
       saveFileTreeAsync,
@@ -190,7 +136,7 @@ export default function Workspace({
       setSecondarySelectedItem(null);
       setIsSplitView(false);
     }
-  }, [fileTreeData, findNodeByPath, secondarySelectedItem]);
+  }, [fileTreeData, secondarySelectedItem]);
 
   const { isResetting, resetWorkspace } = useWorkspaceReset({
     assignment,

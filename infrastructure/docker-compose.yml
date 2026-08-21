@@ -1,0 +1,25 @@
+services:
+  redis:
+    image: redis:8.6.2
+    container_name: eevee-scheduler-redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis-data:/data
+
+  database:
+    image: postgres:16
+    container_name: eevee-scheduler-database
+    # Host 5433 avoids clashing with a local PostgreSQL service often bound to 5432 on Windows.
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: eevee_user
+      POSTGRES_PASSWORD: eevee_password
+      POSTGRES_DB: eevee_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  redis-data:
+  pgdata:

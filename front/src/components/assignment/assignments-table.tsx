@@ -3,7 +3,9 @@
 import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { Code, UserCog } from "lucide-react";
+import { BookOpenCheck } from "lucide-react";
+import Link from "next/link";
+import { DropdownMenuItem } from "../ui/dropdown-menu";
 import {
   Table,
   TableHeader,
@@ -13,9 +15,11 @@ import {
   TableCell,
 } from "../ui/table";
 import TableActions from "../table/table-actions";
-import { DropdownMenuItem } from "../ui/dropdown-menu";
+import {
+  WorkspaceLinkComponent,
+  ViewUserSuspensionComponent,
+} from "./activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
-import Link from "next/link";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 
 interface AssignmentsTableProps {
@@ -25,36 +29,18 @@ interface AssignmentsTableProps {
 
 const ASSIGNMENT_DESCRIPTION_MAX_LENGTH = 100;
 
-const WorkspaceLinkComponent = ({ assignmentId }: { assignmentId: string }) => {
+const AnswerKeyLinkComponent = ({ assignmentId }: { assignmentId: string }) => {
   return (
     <Link
-      href={`/${AppRoutes.Assignment}/${assignmentId}/${AppRoutes.Workspace}`}
+      href={`/${AppRoutes.Assignment}/${assignmentId}/${AppRoutes.Workspace}/${AppRoutes.AnswerKey}`}
     >
       <DropdownMenuItem>
-        <Code className="h-4 w-4" />
-        Workspace
+        <BookOpenCheck className="h-4 w-4" />
+        Gabarito
       </DropdownMenuItem>
     </Link>
   );
 };
-
-const ViewUserSuspensionComponent = ({
-  assignmentId,
-}: {
-  assignmentId: string;
-}) => {
-  return (
-    <Link
-      href={`${AppRoutes.AdminAssignments}/${AppRoutes.AssignmenstUsersSuspensions}/${assignmentId}`}
-    >
-      <DropdownMenuItem>
-        <UserCog className="h-4 w-4" />
-        Usuários Suspensos
-      </DropdownMenuItem>
-    </Link>
-  );
-};
-
 export default function AssignmentsTable({
   assignments,
   emptyMessage = "Nenhuma atividade encontrada.",
@@ -84,7 +70,10 @@ export default function AssignmentsTable({
       <TableBody>
         {list.length === 0 && (
           <TableRow>
-            <TableCell colSpan={5} className="text-center text-muted-foreground">
+            <TableCell
+              colSpan={5}
+              className="text-center text-muted-foreground"
+            >
               {emptyMessage}
             </TableCell>
           </TableRow>
@@ -138,6 +127,10 @@ export default function AssignmentsTable({
                   otherActions={[
                     <WorkspaceLinkComponent
                       key={assignment.id}
+                      assignmentId={assignment.id.toString()}
+                    />,
+                    <AnswerKeyLinkComponent
+                      key={`${assignment.id}-answer-key`}
                       assignmentId={assignment.id.toString()}
                     />,
                     <ViewUserSuspensionComponent

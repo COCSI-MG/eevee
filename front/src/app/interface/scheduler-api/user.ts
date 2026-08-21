@@ -5,16 +5,21 @@ export interface User {
    id: number;
    name: string;
    email: string;
-   passwordHash: string;
    isAdmin: boolean;
    userClasses: UserClass[];
    assignmentSuspensions?: AssignmentUserSuspension[];
 }
 
-export interface UpsertUser {
-   id?: number;
+interface UserInput {
    name: string;
    email: string;
-   passwordHash: string;
    isAdmin: boolean;
+}
+
+export interface CreateUserRequest extends UserInput {
+   password: string;
+}
+
+export interface UpdateUserRequest extends Partial<UserInput> {
+   password?: string;
 }

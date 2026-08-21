@@ -34,3 +34,19 @@ export interface CreateTemplateRequest {
   typedParams?: Array<{ name: string; type: TemplateParamType }>;
   dependencies?: string[];
 }
+
+export interface TestTemplateRequest {
+  workerType: WorkerType;
+  templateContent: string;
+  applicationFileContent: string;
+  files?: Record<string, string>;
+  params?: Record<string, string>;
+  paramDefs?: Array<{ name: string; type?: TemplateParamType }>;
+  dependencies?: string[];
+}
+
+export interface TestTemplateResponse {
+  passes: number;
+  failures: number;
+  completeTrace: string;
+}

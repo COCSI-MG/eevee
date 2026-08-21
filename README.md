@@ -2,9 +2,9 @@
 
 ## _Steps To Reproduce_
 
-1. Construa a infraestrutura do projeto, com detalhamento disponível em [eevee-infrastructure](./eevee-infrastructure/README.md).
+1. Construa a infraestrutura do projeto, com detalhamento disponível em [infrastructure](./infrastructure/README.md).
 
-2. Construa as imagens dos workers e entenda sobre a execução dos workers, seguindo os passos detalhados em [node-worker-images](./node-worker-images/README.md).
+2. Construa as imagens dos workers e entenda sobre a execução dos workers, seguindo os passos detalhados em [images](./images/README.md).
 
 3. Instale os pacotes NPM para os arquivos a seguir:
 
@@ -16,26 +16,26 @@ npm install
 npm run dev
 ```
 
-### 2. `scheduler-api` (Scheduler API)
+### 2. `platform-api` (Platform API)
 
 Lembre-se de definir uma secret JWT no .env
 
-Pode copiar um arquivo `.env.example` dentro de `scheduler-api` e trocar os valores
+Pode copiar um arquivo `.env.example` dentro de `platform-api` e trocar os valores
 
 ```bash
-cd scheduler-api/
+cd platform-api/
 npm install
 npm run start:dev
 ```
 
-#### 2.1 Consumidor do Scheduler API
+#### 2.1 Assignment Runner
 
-O consumidor é uma aplicação em NestJs que roda em segundo plano, e tem a função de consumir as mensagens da fila do Redis + BullMQ, e executar os jobs agendados.
+O avaliador é uma aplicação NestJS que consome comandos do Redis + BullMQ, executa os jobs Kubernetes e publica os resultados para a Platform API.
 
-Lembre-se de preencher os valores do REDIS_HOST e REDIS_PORT no .env do scheduler-api, para que o worker consiga se conectar ao Redis e consumir os jobs agendados. Se estiver usando o Docker, o host do Redis será localhost e a porta fixa será 6379.
+Lembre-se de preencher os valores de REDIS_HOST e REDIS_PORT no `.env` do avaliador. Se estiver usando o Docker, o host do Redis será localhost e a porta fixa será 6379.
 
 ```bash
-cd scheduler-api/ && npm run start:worker:dev
+cd assignment-runner/ && npm run start:dev
 ```
 
 ## _Testando a infraestrutura_
@@ -44,7 +44,7 @@ cd scheduler-api/ && npm run start:worker:dev
 
 ### Utilizando Make
 
-O [Makefile](./node-worker-images/Makefile) tem a opção de rodar um build all, que irá construir todas as imagens necessárias para o projeto. Para isso, basta rodar o comando:
+O [Makefile](./images/Makefile) tem a opção de rodar um build all, que irá construir todas as imagens necessárias para o projeto. Para isso, basta rodar o comando:
 
 ```bash
 make build-all
@@ -62,7 +62,7 @@ minikube image load postgres:16
 ### Node Default Worker
 
 ```
-cd node-worker-images\node
+cd images\node\node-default
 docker build . -t worker-node-default-img:latest
 ```
 
@@ -77,7 +77,7 @@ minikube image load worker-node-default-img:latest
 Worker dedicado para os exercicios comparativos SDK nativo vs TeraORM.
 
 ```
-cd node-worker-images\node-teraorm
+cd images\node\node-teraorm
 docker build . -t worker-node-teraorm-img:latest
 ```
 
@@ -90,7 +90,7 @@ minikube image load worker-node-teraorm-img:latest
 ### Node NestJS Worker
 
 ```
-cd node-worker-images\nest.js
+cd images\node\nest.js
 docker build . -t worker-node-nestjs-img:latest
 ```
 
@@ -103,7 +103,7 @@ minikube image load worker-node-nestjs-img:latest
 ### Node GRPC Worker
 
 ```
-cd node-worker-images\grpc
+cd images\node\grpc
 docker build . -t worker-node-grpcjs-img:latest
 ```
 
@@ -116,7 +116,7 @@ minikube image load worker-node-grpcjs-img:latest
 ### Node Next.js + Cypress Worker
 
 ```
-cd node-worker-images\next.js-cypress
+cd images\node\next.js-cypress
 docker build . -t worker-node-nextjs-cypress-img:latest
 ```
 
@@ -124,6 +124,19 @@ Agora é necessário incluir a imagem no minikube
 
 ```
 minikube image load worker-node-nextjs-cypress-img:latest
+```
+
+### Python + Pytest Worker
+
+```
+cd images\python-default
+docker build . -t worker-python-default-img:latest
+```
+
+Agora é necessário incluir a imagem no minikube
+
+```
+minikube image load worker-python-default-img:latest
 ```
 
 ## Modulo de exercicios TeraORM AB

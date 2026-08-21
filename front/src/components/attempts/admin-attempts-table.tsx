@@ -2,9 +2,10 @@
 
 import { AdminAttemptListItem } from "@/app/interface/scheduler-api/admin-attempt";
 import { AdminAttemptExpandedRow } from "@/components/attempts/admin-attempt-expanded-row";
-import AdminPagination from "@/components/admin/admin-pagination";
+import Pagination from "@/components/shared/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/utils/date";
 import {
   Table,
   TableBody,
@@ -115,7 +116,7 @@ export default function AdminAttemptsTable({
                     <TableCell className="text-slate-200">{formatScore(attempt.score)}</TableCell>
                     <TableCell className="text-slate-300">#{attempt.attempt}</TableCell>
                     <TableCell className="text-slate-400">
-                      {new Date(attempt.createdAt).toLocaleString("pt-BR")}
+                      {formatDateTime(attempt.createdAt)}
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-2">
@@ -157,7 +158,7 @@ export default function AdminAttemptsTable({
         </Table>
       </div>
 
-      <AdminPagination
+      <Pagination
         page={page}
         totalPages={totalPages}
         pageSize={pageSize}

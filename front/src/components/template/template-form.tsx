@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2Icon, Save } from "lucide-react";
+import { FlaskConical, Loader2Icon, Save } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CreateTemplateRequest as UpsertTemplateRequest,
@@ -27,6 +27,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ExpandableDialog,
+  ExpandableTrigger,
+  useExpandable,
+} from "@/components/ui/expandable";
 import { WorkerDefaultTemplateContentMap } from "@/app/admin/assignments/constants";
 import {
   TEMPLATE_FORM_TEXT,
@@ -35,26 +40,35 @@ import {
   TemplateParamTypeLabelMap,
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
-import QueryErrorState from "../admin/query-error-state";
+import { Tooltip } from "../ui/tooltip";
+import { TemplateTestDialog } from "./template-test-dialog";
+import QueryErrorState from "@/components/shared/query-error-state";
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
 });
 
 const upsertTemplateSchema = Yup.object().shape({
-  title: Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
-  description: Yup.string().required(
-    TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired
-  ),
+  title: Yup.string()
+    .trim()
+    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.titleRequired),
+  description: Yup.string()
+    .trim()
+    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.descriptionRequired),
   workerType: Yup.string().required(
-    TEMPLATE_FORM_VALIDATION_MESSAGES.workerTypeRequired
+    TEMPLATE_FORM_VALIDATION_MESSAGES.workerTypeRequired,
   ),
-  content: Yup
-    .string()
-    .required(TEMPLATE_FORM_VALIDATION_MESSAGES.templateContentRequired),
+  content: Yup.string().required(
+    TEMPLATE_FORM_VALIDATION_MESSAGES.templateContentRequired,
+  ),
   params: Yup.array().of(Yup.string()).optional(),
   dependencies: Yup.array()
-    .of(Yup.string().required(TEMPLATE_FORM_VALIDATION_MESSAGES.dependencyNameRequired))
+    .of(
+      Yup.string().required(
+        TEMPLATE_FORM_VALIDATION_MESSAGES.dependencyNameRequired,
+      ),
+    )
     .notRequired(),
 });
 
@@ -83,6 +97,9 @@ export default function TemplateForm() {
     Record<string, TemplateParamType>
   >({});
   const [dependenciesInput, setDependenciesInput] = useState("");
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const codeExpandable = useExpandable();
+  const descriptionExpandable = useExpandable();
 
   const { mutate: upsertTemplate, status: mutationStatus } = useMutation({
     mutationKey: ["upsertTemplate", id],
@@ -104,7 +121,8 @@ export default function TemplateForm() {
       toast({
         title: TEMPLATE_FORM_TOAST_MESSAGES.saveErrorTitle,
         description:
-          res?.message || TEMPLATE_FORM_TOAST_MESSAGES.saveErrorFallbackDescription,
+          res?.message ||
+          TEMPLATE_FORM_TOAST_MESSAGES.saveErrorFallbackDescription,
         variant: "destructive",
         duration: 5000,
       });
@@ -159,7 +177,7 @@ export default function TemplateForm() {
       }
 
       const templateParamsInputAsArray = template.templateParams.map(
-        (t) => t.name
+        (t) => t.name,
       );
 
       const typesMap: Record<string, TemplateParamType> = {};
@@ -186,9 +204,8 @@ export default function TemplateForm() {
   });
 
   // Keep default template content in sync with workerType while the user hasn't edited it.
-  const [lastWorkerTypeForDefault, setLastWorkerTypeForDefault] = useState<
-    WorkerType
-  >(WorkerType.NODE_DEFAULT);
+  const [lastWorkerTypeForDefault, setLastWorkerTypeForDefault] =
+    useState<WorkerType>(WorkerType.NODE_DEFAULT);
 
   useEffect(() => {
     if (!isNewTemplate) return;
@@ -208,6 +225,10 @@ export default function TemplateForm() {
     setLastWorkerTypeForDefault(currentWorkerType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.workerType, isNewTemplate]);
+
+  const editorLanguage = getWorkerLanguageConfig(
+    formik.values.workerType,
+  ).editorLanguage;
 
   const handleParamsBlur = (value: string) => {
     const paramsArray = parseParamsInput(value);
@@ -245,7 +266,7 @@ export default function TemplateForm() {
     setDependenciesInput(value);
     const dependenciesArray = parseDependenciesInput(value);
     formik.setFieldValue("dependencies", dependenciesArray, false);
-  }; 
+  };
 
   const handleParamTypeChange = (name: string, type: TemplateParamType) => {
     setParamTypesByName((prev) => ({
@@ -304,14 +325,22 @@ export default function TemplateForm() {
                     />
                     {(formik.touched.title || formik.submitCount > 0) &&
                       formik.errors.title && (
-                      <div className="text-red-500">{formik.errors.title}</div>
-                    )}
+                        <div className="text-red-500">
+                          {formik.errors.title}
+                        </div>
+                      )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description" className="text-slate-200">
-                      {TEMPLATE_FORM_TEXT.descriptionLabel}
-                    </Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="description" className="text-slate-200">
+                        {TEMPLATE_FORM_TEXT.descriptionLabel}
+                      </Label>
+                      <ExpandableTrigger
+                        onClick={descriptionExpandable.open}
+                        label="Expandir"
+                      />
+                    </div>
                     <Textarea
                       id="description"
                       name="description"
@@ -323,15 +352,16 @@ export default function TemplateForm() {
                     />
                     {(formik.touched.description || formik.submitCount > 0) &&
                       formik.errors.description && (
-                      <div className="text-red-500">
-                        {formik.errors.description}
-                      </div>
-                    )}
+                        <div className="text-red-500">
+                          {formik.errors.description}
+                        </div>
+                      )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="workerType" className="text-slate-200">
-                      {TEMPLATE_FORM_TEXT.workerTypeLabel}
+                      {TEMPLATE_FORM_TEXT.workerTypeLabel}{" "}
+                      <Tooltip message="Escolha o tipo de ambiente de execução que será utilizado no template" />
                     </Label>
                     <Select
                       value={formik.values.workerType as string}
@@ -354,16 +384,17 @@ export default function TemplateForm() {
                     </Select>
                     {(formik.touched.workerType || formik.submitCount > 0) &&
                       formik.errors.workerType && (
-                      <div className="text-red-500">
-                        {formik.errors.workerType as string}
-                      </div>
-                    )}
+                        <div className="text-red-500">
+                          {formik.errors.workerType as string}
+                        </div>
+                      )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="params" className="text-slate-200">
                       {TEMPLATE_FORM_TEXT.paramsLabel} <br />
-                      {TEMPLATE_FORM_TEXT.paramsHelper}
+                      {TEMPLATE_FORM_TEXT.paramsHelper}{" "}
+                      <Tooltip message="Parâmetros que serão passados para o template" />
                     </Label>
                     <Input
                       id="params"
@@ -375,8 +406,10 @@ export default function TemplateForm() {
                     />
                     {(formik.touched.params || formik.submitCount > 0) &&
                       formik.errors.params && (
-                      <div className="text-red-500">{formik.errors.params}</div>
-                    )}
+                        <div className="text-red-500">
+                          {formik.errors.params}
+                        </div>
+                      )}
                   </div>
 
                   {!!formik.values.params.length && (
@@ -406,7 +439,7 @@ export default function TemplateForm() {
                                 onValueChange={(value) =>
                                   handleParamTypeChange(
                                     name,
-                                    value as TemplateParamType
+                                    value as TemplateParamType,
                                   )
                                 }
                               >
@@ -446,7 +479,9 @@ export default function TemplateForm() {
                       placeholder={TEMPLATE_FORM_TEXT.dependenciesPlaceholder}
                     />
                     {formik.errors.dependencies && (
-                      <div className="text-red-500">{formik.errors.dependencies}</div>
+                      <div className="text-red-500">
+                        {formik.errors.dependencies}
+                      </div>
                     )}
                   </div>
 
@@ -463,6 +498,16 @@ export default function TemplateForm() {
                       }}
                     >
                       {TEMPLATE_FORM_TEXT.clearButton}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                      onClick={() => setTestDialogOpen(true)}
+                      title="Testar o conteúdo do template contra uma aplicação de exemplo em um pod efêmero. Nada é persistido."
+                    >
+                      <FlaskConical className="w-4 h-4 mr-2" />
+                      Testar
                     </Button>
                     <Button
                       type="submit"
@@ -484,21 +529,25 @@ export default function TemplateForm() {
 
             <div className="space-y-6">
               <Card className="bg-slate-800 border-slate-700">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-white">
                     {TEMPLATE_FORM_TEXT.codeCardTitle}
                   </CardTitle>
+                  <ExpandableTrigger
+                    onClick={codeExpandable.open}
+                    label={TEMPLATE_FORM_TEXT.codeExpandButton}
+                  />
                 </CardHeader>
                 <CardContent className="pb-6">
                   <div style={{ height: "600px" }}>
                     <Editor
                       height="600px"
-                      defaultLanguage="typescript"
+                      defaultLanguage={editorLanguage}
                       value={formik.values.content}
-                      theme="vs-dark"
                       onChange={(value) =>
                         formik.setFieldValue("content", value || "")
                       }
+                      theme="vs-dark"
                       className="bg-slate-700 border-slate-600 text-white"
                       options={{
                         minimap: { enabled: false },
@@ -515,36 +564,115 @@ export default function TemplateForm() {
                         "semanticHighlighting.enabled": false,
                       }}
                       beforeMount={(monaco) => {
-                        // Disable all diagnostics for TypeScript/JavaScript
                         monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
                           {
                             noSemanticValidation: true,
                             noSyntaxValidation: true,
                             noSuggestionDiagnostics: true,
-                          }
+                          },
                         );
                         monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
                           {
                             noSemanticValidation: true,
                             noSyntaxValidation: true,
                             noSuggestionDiagnostics: true,
-                          }
+                          },
                         );
                       }}
                     />
                   </div>
                   {(formik.touched.content || formik.submitCount > 0) &&
                     formik.errors.content && (
-                    <div className="text-red-500">
-                      {formik.errors.content}
-                    </div>
-                  )}
+                      <div className="text-red-500">
+                        {formik.errors.content}
+                      </div>
+                    )}
                 </CardContent>
               </Card>
             </div>
           </div>
         </form>
       </div>
+
+      <TemplateTestDialog
+        open={testDialogOpen}
+        onOpenChange={setTestDialogOpen}
+        workerType={formik.values.workerType as WorkerType}
+        templateContent={formik.values.content}
+        paramNames={formik.values.params}
+        paramTypesByName={paramTypesByName}
+        dependencies={formik.values.dependencies}
+      />
+
+      <ExpandableDialog
+        open={descriptionExpandable.isOpen}
+        onOpenChange={descriptionExpandable.setIsOpen}
+        title={TEMPLATE_FORM_TEXT.descriptionLabel}
+        minimizeLabel="Minimizar"
+        contentClassName="flex flex-col"
+      >
+        <Textarea
+          id="expanded-description"
+          name="description"
+          autoFocus
+          value={formik.values.description}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          className="flex-1 w-full bg-slate-700 border-slate-600 text-white resize-none"
+          placeholder={TEMPLATE_FORM_TEXT.descriptionPlaceholder}
+        />
+        {(formik.touched.description || formik.submitCount > 0) &&
+          formik.errors.description && (
+            <div className="text-red-500 mt-2">
+              {formik.errors.description}
+            </div>
+          )}
+      </ExpandableDialog>
+
+      <ExpandableDialog
+        open={codeExpandable.isOpen}
+        onOpenChange={codeExpandable.setIsOpen}
+        title={TEMPLATE_FORM_TEXT.codeCardTitle}
+        minimizeLabel="Minimizar"
+        contentClassName="flex flex-col"
+      >
+        <Editor
+          height="100%"
+          defaultLanguage={editorLanguage}
+          value={formik.values.content}
+          onChange={(value) => formik.setFieldValue("content", value || "")}
+          theme="vs-dark"
+          className="flex-1 min-h-0 bg-slate-700 border-slate-600 text-white"
+          options={{
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            wordWrap: "on",
+            wrappingIndent: "indent",
+            fontSize: 14,
+            lineNumbers: "on",
+            quickSuggestions: false,
+            suggest: {
+              showWords: false,
+              showSnippets: false,
+            },
+            "semanticHighlighting.enabled": false,
+          }}
+          beforeMount={(monaco) => {
+            const diagnosticsOptions = {
+              noSemanticValidation: true,
+              noSyntaxValidation: true,
+              noSuggestionDiagnostics: true,
+            };
+
+            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
+            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
+          }}
+        />
+        {(formik.touched.content || formik.submitCount > 0) &&
+          formik.errors.content && (
+            <div className="text-red-500 mt-2">{formik.errors.content}</div>
+          )}
+      </ExpandableDialog>
     </div>
   );
 }

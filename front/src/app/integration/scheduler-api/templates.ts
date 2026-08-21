@@ -1,4 +1,9 @@
-import { CreateTemplateRequest, Template } from "@/app/interface/scheduler-api/template";
+import {
+  CreateTemplateRequest,
+  Template,
+  TestTemplateRequest,
+  TestTemplateResponse,
+} from "@/app/interface/scheduler-api/template";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
@@ -42,6 +47,15 @@ export class TemplatesService {
         const response = await axiosClientWithAuth.get<PaginatedResponse<Template>>(
             "/template/paginated",
             { params },
+        );
+        return response.data;
+    }
+
+    static async testTemplatePreview(body: TestTemplateRequest) {
+        const response = await axiosClientWithAuth.post<TestTemplateResponse>(
+            "/template/preview",
+            body,
+            { timeout: 180_000 },
         );
         return response.data;
     }

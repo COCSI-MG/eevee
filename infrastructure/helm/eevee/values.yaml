@@ -1,0 +1,256 @@
+# -----------------------------------------------------------------------------
+# Default values for the EEVEE umbrella chart.
+# Override these via `-f values.local.yaml` or `--set`.
+# -----------------------------------------------------------------------------
+
+# Namespace handled by the release (`helm install -n <ns>`). Nothing to set here.
+
+# Pin every pod (including spawned worker Jobs) to a single node by default.
+# Leave the map empty ({}) to schedule freely across the cluster.
+nodeSelector: {}
+
+# Image registry pull secret (e.g. for GHCR). The secret MUST be created out-of-band
+# (see README) — Helm only references it by name and never manages its lifecycle.
+imagePullSecret:
+  name: ghcr-auth
+  create: false
+  dockerconfigjson: ""
+
+# Common registry / org prefix for all in-house images. Overridable per-component.
+image:
+  registry: ghcr.io
+  org: cocsi-mg
+  tag: develop
+  pullPolicy: Always
+
+# -----------------------------------------------------------------------------
+# Shared configuration (non-sensitive). Becomes the `eevee-config` ConfigMap.
+# -----------------------------------------------------------------------------
+config:
+  DB_HOST: postgres-service
+  DB_PORT: "5432"
+  DB_USERNAME: postgres
+  DB_DATABASE: eevee_db
+  REDIS_HOST: redis-service
+  REDIS_PORT: "6379"
+  CORS_ALLOWED_ORIGINS: ""
+  AUTH_COOKIE_DOMAIN: ""
+
+# -----------------------------------------------------------------------------
+# Sensitive values. The Secret is expected to already exist in the namespace —
+# Helm only references it by name (see README for creation steps). Set
+# `create: true` only for local/dev environments.
+# -----------------------------------------------------------------------------
+secrets:
+  create: false
+  name: eevee-secrets
+  # Only consumed when create=true. Keep blank/placeholders in committed values.
+  data:
+    DB_PASSWORD: ""
+    JWT_SECRET: ""
+    GROQ_API_KEY: ""
+
+# -----------------------------------------------------------------------------
+# Postgres
+# -----------------------------------------------------------------------------
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  pvcName: postgres-pvc
+  keepPVCOnUninstall: true
+  storage: 20Gi
+  storageClass: "" # leave blank to use the cluster default
+  resources:
+    requests:
+      memory: 256Mi
+    limits:
+      memory: 1Gi
+
+# -----------------------------------------------------------------------------
+# Redis
+# -----------------------------------------------------------------------------
+redis:
+  enabled: true
+  image: redis:7-alpine
+  resources:
+    requests:
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+# -----------------------------------------------------------------------------
+# Platform API (NestJS)
+# -----------------------------------------------------------------------------
+platformApi:
+  enabled: true
+  image:
+    repository: ghcr.io/cocsi-mg/platform-api
+    tag: develop
+    pullPolicy: Always
+  env: "production"
+  replicas: 1
+  containerPort: 3000
+  resources:
+    requests:
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+
+# -----------------------------------------------------------------------------
+# Assignment Runner (BullMQ consumer)
+# -----------------------------------------------------------------------------
+assignmentRunner:
+  enabled: true
+  image:
+    repository: ghcr.io/cocsi-mg/assignment-runner
+    tag: develop
+    pullPolicy: Always
+  env: "production"
+  replicas: 1
+  resources:
+    requests:
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+  rbac:
+    # Creating Role/RoleBinding requires cluster-level RBAC permissions which
+    # ns-admin lacks. Reuse the pre-existing `ns-admin` SA via
+    # `serviceAccount.name` below instead.
+    create: false
+
+# ServiceAccount used only by assignment-runner. Platform API workloads use the
+# namespace's default SA and do not receive Jobs/Pods permissions.
+serviceAccount:
+  name: ns-admin
+
+# -----------------------------------------------------------------------------
+# Worker job images used by the assignment-runner at runtime to spawn
+# Kubernetes Jobs). These values are consumed only by assignment-runner.
+# -----------------------------------------------------------------------------
+workerImages:
+  bootstrap: ghcr.io/cocsi-mg/eevee-worker-bootstrap:develop
+  nodeDefault: ghcr.io/cocsi-mg/worker-node-default-img:develop
+  javascriptDefault: ghcr.io/cocsi-mg/worker-node-javascript-default-img:develop
+  nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:develop
+  nodeNestjs: ghcr.io/cocsi-mg/worker-nestjs-default-img:develop
+  nodeGrpcjs: ghcr.io/cocsi-mg/worker-node-grpcjs-img:develop
+  nodeNextjsCypress: ghcr.io/cocsi-mg/worker-node-nextjs-cypress-img:develop
+  nodeReactjsCypress: ghcr.io/cocsi-mg/worker-react-cypress-img:develop
+  nodeDefaultPostgresql: ghcr.io/cocsi-mg/worker-node-default-img:develop
+  nodeNestjsPostgresql: ghcr.io/cocsi-mg/worker-nestjs-default-img:develop
+
+# -----------------------------------------------------------------------------
+# Frontend (Next.js)
+# -----------------------------------------------------------------------------
+front:
+  enabled: true
+  image:
+    repository: ghcr.io/cocsi-mg/front
+    tag: develop
+    pullPolicy: Always
+  replicas: 1
+  containerPort: 3000
+  # Frontend is internal; public access is handled by entrypointGateway.
+  serviceType: ClusterIP
+  servicePort: 80
+  nodePort: null
+  # Browser calls same-origin API path, then Next.js rewrites to platform API.
+  apiUrl: "/api/v1"
+  # Internal service DNS used by Next.js rewrite target.
+  platformApiInternalUrl: "http://platform-api-service:3000"
+  appEnv: "production"
+  resources:
+    requests:
+      memory: 128Mi
+    limits:
+      memory: 384Mi
+
+# -----------------------------------------------------------------------------
+# Single external entrypoint (NodePort) that path-routes to frontend and API.
+# -----------------------------------------------------------------------------
+entrypointGateway:
+  enabled: true
+  image: nginx:1.27-alpine
+  replicas: 1
+  containerPort: 8080
+  servicePort: 80
+  nodePort: 30001
+  resources:
+    requests:
+      memory: 32Mi
+    limits:
+      memory: 128Mi
+
+# -----------------------------------------------------------------------------
+# Ingress (nginx). Disabled by default because external traffic is handled by
+# `entrypointGateway` (NodePort + path routing). Keep ingress only for scenarios
+# where a dedicated ingress controller is explicitly required.
+# -----------------------------------------------------------------------------
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    api: api.eeveecodelab.local
+    front: frontend.eeveecodelab.local
+    frontWww: ""
+  tls:
+    enabled: false
+    secretName: eevee-tls-secret
+
+# -----------------------------------------------------------------------------
+# Ingress-NGINX controller subchart.
+# The controller is installed inside the same release, but its Service stays
+# cluster-internal so the VM can reach it through the private network/tunnel.
+# -----------------------------------------------------------------------------
+ingress-nginx:
+  enabled: false
+  controller:
+    scope:
+      enabled: true
+    watchIngressWithoutClass: true
+    ingressClassResource:
+      name: nginx
+      enabled: false
+      default: false
+    ingressClass: nginx
+    ingressClassByName: true
+    admissionWebhooks:
+      enabled: false
+    service:
+      type: ClusterIP
+  rbac:
+    create: false
+    scope: true
+  serviceAccount:
+    create: false
+    name: ns-admin
+
+# Optional namespace-scoped cert-manager Issuer (ClusterIssuer requires cluster
+# permissions which are usually not available — keep using Issuer per-namespace).
+certManager:
+  issuer:
+    enabled: false
+    name: letsencrypt-production
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: change-me@example.com
+    solver: http01 # http01 | cloudflare
+    cloudflare:
+      email: change-me@example.com
+      apiTokenSecretName: cloudflare-api-token-secret
+
+# Namespace-scoped egress controls for worker profiles. This deploys a local
+# HTTP CONNECT proxy and locks selected worker pods to use only that proxy plus
+# kube-dns. The proxy itself allows only *.googleapis.com and oauth endpoints.
+egressProxy:
+  enabled: true
+  image: sameersbn/squid:3.5.27-2
+  port: 3128
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
