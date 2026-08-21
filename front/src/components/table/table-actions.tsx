@@ -19,6 +19,8 @@ interface TableActionsProps {
   otherActions?: JSX.Element[];
   resourceName?: string;
   itemName?: string;
+  deleteTitle?: string;
+  deleteDescription?: string;
 }
 
 export default function TableActions({
@@ -30,6 +32,8 @@ export default function TableActions({
   otherActions = [],
   resourceName = "item",
   itemName,
+  deleteTitle,
+  deleteDescription,
 }: TableActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
   const [showUnlinkDialog, setShowUnlinkDialog] = useState<boolean>(false);
@@ -126,6 +130,8 @@ export default function TableActions({
         resourceName={resourceName}
         itemName={itemName}
         isDeleting={isDeleting}
+        title={deleteTitle}
+        description={deleteDescription}
       />
 
       <DeleteAlertDialog

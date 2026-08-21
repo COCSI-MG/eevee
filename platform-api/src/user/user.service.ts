@@ -21,19 +21,16 @@ export class UserService {
   ) {}
   async createOrReplace(createUserDto: CreateUserDto) {
     const { password, ...userData } = createUserDto;
+    const existingUser = await this.findByEmail(userData.email);
     const user: Partial<User> = {
+      ...(existingUser ?? {}),
       ...userData,
       passwordHash: HashUtils.hashPassword(password),
     };
 
-    const result = await this.userRepository.upsert(user, {
-      conflictPaths: ['email'],
-      skipUpdateIfNoValuesChanged: true,
-      upsertType: 'on-conflict-do-update',
-    });
-    const [newIdentifier] = result.identifiers;
-
-    const newUser = await this.findOne(newIdentifier.id)!;
+    const savedUser = await this.userRepository.save(user);
+    const newUser = await this.findOne(savedUser.id);
+    if (!newUser) throw new NotFoundException('Saved user not found');
 
     const response = UserHelper.toResponseDto(newUser);
 
@@ -101,6 +98,8 @@ export class UserService {
   }
 
   async updatePassword(userId: number, newPassword: string): Promise<void> {
+    const user = await this.findOne(userId);
+    if (!user) throw new NotFoundException('User not found');
     await this.userRepository.update(userId, {
       passwordHash: HashUtils.hashPassword(newPassword),
     });
@@ -116,6 +115,6 @@ export class UserService {
       throw new Error('Cannot delete admin user');
     }
 
-    return this.userRepository.delete({ id });
+    return this.userRepository.softDelete({ id });
   }
 }

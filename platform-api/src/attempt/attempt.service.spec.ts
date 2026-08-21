@@ -24,6 +24,7 @@ describe('AttemptService', () => {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       leftJoin: jest.fn().mockReturnThis(),
+      withDeleted: jest.fn().mockReturnThis(),
       clone: jest.fn(),
       orderBy: jest.fn().mockReturnThis(),
       offset: jest.fn().mockReturnThis(),

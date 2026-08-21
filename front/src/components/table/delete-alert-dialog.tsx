@@ -56,7 +56,7 @@ export default function DeleteAlertDialog({
             {isDeleting && (
               <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {isDeleting ? "Excluindo…" : "Delete"}
+            {isDeleting ? "Excluindo…" : "Excluir"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

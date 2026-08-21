@@ -86,6 +86,7 @@ export class AttemptService {
 
     const baseQb = this.attemptRepository
       .createQueryBuilder('attempt')
+      .withDeleted()
       .leftJoin('attempt.user', 'user')
       .leftJoin('attempt.assignment', 'assignment')
       .where('attempt.assignmentId = :assignmentId', {
@@ -182,6 +183,7 @@ export class AttemptService {
   findOneForAdmin(id: number) {
     return this.attemptRepository
       .createQueryBuilder('attempt')
+      .withDeleted()
       .leftJoin('attempt.user', 'user')
       .leftJoin('attempt.assignment', 'assignment')
       .where('attempt.id = :id', { id })

@@ -1,7 +1,6 @@
 import { NestMiddleware, Injectable } from '@nestjs/common';
 import * as passport from 'passport';
 import { ConfigService } from '@nestjs/config';
-import { JwtStrategy } from 'src/auth/strategies/jwt.strategy';
 import { ClsService } from 'nestjs-cls';
 
 @Injectable()
@@ -9,9 +8,7 @@ export class RequestContextMiddleware implements NestMiddleware {
   constructor(
     private readonly configService: ConfigService,
     private readonly clsService: ClsService,
-  ) {
-    passport.use(new JwtStrategy(this.configService));
-  }
+  ) {}
 
   async use(req: any, res: any, next: (error?: any) => void) {
     const isDevEnv = this.configService.get<string>('ENV') === 'local';
