@@ -168,6 +168,36 @@ describe('ClassService', () => {
     );
   });
 
+  it('returns every class for an admin regardless of enrollment', async () => {
+    requestContextService.getUser.mockReturnValue({
+      userId: 2,
+      isAdmin: true,
+    });
+    classRepository.find.mockResolvedValue([
+      {
+        id: 7,
+        name: 'Algorithms',
+        description: 'Intro class',
+      },
+      {
+        id: 8,
+        name: 'Databases',
+        description: 'Advanced class',
+      },
+    ]);
+
+    await expect(service.findAllByUser(999)).resolves.toHaveLength(2);
+
+    expect(classRepository.find).toHaveBeenCalledWith({
+      relations: [
+        'userClasses',
+        'userClasses.user',
+        'userClasses.class',
+        'assignments',
+      ],
+    });
+  });
+
   it('queries classes correctly when access is allowed', async () => {
     requestContextService.getUser.mockReturnValue({
       userId: 7,
