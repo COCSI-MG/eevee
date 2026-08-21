@@ -267,6 +267,10 @@ export class KubernetesService {
     }
 
     const initContainers = this.buildInitContainers(options);
+    const additionalContainers = this.buildInitContainers({
+      ...options,
+      initContainers: options?.additionalContainers,
+    });
     const podLabels = options?.podLabels || {};
 
     const jobManifest = {
@@ -308,6 +312,7 @@ export class KubernetesService {
                   : {}),
                 volumeMounts: volumeMounts,
               },
+              ...additionalContainers,
             ],
             volumes: volumes,
             restartPolicy: 'Never',

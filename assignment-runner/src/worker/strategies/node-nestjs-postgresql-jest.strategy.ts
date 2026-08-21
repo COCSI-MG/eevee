@@ -5,7 +5,6 @@ import { WorkerConfig } from './worker-execution-strategy';
 import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFIX } from '../worker.constants';
 import { CreateWorkerDto } from '../dto/create-worker.dto';
 import {
-  asShellCommand,
   buildWorkerPayload,
   buildNpmInstallCommand,
   buildWriteFileCommand,
@@ -53,7 +52,7 @@ export class NodeNestJsPostgresqlJestStrategy extends PostgresqlContainerStrateg
 
     commands.push('npm start');
 
-    return asShellCommand(commands);
+    return this.buildPostgresWorkerCommand(commands);
   }
 
   buildWorkerPayload(
@@ -104,6 +103,6 @@ export class NodeNestJsPostgresqlJestStrategy extends PostgresqlContainerStrateg
 
     commands.push('npm start');
 
-    return asShellCommand(commands);
+    return this.buildPostgresWorkerCommand(commands);
   }
 }

@@ -44,6 +44,7 @@ export interface KubernetesJobEnvVar {
 export interface KubernetesJobOptions {
   configMap?: KubernetesJobConfigMap[];
   initContainers?: KubernetesJobInitContainer[];
+  additionalContainers?: KubernetesJobInitContainer[];
   sharedEmptyDir?: KubernetesJobSharedEmptyDir;
   secretVolumes?: KubernetesJobSecretVolume[];
   podLabels?: Record<string, string>;
