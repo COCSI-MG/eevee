@@ -3,10 +3,14 @@ import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
 import { ExecutionRequestService } from 'src/execution/execution-request.service';
-import { buildTemplateVariablesModuleFromParams, templateVariablesLanguageForWorker } from 'src/utils/template-variables.utils';
+import {
+  buildTemplateVariablesModuleFromParams,
+  templateVariablesLanguageForWorker,
+} from 'src/utils/template-variables.utils';
 import { TestTemplateDto } from './dto/test-template.dto';
 
 const APP_FILE_EXTENSION_BY_WORKER_TYPE: Partial<Record<WorkerType, string>> = {
+  [WorkerType.JAVASCRIPT_DEFAULT]: '.js',
   [WorkerType.PYTHON_DEFAULT]: '.py',
 };
 
@@ -19,10 +23,6 @@ export class TemplateTestService {
   constructor(private readonly executionRequestService: ExecutionRequestService) {}
 
   async run(body: TestTemplateDto): Promise<WorkerResponse> {
-    const isJavascriptDefault = body.workerType === WorkerType.JAVASCRIPT_DEFAULT;
-    const fileExtension = isJavascriptDefault ? 'js' : 'ts';
-    const applicationFileName = `app.${fileExtension}`;
-    const applicationFileInTestDir = `../test/${applicationFileName}`;
     const paramSpecs = (body.paramDefs ?? []).map((d) => ({
       name: d.name,
       type: d.type,
@@ -54,13 +54,13 @@ export class TemplateTestService {
       buildTemplateVariablesModuleFromParams(
         body.params ?? {},
         paramSpecs,
-        templateVariablesLanguageForWorker(body.workerType),
+        templateVariablesLanguage,
       );
 
-      if (body.workerType !== WorkerType.PYTHON_DEFAULT) {
-        files[`../test/template-variables${templateVariablesExtension}`] =
-          templateVariablesModuleContent;
-      }
+    if (body.workerType !== WorkerType.PYTHON_DEFAULT) {
+      files[`../test/template-variables${templateVariablesExtension}`] =
+        templateVariablesModuleContent;
+    }
 
     if (body.applicationFileContent) {
       files[appFileName] = body.applicationFileContent;

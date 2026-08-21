@@ -69,7 +69,6 @@ export function TemplateTestDialog({
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
   const isJavascriptDefault = workerType === WorkerType.JAVASCRIPT_DEFAULT;
   const applicationExtension = isJavascriptDefault ? "js" : "ts";
-  const applicationLanguage = isJavascriptDefault ? "javascript" : "typescript";
 
   const defaultAppContent =
     WorkerDefaultTemplateMap[workerType] ??
