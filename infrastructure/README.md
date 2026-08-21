@@ -193,12 +193,12 @@ Verificar se as imagens estão disponíveis no minikube:
 minikube ssh "docker images | grep worker-node"
 ```
 
-### Scheduler-Api Redis
+### Platform API Redis
 
-Para que o Scheduler-Api seja executado, há necessidade de uma imagem Redis, que para este projeto é [docker-compose.yml](CEFETCodeLab-SchedulerApi\docker-compose.yml).
+Para que o Platform API seja executado, há necessidade de uma imagem Redis, que para este projeto é [docker-compose.yml](platform-api\docker-compose.yml).
 
 ```bash
-cd CEFETCodeLab-SchedulerApi
+cd platform-api
 docker compose up -d
 ```
 
@@ -213,3 +213,4 @@ CONTAINER ID   IMAGE                                 COMMAND                  CR
                                                                                code-lab-db
 c32786732975   gcr.io/k8s-minikube/kicbase:v0.0.48   "/usr/local/bin/entr…"   27 hours ago   Up 3 hours   127.0.0.1:61869->22/tcp, 127.0.0.1:61868->2376/tcp, 127.0.0.1:61871->5000/tcp, 127.0.0.1:61867->8443/tcp, 127.0.0.1:61870->32443/tcp   minikube
 ```
+

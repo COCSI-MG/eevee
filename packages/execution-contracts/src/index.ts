@@ -1,12 +1,18 @@
 export const EXECUTION_COMMAND_QUEUE = 'execution-commands';
 export const EXECUTION_RESULTS_QUEUE = 'execution-results';
+export const EXECUTION_REQUEST_QUEUE = 'execution-requests';
 
 export type ExecutionLifecycleStatus = 'running' | 'completed' | 'failed';
 
 export interface ExecutionWorkerPayload {
   applicationFileContent?: string;
-  files?: Record<string, string>;
+  files?: Record<string, string> | null;
   testFilesContent?: string[];
+  testFiles?: Array<{
+    templateId: number;
+    type: string;
+    content: string;
+  }>;
   dependencies?: string[];
   initSqlScript?: string;
   templateVariablesModuleContent?: string;
@@ -17,6 +23,26 @@ export interface ExecutionCommand {
   userId: number;
   workerType: string;
   workerData: ExecutionWorkerPayload;
+}
+
+export interface ExecutionRequest {
+  action: 'execute';
+  jobName: string;
+  workerType: string;
+  workerData: ExecutionWorkerPayload;
+}
+
+export interface ExecutionCancelRequest {
+  action: 'cancel';
+  jobName: string;
+}
+
+export type ExecutionRequestCommand = ExecutionRequest | ExecutionCancelRequest;
+
+export interface ExecutionWorkerResult {
+  completeTrace: string;
+  failures: number;
+  passes: number;
 }
 
 export type ExecutionEventName =

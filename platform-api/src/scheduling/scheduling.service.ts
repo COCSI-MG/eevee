@@ -6,7 +6,6 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
-import { WorkerService } from 'src/worker/worker.service';
 import { AttemptService } from 'src/attempt/attempt.service';
 import { AssignmentService } from 'src/assignment/assignment.service';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
@@ -18,7 +17,6 @@ import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ScorePolicyService } from './score-policy.service';
-import { SchedulingAttemptTransitionService } from './scheduling-attempt-transition.service';
 import {
   NoTemplatesForAssignmentError,
   NoTestFilesGeneratedError,
@@ -34,7 +32,7 @@ import {
 } from './entities/scheduling-preview-run.entity';
 import { Repository, In } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
-import { ExecutionEventPublisher } from 'src/execution/execution-event.publisher';
+import { ExecutionRequestService } from 'src/execution/execution-request.service';
 import { EXECUTION_COMMAND_QUEUE } from '@eevee/execution-contracts';
 
 /**
@@ -48,15 +46,13 @@ export class SchedulingService {
   private readonly logger = new Logger(SchedulingService.name);
 
   constructor(
-    private readonly workerService: WorkerService,
+    private readonly executionRequestService: ExecutionRequestService,
     private readonly attemptService: AttemptService,
     private readonly assignmentService: AssignmentService,
     private readonly scorePolicyService: ScorePolicyService,
     private readonly schedulingWorkerPreparationService: SchedulingWorkerPreparationService,
-    private readonly schedulingAttemptTransitionService: SchedulingAttemptTransitionService,
     private readonly requestContextService: RequestContextService,
     private readonly aiReportService: AiReportService,
-    private readonly executionEventPublisher: ExecutionEventPublisher,
     @InjectRepository(SchedulingPreviewRun)
     private readonly schedulingPreviewRunRepository: Repository<SchedulingPreviewRun>,
     @InjectQueue(EXECUTION_COMMAND_QUEUE) private readonly evaluationQueue: Queue,
@@ -260,7 +256,7 @@ export class SchedulingService {
     }
 
     if (previewRun.jobName) {
-      await this.workerService.cancelWorkerJob(previewRun.jobName);
+      await this.executionRequestService.cancel(previewRun.jobName);
     }
 
     await this.schedulingPreviewRunRepository.update(previewRun.id, {
@@ -329,103 +325,6 @@ export class SchedulingService {
     );
 
     return newAttempt;
-  }
-
-  /**
-   * Processes a scheduling job message.
-   *
-   * @param payload - The message containing the scheduling job details.
-   */
-  async processJobAndWait(
-    payload: CreateSchedulingJobMessageDto,
-    onStatus?: SchedulingStatusReporter,
-  ) {
-    const { attemptId } = payload;
-    this.logger.log(`Processing scheduling job for attempt ID: ${attemptId}`);
-
-    const attempt = await this.attemptService.findOne(attemptId);
-    if (!attempt) {
-      this.logger.fatal(
-        `Attempt with ID ${attemptId} not found in job processing`,
-      );
-      return;
-    }
-
-    if (attempt.status !== AttemptStatus.PENDING) {
-      this.logger.warn(
-        `Attempt with ID ${attemptId} has status ${attempt.status} and will not be processed`,
-      );
-      return;
-    }
-
-    this.logger.log(
-      `Found attempt: ${JSON.stringify(attempt)}`,
-      `ATTEMPT_ID: ${attempt.id}`,
-    );
-
-    await this.executionEventPublisher.publishStarted(attempt.id, attempt.userId);
-
-    try {
-      const workerResult = await this.prepareAndRunWorker({
-        assignment: attempt.assignment,
-        baseWorkerData: {
-          ...payload.workerData,
-        },
-        attemptId: attempt.id,
-        jobName: `attempt-${attempt.id}-worker`,
-      });
-      if (!workerResult) {
-        await this.executionEventPublisher.publishFailed(
-          attempt.id,
-          attempt.userId,
-          'No test files available for execution.',
-        );
-        return;
-      }
-
-      this.logger.log(
-        `Worker result: ${JSON.stringify(workerResult)}`,
-        `ATTEMPT_ID: ${attempt.id}`,
-      );
-
-      const score = this.scorePolicyService.calculateScore(workerResult);
-      const isAcceptable = this.scorePolicyService.isAcceptable(score);
-
-      this.logger.log(
-        `Score: ${score}, Is Acceptable: ${isAcceptable}`,
-        `ATTEMPT_ID: ${attempt.id}`,
-      );
-
-      await this.executionEventPublisher.publishCompleted(
-        attempt.id,
-        attempt.userId,
-        {
-          isAcceptable,
-          score,
-          report: workerResult.completeTrace,
-          fails: workerResult.failures,
-          passes: workerResult.passes,
-        },
-      );
-
-      this.logger.log(
-        `Attempt updated successfully with status: ${AttemptStatus.COMPLETED}`,
-        `ATTEMPT_ID: ${attempt.id}`,
-      );
-    } catch (err) {
-      const errMessage = err instanceof Error ? err.message : 'Unknown error';
-
-      this.logger.fatal(
-        `Worker creation failed for attempt ID ${attempt.id}: ${errMessage}`,
-        `ATTEMPT_ID: ${attempt.id}`,
-      );
-
-      await this.executionEventPublisher.publishFailed(
-        attempt.id,
-        attempt.userId,
-        errMessage,
-      );
-    }
   }
 
   async requestAiFeedback(attemptId: number): Promise<void> {
@@ -508,11 +407,11 @@ export class SchedulingService {
       return null;
     }
 
-    return this.workerService.createWorkerWithInitContainer(
+    return this.executionRequestService.execute({
       jobName,
-      assignment.workerType,
+      workerType: assignment.workerType,
       workerData,
-    );
+    });
   }
 
   private async generateRefinedReport(

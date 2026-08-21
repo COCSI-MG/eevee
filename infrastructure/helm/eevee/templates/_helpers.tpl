@@ -19,7 +19,7 @@ imagePullSecrets:
 {{- end -}}
 
 {{/*
-Standard env block used by scheduler-api and queue-worker. Both consume
+Standard application env block used by Platform API workloads and Assignment Runner.
 DB_* values from the ConfigMap but expose them to the app as PG_*.
 */}}
 {{- define "eevee.appEnv" -}}
@@ -76,7 +76,7 @@ DB_* values from the ConfigMap but expose them to the app as PG_*.
 {{- end -}}
 
 {{/*
-Worker image env vars consumed by scheduler-api and queue-worker. These
+Worker image env vars consumed by Assignment Runner. These
 override the GHCR defaults baked into worker.constants.ts.
 */}}
 {{- define "eevee.workerImageEnv" -}}
@@ -101,7 +101,7 @@ override the GHCR defaults baked into worker.constants.ts.
 {{- end -}}
 
 {{/*
-Env vars consumed by scheduler-api / queue-worker to configure the Kubernetes
+Env vars consumed by Assignment Runner to configure the Kubernetes
 Jobs they spawn at runtime (namespace, nodeSelector, pull secrets, etc.).
 */}}
 {{- define "eevee.jobRuntimeEnv" -}}

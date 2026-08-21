@@ -3,6 +3,7 @@ import { BullModule } from '@nestjs/bullmq';
 import {
   EXECUTION_COMMAND_QUEUE,
   EXECUTION_RESULTS_QUEUE,
+  EXECUTION_REQUEST_QUEUE,
 } from '@eevee/execution-contracts';
 
 @Module({
@@ -14,9 +15,6 @@ import {
       },
     }),
     BullModule.registerQueue(
-      {
-        name: 'scheduling-queue',
-      },
       {
         name: 'preview-queue',
       },
@@ -31,6 +29,9 @@ import {
       },
       {
         name: EXECUTION_COMMAND_QUEUE,
+      },
+      {
+        name: EXECUTION_REQUEST_QUEUE,
       },
     ),
   ],

@@ -31,9 +31,6 @@ spec:
       labels:
         app: platform-api
     spec:
-      {{- if .Values.serviceAccount.name }}
-      serviceAccountName: {{ .Values.serviceAccount.name }}
-      {{- end }}
       containers:
         - name: platform-api
           image: "{{ .Values.platformApi.image.repository }}:{{ .Values.platformApi.image.tag }}"
@@ -44,8 +41,6 @@ spec:
             - name: ENV
               value: {{ .Values.platformApi.env | quote }}
             {{- include "eevee.appEnv" . | nindent 12 }}
-            {{- include "eevee.workerImageEnv" . | nindent 12 }}
-            {{- include "eevee.jobRuntimeEnv" . | nindent 12 }}
             - name: PORT
               value: {{ .Values.platformApi.containerPort | quote }}
             - name: JWT_SECRET
@@ -55,6 +50,23 @@ spec:
                   key: JWT_SECRET
           resources:
             {{- toYaml .Values.platformApi.resources | nindent 12 }}
+        {{- if .Values.platformApi.backgroundWorker.enabled }}
+        - name: platform-background-worker
+          image: "{{ .Values.platformApi.image.repository }}:{{ .Values.platformApi.image.tag }}"
+          imagePullPolicy: {{ .Values.platformApi.image.pullPolicy }}
+          args: ["start:worker:prod"]
+          env:
+            - name: ENV
+              value: {{ .Values.platformApi.env | quote }}
+            {{- include "eevee.appEnv" . | nindent 12 }}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.name }}
+                  key: JWT_SECRET
+          resources:
+            {{- toYaml .Values.platformApi.backgroundWorker.resources | nindent 12 }}
+        {{- end }}
       {{- include "eevee.imagePullSecrets" . | nindent 6 }}
       {{- include "eevee.nodeSelector" . | nindent 6 }}
 {{- end }}

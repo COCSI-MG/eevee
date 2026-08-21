@@ -3,8 +3,6 @@ import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SchedulingModule } from './scheduling/scheduling.module';
-import { WorkerModule } from './worker/worker.module';
-import { KubernetesModule } from './kubernetes/kubernetes.module';
 import { UserModule } from './user/user.module';
 import { ClassModule } from './class/class.module';
 import { ConfigModule } from '@nestjs/config';
@@ -35,7 +33,6 @@ import { MailModule } from './mail/mail.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { TemplateTestModule } from './template-test/template-test.module';
 import { AnswerKeyModule } from './answer-key/answer-key.module';
-import { ExecutionPlatformEventsModule } from './execution/execution-platform-events.module';
 import { ExamModule } from './exam/exam.module';
 @Module({
   imports: [
@@ -60,8 +57,6 @@ import { ExamModule } from './exam/exam.module';
     NestScheduleModule.forRoot(),
     RequestContextModule,
     SchedulingModule,
-    WorkerModule,
-    KubernetesModule,
     AttemptModule,
     UserModule,
     ClassModule,
@@ -79,7 +74,6 @@ import { ExamModule } from './exam/exam.module';
     InterviewResponseModule,
     MailModule,
     RealtimeModule,
-    ExecutionPlatformEventsModule,
     TemplateTestModule,
     AnswerKeyModule,
     ExamModule,

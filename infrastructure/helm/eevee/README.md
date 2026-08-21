@@ -7,8 +7,9 @@ single release:
 | --------------- | ------------------------------------------------- |
 | Postgres        | Deployment + Service + PVC                        |
 | Redis           | Deployment + Service                              |
-| Scheduler API   | Deployment + Service                              |
-| Queue Worker    | Deployment + RBAC (ServiceAccount/Role)           |
+| Platform API    | Deployment + Service                              |
+| Platform worker | Sidecar process in the Platform API Deployment     |
+| Assignment Runner | Deployment + RBAC (ServiceAccount/Role)         |
 | Frontend        | Deployment + Service                              |
 | Entrypoint      | Nginx gateway + NodePort Service                  |
 | Ingress (nginx) | Ingress with optional TLS                         |
@@ -60,7 +61,7 @@ Key names must match exactly: `DB_PASSWORD`, `JWT_SECRET`, `GROQ_API_KEY`.
 The secret name (`eevee-secrets`) must match `secrets.name` in values.
 
 > **Rotating a secret:** edit it with `kubectl edit secret eevee-secrets`
-> (or recreate it) and then `kubectl rollout restart deploy/scheduler-api-deployment deploy/queue-worker-deployment` to pick up the new value.
+> (or recreate it) and then `kubectl rollout restart deploy/platform-api-deployment deploy/assignment-runner-deployment` to pick up the new value.
 
 ### 3. Install / upgrade the release
 
@@ -132,14 +133,14 @@ If you change the external setup, update:
 
 ## Node pinning
 
-All pods — including worker Jobs spawned by the scheduler at runtime —
+All pods — including worker Jobs spawned by Assignment Runner at runtime —
 are pinned to a single node via `nodeSelector.kubernetes.io/hostname`
 (default `whx-rn`). Change `nodeSelector` in values to retarget, or set
 it to `{}` to schedule freely.
 
 ## Overriding worker images
 
-The scheduler-api reads worker image names from environment variables,
+Assignment Runner reads worker image names from environment variables,
 so new image tags don't require a code change — just bump
 `workerImages.*` in values and `helm upgrade`. Defaults point to the
 COCSI-MG GHCR packages:

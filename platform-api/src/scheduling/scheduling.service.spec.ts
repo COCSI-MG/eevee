@@ -4,12 +4,11 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { SchedulingService } from './scheduling.service';
-import { WorkerService } from 'src/worker/worker.service';
+import { ExecutionRequestService } from 'src/execution/execution-request.service';
 import { AttemptService } from 'src/attempt/attempt.service';
 import { AssignmentService } from 'src/assignment/assignment.service';
 import { ScorePolicyService } from './score-policy.service';
 import { SchedulingWorkerPreparationService } from './scheduling-worker-preparation.service';
-import { SchedulingAttemptTransitionService } from './scheduling-attempt-transition.service';
 import { Queue } from 'bullmq';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
@@ -20,16 +19,14 @@ import {
 } from './entities/scheduling-preview-run.entity';
 import { Repository } from 'typeorm';
 import { AiReportService } from 'src/ai-report/ai-report.abstract';
-import { ExecutionEventPublisher } from 'src/execution/execution-event.publisher';
 
 describe('SchedulingService', () => {
   let service: SchedulingService;
-  let workerService: jest.Mocked<
+  let executionRequestService: jest.Mocked<
     Pick<
-      WorkerService,
-      | 'createWorkerWithInitContainer'
-      | 'createSynchronousWorker'
-      | 'cancelWorkerJob'
+      ExecutionRequestService,
+      | 'execute'
+      | 'cancel'
     >
   >;
   let attemptService: jest.Mocked<
@@ -54,15 +51,6 @@ describe('SchedulingService', () => {
   let schedulingWorkerPreparationService: jest.Mocked<
     Pick<SchedulingWorkerPreparationService, 'prepare'>
   >;
-  let schedulingAttemptTransitionService: jest.Mocked<
-    Pick<
-      SchedulingAttemptTransitionService,
-      | 'markRunning'
-      | 'markFailedNoTests'
-      | 'markCompleted'
-      | 'markFailedWorkerError'
-    >
-  >;
   let schedulingQueue: jest.Mocked<Pick<Queue, 'add'>>;
   let previewQueue: jest.Mocked<Pick<Queue, 'add'>>;
   let requestContextService: jest.Mocked<
@@ -73,18 +61,11 @@ describe('SchedulingService', () => {
   >;
   let aiReportService: jest.Mocked<Pick<AiReportService, 'refineReport'>>;
   let aiReportQueue: jest.Mocked<Pick<Queue, 'add'>>;
-  let executionEventPublisher: jest.Mocked<
-    Pick<
-      ExecutionEventPublisher,
-      'publishStarted' | 'publishCompleted' | 'publishFailed'
-    >
-  >;
 
   beforeEach(() => {
-    workerService = {
-      createWorkerWithInitContainer: jest.fn(),
-      createSynchronousWorker: jest.fn(),
-      cancelWorkerJob: jest.fn(),
+    executionRequestService = {
+      execute: jest.fn(),
+      cancel: jest.fn(),
     };
 
     attemptService = {
@@ -110,13 +91,6 @@ describe('SchedulingService', () => {
 
     schedulingWorkerPreparationService = {
       prepare: jest.fn(),
-    };
-
-    schedulingAttemptTransitionService = {
-      markRunning: jest.fn(),
-      markFailedNoTests: jest.fn(),
-      markCompleted: jest.fn(),
-      markFailedWorkerError: jest.fn(),
     };
 
     schedulingQueue = {
@@ -145,22 +119,14 @@ describe('SchedulingService', () => {
       add: jest.fn(),
     };
 
-    executionEventPublisher = {
-      publishStarted: jest.fn(),
-      publishCompleted: jest.fn(),
-      publishFailed: jest.fn(),
-    };
-
     service = new SchedulingService(
-      workerService as unknown as WorkerService,
+      executionRequestService as unknown as ExecutionRequestService,
       attemptService as unknown as AttemptService,
       assignmentService as unknown as AssignmentService,
       scorePolicyService as unknown as ScorePolicyService,
       schedulingWorkerPreparationService as unknown as SchedulingWorkerPreparationService,
-      schedulingAttemptTransitionService as unknown as SchedulingAttemptTransitionService,
       requestContextService as unknown as RequestContextService,
       aiReportService as unknown as AiReportService,
-      executionEventPublisher as unknown as ExecutionEventPublisher,
       schedulingPreviewRunRepository as unknown as Repository<SchedulingPreviewRun>,
       schedulingQueue as unknown as Queue,
       previewQueue as unknown as Queue,
@@ -187,7 +153,7 @@ describe('SchedulingService', () => {
       files: { 'index.ts': 'console.log(1);' },
       dependencies: ['jest'],
     });
-    workerService.createWorkerWithInitContainer.mockResolvedValue({
+    executionRequestService.execute.mockResolvedValue({
       passes: 3,
       failures: 1,
       completeTrace: 'trace',
@@ -202,8 +168,7 @@ describe('SchedulingService', () => {
     });
 
     expect(schedulingWorkerPreparationService.prepare).toHaveBeenCalled();
-    expect(workerService.createWorkerWithInitContainer).toHaveBeenCalled();
-    expect(workerService.createSynchronousWorker).not.toHaveBeenCalled();
+    expect(executionRequestService.execute).toHaveBeenCalled();
     expect(attemptService.create).not.toHaveBeenCalled();
     expect(result).toEqual({
       assignmentId: 10,
@@ -351,7 +316,7 @@ describe('SchedulingService', () => {
       }),
     );
     expect(schedulingWorkerPreparationService.prepare).not.toHaveBeenCalled();
-    expect(workerService.createWorkerWithInitContainer).not.toHaveBeenCalled();
+    expect(executionRequestService.execute).not.toHaveBeenCalled();
   });
 
   it('does not overwrite a cancelled preview run with completed status', async () => {
@@ -365,7 +330,7 @@ describe('SchedulingService', () => {
     schedulingWorkerPreparationService.prepare.mockResolvedValue({
       files: { 'index.ts': 'console.log(1);' },
     });
-    workerService.createWorkerWithInitContainer.mockResolvedValue({
+    executionRequestService.execute.mockResolvedValue({
       passes: 3,
       failures: 1,
       completeTrace: 'trace',
@@ -491,39 +456,5 @@ describe('SchedulingService', () => {
     expect(attemptService.update).not.toHaveBeenCalled();
   });
 
-  it('marks attempt as failed worker error without rethrowing', async () => {
-    attemptService.findOne.mockResolvedValue({
-      id: 31,
-      userId: 42,
-      assignment: {
-        id: 10,
-        workerType: WorkerType.NODE_DEFAULT,
-        assignmentTemplates: [{}],
-      },
-      status: AttemptStatus.PENDING,
-    } as never);
-
-    schedulingWorkerPreparationService.prepare.mockRejectedValue(
-      new Error('worker crash'),
-    );
-
-    await expect(
-      service.processJobAndWait({
-        attemptId: 31,
-        userId: 42,
-        workerType: WorkerType.NODE_DEFAULT,
-        workerData: {
-          applicationFileContent: '',
-          files: { 'src/index.ts': 'content' },
-        },
-      }),
-    ).resolves.toBeUndefined();
-
-    expect(executionEventPublisher.publishStarted).toHaveBeenCalledWith(31, 42);
-    expect(executionEventPublisher.publishFailed).toHaveBeenCalledWith(
-      31,
-      42,
-      'worker crash',
-    );
-  });
 });
+

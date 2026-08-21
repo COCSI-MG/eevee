@@ -1,4 +1,4 @@
-name: Deploy Scheduler API
+name: Deploy Platform API
 
 on:
     push:
@@ -6,11 +6,11 @@ on:
         - main
         paths:
         - 'platform-api/**'
-        - '.github/workflows/deploy-scheduler-api.yaml'
+        - '.github/workflows/deploy-platform-api.yaml'
 
 env:
     REGISTRY: ghcr.io
-    SCHEDULER_API_IMAGE: ${{ vars.SCHEDULER_API_IMAGE }}
+    PLATFORM_API_IMAGE: ${{ vars.PLATFORM_API_IMAGE }}
 
 jobs:
     build-and-deploy:
@@ -33,8 +33,8 @@ jobs:
                 context: ./platform-api
                 push: true
                 tags: |
-                    ${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:latest
-                    ${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }}
+                    ${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:latest
+                    ${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }}
 
             - name: Configurar kubectl
               uses: azure/setup-kubectl@v3
@@ -47,7 +47,6 @@ jobs:
                 echo "${KUBE_CONFIG_DATA}" | base64 --decode > $HOME/.kube/config
                 chmod 600 $HOME/.kube/config
 
-            - name: Atualiza imagem do scheduler-api e reinicia workloads
+            - name: Atualiza Platform API e seus workers
               run: |
-                kubectl set image deployment/scheduler-api-deployment scheduler-api=${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }} -n default
-                kubectl set image deployment/queue-worker-deployment queue-worker=${{ env.REGISTRY }}/${{ env.SCHEDULER_API_IMAGE }}:${{ github.sha }} -n default
+                kubectl set image deployment/platform-api-deployment platform-api=${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }} platform-background-worker=${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }} -n default

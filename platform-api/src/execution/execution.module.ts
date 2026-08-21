@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { BullMQModule } from 'src/bullmq/bullmq.module';
-import { ExecutionEventPublisher } from './execution-event.publisher';
+import { ExecutionRequestService } from './execution-request.service';
 
 @Module({
   imports: [BullMQModule],
-  providers: [ExecutionEventPublisher],
-  exports: [ExecutionEventPublisher],
+  providers: [ExecutionRequestService],
+  exports: [ExecutionRequestService],
 })
 export class ExecutionModule {}

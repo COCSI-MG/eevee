@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "cefet-codelab-schedulerapi.fullname" . }}
+  name: {{ include "cefet-codelab-platform-api.fullname" . }}
   labels:
-    {{- include "cefet-codelab-schedulerapi.labels" . | nindent 4 }}
+    {{- include "cefet-codelab-platform-api.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "cefet-codelab-schedulerapi.fullname" . }}
+    name: {{ include "cefet-codelab-platform-api.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:
@@ -30,3 +30,4 @@ spec:
           averageUtilization: {{ .Values.autoscaling.targetMemoryUtilizationPercentage }}
     {{- end }}
 {{- end }}
+

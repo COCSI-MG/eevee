@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "cefet-codelab-schedulerapi.fullname" . }}
+  name: {{ include "cefet-codelab-platform-api.fullname" . }}
   labels:
-    {{- include "cefet-codelab-schedulerapi.labels" . | nindent 4 }}
+    {{- include "cefet-codelab-platform-api.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -35,9 +35,10 @@ spec:
             {{- end }}
             backend:
               service:
-                name: {{ include "cefet-codelab-schedulerapi.fullname" $ }}
+                name: {{ include "cefet-codelab-platform-api.fullname" $ }}
                 port:
                   number: {{ $.Values.service.port }}
           {{- end }}
     {{- end }}
 {{- end }}
+

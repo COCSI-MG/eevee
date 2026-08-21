@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
-import { WorkerService } from 'src/worker/worker.service';
+import { ExecutionRequestService } from 'src/execution/execution-request.service';
 import { buildTemplateVariablesModuleFromParams } from 'src/utils/template-variables.utils';
 import { TestTemplateDto } from './dto/test-template.dto';
 
@@ -16,7 +16,7 @@ const APP_FILE_EXTENSION_DEFAULT = '.ts';
 export class TemplateTestService {
   private readonly logger = new Logger(TemplateTestService.name);
 
-  constructor(private readonly workerService: WorkerService) {}
+  constructor(private readonly executionRequestService: ExecutionRequestService) {}
 
   async run(body: TestTemplateDto): Promise<WorkerResponse> {
     const paramSpecs = (body.paramDefs ?? []).map((d) => ({
@@ -65,10 +65,10 @@ export class TemplateTestService {
       jobName,
     });
 
-    return this.workerService.createWorkerWithInitContainer(
+    return this.executionRequestService.execute({
       jobName,
-      body.workerType,
+      workerType: body.workerType,
       workerData,
-    );
+    });
   }
 }

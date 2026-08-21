@@ -95,6 +95,13 @@ platformApi:
       memory: 128Mi
     limits:
       memory: 384Mi
+  backgroundWorker:
+    enabled: true
+    resources:
+      requests:
+        memory: 128Mi
+      limits:
+        memory: 384Mi
 
 # -----------------------------------------------------------------------------
 # Assignment Runner (BullMQ consumer)
@@ -118,15 +125,14 @@ assignmentRunner:
     # `serviceAccount.name` below instead.
     create: false
 
-# ServiceAccount used by platform-api and assignment-runner. The default reuses
-# the `ns-admin` SA that already exists in the eevee-cefetrj namespace and
-# has Jobs/Pods permissions. Set name="" to use the pod's default SA.
+# ServiceAccount used only by assignment-runner. Platform API workloads use the
+# namespace's default SA and do not receive Jobs/Pods permissions.
 serviceAccount:
   name: ns-admin
 
 # -----------------------------------------------------------------------------
 # Worker job images used by the assignment-runner at runtime to spawn
-# Kubernetes Jobs). Each value is consumed as an env var by both deployments.
+# Kubernetes Jobs). These values are consumed only by assignment-runner.
 # -----------------------------------------------------------------------------
 workerImages:
   bootstrap: ghcr.io/cocsi-mg/eevee-worker-bootstrap:develop

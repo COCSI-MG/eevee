@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { WorkerModule } from 'src/worker/worker.module';
+import { ExecutionModule } from 'src/execution/execution.module';
 import { TemplateTestController } from './template-test.controller';
 import { TemplateTestService } from './template-test.service';
 
 @Module({
-  imports: [WorkerModule],
+  imports: [ExecutionModule],
   controllers: [TemplateTestController],
   providers: [TemplateTestService],
 })

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { CodeEvaluatorEngineModule } from './execution/execution-orchestrator.module';
+import { EXECUTION_REQUEST_QUEUE } from '@eevee/execution-contracts';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { CodeEvaluatorEngineModule } from './execution/execution-orchestrator.mo
         port: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
       },
     }),
+    BullModule.registerQueue({ name: EXECUTION_REQUEST_QUEUE }),
     CodeEvaluatorEngineModule,
   ],
 })

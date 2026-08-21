@@ -1,22 +1,22 @@
 import { TemplateTestService } from './template-test.service';
-import { WorkerService } from 'src/worker/worker.service';
+import { ExecutionRequestService } from 'src/execution/execution-request.service';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
 
 describe('TemplateTestService', () => {
   let service: TemplateTestService;
-  let workerService: jest.Mocked<Pick<WorkerService, 'createWorkerWithInitContainer'>>;
+  let executionRequestService: jest.Mocked<Pick<ExecutionRequestService, 'execute'>>;
 
   beforeEach(() => {
-    workerService = {
-      createWorkerWithInitContainer: jest.fn().mockResolvedValue({
+    executionRequestService = {
+      execute: jest.fn().mockResolvedValue({
         passes: 2,
         failures: 0,
         completeTrace: 'Tests: 2 passed, 2 total',
       }),
     };
     service = new TemplateTestService(
-      workerService as unknown as WorkerService,
+      executionRequestService as unknown as ExecutionRequestService,
     );
   });
 
@@ -27,11 +27,11 @@ describe('TemplateTestService', () => {
       applicationFileContent: 'export const sum = (a, b) => a + b;',
     });
 
-    const call = workerService.createWorkerWithInitContainer.mock.calls[0];
-    expect(call[0]).toMatch(/^template-test-preview-\d+$/);
-    expect(call[1]).toBe(WorkerType.NODE_DEFAULT);
+    const call = executionRequestService.execute.mock.calls[0];
+    expect(call[0].jobName).toMatch(/^template-test-preview-\d+$/);
+    expect(call[0].workerType).toBe(WorkerType.NODE_DEFAULT);
 
-    const workerData = call[2];
+    const workerData = call[0].workerData;
     // files go to srcPath (/app/src). The bootstrap resolves the `..` so
     // `../test/app.ts` lands at /app/test/app.ts.
     expect(workerData.files).toEqual({
@@ -54,8 +54,8 @@ describe('TemplateTestService', () => {
       files: { 'src/index.ts': 'export const x = 1;' },
     });
 
-    const call = workerService.createWorkerWithInitContainer.mock.calls[0];
-    const workerData = call[2];
+    const call = executionRequestService.execute.mock.calls[0];
+    const workerData = call[0].workerData;
     expect(workerData.files).toEqual({
       'src/index.ts': 'export const x = 1;',
       'app.ts': 'export const app = 1;',
@@ -71,8 +71,8 @@ describe('TemplateTestService', () => {
       files: { 'src/index.ts': 'export const x = 1;' },
     });
 
-    const call = workerService.createWorkerWithInitContainer.mock.calls[0];
-    const workerData = call[2];
+    const call = executionRequestService.execute.mock.calls[0];
+    const workerData = call[0].workerData;
     expect(workerData.files).toEqual({ 'src/index.ts': 'export const x = 1;' });
     expect(workerData.testFilesContent).toEqual(['test("a", () => {});']);
   });
@@ -85,8 +85,8 @@ describe('TemplateTestService', () => {
       dependencies: ['lodash'],
     });
 
-    const call = workerService.createWorkerWithInitContainer.mock.calls[0];
-    expect(call[2].dependencies).toEqual(['lodash']);
+    const call = executionRequestService.execute.mock.calls[0];
+    expect(call[0].workerData.dependencies).toEqual(['lodash']);
   });
 
   it('generates a non-empty templateVariablesModuleContent with the params supplied', async () => {
@@ -101,8 +101,8 @@ describe('TemplateTestService', () => {
       ],
     });
 
-    const call = workerService.createWorkerWithInitContainer.mock.calls[0];
-    const generated = call[2].templateVariablesModuleContent ?? '';
+    const call = executionRequestService.execute.mock.calls[0];
+    const generated = call[0].workerData.templateVariablesModuleContent ?? '';
     expect(generated).toContain('"name": "Alice"');
     expect(generated).toContain('"count": 3');
     expect(generated).toContain('export const vars');
@@ -121,3 +121,4 @@ describe('TemplateTestService', () => {
     });
   });
 });
+

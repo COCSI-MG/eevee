@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "cefet-codelab-schedulerapi.fullname" . }}
+  name: {{ include "cefet-codelab-platform-api.fullname" . }}
   labels:
-    {{- include "cefet-codelab-schedulerapi.labels" . | nindent 4 }}
+    {{- include "cefet-codelab-platform-api.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "cefet-codelab-schedulerapi.selectorLabels" . | nindent 6 }}
+      {{- include "cefet-codelab-platform-api.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "cefet-codelab-schedulerapi.labels" . | nindent 8 }}
+        {{- include "cefet-codelab-platform-api.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -27,7 +27,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "cefet-codelab-schedulerapi.serviceAccountName" . }}
+      serviceAccountName: {{ include "cefet-codelab-platform-api.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -66,3 +66,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+
