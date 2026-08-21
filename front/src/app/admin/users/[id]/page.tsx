@@ -19,19 +19,45 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { UsersService } from "@/app/integration/scheduler-api/user";
-import { UpsertUser } from "@/app/interface/scheduler-api/user";
+import {
+  CreateUserRequest,
+  UpdateUserRequest,
+} from "@/app/interface/scheduler-api/user";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import QueryErrorState from "@/components/shared/query-error-state";
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MIN_LENGTH_MESSAGE,
+} from "@/app/admin/users/constants";
 
-const usersUpsertSchema = Yup.object().shape({
-  name: Yup.string().required("Nome é obrigatório"),
-  email: Yup.string().email("E-mail inválido").required("E-mail é obrigatório"),
-  password: Yup.string()
-    .min(8, "A senha deve ter pelo menos 8 caracteres")
-    .required("Senha é obrigatória"),
-  isAdmin: Yup.boolean().required(),
-});
+export interface UserFormValues {
+  name: string;
+  email: string;
+  password: string;
+  isAdmin: boolean;
+}
+
+const buildUsersSchema = (isNewUser: boolean) =>
+  Yup.object().shape({
+    name: Yup.string().required("Nome é obrigatório"),
+    email: Yup.string()
+      .email("E-mail inválido")
+      .required("E-mail é obrigatório"),
+    password: isNewUser
+
+      ? Yup.string()
+          .min(PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH_MESSAGE)
+          .required("Senha é obrigatória")
+
+      : Yup.string().test(
+          "optional-password-length",
+          PASSWORD_MIN_LENGTH_MESSAGE,
+          (password) =>
+            !password || password.length >= PASSWORD_MIN_LENGTH,
+        ),
+    isAdmin: Yup.boolean().required(),
+  });
 
 export default function UserEditPage() {
   const router = useRouter();
@@ -41,14 +67,30 @@ export default function UserEditPage() {
   const isNewUser = id === "new";
 
   const {
-    mutateAsync: upsertUser,
+    mutateAsync: saveUser,
   } = useMutation({
     mutationKey: ["adminUsers", id],
-    mutationFn: (user: UpsertUser) => {
+    mutationFn: (values: UserFormValues) => {
+      const userData = {
+        name: values.name,
+        email: values.email,
+        isAdmin: values.isAdmin,
+      };
+
       if (isNewUser) {
-        return UsersService.upsertUser(user);
+        const createUserRequest: CreateUserRequest = {
+          ...userData,
+          password: values.password,
+        };
+        return UsersService.createUser(createUserRequest);
       }
-      return UsersService.upsertUser({ ...user, id: Number(id) });
+
+      const updateUserRequest: UpdateUserRequest = {
+        ...userData,
+        ...(values.password ? { password: values.password } : {}),
+      };
+
+      return UsersService.updateUser(Number(id), updateUserRequest);
     },
     onSuccess: () => {
       toast({
@@ -60,27 +102,17 @@ export default function UserEditPage() {
     },
   });
 
-  const formik = useFormik({
+  const formik = useFormik<UserFormValues>({
     initialValues: {
       name: "",
       email: "",
       password: "",
       isAdmin: false,
     },
-    validationSchema: usersUpsertSchema,
+    validationSchema: buildUsersSchema(isNewUser),
     enableReinitialize: true,
-    onSubmit: (values) => {
-      if (!values.password && isNewUser) {
-        formik.setFieldError("password", "Senha é obrigatória");
-        return;
-      }
-
-      const userData: UpsertUser = {
-        ...values,
-        id: isNewUser ? 0 : Number(id),
-        passwordHash: values.password,
-      };
-      upsertUser(userData);
+    onSubmit: async (values) => {
+      await saveUser(values);
     },
   });
 
@@ -192,7 +224,11 @@ export default function UserEditPage() {
                 id="password"
                 type="password"
                 {...formik.getFieldProps("password")}
-                placeholder="Insira a senha"
+                placeholder={
+                  isNewUser
+                    ? "Insira a senha"
+                    : "Deixe em branco para manter a senha atual"
+                }
                 minLength={8}
               />
               {formik.errors.password && formik.touched.password && (

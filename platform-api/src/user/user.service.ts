@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Brackets, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
-import { CreateOrUpdateUserDto } from './dto/request/create-or-update-user.dto';
+import { CreateUserDto } from './dto/request/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { HashUtils } from 'src/utils/hash.utils';
 import { UserHelper } from './user.helper';
@@ -11,6 +11,7 @@ import {
   buildPaginationMeta,
   buildPaginationParams,
 } from 'src/common/pagination/pagination';
+import { UpdateUserDto } from './dto/request/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -18,10 +19,11 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
-  async createOrReplace(createUserDto: CreateOrUpdateUserDto) {
+  async createOrReplace(createUserDto: CreateUserDto) {
+    const { password, ...userData } = createUserDto;
     const user: Partial<User> = {
-      ...createUserDto,
-      passwordHash: HashUtils.hashPassword(createUserDto.password),
+      ...userData,
+      passwordHash: HashUtils.hashPassword(password),
     };
 
     const result = await this.userRepository.upsert(user, {
@@ -36,6 +38,27 @@ export class UserService {
     const response = UserHelper.toResponseDto(newUser);
 
     return response;
+  }
+
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const existingUser = await this.findOne(id);
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const { password, ...userData } = updateUserDto;
+    const userUpdates: Partial<User> = { ...userData };
+
+    if (password) {
+      userUpdates.passwordHash = HashUtils.hashPassword(password);
+    }
+
+    if (Object.keys(userUpdates).length > 0) {
+      await this.userRepository.update(id, userUpdates);
+    }
+
+    const updatedUser = (await this.findOne(id))!;
+    return UserHelper.toResponseDto(updatedUser);
   }
 
   findAll() {
