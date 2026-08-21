@@ -60,7 +60,7 @@ build-nestjs: ## Build the Nest.js default worker Docker image
 
 build-grpc: ## Build the gRPC worker Docker image
 	@echo "Building gRPC worker Docker image..."
-	docker buildx build -t $(IMAGE_PREFIX)$(GRPC_IMAGE):$(IMAGE_TAG) -f ./node/grpc/Dockerfile ./node/grpc
+	docker buildx build -t $(IMAGE_PREFIX)$(GRPC_IMAGE):$(IMAGE_TAG) -f ./node/grpc/Dockerfile .
 	echo "gRPC worker Docker image built successfully."
 
 build-python-default: ## Build the Python pytest worker Docker image

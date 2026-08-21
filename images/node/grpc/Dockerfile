@@ -10,11 +10,11 @@ FROM node:22-bullseye-slim
 
 WORKDIR /app
 
-COPY ./grpc/package*.json .
+COPY ./node/grpc/package*.json .
 
 RUN npm ci
 
-COPY ./grpc .
+COPY ./node/grpc .
 
 COPY --from=bootstrap-builder /build/dist/bootstrap.js /app/bootstrap/bootstrap.js
 
