@@ -15,7 +15,7 @@ export function buildPasswordResetEmailHtml(resetUrl: string): string {
           <tr>
             <td style="padding: 40px 32px 0 32px;">
               <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #3B82F6;">EEVEE</h1>
-              <p style="margin: 4px 0 0 0; font-size: 14px; color: #71717a;">CEFET Code Lab</p>
+              <p style="margin: 4px 0 0 0; font-size: 14px; color: #71717a;">EEVEE Code Lab</p>
             </td>
           </tr>
           <tr>
@@ -33,7 +33,7 @@ export function buildPasswordResetEmailHtml(resetUrl: string): string {
             <td style="padding: 0 32px 32px 32px;">
               <hr style="border: none; border-top: 1px solid #e4e4e7; margin: 0 0 16px 0;">
               <p style="margin: 0; font-size: 12px; color: #a1a1aa;">Este link expira em <strong style="color: #52525b;">1 hora</strong>. Se você não solicitou esta redefinição, ignore este e-mail.</p>
-              <p style="margin: 12px 0 0 0; font-size: 12px; color: #a1a1aa;">&copy; ${new Date().getFullYear()} EEVEE CEFET Code Lab</p>
+              <p style="margin: 12px 0 0 0; font-size: 12px; color: #a1a1aa;">&copy; ${new Date().getFullYear()} EEVEE Code Lab</p>
             </td>
           </tr>
         </table>

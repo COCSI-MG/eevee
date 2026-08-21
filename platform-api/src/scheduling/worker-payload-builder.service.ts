@@ -4,8 +4,9 @@ import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { WorkerTestFile } from 'src/worker/worker.interfaces';
 
-const WORKER_PATHS: Partial<Record<WorkerType, { srcPath: string; testPath: string }>> = {
+const WORKER_PATHS: Record<WorkerType,{ srcPath: string; testPath: string }> = {
   [WorkerType.NODE_DEFAULT]: { srcPath: '/app/src', testPath: '/app/test' },
+  [WorkerType.JAVASCRIPT_DEFAULT]: { srcPath: '/app/src', testPath: '/app/test' },
   [WorkerType.NODE_GRPCJS]: { srcPath: '/app/src', testPath: '/app/test' },
   [WorkerType.NODE_NESTJS]: { srcPath: '/app/src', testPath: '/app/test' },
   [WorkerType.NODE_NEXTJS_CYPRESS]: { srcPath: '/app/src', testPath: '/app/cypress/e2e' },

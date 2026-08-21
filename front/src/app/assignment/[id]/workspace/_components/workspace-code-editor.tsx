@@ -6,6 +6,7 @@ import React from "react";
 import { editor, IDisposable, Position } from "monaco-editor";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { FileNode } from "@/types/shared";
+import { registerAllowedEditorActions } from "@/hooks/user-actions/allowed-editor-actions";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -43,6 +44,7 @@ function getMonacoLanguage(language: string | undefined): string {
 
 interface WorkspaceCodeEditorProps {
   onEditorChange: (value: string | undefined) => void;
+  allowRestrictedUserActions?: boolean;
   readOnly?: boolean;
   file: {
     name: string;
@@ -55,6 +57,7 @@ interface WorkspaceCodeEditorProps {
 export default function WorkspaceCodeEditor({
   file,
   onEditorChange,
+  allowRestrictedUserActions = false,
   readOnly = false,
 }: WorkspaceCodeEditorProps) {
   const { fileTreeData } = useWorkspaceContext();
@@ -189,6 +192,13 @@ export default function WorkspaceCodeEditor({
     editorDragGuardCleanupRef.current?.();
 
     const editorDomNode = editor.getDomNode();
+
+    if (allowRestrictedUserActions) {
+      const unregisterAllowedEditorActions =registerAllowedEditorActions(editor);
+
+      editor.onDidDispose(unregisterAllowedEditorActions);
+    }
+
     if (editorDomNode) {
       BLOCKED_EDITOR_DRAG_EVENTS.forEach((eventName) => {
         editorDomNode.addEventListener(eventName, blockEditorDragAction, true);
@@ -347,7 +357,7 @@ export default function WorkspaceCodeEditor({
           onChange={onEditorChange}
           onMount={handleEditorDidMount}
           options={{
-             readOnly,
+            readOnly,
             automaticLayout: true,
             dragAndDrop: false,
             dropIntoEditor: { enabled: false },
