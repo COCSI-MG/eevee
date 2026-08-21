@@ -13,6 +13,24 @@ import {
   SchedulingPreviewRunStatus,
 } from 'src/scheduling/entities/scheduling-preview-run.entity';
 
+const ATTEMPT_STATUS_BY_EXECUTION_STATUS: Record<
+  ExecutionEvent['status'],
+  AttemptStatus
+> = {
+  [AttemptStatus.RUNNING]: AttemptStatus.RUNNING,
+  [AttemptStatus.COMPLETED]: AttemptStatus.COMPLETED,
+  [AttemptStatus.FAILED]: AttemptStatus.FAILED,
+};
+
+const PREVIEW_STATUS_BY_EXECUTION_STATUS: Record<
+  ExecutionEvent['status'],
+  SchedulingPreviewRunStatus
+> = {
+  [SchedulingPreviewRunStatus.RUNNING]: SchedulingPreviewRunStatus.RUNNING,
+  [SchedulingPreviewRunStatus.COMPLETED]: SchedulingPreviewRunStatus.COMPLETED,
+  [SchedulingPreviewRunStatus.FAILED]: SchedulingPreviewRunStatus.FAILED,
+};
+
 @Processor(EXECUTION_RESULTS_QUEUE)
 export class ExecutionResultConsumer extends WorkerHost {
   private readonly logger = new Logger(ExecutionResultConsumer.name);
@@ -33,6 +51,8 @@ export class ExecutionResultConsumer extends WorkerHost {
       return;
     }
 
+    const nextStatus = ATTEMPT_STATUS_BY_EXECUTION_STATUS[event.status];
+
     const attempt = await this.attemptService.findOne(event.target.id);
 
     if (!attempt || attempt.userId !== event.target.userId) {
@@ -40,11 +60,11 @@ export class ExecutionResultConsumer extends WorkerHost {
       return;
     }
 
-    if (!this.canTransition(attempt.status, event.status)) {
+    if (!this.canTransition(attempt.status, nextStatus)) {
       return;
     }
 
-    switch (event.status) {
+    switch (nextStatus) {
       case AttemptStatus.RUNNING:
         await this.attemptService.update({
           id: attempt.id,
@@ -82,11 +102,12 @@ export class ExecutionResultConsumer extends WorkerHost {
       kind: 'attempt',
       id: attempt.id,
       userId: attempt.userId,
-      status: event.status,
+      status: nextStatus,
     });
   }
 
   private async processPreview(event: ExecutionEvent) {
+    const nextStatus = PREVIEW_STATUS_BY_EXECUTION_STATUS[event.status];
     const preview = await this.previewRepository.findOne({
       where: { id: event.target.id },
     });
@@ -94,19 +115,22 @@ export class ExecutionResultConsumer extends WorkerHost {
       this.logger.warn(`Ignoring execution event ${event.eventId}`);
       return;
     }
-    if (!this.canTransitionPreview(preview.status, event.status)) return;
+    if (!this.canTransitionPreview(preview.status, nextStatus)) return;
 
-    if (event.status === 'running') {
+    if (nextStatus === SchedulingPreviewRunStatus.RUNNING) {
       await this.previewRepository.update(preview.id, {
         status: SchedulingPreviewRunStatus.RUNNING,
       });
-    } else if (event.status === 'completed' && event.result) {
+    } else if (
+      nextStatus === SchedulingPreviewRunStatus.COMPLETED &&
+      event.result
+    ) {
       await this.previewRepository.update(preview.id, {
         status: SchedulingPreviewRunStatus.COMPLETED,
         ...event.result,
         completedAt: new Date(),
       });
-    } else if (event.status === 'failed') {
+    } else if (nextStatus === SchedulingPreviewRunStatus.FAILED) {
       await this.previewRepository.update(preview.id, {
         status: SchedulingPreviewRunStatus.FAILED,
         errorMessage: event.errorMessage ?? 'Execution failed',
@@ -120,33 +144,31 @@ export class ExecutionResultConsumer extends WorkerHost {
       kind: 'preview',
       id: preview.id,
       userId: preview.userId,
-      status: event.status,
+      status: nextStatus,
     });
   }
 
-  private canTransition(
-    current: AttemptStatus,
-    next: ExecutionEvent['status'],
-  ) {
-    if (next === 'running') {
+  private canTransition(current: AttemptStatus, next: AttemptStatus) {
+    if (next === AttemptStatus.RUNNING) {
       return current === AttemptStatus.PENDING;
     }
 
     return (
-      (next === 'completed' || next === 'failed') &&
+      (next === AttemptStatus.COMPLETED || next === AttemptStatus.FAILED) &&
       (current === AttemptStatus.PENDING || current === AttemptStatus.RUNNING)
     );
   }
 
   private canTransitionPreview(
     current: SchedulingPreviewRunStatus,
-    next: ExecutionEvent['status'],
+    next: SchedulingPreviewRunStatus,
   ) {
-    if (next === 'running') {
+    if (next === SchedulingPreviewRunStatus.RUNNING) {
       return current === SchedulingPreviewRunStatus.PENDING;
     }
     return (
-      (next === 'completed' || next === 'failed') &&
+      (next === SchedulingPreviewRunStatus.COMPLETED ||
+        next === SchedulingPreviewRunStatus.FAILED) &&
       (current === SchedulingPreviewRunStatus.PENDING ||
         current === SchedulingPreviewRunStatus.RUNNING)
     );

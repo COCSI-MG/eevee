@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node ./trigger.js",
-    "test": "jest --runInBand --roots . --testMatch '**/*.spec.js' --testMatch '**/*.test.js' --json --outputFile=./test-results.json"
+    "test": "jest --runInBand --json --outputFile=./test-results.json"
   },
   "license": "ISC",
   "dependencies": {
