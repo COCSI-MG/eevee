@@ -8,7 +8,6 @@ single release:
 | Postgres        | Deployment + Service + PVC                        |
 | Redis           | Deployment + Service                              |
 | Platform API    | Deployment + Service                              |
-| Platform worker | Sidecar process in the Platform API Deployment     |
 | Assignment Runner | Deployment + RBAC (ServiceAccount/Role)         |
 | Frontend        | Deployment + Service                              |
 | Entrypoint      | Nginx gateway + NodePort Service                  |

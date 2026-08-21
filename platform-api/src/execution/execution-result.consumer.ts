@@ -6,6 +6,12 @@ import { AttemptService } from 'src/attempt/attempt.service';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 import { ExecutionEvent } from './execution-event';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  SchedulingPreviewRun,
+  SchedulingPreviewRunStatus,
+} from 'src/scheduling/entities/scheduling-preview-run.entity';
 
 @Processor(EXECUTION_RESULTS_QUEUE)
 export class ExecutionResultConsumer extends WorkerHost {
@@ -14,15 +20,22 @@ export class ExecutionResultConsumer extends WorkerHost {
   constructor(
     private readonly attemptService: AttemptService,
     private readonly realtimeGateway: RealtimeGateway,
+    @InjectRepository(SchedulingPreviewRun)
+    private readonly previewRepository: Repository<SchedulingPreviewRun>,
   ) {
     super();
   }
 
   async process(job: Job<ExecutionEvent>) {
     const event = job.data;
-    const attempt = await this.attemptService.findOne(event.attemptId);
+    if (event.target.kind === 'preview') {
+      await this.processPreview(event);
+      return;
+    }
 
-    if (!attempt || attempt.userId !== event.userId) {
+    const attempt = await this.attemptService.findOne(event.target.id);
+
+    if (!attempt || attempt.userId !== event.target.userId) {
       this.logger.warn(`Ignoring execution event ${event.eventId}`);
       return;
     }
@@ -73,14 +86,69 @@ export class ExecutionResultConsumer extends WorkerHost {
     });
   }
 
-  private canTransition(current: AttemptStatus, next: AttemptStatus) {
-    if (next === AttemptStatus.RUNNING) {
+  private async processPreview(event: ExecutionEvent) {
+    const preview = await this.previewRepository.findOne({
+      where: { id: event.target.id },
+    });
+    if (!preview || preview.userId !== event.target.userId) {
+      this.logger.warn(`Ignoring execution event ${event.eventId}`);
+      return;
+    }
+    if (!this.canTransitionPreview(preview.status, event.status)) return;
+
+    if (event.status === 'running') {
+      await this.previewRepository.update(preview.id, {
+        status: SchedulingPreviewRunStatus.RUNNING,
+      });
+    } else if (event.status === 'completed' && event.result) {
+      await this.previewRepository.update(preview.id, {
+        status: SchedulingPreviewRunStatus.COMPLETED,
+        ...event.result,
+        completedAt: new Date(),
+      });
+    } else if (event.status === 'failed') {
+      await this.previewRepository.update(preview.id, {
+        status: SchedulingPreviewRunStatus.FAILED,
+        errorMessage: event.errorMessage ?? 'Execution failed',
+        completedAt: new Date(),
+      });
+    } else {
+      return;
+    }
+
+    this.realtimeGateway.emitSchedulingEvent({
+      kind: 'preview',
+      id: preview.id,
+      userId: preview.userId,
+      status: event.status,
+    });
+  }
+
+  private canTransition(
+    current: AttemptStatus,
+    next: ExecutionEvent['status'],
+  ) {
+    if (next === 'running') {
       return current === AttemptStatus.PENDING;
     }
 
     return (
-      (next === AttemptStatus.COMPLETED || next === AttemptStatus.FAILED) &&
+      (next === 'completed' || next === 'failed') &&
       (current === AttemptStatus.PENDING || current === AttemptStatus.RUNNING)
+    );
+  }
+
+  private canTransitionPreview(
+    current: SchedulingPreviewRunStatus,
+    next: ExecutionEvent['status'],
+  ) {
+    if (next === 'running') {
+      return current === SchedulingPreviewRunStatus.PENDING;
+    }
+    return (
+      (next === 'completed' || next === 'failed') &&
+      (current === SchedulingPreviewRunStatus.PENDING ||
+        current === SchedulingPreviewRunStatus.RUNNING)
     );
   }
 }

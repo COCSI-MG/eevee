@@ -88,7 +88,7 @@ ENV_FILE="$ROOT_DIR/scheduler-api/.env"
 if [ ! -f "$ENV_FILE" ]; then
   info "Criando .env a partir do .env.example..."
   cp "$ROOT_DIR/scheduler-api/.env.example" "$ENV_FILE"
-  warn "Preencha o JWT_SECRET e GROQ_API_KEY no arquivo scheduler-api/.env"
+  warn "Preencha o JWT_SECRET e GROQ_API_KEY no arquivo platform-api/.env"
 else
   info "Arquivo .env já existe."
 fi
@@ -98,14 +98,14 @@ fi
 # ---------------------------------------------------------------------------
 > "$PID_FILE"  # Limpar arquivo de PIDs
 
-info "Iniciando Scheduler API..."
-cd "$ROOT_DIR/scheduler-api"
+info "Iniciando Platform API..."
+cd "$ROOT_DIR/platform-api"
 npm run start:dev &  echo $! >> "$PID_FILE"
 cd "$ROOT_DIR"
 
-info "Iniciando Queue Worker..."
-cd "$ROOT_DIR/scheduler-api"
-npm run start:worker:dev &  echo $! >> "$PID_FILE"
+info "Iniciando Assignment Runner..."
+cd "$ROOT_DIR/assignment-runner"
+npm run start:dev &  echo $! >> "$PID_FILE"
 cd "$ROOT_DIR"
 
 info "Iniciando Frontend..."

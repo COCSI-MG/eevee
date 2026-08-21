@@ -49,4 +49,4 @@ jobs:
 
             - name: Atualiza Platform API e seus workers
               run: |
-                kubectl set image deployment/platform-api-deployment platform-api=${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }} platform-background-worker=${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }} -n default
+                kubectl set image deployment/platform-api-deployment platform-api=${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }} -n default

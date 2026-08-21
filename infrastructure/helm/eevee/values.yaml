@@ -95,13 +95,6 @@ platformApi:
       memory: 128Mi
     limits:
       memory: 384Mi
-  backgroundWorker:
-    enabled: true
-    resources:
-      requests:
-        memory: 128Mi
-      limits:
-        memory: 384Mi
 
 # -----------------------------------------------------------------------------
 # Assignment Runner (BullMQ consumer)

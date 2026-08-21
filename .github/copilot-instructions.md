@@ -123,7 +123,7 @@ Loaded via `ConfigModule.forRoot()` (global scope).
 - **Kubernetes Context**: Verify `kubectl config current-context` (must be `minikube`)
 - **Test Log Parsing**: Worker output must include `Tests: X passed, Y total` line for score calculation
 - **Base64 Injection**: Long files may exceed shell command limits; consider streaming approach if issues arise
-- **BullMQ Consumers**: Queue consumers run in a separate process (`main-worker.ts` / `QueueWorkerModule`), not the HTTP API process
+- **BullMQ ownership**: Platform-domain consumers run in Platform API; Kubernetes execution consumers run in Assignment Runner
 
 ## Resources
 

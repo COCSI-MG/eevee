@@ -34,6 +34,7 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { TemplateTestModule } from './template-test/template-test.module';
 import { AnswerKeyModule } from './answer-key/answer-key.module';
 import { ExamModule } from './exam/exam.module';
+import { ExecutionPlatformEventsModule } from './execution/execution-platform-events.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -77,6 +78,7 @@ import { ExamModule } from './exam/exam.module';
     TemplateTestModule,
     AnswerKeyModule,
     ExamModule,
+    ExecutionPlatformEventsModule,
   ],
   controllers: [AppController],
   providers: [

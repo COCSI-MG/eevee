@@ -19,10 +19,16 @@ export interface ExecutionWorkerPayload {
 }
 
 export interface ExecutionCommand {
-  attemptId: number;
-  userId: number;
+  target: ExecutionTarget;
+  jobName: string;
   workerType: string;
   workerData: ExecutionWorkerPayload;
+}
+
+export interface ExecutionTarget {
+  kind: 'attempt' | 'preview';
+  id: number;
+  userId: number;
 }
 
 export interface ExecutionRequest {
@@ -62,8 +68,7 @@ export interface ExecutionEvent {
   eventId: string;
   name: ExecutionEventName;
   occurredAt: string;
-  attemptId: number;
-  userId: number;
+  target: ExecutionTarget;
   status: ExecutionLifecycleStatus;
   result?: ExecutionResult;
   errorMessage?: string;

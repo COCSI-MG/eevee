@@ -12,6 +12,7 @@ import { SchedulingPreviewRun } from './entities/scheduling-preview-run.entity';
 import { RequestContextModule } from 'src/request-context/request-context.module';
 import { AiReportModule } from 'src/ai-report/ai-report.module';
 import { ExecutionModule } from 'src/execution/execution.module';
+import { AiReportJobConsumer } from './ai-report-job.processor';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ExecutionModule } from 'src/execution/execution.module';
     ScorePolicyService,
     WorkerPayloadBuilderService,
     SchedulingWorkerPreparationService,
+    AiReportJobConsumer,
   ],
   exports: [SchedulingService],
 })
