@@ -8,6 +8,7 @@ import {
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { WorkerService } from 'src/worker/worker.service';
 import { ExecutionEventPublisher } from './execution-event.publisher';
+import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 
 @Processor(EXECUTION_COMMAND_QUEUE, { concurrency: 5 })
 export class ExecutionCommandProcessor extends WorkerHost {
@@ -28,7 +29,7 @@ export class ExecutionCommandProcessor extends WorkerHost {
       const result = await this.workerService.createWorkerWithInitContainer(
         `attempt-${attemptId}-worker`,
         workerType as WorkerType,
-        workerData,
+        workerData as CreateWorkerDto,
       );
       const score = result.passes / (result.passes + result.failures || 1);
 
