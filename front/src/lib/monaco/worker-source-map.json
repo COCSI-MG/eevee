@@ -1,6 +1,7 @@
 {
   "node_default": "node-default",
   "node_default_postgresql": "node-default",
+  "javascript_default": "javascript-default",
   "node_nestjs": "nest.js",
   "node_nestjs_postgresql": "nest.js",
   "node_grpcjs": "grpc",

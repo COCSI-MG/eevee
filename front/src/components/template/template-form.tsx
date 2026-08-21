@@ -504,7 +504,7 @@ export default function TemplateForm() {
                       variant="outline"
                       className="border-slate-600 text-slate-200 hover:bg-slate-700"
                       onClick={() => setTestDialogOpen(true)}
-                      title="Testar o conteúdo do template contra um app.ts de exemplo em um pod efêmero. Nada é persistido."
+                      title="Testar o conteúdo do template contra uma aplicação de exemplo em um pod efêmero. Nada é persistido."
                     >
                       <FlaskConical className="w-4 h-4 mr-2" />
                       Testar

@@ -1,5 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { buildTemplateVariablesModule } from 'src/utils/template-variables.utils';
+import {
+  buildTemplateVariablesModule,
+  templateVariablesLanguageForWorker,
+} from 'src/utils/template-variables.utils';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerPayloadBuilderService } from './worker-payload-builder.service';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
@@ -46,7 +49,10 @@ export class SchedulingWorkerPreparationService {
         ...baseWorkerData,
         initSqlScript: assignment.initSqlScript ?? baseWorkerData.initSqlScript,
       },
-      buildTemplateVariablesModule(assignment),
+      buildTemplateVariablesModule(
+        assignment,
+        templateVariablesLanguageForWorker(assignment.workerType),
+      ),
     );
 
     if ((workerData.testFilesContent?.length ?? 0) === 0) {

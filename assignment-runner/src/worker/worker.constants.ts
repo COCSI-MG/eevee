@@ -6,6 +6,7 @@ function getImageFromEnv(envName: string, fallback: string): string {
 
 export const WORKER_JOB_PREFIX: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: 'worker-node-default',
+  [WorkerType.JAVASCRIPT_DEFAULT]: 'worker-javascript-default',
   [WorkerType.NODE_NESTJS]: 'worker-node-nestjs',
   [WorkerType.NODE_GRPCJS]: 'worker-node-grpcjs',
   [WorkerType.NODE_NEXTJS_CYPRESS]: 'worker-node-nextjs-cypress',
@@ -20,6 +21,10 @@ export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: getImageFromEnv(
     'WORKER_IMAGE_NODE_DEFAULT',
     'docker.io/library/worker-node-default-img:latest',
+  ),
+  [WorkerType.JAVASCRIPT_DEFAULT]: getImageFromEnv(
+    'WORKER_IMAGE_JAVASCRIPT_DEFAULT',
+    'docker.io/library/worker-node-javascript-default-img:latest',
   ),
   [WorkerType.NODE_NESTJS]: getImageFromEnv(
     'WORKER_IMAGE_NODE_NESTJS',

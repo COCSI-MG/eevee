@@ -31,7 +31,7 @@ import {
 import { useTemplateTest } from "@/hooks/use-template-test";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { TemplateParamType } from "@/app/interface/scheduler-api/template";
-import { WorkerDefaultTemplateContentMap } from "@/app/admin/assignments/constants";
+import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
 import { Tooltip } from "../ui/tooltip";
 import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
 
@@ -67,10 +67,12 @@ export function TemplateTestDialog({
   const [applicationFileContent, setApplicationFileContent] = useState("");
   const [paramValues, setParamValues] = useState<ParamValueState>({});
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+  const isJavascriptDefault = workerType === WorkerType.JAVASCRIPT_DEFAULT;
+  const applicationExtension = isJavascriptDefault ? "js" : "ts";
 
   const defaultAppContent =
-    WorkerDefaultTemplateContentMap[workerType] ??
-    WorkerDefaultTemplateContentMap[WorkerType.NODE_DEFAULT];
+    WorkerDefaultTemplateMap[workerType] ??
+    WorkerDefaultTemplateMap[WorkerType.NODE_DEFAULT];
 
   useEffect(() => {
     if (!open) return;
@@ -251,7 +253,9 @@ export function TemplateTestDialog({
                 Causas comuns: (1) o pod não conseguiu pullar a imagem do
                 worker — verifique{" "}
                 <code className="rounded bg-black/30 px-1">
-                  WORKER_IMAGE_NODE_DEFAULT
+                  {isJavascriptDefault
+                    ? "WORKER_IMAGE_JAVASCRIPT_DEFAULT"
+                    : "WORKER_IMAGE_NODE_DEFAULT"}
                 </code>{" "}
                 e{" "}
                 <code className="rounded bg-black/30 px-1">
@@ -264,7 +268,7 @@ export function TemplateTestDialog({
                 </code>{" "}
                 quando o app só está em{" "}
                 <code className="rounded bg-black/30 px-1">
-                  /app/src/app.ts
+                  /app/src/app.{applicationExtension}
                 </code>
                 ); (3) o pod foi morto antes do Jest terminar (timeout).
                 Inspecione o pod com{" "}

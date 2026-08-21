@@ -138,14 +138,17 @@ describe('SchedulingService', () => {
   });
 
   it('runs sync preview with init container and does not persist attempt', async () => {
-    assignmentService.findOne.mockResolvedValue({
+    const assignment = {
       id: 10,
-      workerType: WorkerType.NODE_DEFAULT,
-      assignmentTemplates: [{}],
-    } as never);
+      workerType: WorkerType.NODE_DEFAULT_POSTGRESQL,
+      initSqlScript: 'CREATE TABLE produtos (id SERIAL PRIMARY KEY);',
+      assignmentTemplates: [{}, {}],
+    };
+    assignmentService.findOne.mockResolvedValue(assignment as never);
     schedulingWorkerPreparationService.prepare.mockResolvedValue({
       files: { 'index.ts': 'console.log(1);' },
       dependencies: ['jest'],
+      initSqlScript: assignment.initSqlScript,
     });
     executionRequestService.execute.mockResolvedValue({
       passes: 3,

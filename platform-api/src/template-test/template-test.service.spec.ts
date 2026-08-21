@@ -37,6 +37,8 @@ describe('TemplateTestService', () => {
     expect(workerData.files).toEqual({
       'app.ts': 'export const sum = (a, b) => a + b;',
       '../test/app.ts': 'export const sum = (a, b) => a + b;',
+      '../test/template-variables.ts':
+        expect.stringContaining('export const vars'),
     });
     // testFilesContent goes through the strategy's index-based naming →
     // /app/test/0-template.spec.ts.
@@ -60,6 +62,8 @@ describe('TemplateTestService', () => {
       'src/index.ts': 'export const x = 1;',
       'app.ts': 'export const app = 1;',
       '../test/app.ts': 'export const app = 1;',
+      '../test/template-variables.ts':
+        expect.stringContaining('export const vars'),
     });
   });
 
@@ -73,7 +77,11 @@ describe('TemplateTestService', () => {
 
     const call = executionRequestService.execute.mock.calls[0];
     const workerData = call[0].workerData;
-    expect(workerData.files).toEqual({ 'src/index.ts': 'export const x = 1;' });
+    expect(workerData.files).toEqual({
+      'src/index.ts': 'export const x = 1;',
+      '../test/template-variables.ts':
+        expect.stringContaining('export const vars'),
+    });
     expect(workerData.testFilesContent).toEqual(['test("a", () => {});']);
   });
 
