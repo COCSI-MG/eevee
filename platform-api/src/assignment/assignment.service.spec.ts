@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Brackets, DataSource } from 'typeorm';
+import { DataSource } from 'typeorm';
 import { AssignmentService } from './assignment.service';
 import { Assignment } from './entities/assignment.entity';
 import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
@@ -132,6 +132,46 @@ describe('AssignmentService', () => {
       'templateParams',
     );
     expect(requestContextService.getUser).not.toHaveBeenCalled();
+  });
+
+  it('returns every assignment for an admin without filtering by creator', async () => {
+    const { service, assignmentRepository, requestContextService } =
+      await setup();
+    assignmentRepository.find.mockResolvedValue([
+      { id: 1, createdById: 10, boilerplateContent: '' },
+      { id: 2, createdById: 20, boilerplateContent: '' },
+    ]);
+
+    await expect(service.findAll()).resolves.toEqual([
+      expect.objectContaining({ id: 1, createdById: 10 }),
+      expect.objectContaining({ id: 2, createdById: 20 }),
+    ]);
+
+    expect(assignmentRepository.find).toHaveBeenCalledWith({
+      relations: [
+        'assignmentAttempts',
+        'class',
+        'class.userClasses',
+        'suspensions',
+      ],
+    });
+    expect(requestContextService.getUser).not.toHaveBeenCalled();
+  });
+
+  it('uses the global assignment list for the admin me endpoint', async () => {
+    const { service, assignmentRepository, requestContextService } =
+      await setup();
+    const assignments = [{ id: 1 }, { id: 2 }] as Assignment[];
+    requestContextService.getUser.mockReturnValue({
+      userId: 10,
+      isAdmin: true,
+    });
+    jest.spyOn(service, 'findAll').mockResolvedValue(assignments as any);
+
+    await expect(service.findAllUserAssignments()).resolves.toBe(assignments);
+
+    expect(service.findAll).toHaveBeenCalledTimes(1);
+    expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
   });
 
   it('create throws when class does not exist', async () => {
@@ -416,6 +456,7 @@ describe('AssignmentService', () => {
         'assignment.examAssignment',
         'examAssignment',
       );
+      expect(qb.where).not.toHaveBeenCalled();
       expect(result.meta).toEqual({
         total: 1,
         page: 1,
@@ -484,7 +525,7 @@ describe('AssignmentService', () => {
       expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
     });
 
-    it('applies the exam filter together with the admin createdById branch', async () => {
+    it('allows an admin to list every assignment in the class', async () => {
       const {
         service,
         assignmentRepository,
@@ -502,12 +543,100 @@ describe('AssignmentService', () => {
 
       await service.findAssignmentsByClass(1);
 
+      expect(userClassRepository.findOne).not.toHaveBeenCalled();
       expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
-      const createdByCall = qb.andWhere.mock.calls.find(
-        (c) => c[0] instanceof Brackets,
-      );
-      expect(createdByCall).toBeDefined();
+      expect(qb.andWhere).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it('allows an admin to open an assignment created by another admin', async () => {
+    const { service, assignmentRepository, requestContextService } =
+      await setup();
+    const assignment = {
+      id: 42,
+      createdById: 20,
+      boilerplateContent: '',
+    } as Assignment;
+    const query = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      innerJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(assignment),
+    };
+    assignmentRepository.createQueryBuilder.mockReturnValue(query);
+    requestContextService.getUser.mockReturnValue({
+      userId: 10,
+      isAdmin: true,
+    });
+
+    await expect(service.findOne(42)).resolves.toEqual(
+      expect.objectContaining({ id: 42, createdById: 20 }),
+    );
+
+    expect(query.andWhere).not.toHaveBeenCalled();
+    expect(query.innerJoinAndSelect).not.toHaveBeenCalled();
+  });
+
+  it('allows an admin to update another admin assignment without changing its creator', async () => {
+    const { service, assignmentRepository, requestContextService } =
+      await setup();
+    assignmentRepository.findOne
+      .mockResolvedValueOnce({
+        id: 55,
+        createdById: 20,
+        workerType: WorkerType.NODE_DEFAULT,
+      })
+      .mockResolvedValueOnce({
+        id: 55,
+        createdById: 20,
+        title: 'Updated',
+        boilerplateContent: '',
+      });
+
+    await expect(
+      service.update(55, { title: 'Updated' } as any),
+    ).resolves.toEqual(
+      expect.objectContaining({ id: 55, createdById: 20, title: 'Updated' }),
+    );
+
+    expect(assignmentRepository.update).toHaveBeenCalledWith(55, {
+      title: 'Updated',
+    });
+    expect(assignmentRepository.update).not.toHaveBeenCalledWith(
+      55,
+      expect.objectContaining({ createdById: expect.anything() }),
+    );
+    expect(requestContextService.getUser).not.toHaveBeenCalled();
+  });
+
+  it('allows an admin to delete another admin assignment', async () => {
+    const {
+      service,
+      assignmentRepository,
+      attemptRepository,
+      dataSource,
+      requestContextService,
+    } = await setup();
+    const manager = { delete: jest.fn().mockResolvedValue({ affected: 1 }) };
+    assignmentRepository.findOne.mockResolvedValue({
+      id: 55,
+      createdById: 20,
+    });
+    attemptRepository.count.mockResolvedValue(0);
+    dataSource.transaction.mockImplementation((callback) => callback(manager));
+
+    await expect(service.remove(55)).resolves.toEqual({ affected: 1 });
+
+    expect(manager.delete).toHaveBeenNthCalledWith(1, AssignmentTemplate, {
+      assignmentId: 55,
+    });
+    expect(manager.delete).toHaveBeenNthCalledWith(2, AssignmentParam, {
+      assignmentId: 55,
+    });
+    expect(manager.delete).toHaveBeenNthCalledWith(3, Assignment, { id: 55 });
+    expect(requestContextService.getUser).not.toHaveBeenCalled();
   });
 
   describe('template weight normalisation', () => {

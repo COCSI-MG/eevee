@@ -162,11 +162,15 @@ export class ClassService {
         'userClasses.class',
         'assignments',
       ],
-      where: {
-        userClasses: {
-          user: { id: userId },
-        },
-      },
+      ...(user.isAdmin
+        ? {}
+        : {
+            where: {
+              userClasses: {
+                user: { id: userId },
+              },
+            },
+          }),
     });
   }
 
