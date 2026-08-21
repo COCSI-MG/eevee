@@ -23,8 +23,8 @@ export default function AdminDashboardLayout({
               <div className="relative w-8 h-8 mr-2 rounded-full bg-primary flex items-center justify-center">
                 <Code className="w-4 h-4 text-primary-foreground" />
               </div>
-              <h1 className="text-xl font-bold text-white">EEVEE CEFET/RJ</h1>
-            </Link>           
+              <h1 className="text-xl font-bold text-white">EEVEE</h1>
+            </Link>
 
             <AdminSidebar />
           </div>
