@@ -4,14 +4,14 @@ import WORKER_SOURCE_MAP from "./worker-source-map.json";
 type MonacoNamespace = typeof import("monaco-editor");
 
 /**
- * Maps a {@link WorkerType} to the `node-worker-images/<dir>` folder whose
+ * Maps a {@link WorkerType} to the worker image folder whose
  * `package.json` / `tsconfig.json` describe the runtime the student code will
  * actually execute in. Everything below is derived from those workers so the
  * in-browser editor mirrors the real execution environment.
  */
 const workerSourceMap = WORKER_SOURCE_MAP as Record<string, string>;
 
-const DEFAULT_PACK_DIR = "node";
+const DEFAULT_PACK_DIR = "node-default";
 
 /**
  * Resolves the type-pack / worker directory name for a given worker type.
@@ -55,7 +55,7 @@ export function getCompilerOptions(
 
   switch (dir) {
     case "nest.js":
-      // node-worker-images/nest.js/tsconfig.json
+      // images/node/nest.js/tsconfig.json
       return {
         ...base,
         module: ts.ModuleKind.CommonJS,
@@ -67,7 +67,7 @@ export function getCompilerOptions(
       };
 
     case "grpc":
-      // node-worker-images/grpc/tsconfig.json
+      // images/node/grpc/tsconfig.json
       return {
         ...base,
         module: ts.ModuleKind.CommonJS,
@@ -75,7 +75,7 @@ export function getCompilerOptions(
       };
 
     case "next.js-cypress":
-      // node-worker-images/next.js-cypress/tsconfig.json
+      // images/node/next.js-cypress/tsconfig.json
       return {
         ...base,
         module: ts.ModuleKind.ESNext,
@@ -84,7 +84,7 @@ export function getCompilerOptions(
       };
 
     case "reactjs-cypress":
-      // node-worker-images/reactjs-cypress/tsconfig.app.json
+      // images/node/reactjs-cypress/tsconfig.app.json
       return {
         ...base,
         module: ts.ModuleKind.ESNext,
@@ -94,9 +94,9 @@ export function getCompilerOptions(
       };
 
     case "node-teraorm":
-    case "node":
+    case "node-default":
     default:
-      // node-worker-images/node/tsconfig.json (also node-teraorm)
+      // images/node/node-default/tsconfig.json (also node-teraorm)
       return {
         ...base,
         module: ts.ModuleKind.CommonJS,

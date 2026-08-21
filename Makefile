@@ -25,7 +25,7 @@ up-platform-api:
 	cd platform-api && npm run start:dev
 
 up-assignment-runner:
-	@echo Starting the Code Evaluator Engine
+	@echo Starting the Assignment Runner
 	cd assignment-runner && npm run start:dev
 
 up-front:
@@ -61,6 +61,7 @@ push-images: \
 build-workers: \
 	build-eevee-worker-bootstrap \
 	build-worker-node-default \
+	build-worker-node-javascript-default \
 	build-worker-node-teraorm \
 	build-worker-nestjs-default \
 	build-worker-node-grpcjs \
@@ -71,6 +72,7 @@ build-workers: \
 push-workers: \
 	push-eevee-worker-bootstrap \
 	push-worker-node-default \
+	push-worker-node-javascript-default \
 	push-worker-node-teraorm \
 	push-worker-nestjs-default \
 	push-worker-node-grpcjs \
@@ -111,6 +113,12 @@ build-worker-node-default:
 push-worker-node-default:
 	docker push $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG)
 
+.PHONY: build-worker-node-javascript-default push-worker-node-javascript-default
+build-worker-node-javascript-default:
+	docker build -t $(GHCR_NAMESPACE)/worker-node-javascript-default-img:$(TAG) images/javascript-default
+push-worker-node-javascript-default:
+	docker push $(GHCR_NAMESPACE)/worker-node-javascript-default-img:$(TAG)
+
 .PHONY: build-worker-node-teraorm push-worker-node-teraorm
 build-worker-node-teraorm:
 	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG) images/node/node-teraorm
@@ -125,7 +133,7 @@ push-worker-nestjs-default:
 
 .PHONY: build-worker-node-grpcjs push-worker-node-grpcjs
 build-worker-node-grpcjs:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG) -f images/node/grpc/Dockerfile images/node
+	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG) -f images/node/grpc/Dockerfile images
 push-worker-node-grpcjs:
 	docker push $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG)
 
@@ -143,7 +151,7 @@ push-worker-react-cypress:
 
 .PHONY: build-worker-python-default push-worker-python-default
 build-worker-python-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG) node-worker-images/python-default
+	docker build -t $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG) images/python-default
 push-worker-python-default:
 	docker push $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG)
 

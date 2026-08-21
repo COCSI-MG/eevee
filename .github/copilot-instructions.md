@@ -89,7 +89,7 @@ DTOs use decorators for validation: `@IsEnum()`, `@IsString()`, `@MinLength()`, 
 **Add a new worker type:**
 
 1. Add to `WorkerType` enum
-2. Create Dockerfile in `node-worker-images/new-type/`
+2. Create Dockerfile in `images/new-type/`
 3. Create `new-type/worker-definition.json`
 4. Add handler method in `WorkerService`
 5. Register in `SchedulingService.workerMap` constructor

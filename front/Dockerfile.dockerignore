@@ -14,7 +14,7 @@ front/public/type-packs
 
 # Everything outside front/ and images/ is irrelevant to this image.
 platform-api
-code-evaluator-engine
+assignment-runner
 infrastructure
 scripts
 *.drawio

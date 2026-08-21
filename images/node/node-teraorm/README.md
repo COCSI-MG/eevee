@@ -17,7 +17,7 @@ It keeps the same runtime contract as the default node worker:
 ## Build and load
 
 ```bash
-cd node-worker-images
+cd images
 make build-node-teraorm
 make load-node-teraorm
 ```

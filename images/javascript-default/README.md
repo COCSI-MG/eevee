@@ -15,7 +15,7 @@ npm test
 
 ## Build the image
 
-From `node-worker-images/`:
+From `images/`:
 
 ```bash
 make build-javascript-default

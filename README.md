@@ -44,7 +44,7 @@ cd code-evaluator-engine/ && npm run start:dev
 
 ### Utilizando Make
 
-O [Makefile](./node-worker-images/Makefile) tem a opção de rodar um build all, que irá construir todas as imagens necessárias para o projeto. Para isso, basta rodar o comando:
+O [Makefile](./images/Makefile) tem a opção de rodar um build all, que irá construir todas as imagens necessárias para o projeto. Para isso, basta rodar o comando:
 
 ```bash
 make build-all

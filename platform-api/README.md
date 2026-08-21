@@ -118,8 +118,8 @@ Para construir localmente a mesma imagem utilizada pelo worker:
 
 ```bash
 docker build -t worker-python-default-img:latest \
-  -f ../node-worker-images/python-default/Dockerfile \
-  ../node-worker-images/python-default
+  -f ../images/python-default/Dockerfile \
+  ../images/python-default
 ```
 
 ## Debug execution

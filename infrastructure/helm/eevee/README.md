@@ -27,7 +27,7 @@ Helm fighting an externally-edited Secret on `helm upgrade`).
 ```bash
 NAMESPACE=eevee-cefetrj
 RELEASE=eevee
-CHART=eevee-infrastructure/helm/eevee
+CHART=infrastructure/helm/eevee
 ```
 
 ### 1. Create the GHCR image pull secret

@@ -1,5 +1,5 @@
 # NOTE: build context is the REPOSITORY ROOT (not front/), because the Monaco
-# type packs are generated from the sibling `images/node/` directory.
+# type packs are generated from the sibling worker directories under `images/`.
 # Build with:  docker build -f front/Dockerfile -t <img> .
 
 # ---- Stage 1: generate offline Monaco type packs from the worker images ----
@@ -18,6 +18,7 @@ WORKDIR /repo
 COPY front/scripts ./front/scripts
 COPY front/src/lib/monaco/worker-source-map.json ./front/src/lib/monaco/worker-source-map.json
 COPY images/node ./images/node
+COPY images/javascript-default ./images/javascript-default
 
 RUN node front/scripts/build-type-packs.mjs
 

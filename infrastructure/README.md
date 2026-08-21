@@ -87,17 +87,17 @@ A primeira é a imagem dos workers que serão usados.
 
 Para facilitar o processo de build, foi criado um Makefile para cada worker, assim basta executar o comando
 
-O Makefile está na pasta [node-worker-images](node-worker-images) e basta executar o comando make help para verificar os comandos disponíveis
+O Makefile está na pasta [images](../images) e basta executar o comando make help para verificar os comandos disponíveis
 
 ```bash
-cd node-worker-images
+cd images
 make help
 ```
 
 ### Node Default Worker
 
 ```
-cd node-worker-images\node
+cd images\node\node-default
 docker build . -t worker-node-default-img
 ```
 
@@ -117,7 +117,7 @@ make load-node
 ### Node NestJS Worker
 
 ```
-cd node-worker-images\nestjs
+cd images\node\nest.js
 docker build . -t worker-node-nestjs-img
 ```
 
@@ -130,7 +130,7 @@ minikube image load worker-node-nestjs-img:latest
 ### Node GRPC Worker
 
 ```
-cd node-worker-images\grpc
+cd images\node\grpc
 docker build . -t worker-node-grpc-img
 ```
 
