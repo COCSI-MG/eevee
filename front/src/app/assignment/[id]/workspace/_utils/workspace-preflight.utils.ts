@@ -1,5 +1,6 @@
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { SchedulingFiles } from "@/app/interface/scheduler-api/scheduling";
+import { defaultResponseValidateWorker, FailureTypeWorker, responses } from './constant'
 
 export interface WorkspacePreflightResult {
   ok: boolean;
@@ -153,6 +154,8 @@ function validateWorkerRequiredFiles(
   workerType: WorkerType,
   files: SchedulingFiles,
 ): WorkspacePreflightResult {
+  let reasonForFailure : FailureTypeWorker | null = null;
+
   switch (workerType) {
     case WorkerType.JAVASCRIPT_DEFAULT: {
       const typescriptFile = Object.keys(files).find(
@@ -160,61 +163,33 @@ function validateWorkerRequiredFiles(
       );
 
       if (typescriptFile) {
-        return {
-          ok: false,
-          message: "Arquivo TypeScript não permitido",
-          details: [
-            `O worker JavaScript aceita somente arquivos .js; remova ou renomeie ${typescriptFile}.`,
-          ],
-        };
+        reasonForFailure = FailureTypeWorker.TYPESCRIPT_NOT_ALLOWED;
       }
 
       if (!hasAnyFile(files, ["src/app.js"])) {
-        return {
-          ok: false,
-          message: "Arquivo principal ausente",
-          details: ["Esperado o arquivo src/app.js para este worker."],
-        };
+        reasonForFailure = FailureTypeWorker.HAS_NO_PRINCIPAL_ARCHIVE
       }
 
       if (!hasEsmMainExport(files["src/app.js"] ?? "")) {
-        return {
-          ok: false,
-          message: "Export principal não encontrado",
-          details: [
-            "Use export function main(...) ou export const main = ... em src/app.js.",
-          ],
-        };
+        reasonForFailure = FailureTypeWorker.EXPORTS_NOT_FOUND
       }
 
-      return { ok: true };
+      break;
     }
 
     case WorkerType.NODE_DEFAULT:
     case WorkerType.NODE_DEFAULT_POSTGRESQL:
     case WorkerType.NODE_GRPCJS: {
       if (!hasAnyFile(files, ["src/app.ts", "src/app.js"])) {
-        return {
-          ok: false,
-          message: "Arquivo principal ausente",
-          details: [
-            "Esperado um arquivo src/app.ts (ou src/app.js) para este tipo de worker.",
-          ],
-        };
+        reasonForFailure = FailureTypeWorker.HAS_NO_PRINCIPAL_ARCHIVE
       }
 
       const mainContent = files["src/app.ts"] ?? files["src/app.js"] ?? "";
       if (!hasMainExport(mainContent)) {
-        return {
-          ok: false,
-          message: "Export principal não encontrado",
-          details: [
-            "Seu código precisa exportar uma função main para que os testes consigam importar o módulo.",
-          ],
-        };
+        reasonForFailure = FailureTypeWorker.EXPORTS_NOT_FOUND
       }
 
-      return { ok: true };
+      break;
     }
 
     case WorkerType.NODE_NESTJS:
@@ -224,46 +199,30 @@ function validateWorkerRequiredFiles(
       );
 
       if (!hasNestSource) {
-        return {
-          ok: false,
-          message: "Estrutura mínima do NestJS não encontrada",
-          details: ["Inclua pelo menos um arquivo TypeScript dentro de src/."],
-        };
+        reasonForFailure = FailureTypeWorker.MIN_STRCTURE_NUXT
       }
 
-      return { ok: true };
+      break;
     }
 
     case WorkerType.NODE_NEXTJS_CYPRESS: {
       if (!hasAnyFile(files, ["src/page.tsx", "src/page.jsx"])) {
-        return {
-          ok: false,
-          message: "Página principal não encontrada",
-          details: ["Esperado arquivo src/page.tsx (ou src/page.jsx)."],
-        };
+        reasonForFailure = FailureTypeWorker.PRINCIPAL_PAGE_NOT_FOUND
       }
 
-      return { ok: true };
+      break;
     }
 
     case WorkerType.NODE_REACTJS_CYPRESS: {
       if (!hasAnyFile(files, ["src/App.tsx", "src/App.jsx"])) {
-        return {
-          ok: false,
-          message: "Componente principal não encontrado",
-          details: ["Esperado arquivo src/App.tsx (ou src/App.jsx)."],
-        };
+        reasonForFailure = FailureTypeWorker.PRINCIPAL_COMPONENT_NOT_FOUND
       }
 
       if (!hasAnyFile(files, ["src/main.tsx", "src/main.jsx"])) {
-        return {
-          ok: false,
-          message: "Entry point da aplicação não encontrado",
-          details: ["Esperado arquivo src/main.tsx (ou src/main.jsx)."],
-        };
+        reasonForFailure = FailureTypeWorker.ENTRY_POINT_NOT_FOUND
       }
 
-      return { ok: true };
+      break;
     }
 
     case WorkerType.PYTHON_DEFAULT: {
@@ -288,12 +247,21 @@ function validateWorkerRequiredFiles(
         };
       }
 
-      return { ok: true };
+      break;
     }
-
-    default:
-      return { ok: true };
   }
+
+  if(reasonForFailure !== null) {
+
+    const obj = responses[reasonForFailure]
+
+    return {
+      ...defaultResponseValidateWorker,
+      ...obj
+    }
+  }
+
+  return defaultResponseValidateWorker
 }
 
 export async function runWorkspacePreflight({
