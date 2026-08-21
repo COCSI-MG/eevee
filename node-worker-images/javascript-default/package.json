@@ -1,0 +1,22 @@
+{
+  "name": "eevee-javascript-default-worker",
+  "version": "1.0.0",
+  "description": "Default JavaScript-only worker for EEVEE",
+  "type": "module",
+  "scripts": {
+    "start": "node ./trigger.js",
+    "test": "jest --runInBand --roots . --testMatch '**/*.spec.js' --testMatch '**/*.test.js' --json --outputFile=./test-results.json"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "babel-jest": "^29.7.0",
+    "express": "^4.18.2",
+    "jest": "^29.7.0"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "supertest": "^7.1.4"
+  }
+}

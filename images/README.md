@@ -52,6 +52,8 @@ Atualmente, as imagens disponíveis suportam motores de execução baseados em N
 
 - [node](./node/Dockerfile) - Imagem base para execução de workers utilizando Node.js. Esta imagem pode ser personalizada para incluir bibliotecas ou ferramentas adicionais conforme necessário.
 
+- [JavaScript Default](./javascript-default/Dockerfile) - Imagem Node.js exclusiva para aplicações e testes JavaScript ES Modules, sem toolchain TypeScript.
+
 - [React.Js + Cypress](./react-cypress/Dockerfile) - Imagem especializada para execução de testes end-to-end utilizando Cypress em aplicações React.js. Esta imagem inclui todas as dependências necessárias para rodar testes Cypress de forma eficiente.
 
 - [GRPC Node.js](./grpc-node/Dockerfile) - Imagem otimizada para execução de serviços gRPC utilizando Node.js. Esta imagem inclui as bibliotecas e ferramentas necessárias para desenvolver e executar serviços gRPC.

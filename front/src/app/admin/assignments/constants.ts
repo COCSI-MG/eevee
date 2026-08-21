@@ -54,6 +54,10 @@ def test_main_can_divide():
     provided_result = main(2, 3)
     assert provided_result[3] == correct_result`;
 
+export const DEFAULT_JAVASCRIPT_ASSIGNMENT_TEMPLATE = `// PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
+export function main(a, b) {
+  return [a + b, a - b, a * b, a / b];
+}`;
 
 export const DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE = `import React from 'react';
 
@@ -174,6 +178,37 @@ describe('main', () => {
     const correctResult = math_div(2, 3);
     const providedResult = main(2, 3);
     expect(providedResult[3]).toEqual(correctResult);
+  });
+});
+`;
+
+export const DEFAULT_JAVASCRIPT_VALIDATION_SCRIPT = `
+import { main } from './app';
+
+function mathAdd(a, b) {
+  return a + b;
+}
+
+function mathSub(a, b) {
+  return a - b;
+}
+
+function mathMul(a, b) {
+  return a * b;
+}
+
+function mathDiv(a, b) {
+  return a / b;
+}
+
+describe('main', () => {
+  it('should return the basic arithmetic operations', () => {
+    expect(main(6, 2)).toEqual([
+      mathAdd(6, 2),
+      mathSub(6, 2),
+      mathMul(6, 2),
+      mathDiv(6, 2),
+    ]);
   });
 });
 `;
@@ -492,6 +527,7 @@ describe("gRPC MovieService", () => {
 `;
 
 export const WORKER_EXHIBITION_NODE_DEFAULT = "Node Default";
+export const WORKER_EXHIBITION_JAVASCRIPT_DEFAULT = "JavaScript Default";
 export const WORKER_EXHIBITION_NODE_NESTJS = "Node NestJS + TypeORM";
 export const WORKER_EXHIBITION_NODE_GRPCJS = "GRPC using gRPCJS";
 export const WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS = "Next.js + Cypress";
@@ -537,6 +573,13 @@ ${DEFAULT_VALIDATION_SCRIPT.trim()}
 ${TEMPLATE_VARIABLES_SANITY_TEST.trim()}
 `;
 
+export const DEFAULT_TEMPLATE_CONTENT_JAVASCRIPT_DEFAULT = `${TEMPLATE_VARIABLES_IMPORTS}
+
+${DEFAULT_JAVASCRIPT_VALIDATION_SCRIPT.trim()}
+
+${TEMPLATE_VARIABLES_SANITY_TEST.trim()}
+`;
+
 export const DEFAULT_TEMPLATE_CONTENT_NODE_NESTJS = `${TEMPLATE_VARIABLES_IMPORTS}
 
 ${DEFAULT_NEST_JS_VALIDATION_SCRIPT.trim()}
@@ -560,6 +603,7 @@ ${TEMPLATE_VARIABLES_SANITY_TEST.trim()}
 
 export const WorkerExibitionMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: WORKER_EXHIBITION_NODE_DEFAULT,
+  [WorkerType.JAVASCRIPT_DEFAULT]: WORKER_EXHIBITION_JAVASCRIPT_DEFAULT,
   [WorkerType.NODE_NESTJS]: WORKER_EXHIBITION_NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: WORKER_EXHIBITION_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: WORKER_EXHIBITION_NODE_NEXTJS_CYPRESS,
@@ -572,6 +616,7 @@ export const WorkerExibitionMap: Record<WorkerType, string> = {
 
 export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_ASSIGNMENT_TEMPLATE,
+  [WorkerType.JAVASCRIPT_DEFAULT]: DEFAULT_JAVASCRIPT_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_ASSIGNMENT_TEMPLATE,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_ASSIGNMENT_TEMPLATE,
@@ -584,6 +629,7 @@ export const WorkerDefaultTemplateMap: Record<WorkerType, string> = {
 
 export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_VALIDATION_SCRIPT,
+  [WorkerType.JAVASCRIPT_DEFAULT]: DEFAULT_JAVASCRIPT_VALIDATION_SCRIPT,
   [WorkerType.NODE_NESTJS]: DEFAULT_NEST_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_GRPCJS]: DEFAULT_GRPC_JS_VALIDATION_SCRIPT,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,
@@ -601,6 +647,7 @@ export const WorkerDefaultValidationScriptMap: Record<WorkerType, string> = {
  */
 export const WorkerDefaultTemplateContentMap: Record<WorkerType, string> = {
   [WorkerType.NODE_DEFAULT]: DEFAULT_TEMPLATE_CONTENT_NODE_DEFAULT,
+  [WorkerType.JAVASCRIPT_DEFAULT]: DEFAULT_TEMPLATE_CONTENT_JAVASCRIPT_DEFAULT,
   [WorkerType.NODE_NESTJS]: DEFAULT_TEMPLATE_CONTENT_NODE_NESTJS,
   [WorkerType.NODE_GRPCJS]: DEFAULT_TEMPLATE_CONTENT_NODE_GRPCJS,
   [WorkerType.NODE_NEXTJS_CYPRESS]: DEFAULT_NEXTJS_CYPRESS_VALIDATION_SCRIPT,

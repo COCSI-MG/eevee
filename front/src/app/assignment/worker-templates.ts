@@ -10,6 +10,8 @@ import {
  */
 function getFileExtension(workerType: WorkerType): string {
   switch (workerType) {
+    case WorkerType.JAVASCRIPT_DEFAULT:
+      return ".js";
     case WorkerType.NODE_NEXTJS_CYPRESS:
     case WorkerType.NODE_REACTJS_CYPRESS:
       return ".tsx";

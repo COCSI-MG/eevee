@@ -17,6 +17,11 @@ export const WORKER_LANGUAGE_MAP: Partial<
     fileExtension: ".ts",
     defaultFileName: "app",
   },
+  [WorkerType.JAVASCRIPT_DEFAULT]: {
+    editorLanguage: "javascript",
+    fileExtension: ".js",
+    defaultFileName: "app",
+  },
   [WorkerType.NODE_NESTJS]: {
     editorLanguage: "typescript",
     fileExtension: ".ts",

@@ -137,6 +137,7 @@ serviceAccount:
 workerImages:
   bootstrap: ghcr.io/cocsi-mg/eevee-worker-bootstrap:develop
   nodeDefault: ghcr.io/cocsi-mg/worker-node-default-img:develop
+  javascriptDefault: ghcr.io/cocsi-mg/worker-node-javascript-default-img:develop
   nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:develop
   nodeNestjs: ghcr.io/cocsi-mg/worker-nestjs-default-img:develop
   nodeGrpcjs: ghcr.io/cocsi-mg/worker-node-grpcjs-img:develop

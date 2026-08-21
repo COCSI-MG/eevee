@@ -7,6 +7,7 @@ import {
 } from '@eevee/execution-contracts';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { WorkerService } from 'src/worker/worker.service';
+import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 
 @Processor(EXECUTION_REQUEST_QUEUE, { concurrency: 5 })
 export class ExecutionRequestProcessor extends WorkerHost {
@@ -25,7 +26,7 @@ export class ExecutionRequestProcessor extends WorkerHost {
     return this.workerService.createWorkerWithInitContainer(
       job.data.jobName,
       job.data.workerType as WorkerType,
-      job.data.workerData,
+      job.data.workerData as CreateWorkerDto,
     );
   }
 }

@@ -1,5 +1,6 @@
 export enum WorkerType {
   NODE_DEFAULT = 'node_default',
+  JAVASCRIPT_DEFAULT = 'javascript_default',
   NODE_NESTJS = 'node_nestjs',
   NODE_REACTJS_CYPRESS = 'node_reactjs_cypress',
   NODE_GRPCJS = 'node_grpcjs',

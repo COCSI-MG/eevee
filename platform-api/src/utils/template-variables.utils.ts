@@ -1,4 +1,15 @@
 import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
+
+export type TemplateVariablesLanguage = 'typescript' | 'javascript';
+
+export function templateVariablesLanguageForWorker(
+  workerType: WorkerType,
+): TemplateVariablesLanguage {
+  return workerType === WorkerType.JAVASCRIPT_DEFAULT
+    ? 'javascript'
+    : 'typescript';
+}
 
 type TemplateParamLike = {
   id: number;
@@ -21,7 +32,7 @@ type AssignmentLike = {
   assignmentParams: AssignmentParamLike[];
 };
 
-function valueToTsLiteral(type: TemplateParamType, raw: string): string {
+function valueToLiteral(type: TemplateParamType, raw: string): string {
   switch (type) {
     case TemplateParamType.NUMBER: {
       const n = Number(raw);
@@ -45,21 +56,28 @@ function valueToTsLiteral(type: TemplateParamType, raw: string): string {
   }
 }
 
-export function buildTemplateVariablesModule(assignment: AssignmentLike): string {
+export function buildTemplateVariablesModule(
+  assignment: AssignmentLike,
+  language: TemplateVariablesLanguage = 'typescript',
+): string {
   const templates = assignment.assignmentTemplates.map((t) => t.template);
   const templateIds = templates.map((t) => t.id);
 
   const lines: string[] = [];
   lines.push('/* Auto-generated at runtime */');
   lines.push('');
-  lines.push('export type TemplateVars = Record<string, unknown>;');
-  lines.push('');
+  if (language === 'typescript') {
+    lines.push('export type TemplateVars = Record<string, unknown>;');
+    lines.push('');
+  }
   lines.push(
-    `export const templateIds = [${templateIds.map((id) => String(id)).join(', ')}] as const;`,
+    `export const templateIds = [${templateIds.map((id) => String(id)).join(', ')}]${language === 'typescript' ? ' as const' : ''};`,
   );
   lines.push('');
   lines.push(
-    'export const firstTemplateId = (templateIds[0] ?? null) as typeof templateIds[number] | null;',
+    language === 'typescript'
+      ? 'export const firstTemplateId = (templateIds[0] ?? null) as typeof templateIds[number] | null;'
+      : 'export const firstTemplateId = templateIds[0] ?? null;',
   );
   lines.push('');
   lines.push('export const templates = {');
@@ -74,23 +92,41 @@ export function buildTemplateVariablesModule(assignment: AssignmentLike): string
           ?.value ?? '';
       const paramType = param.type ?? TemplateParamType.STRING;
       const key = JSON.stringify(param.name);
-      const literal = valueToTsLiteral(paramType, raw);
+      const literal = valueToLiteral(paramType, raw);
       lines.push(`    ${key}: ${literal},`);
     }
     lines.push('  },');
   }
 
-  lines.push('} as const;');
+  lines.push(language === 'typescript' ? '} as const;' : '};');
   lines.push('');
-  lines.push('export function varsFor(templateId: number): TemplateVars {');
-  lines.push('  return (templates as any)[templateId] ?? {};');
+  lines.push(
+    language === 'typescript'
+      ? 'export function varsFor(templateId: number): TemplateVars {'
+      : 'export function varsFor(templateId) {',
+  );
+  lines.push(
+    language === 'typescript'
+      ? '  return (templates as any)[templateId] ?? {};'
+      : '  return templates[templateId] ?? {};',
+  );
   lines.push('}');
   lines.push('');
-  lines.push('export function varsForFirstTemplate(): TemplateVars {');
-  lines.push('  return firstTemplateId === null ? {} : varsFor(firstTemplateId);');
+  lines.push(
+    language === 'typescript'
+      ? 'export function varsForFirstTemplate(): TemplateVars {'
+      : 'export function varsForFirstTemplate() {',
+  );
+  lines.push(
+    '  return firstTemplateId === null ? {} : varsFor(firstTemplateId);',
+  );
   lines.push('}');
   lines.push('');
-  lines.push('export const vars: TemplateVars = varsForFirstTemplate();');
+  lines.push(
+    language === 'typescript'
+      ? 'export const vars: TemplateVars = varsForFirstTemplate();'
+      : 'export const vars = varsForFirstTemplate();',
+  );
 
   return lines.join('\n');
 }
@@ -111,15 +147,24 @@ type TemplateParamSpec = {
 export function buildTemplateVariablesModuleFromParams(
   paramValues: Record<string, string>,
   params: TemplateParamSpec[] = [],
+  language: TemplateVariablesLanguage = 'typescript',
 ): string {
   const lines: string[] = [];
   lines.push('/* Auto-generated at runtime (template-test preview) */');
   lines.push('');
-  lines.push('export type TemplateVars = Record<string, unknown>;');
-  lines.push('');
-  lines.push('export const templateIds = [0] as const;');
+  if (language === 'typescript') {
+    lines.push('export type TemplateVars = Record<string, unknown>;');
+    lines.push('');
+  }
   lines.push(
-    "export const firstTemplateId = (templateIds[0] ?? null) as typeof templateIds[number] | null;",
+    language === 'typescript'
+      ? 'export const templateIds = [0] as const;'
+      : 'export const templateIds = [0];',
+  );
+  lines.push(
+    language === 'typescript'
+      ? 'export const firstTemplateId = (templateIds[0] ?? null) as typeof templateIds[number] | null;'
+      : 'export const firstTemplateId = templateIds[0] ?? null;',
   );
   lines.push('');
   lines.push('export const templates = {');
@@ -128,23 +173,39 @@ export function buildTemplateVariablesModuleFromParams(
     const raw = paramValues[param.name] ?? '';
     const paramType = param.type ?? TemplateParamType.STRING;
     const key = JSON.stringify(param.name);
-    const literal = valueToTsLiteral(paramType, raw);
+    const literal = valueToLiteral(paramType, raw);
     lines.push(`    ${key}: ${literal},`);
   }
   lines.push('  },');
-  lines.push('} as const;');
+  lines.push(language === 'typescript' ? '} as const;' : '};');
   lines.push('');
-  lines.push('export function varsFor(templateId: number): TemplateVars {');
-  lines.push('  return (templates as any)[templateId] ?? {};');
+  lines.push(
+    language === 'typescript'
+      ? 'export function varsFor(templateId: number): TemplateVars {'
+      : 'export function varsFor(templateId) {',
+  );
+  lines.push(
+    language === 'typescript'
+      ? '  return (templates as any)[templateId] ?? {};'
+      : '  return templates[templateId] ?? {};',
+  );
   lines.push('}');
   lines.push('');
-  lines.push('export function varsForFirstTemplate(): TemplateVars {');
+  lines.push(
+    language === 'typescript'
+      ? 'export function varsForFirstTemplate(): TemplateVars {'
+      : 'export function varsForFirstTemplate() {',
+  );
   lines.push(
     '  return firstTemplateId === null ? {} : varsFor(firstTemplateId);',
   );
   lines.push('}');
   lines.push('');
-  lines.push('export const vars: TemplateVars = varsForFirstTemplate();');
+  lines.push(
+    language === 'typescript'
+      ? 'export const vars: TemplateVars = varsForFirstTemplate();'
+      : 'export const vars = varsForFirstTemplate();',
+  );
 
   return lines.join('\n');
 }
