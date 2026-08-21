@@ -658,20 +658,14 @@ export default function TemplateForm() {
             "semanticHighlighting.enabled": false,
           }}
           beforeMount={(monaco) => {
-            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-              {
-                noSemanticValidation: true,
-                noSyntaxValidation: true,
-                noSuggestionDiagnostics: true,
-              },
-            );
-            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
-              {
-                noSemanticValidation: true,
-                noSyntaxValidation: true,
-                noSuggestionDiagnostics: true,
-              },
-            );
+            const diagnosticsOptions = {
+              noSemanticValidation: true,
+              noSyntaxValidation: true,
+              noSuggestionDiagnostics: true,
+            };
+
+            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
+            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
           }}
         />
         {(formik.touched.content || formik.submitCount > 0) &&
