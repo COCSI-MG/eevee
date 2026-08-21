@@ -10,8 +10,6 @@ import { AttemptService } from 'src/attempt/attempt.service';
 import { AssignmentService } from 'src/assignment/assignment.service';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
-import { CreateSchedulingJobMessageDto } from './dto/create-scheduling-job-message.dto';
-import { CreatePreviewJobMessageDto } from './dto/create-preview-job-message.dto';
 import { plainToClass } from 'class-transformer';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -33,13 +31,7 @@ import {
 import { Repository, In } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { ExecutionRequestService } from 'src/execution/execution-request.service';
-import { EXECUTION_COMMAND_QUEUE } from '@eevee/execution-contracts';
-
-/**
- * Callback invoked by the scheduling processors whenever a queued job
- * transitions to a new status, so realtime consumers can be notified.
- */
-export type SchedulingStatusReporter = (status: string) => Promise<void> | void;
+import { EXECUTION_COMMAND_QUEUE, ExecutionCommand } from '@eevee/execution-contracts';
 
 @Injectable()
 export class SchedulingService {
@@ -56,7 +48,6 @@ export class SchedulingService {
     @InjectRepository(SchedulingPreviewRun)
     private readonly schedulingPreviewRunRepository: Repository<SchedulingPreviewRun>,
     @InjectQueue(EXECUTION_COMMAND_QUEUE) private readonly evaluationQueue: Queue,
-    @InjectQueue('preview-queue') private readonly previewQueue: Queue,
     @InjectQueue('ai-report-queue') private readonly aiReportQueue: Queue,
   ) {}
 
@@ -162,12 +153,12 @@ export class SchedulingService {
       receivedWork: createSchedulingDto.files ?? undefined,
     });
 
-    const message = plainToClass(CreateSchedulingJobMessageDto, {
-      attemptId: newAttempt.id,
-      userId: newAttempt.userId,
+    const message: ExecutionCommand = {
+      target: { kind: 'attempt', id: newAttempt.id, userId: newAttempt.userId },
+      jobName: `attempt-${newAttempt.id}-worker`,
       workerType: assignment.workerType,
       workerData,
-    });
+    };
 
     await this.evaluationQueue.add('evaluate-code', message);
 
@@ -177,7 +168,7 @@ export class SchedulingService {
   }
 
   async createPreviewRun(createSchedulingDto: CreateSchedulingDto) {
-    const assignment = await this.assignmentService.findOne(
+    const assignment = await this.assignmentService.findOneForExecution(
       createSchedulingDto.assignmentId,
     );
     if (!assignment) {
@@ -212,15 +203,29 @@ export class SchedulingService {
       report: '',
     });
 
-    const message = plainToClass(CreatePreviewJobMessageDto, {
-      previewRunId: previewRun.id,
-      userId: user.userId,
-      createSchedulingDto,
-    });
+    const jobName = `preview-run-${previewRun.id}-worker`;
+    try {
+      const workerData = await this.schedulingWorkerPreparationService.prepare({
+        assignment,
+        baseWorkerData: { ...createSchedulingDto },
+      });
+      const message: ExecutionCommand = {
+        target: { kind: 'preview', id: previewRun.id, userId: user.userId },
+        jobName,
+        workerType: assignment.workerType,
+        workerData,
+      };
 
-    await this.previewQueue.add('process-preview-job', message, {
-      jobId: `preview-run-${previewRun.id}`,
-    });
+      await this.schedulingPreviewRunRepository.update(previewRun.id, { jobName });
+      await this.evaluationQueue.add('evaluate-code', message);
+    } catch (error) {
+      await this.schedulingPreviewRunRepository.update(previewRun.id, {
+        status: SchedulingPreviewRunStatus.FAILED,
+        errorMessage:
+          error instanceof Error ? error.message : 'Preview preparation failed',
+        completedAt: new Date(),
+      });
+    }
 
     this.logger.log(
       `Preview job created with preview run ID: ${previewRun.id}`,
@@ -311,12 +316,16 @@ export class SchedulingService {
       attemptId: newAttempt.id,
     });
 
-    const message = plainToClass(CreateSchedulingJobMessageDto, {
-      attemptId: newAttempt.id,
-      userId: originalAttempt.userId,
+    const message: ExecutionCommand = {
+      target: {
+        kind: 'attempt',
+        id: newAttempt.id,
+        userId: originalAttempt.userId,
+      },
+      jobName: `attempt-${newAttempt.id}-worker`,
       workerType: originalAttempt.assignment.workerType,
       workerData: preparedWorkerData,
-    });
+    };
 
     await this.evaluationQueue.add('evaluate-code', message);
 
@@ -435,136 +444,4 @@ export class SchedulingService {
     }
   }
 
-  async processPreviewJob(
-    payload: CreatePreviewJobMessageDto,
-    onStatus?: SchedulingStatusReporter,
-  ) {
-    const { previewRunId, createSchedulingDto } = payload;
-    this.logger.log(
-      `Processing preview job for preview run ID: ${previewRunId}`,
-    );
-
-    const assignment = await this.assignmentService.findOneForExecution(
-      createSchedulingDto.assignmentId,
-    );
-    if (!assignment) {
-      this.logger.fatal(
-        `Assignment ${createSchedulingDto.assignmentId} not found for preview run ${previewRunId}`,
-      );
-      await this.schedulingPreviewRunRepository.update(
-        {
-          id: previewRunId,
-          status: SchedulingPreviewRunStatus.PENDING,
-        },
-        {
-          status: SchedulingPreviewRunStatus.FAILED,
-          errorMessage: 'Assignment not found',
-          completedAt: new Date(),
-        },
-      );
-      await onStatus?.(SchedulingPreviewRunStatus.FAILED);
-      return;
-    }
-
-    await this.processPreviewRun(
-      previewRunId,
-      assignment,
-      createSchedulingDto,
-      onStatus,
-    );
-  }
-
-  private async processPreviewRun(
-    previewRunId: number,
-    assignment: Assignment,
-    createSchedulingDto: CreateSchedulingDto,
-    onStatus?: SchedulingStatusReporter,
-  ) {
-    const jobName = `preview-run-${previewRunId}-worker`;
-
-    const startPreviewRunResult =
-      await this.schedulingPreviewRunRepository.update(
-        {
-          id: previewRunId,
-          status: SchedulingPreviewRunStatus.PENDING,
-        },
-        {
-          status: SchedulingPreviewRunStatus.RUNNING,
-          jobName,
-          errorMessage: undefined,
-        },
-      );
-
-    if (!startPreviewRunResult.affected) {
-      this.logger.warn(
-        `Preview run ${previewRunId} was not started because it is no longer pending`,
-      );
-      return;
-    }
-
-    await onStatus?.(SchedulingPreviewRunStatus.RUNNING);
-
-    try {
-      const workerResult = await this.prepareAndRunWorker({
-        assignment,
-        baseWorkerData: {
-          ...createSchedulingDto,
-        },
-        jobName,
-      });
-
-      if (!workerResult) {
-        await this.schedulingPreviewRunRepository.update(previewRunId, {
-          status: SchedulingPreviewRunStatus.FAILED,
-          errorMessage: 'No test files available for execution.',
-          completedAt: new Date(),
-        });
-        await onStatus?.(SchedulingPreviewRunStatus.FAILED);
-        return;
-      }
-
-      const score = this.scorePolicyService.calculateScore(workerResult);
-      const isAcceptable = this.scorePolicyService.isAcceptable(score);
-
-      await this.schedulingPreviewRunRepository.update(
-        {
-          id: previewRunId,
-          status: SchedulingPreviewRunStatus.RUNNING,
-        },
-        {
-          status: SchedulingPreviewRunStatus.COMPLETED,
-          isAcceptable,
-          score,
-          report: workerResult.completeTrace,
-          fails: workerResult.failures,
-          passes: workerResult.passes,
-          completedAt: new Date(),
-        },
-      );
-      await onStatus?.(SchedulingPreviewRunStatus.COMPLETED);
-    } catch (error) {
-      const previewRun = await this.schedulingPreviewRunRepository.findOne({
-        where: { id: previewRunId },
-      });
-
-      if (previewRun?.status === SchedulingPreviewRunStatus.CANCELLED) {
-        await onStatus?.(SchedulingPreviewRunStatus.CANCELLED);
-        return;
-      }
-
-      await this.schedulingPreviewRunRepository.update(
-        {
-          id: previewRunId,
-          status: SchedulingPreviewRunStatus.RUNNING,
-        },
-        {
-          status: SchedulingPreviewRunStatus.FAILED,
-          errorMessage:
-            error instanceof Error ? error.message : 'Preview run failed',
-          completedAt: new Date(),
-        },
-      );
-      await onStatus?.(SchedulingPreviewRunStatus.FAILED);
-    }
-  }
 }

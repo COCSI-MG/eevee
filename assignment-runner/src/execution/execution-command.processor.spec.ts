@@ -26,8 +26,8 @@ describe('ExecutionCommandProcessor', () => {
 
     await processor.process({
       data: {
-        attemptId: 10,
-        userId: 42,
+        target: { kind: 'attempt', id: 10, userId: 42 },
+        jobName: 'attempt-10-worker',
         workerType: WorkerType.NODE_DEFAULT,
         workerData: { files: { 'index.ts': 'console.log(1)' } },
       },
@@ -38,8 +38,12 @@ describe('ExecutionCommandProcessor', () => {
       WorkerType.NODE_DEFAULT,
       { files: { 'index.ts': 'console.log(1)' } },
     );
-    expect(executionEventPublisher.publishStarted).toHaveBeenCalledWith(10, 42);
-    expect(executionEventPublisher.publishCompleted).toHaveBeenCalledWith(10, 42, {
+    expect(executionEventPublisher.publishStarted).toHaveBeenCalledWith({
+      kind: 'attempt', id: 10, userId: 42,
+    });
+    expect(executionEventPublisher.publishCompleted).toHaveBeenCalledWith({
+      kind: 'attempt', id: 10, userId: 42,
+    }, {
       isAcceptable: true,
       score: 0.75,
       report: 'trace',

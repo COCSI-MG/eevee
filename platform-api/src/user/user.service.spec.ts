@@ -7,19 +7,19 @@ import { HashUtils } from 'src/utils/hash.utils';
 describe('UserService', () => {
   let service: UserService;
   let userRepository: {
-    upsert: jest.Mock;
+    save: jest.Mock;
     update: jest.Mock;
     findOne: jest.Mock;
-    delete: jest.Mock;
+    softDelete: jest.Mock;
     createQueryBuilder: jest.Mock;
   };
 
   beforeEach(async () => {
     userRepository = {
-      upsert: jest.fn(),
+      save: jest.fn(),
       update: jest.fn(),
       findOne: jest.fn(),
-      delete: jest.fn(),
+      softDelete: jest.fn(),
       createQueryBuilder: jest.fn(),
     };
 
@@ -40,7 +40,7 @@ describe('UserService', () => {
     jest.restoreAllMocks();
   });
 
-  it('creates or replaces a user with hashed password and email conflict upsert', async () => {
+  it('creates a user with a hashed password', async () => {
     const dto = {
       email: 'teacher@example.com',
       name: 'Teacher',
@@ -49,37 +49,32 @@ describe('UserService', () => {
     };
 
     jest.spyOn(HashUtils, 'hashPassword').mockReturnValue('hashed-password');
-    userRepository.upsert.mockResolvedValue({
-      identifiers: [{ id: 10 }],
-    } as any);
-    userRepository.findOne.mockResolvedValue({
+    userRepository.findOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
       id: 10,
       email: dto.email,
       name: dto.name,
       isAdmin: dto.isAdmin,
       userClasses: [],
-    } as unknown as User);
+      } as unknown as User);
+    userRepository.save.mockResolvedValue({ id: 10 } as User);
 
     const result = await service.createOrReplace(dto as any);
 
     expect(HashUtils.hashPassword).toHaveBeenCalledWith(dto.password);
-    expect(userRepository.upsert).toHaveBeenCalledWith(
+    expect(userRepository.save).toHaveBeenCalledWith(
       expect.objectContaining({
         email: dto.email,
         name: dto.name,
         isAdmin: dto.isAdmin,
         passwordHash: 'hashed-password',
       }),
-      expect.objectContaining({
-        conflictPaths: ['email'],
-        skipUpdateIfNoValuesChanged: true,
-        upsertType: 'on-conflict-do-update',
-      }),
     );
-    expect(userRepository.upsert.mock.calls[0][0]).not.toHaveProperty(
+    expect(userRepository.save.mock.calls[0][0]).not.toHaveProperty(
       'password',
     );
-    expect(userRepository.findOne).toHaveBeenCalledWith({
+    expect(userRepository.findOne).toHaveBeenLastCalledWith({
       where: { id: 10 },
     });
     expect(result).toEqual({
@@ -90,18 +85,18 @@ describe('UserService', () => {
     });
   });
 
-  it('uses the id returned by upsert to load the saved user', async () => {
+  it('replaces an active user but does not revive a soft-deleted row', async () => {
     jest.spyOn(HashUtils, 'hashPassword').mockReturnValue('hashed-password');
-    userRepository.upsert.mockResolvedValue({
-      identifiers: [{ id: 42 }],
-    } as any);
-    userRepository.findOne.mockResolvedValue({
+    userRepository.findOne
+      .mockResolvedValueOnce({ id: 42, email: 'saved@example.com' } as User)
+      .mockResolvedValueOnce({
       id: 42,
       email: 'saved@example.com',
       name: 'Saved User',
       isAdmin: false,
       userClasses: [],
-    } as unknown as User);
+      } as unknown as User);
+    userRepository.save.mockResolvedValue({ id: 42 } as User);
 
     await service.createOrReplace({
       email: 'saved@example.com',
@@ -110,7 +105,10 @@ describe('UserService', () => {
       isAdmin: false,
     } as any);
 
-    expect(userRepository.findOne).toHaveBeenCalledWith({
+    expect(userRepository.save).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 42, email: 'saved@example.com' }),
+    );
+    expect(userRepository.findOne).toHaveBeenLastCalledWith({
       where: { id: 42 },
     });
   });
@@ -161,7 +159,7 @@ describe('UserService', () => {
     userRepository.findOne.mockResolvedValue(null);
 
     await expect(service.remove(1)).rejects.toThrow('User not found');
-    expect(userRepository.delete).not.toHaveBeenCalled();
+    expect(userRepository.softDelete).not.toHaveBeenCalled();
   });
 
   it('throws when removing an admin user', async () => {
@@ -171,7 +169,7 @@ describe('UserService', () => {
     } as unknown as User);
 
     await expect(service.remove(1)).rejects.toThrow('Cannot delete admin user');
-    expect(userRepository.delete).not.toHaveBeenCalled();
+    expect(userRepository.softDelete).not.toHaveBeenCalled();
   });
 
   it('deletes a removable user', async () => {
@@ -179,11 +177,11 @@ describe('UserService', () => {
       id: 7,
       isAdmin: false,
     } as unknown as User);
-    userRepository.delete.mockResolvedValue({ affected: 1 } as any);
+    userRepository.softDelete.mockResolvedValue({ affected: 1 } as any);
 
     await service.remove(7);
 
-    expect(userRepository.delete).toHaveBeenCalledWith({ id: 7 });
+    expect(userRepository.softDelete).toHaveBeenCalledWith({ id: 7 });
   });
 
   const makeQueryBuilder = () => {

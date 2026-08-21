@@ -6,6 +6,30 @@ import { AttemptService } from 'src/attempt/attempt.service';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { RealtimeGateway } from 'src/realtime/realtime.gateway';
 import { ExecutionEvent } from './execution-event';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  SchedulingPreviewRun,
+  SchedulingPreviewRunStatus,
+} from 'src/scheduling/entities/scheduling-preview-run.entity';
+
+const ATTEMPT_STATUS_BY_EXECUTION_STATUS: Record<
+  ExecutionEvent['status'],
+  AttemptStatus
+> = {
+  [AttemptStatus.RUNNING]: AttemptStatus.RUNNING,
+  [AttemptStatus.COMPLETED]: AttemptStatus.COMPLETED,
+  [AttemptStatus.FAILED]: AttemptStatus.FAILED,
+};
+
+const PREVIEW_STATUS_BY_EXECUTION_STATUS: Record<
+  ExecutionEvent['status'],
+  SchedulingPreviewRunStatus
+> = {
+  [SchedulingPreviewRunStatus.RUNNING]: SchedulingPreviewRunStatus.RUNNING,
+  [SchedulingPreviewRunStatus.COMPLETED]: SchedulingPreviewRunStatus.COMPLETED,
+  [SchedulingPreviewRunStatus.FAILED]: SchedulingPreviewRunStatus.FAILED,
+};
 
 @Processor(EXECUTION_RESULTS_QUEUE)
 export class ExecutionResultConsumer extends WorkerHost {
@@ -14,24 +38,33 @@ export class ExecutionResultConsumer extends WorkerHost {
   constructor(
     private readonly attemptService: AttemptService,
     private readonly realtimeGateway: RealtimeGateway,
+    @InjectRepository(SchedulingPreviewRun)
+    private readonly previewRepository: Repository<SchedulingPreviewRun>,
   ) {
     super();
   }
 
   async process(job: Job<ExecutionEvent>) {
     const event = job.data;
-    const attempt = await this.attemptService.findOne(event.attemptId);
+    if (event.target.kind === 'preview') {
+      await this.processPreview(event);
+      return;
+    }
 
-    if (!attempt || attempt.userId !== event.userId) {
+    const nextStatus = ATTEMPT_STATUS_BY_EXECUTION_STATUS[event.status];
+
+    const attempt = await this.attemptService.findOne(event.target.id);
+
+    if (!attempt || attempt.userId !== event.target.userId) {
       this.logger.warn(`Ignoring execution event ${event.eventId}`);
       return;
     }
 
-    if (!this.canTransition(attempt.status, event.status)) {
+    if (!this.canTransition(attempt.status, nextStatus)) {
       return;
     }
 
-    switch (event.status) {
+    switch (nextStatus) {
       case AttemptStatus.RUNNING:
         await this.attemptService.update({
           id: attempt.id,
@@ -69,7 +102,49 @@ export class ExecutionResultConsumer extends WorkerHost {
       kind: 'attempt',
       id: attempt.id,
       userId: attempt.userId,
-      status: event.status,
+      status: nextStatus,
+    });
+  }
+
+  private async processPreview(event: ExecutionEvent) {
+    const nextStatus = PREVIEW_STATUS_BY_EXECUTION_STATUS[event.status];
+    const preview = await this.previewRepository.findOne({
+      where: { id: event.target.id },
+    });
+    if (!preview || preview.userId !== event.target.userId) {
+      this.logger.warn(`Ignoring execution event ${event.eventId}`);
+      return;
+    }
+    if (!this.canTransitionPreview(preview.status, nextStatus)) return;
+
+    if (nextStatus === SchedulingPreviewRunStatus.RUNNING) {
+      await this.previewRepository.update(preview.id, {
+        status: SchedulingPreviewRunStatus.RUNNING,
+      });
+    } else if (
+      nextStatus === SchedulingPreviewRunStatus.COMPLETED &&
+      event.result
+    ) {
+      await this.previewRepository.update(preview.id, {
+        status: SchedulingPreviewRunStatus.COMPLETED,
+        ...event.result,
+        completedAt: new Date(),
+      });
+    } else if (nextStatus === SchedulingPreviewRunStatus.FAILED) {
+      await this.previewRepository.update(preview.id, {
+        status: SchedulingPreviewRunStatus.FAILED,
+        errorMessage: event.errorMessage ?? 'Execution failed',
+        completedAt: new Date(),
+      });
+    } else {
+      return;
+    }
+
+    this.realtimeGateway.emitSchedulingEvent({
+      kind: 'preview',
+      id: preview.id,
+      userId: preview.userId,
+      status: nextStatus,
     });
   }
 
@@ -81,6 +156,21 @@ export class ExecutionResultConsumer extends WorkerHost {
     return (
       (next === AttemptStatus.COMPLETED || next === AttemptStatus.FAILED) &&
       (current === AttemptStatus.PENDING || current === AttemptStatus.RUNNING)
+    );
+  }
+
+  private canTransitionPreview(
+    current: SchedulingPreviewRunStatus,
+    next: SchedulingPreviewRunStatus,
+  ) {
+    if (next === SchedulingPreviewRunStatus.RUNNING) {
+      return current === SchedulingPreviewRunStatus.PENDING;
+    }
+    return (
+      (next === SchedulingPreviewRunStatus.COMPLETED ||
+        next === SchedulingPreviewRunStatus.FAILED) &&
+      (current === SchedulingPreviewRunStatus.PENDING ||
+        current === SchedulingPreviewRunStatus.RUNNING)
     );
   }
 }

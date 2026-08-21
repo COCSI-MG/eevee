@@ -16,9 +16,6 @@ import {
     }),
     BullModule.registerQueue(
       {
-        name: 'preview-queue',
-      },
-      {
         name: 'ai-report-queue',
       },
       {

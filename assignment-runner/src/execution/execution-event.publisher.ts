@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { randomUUID } from 'crypto';
 import { EXECUTION_RESULTS_QUEUE } from '@eevee/execution-contracts';
+import { ExecutionTarget } from '@eevee/execution-contracts';
 import { ExecutionEvent, ExecutionEventName } from './execution-event';
 
 @Injectable()
@@ -26,34 +27,30 @@ export class ExecutionEventPublisher {
     });
   }
 
-  publishStarted(attemptId: number, userId: number) {
+  publishStarted(target: ExecutionTarget) {
     return this.publish({
       name: 'execution.started.v1',
-      attemptId,
-      userId,
+      target,
       status: 'running',
     });
   }
 
   publishCompleted(
-    attemptId: number,
-    userId: number,
+    target: ExecutionTarget,
     result: NonNullable<ExecutionEvent['result']>,
   ) {
     return this.publish({
       name: 'execution.completed.v1',
-      attemptId,
-      userId,
+      target,
       status: 'completed',
       result,
     });
   }
 
-  publishFailed(attemptId: number, userId: number, errorMessage: string) {
+  publishFailed(target: ExecutionTarget, errorMessage: string) {
     return this.publish({
       name: 'execution.failed.v1',
-      attemptId,
-      userId,
+      target,
       status: 'failed',
       errorMessage,
     });

@@ -52,7 +52,6 @@ describe('SchedulingService', () => {
     Pick<SchedulingWorkerPreparationService, 'prepare'>
   >;
   let schedulingQueue: jest.Mocked<Pick<Queue, 'add'>>;
-  let previewQueue: jest.Mocked<Pick<Queue, 'add'>>;
   let requestContextService: jest.Mocked<
     Pick<RequestContextService, 'getUser'>
   >;
@@ -97,10 +96,6 @@ describe('SchedulingService', () => {
       add: jest.fn(),
     };
 
-    previewQueue = {
-      add: jest.fn(),
-    };
-
     requestContextService = {
       getUser: jest.fn().mockReturnValue({ userId: 42, isAdmin: false }),
     };
@@ -129,7 +124,6 @@ describe('SchedulingService', () => {
       aiReportService as unknown as AiReportService,
       schedulingPreviewRunRepository as unknown as Repository<SchedulingPreviewRun>,
       schedulingQueue as unknown as Queue,
-      previewQueue as unknown as Queue,
       aiReportQueue as unknown as Queue,
     );
 
@@ -233,8 +227,8 @@ describe('SchedulingService', () => {
     expect(schedulingQueue.add).toHaveBeenCalledWith(
       'evaluate-code',
       expect.objectContaining({
-        attemptId: 25,
-        userId: 42,
+        target: { kind: 'attempt', id: 25, userId: 42 },
+        jobName: 'attempt-25-worker',
         workerType: WorkerType.NODE_DEFAULT,
         workerData: expect.objectContaining({
           testFilesContent: ['test content'],
@@ -265,7 +259,7 @@ describe('SchedulingService', () => {
   });
 
   it('returns existing preview run when one is already active', async () => {
-    assignmentService.findOne.mockResolvedValue({
+    assignmentService.findOneForExecution.mockResolvedValue({
       id: 10,
       workerType: WorkerType.NODE_DEFAULT,
     } as never);
@@ -290,82 +284,35 @@ describe('SchedulingService', () => {
     );
   });
 
-  it('does not start a preview worker when the run is no longer pending', async () => {
-    schedulingPreviewRunRepository.update.mockResolvedValue({
-      affected: 0,
+  it('prepares and enqueues a preview directly for Assignment Runner', async () => {
+    assignmentService.findOneForExecution.mockResolvedValue({
+      id: 10,
+      workerType: WorkerType.NODE_DEFAULT,
+      assignmentTemplates: [{}],
     } as never);
-
-    await (service as any).processPreviewRun(
-      77,
-      {
-        id: 10,
-        workerType: WorkerType.NODE_DEFAULT,
-      },
-      {
-        assignmentId: 10,
-        applicationFileContent: '',
-        files: { 'src/index.ts': 'content' },
-      },
-    );
-
-    expect(schedulingPreviewRunRepository.update).toHaveBeenCalledWith(
-      {
-        id: 77,
-        status: SchedulingPreviewRunStatus.PENDING,
-      },
-      expect.objectContaining({
-        status: SchedulingPreviewRunStatus.RUNNING,
-        jobName: 'preview-run-77-worker',
-      }),
-    );
-    expect(schedulingWorkerPreparationService.prepare).not.toHaveBeenCalled();
-    expect(executionRequestService.execute).not.toHaveBeenCalled();
-  });
-
-  it('does not overwrite a cancelled preview run with completed status', async () => {
-    schedulingPreviewRunRepository.update
-      .mockResolvedValueOnce({
-        affected: 1,
-      } as never)
-      .mockResolvedValueOnce({
-        affected: 0,
-      } as never);
+    schedulingPreviewRunRepository.findOne.mockResolvedValue(null);
+    schedulingPreviewRunRepository.save.mockResolvedValue({
+      id: 78,
+      userId: 42,
+      assignmentId: 10,
+      status: SchedulingPreviewRunStatus.PENDING,
+    } as never);
     schedulingWorkerPreparationService.prepare.mockResolvedValue({
       files: { 'index.ts': 'console.log(1);' },
     });
-    executionRequestService.execute.mockResolvedValue({
-      passes: 3,
-      failures: 1,
-      completeTrace: 'trace',
-    } as never);
-    scorePolicyService.calculateScore.mockReturnValue(0.75);
-    scorePolicyService.isAcceptable.mockReturnValue(false);
 
-    await (service as any).processPreviewRun(
-      78,
-      {
-        id: 10,
-        workerType: WorkerType.NODE_DEFAULT,
-        assignmentTemplates: [{}],
-      },
-      {
-        assignmentId: 10,
-        applicationFileContent: '',
-        files: { 'src/index.ts': 'content' },
-      },
-    );
+    await service.createPreviewRun({
+      assignmentId: 10,
+      applicationFileContent: '',
+      files: { 'src/index.ts': 'content' },
+    });
 
-    expect(schedulingPreviewRunRepository.update).toHaveBeenNthCalledWith(
-      2,
-      {
-        id: 78,
-        status: SchedulingPreviewRunStatus.RUNNING,
-      },
-      expect.objectContaining({
-        status: SchedulingPreviewRunStatus.COMPLETED,
-        report: 'trace',
-      }),
-    );
+    expect(schedulingQueue.add).toHaveBeenCalledWith('evaluate-code', {
+      target: { kind: 'preview', id: 78, userId: 42 },
+      jobName: 'preview-run-78-worker',
+      workerType: WorkerType.NODE_DEFAULT,
+      workerData: { files: { 'index.ts': 'console.log(1);' } },
+    });
   });
 
   it('throws NotFoundException for requestAiFeedback when attempt not found', async () => {

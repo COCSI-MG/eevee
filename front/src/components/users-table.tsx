@@ -63,6 +63,10 @@ export default function UsersTable({
                 <TableActions
                   href={`/admin/users/${user.id}`}
                   onDelete={() => handleDelete(user.id)}
+                  resourceName="usuário"
+                  itemName={`${user.name} (${user.email})`}
+                  deleteTitle="Excluir este usuário?"
+                  deleteDescription={`O usuário ${user.name} perderá o acesso à plataforma. Suas tentativas e demais registros históricos serão preservados.`}
                 />
               </TableCell>
             </TableRow>

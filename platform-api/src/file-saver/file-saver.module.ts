@@ -7,6 +7,7 @@ import { FileEntry } from './entities/file-saver.entity';
 import { SyncJob } from './entities/sync-job.entity';
 import { GithubModule } from 'src/github/github.module';
 import { BullMQModule } from 'src/bullmq/bullmq.module';
+import { FileSaverConsumer } from './file-saver.processor';
 
 @Module({
   controllers: [FileSaverController],
@@ -16,7 +17,7 @@ import { BullMQModule } from 'src/bullmq/bullmq.module';
     GithubModule,
     BullMQModule,
   ],
-  providers: [FileSaverService],
+  providers: [FileSaverService, FileSaverConsumer],
   exports: [FileSaverService],
 })
 export class FileSaverModule {}

@@ -18,19 +18,16 @@ $ npm run start
 $ npm run start:dev
 
 # queue worker (required to process scheduling attempts)
-$ npm run start:worker:dev
 
 # production mode
 $ npm run start:prod
 
 # queue worker (production)
-$ npm run start:worker:prod
 ```
 
 When running locally, keep both processes alive in separate terminals:
 
-1. Platform API server (`start:dev`): public REST/WebSocket API; owns attempt state and consumes `execution-results` to relay authenticated realtime updates.
-2. Execution orchestrator (`start:worker:dev`): consumes `execution-commands`, creates Kubernetes workers, and publishes lifecycle facts to `execution-results`.
+The Platform API server (`start:dev`) owns HTTP/WebSocket endpoints, platform background jobs, and persistence of correlated execution results. Assignment Runner is the separate execution service that consumes `execution-commands`, creates Kubernetes workers, and publishes lifecycle facts to `execution-results`.
 
 An execution submission follows this flow:
 
