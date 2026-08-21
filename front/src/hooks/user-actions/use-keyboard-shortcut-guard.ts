@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { isAllowedEditorAction } from "./allowed-editor-actions";
 import { ClipboardAction, RegisterClipboardAttempt } from "./types";
 
 interface UseKeyboardShortcutGuardOptions {
@@ -14,15 +15,21 @@ const CLIPBOARD_SHORTCUTS: Record<string, ClipboardAction> = {
   x: "cut",
 };
 
-function isBlockedKeyboardShortcut(event: KeyboardEvent) {
+function isDevToolsShortcut(event: KeyboardEvent) {
   const isModifierShortcut = event.ctrlKey || event.metaKey;
   const key = event.key.toLowerCase();
 
   return (
     event.key === "F12" ||
-    (isModifierShortcut && event.shiftKey && BLOCKED_DEVTOOLS_KEYS.has(key)) ||
-    (isModifierShortcut && BLOCKED_MODIFIER_KEYS.has(key))
+    (isModifierShortcut && event.shiftKey && BLOCKED_DEVTOOLS_KEYS.has(key))
   );
+}
+
+function isBlockedModifierShortcut(event: KeyboardEvent) {
+  const isModifierShortcut = event.ctrlKey || event.metaKey;
+  const key = event.key.toLowerCase();
+
+  return isModifierShortcut && BLOCKED_MODIFIER_KEYS.has(key);
 }
 
 export function useKeyboardShortcutGuard({
@@ -35,7 +42,14 @@ export function useKeyboardShortcutGuard({
     }
 
     const preventKeyboardShortcuts = (event: KeyboardEvent) => {
-      if (!isBlockedKeyboardShortcut(event)) {
+      const isDevToolsAction = isDevToolsShortcut(event);
+      const isBlockedModifierAction = isBlockedModifierShortcut(event);
+
+      if (!isDevToolsAction && !isBlockedModifierAction) {
+        return;
+      }
+
+      if (!isDevToolsAction && isAllowedEditorAction()) {
         return;
       }
 
