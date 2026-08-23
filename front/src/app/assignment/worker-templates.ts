@@ -4,39 +4,7 @@ import {
   DEFAULT_REACTJS_CYPRESS_WORKSPACE_FILES,
   WorkerDefaultTemplateMap,
 } from "@/app/admin/assignments/constants";
-
-/**
- * Returns the appropriate file extension based on worker type
- */
-function getFileExtension(workerType: WorkerType): string {
-  switch (workerType) {
-    case WorkerType.JAVASCRIPT_DEFAULT:
-      return ".js";
-    case WorkerType.NODE_NEXTJS_CYPRESS:
-    case WorkerType.NODE_REACTJS_CYPRESS:
-      return ".tsx";
-    case WorkerType.PYTHON_DEFAULT:
-      return ".py";
-    default:
-      return ".ts";
-  }
-}
-
-/**
- * Returns the appropriate file name based on worker type
- */
-function getFileName(workerType: WorkerType): string {
-  const ext = getFileExtension(workerType);
-
-  switch (workerType) {
-    case WorkerType.NODE_NEXTJS_CYPRESS:
-      return `page${ext}`;
-    case WorkerType.NODE_REACTJS_CYPRESS:
-      return `App${ext}`;
-    default:
-      return `app${ext}`;
-  }
-}
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";
 
 /**
  * Creates a default file node structure based on worker type
@@ -76,7 +44,8 @@ export function createDefaultFileNode(
     return createSrcRootNode(children);
   }
 
-  const fileName = getFileName(workerType);
+  const { defaultFileName, fileExtension } = getWorkerLanguageConfig(workerType);
+  const fileName = `${defaultFileName}${fileExtension}`;
   const content = boilerplate ?? WorkerDefaultTemplateMap[workerType];
 
   return createSrcRootNode([createFileNode(`src/${fileName}`, content)]);

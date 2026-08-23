@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { isAllowedEditorAction } from "./allowed-editor-actions";
+import { isFocusedEditorExemptFromActionGuards } from "./editor-action-guard";
 import { ClipboardAction, RegisterClipboardAttempt } from "./types";
 
 interface UseKeyboardShortcutGuardOptions {
@@ -49,7 +49,7 @@ export function useKeyboardShortcutGuard({
         return;
       }
 
-      if (!isDevToolsAction && isAllowedEditorAction()) {
+      if (!isDevToolsAction && isFocusedEditorExemptFromActionGuards()) {
         return;
       }
 

@@ -10,12 +10,9 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { Badge } from "../ui/badge";
-import dynamic from "next/dynamic";
 import { Template, TemplateParamType } from "@/app/interface/scheduler-api/template";
 import { Tooltip } from "../ui/tooltip";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 interface TemplateConfigDialogProps {
   configTemplateDialog: Template | null;
@@ -72,22 +69,15 @@ export default function TemplateConfigDialog({
                     </Label>
                     <div className="relative">
                       <div className="border border-slate-600 rounded-md overflow-auto min-w-0">
-                        <Editor
+                        <MonacoCodeEditor
+                          preset="parameter-input"
                           value={paramsValues[param.id] || ""}
                           onChange={(value) => {
                             handleSetParamsValues(param.id, value || "");
                           }}
-                          theme="vs-dark"
-                          defaultLanguage={getWorkerLanguageConfig(configTemplateDialog?.workerType).editorLanguage}
+                          workerType={configTemplateDialog?.workerType}
                           height="100px"
                           className="sm:h-[120px] lg:h-[140px]"
-                          options={{
-                            minimap: { enabled: false },
-                            scrollBeyondLastLine: false,
-                            fontSize: 12,
-                            lineHeight: 16,
-                            wordWrap: "on",
-                          }}
                         />
                       </div>
                       <div className="absolute top-2 right-2">

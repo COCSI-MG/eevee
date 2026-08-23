@@ -14,6 +14,7 @@ import {
 import ListSearch from "@/components/shared/list-search";
 import Loader from "@/components/loader";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
+import { normalizeString } from "@/utils/string";
 
 export interface SelectFromListModalProps<T> {
   open: boolean;
@@ -63,7 +64,7 @@ export default function SelectFromListModal<T>({
   }, [open, setSearch]);
 
   const filteredItems = useMemo(() => {
-    const q = debouncedSearch.trim().toLowerCase();
+    const q = normalizeString(debouncedSearch);
     if (!q) return items;
     return items.filter((item) =>
       searchKeys(item).some(

@@ -16,7 +16,6 @@ import { TemplatesService } from "@/app/integration/scheduler-api/templates";
 import { toast } from "@/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import dynamic from "next/dynamic";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { AxiosError } from "axios";
@@ -43,11 +42,7 @@ import {
 import { Tooltip } from "../ui/tooltip";
 import { TemplateTestDialog } from "./template-test-dialog";
 import QueryErrorState from "@/components/shared/query-error-state";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
-});
+import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 const upsertTemplateSchema = Yup.object().shape({
   title: Yup.string()
@@ -225,10 +220,6 @@ export default function TemplateForm() {
     setLastWorkerTypeForDefault(currentWorkerType);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.workerType, isNewTemplate]);
-
-  const editorLanguage = getWorkerLanguageConfig(
-    formik.values.workerType,
-  ).editorLanguage;
 
   const handleParamsBlur = (value: string) => {
     const paramsArray = parseParamsInput(value);
@@ -540,45 +531,15 @@ export default function TemplateForm() {
                 </CardHeader>
                 <CardContent className="pb-6">
                   <div style={{ height: "600px" }}>
-                    <Editor
+                    <MonacoCodeEditor
+                      preset="template-authoring"
                       height="600px"
-                      defaultLanguage={editorLanguage}
+                      workerType={formik.values.workerType}
                       value={formik.values.content}
                       onChange={(value) =>
                         formik.setFieldValue("content", value || "")
                       }
-                      theme="vs-dark"
                       className="bg-slate-700 border-slate-600 text-white"
-                      options={{
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        wordWrap: "on",
-                        wrappingIndent: "indent",
-                        fontSize: 14,
-                        lineNumbers: "on",
-                        quickSuggestions: false,
-                        suggest: {
-                          showWords: false,
-                          showSnippets: false,
-                        },
-                        "semanticHighlighting.enabled": false,
-                      }}
-                      beforeMount={(monaco) => {
-                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          },
-                        );
-                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          },
-                        );
-                      }}
                     />
                   </div>
                   {(formik.touched.content || formik.submitCount > 0) &&
@@ -636,37 +597,13 @@ export default function TemplateForm() {
         minimizeLabel="Minimizar"
         contentClassName="flex flex-col"
       >
-        <Editor
+        <MonacoCodeEditor
+          preset="template-authoring"
           height="100%"
-          defaultLanguage={editorLanguage}
+          workerType={formik.values.workerType}
           value={formik.values.content}
           onChange={(value) => formik.setFieldValue("content", value || "")}
-          theme="vs-dark"
           className="flex-1 min-h-0 bg-slate-700 border-slate-600 text-white"
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: "on",
-            wrappingIndent: "indent",
-            fontSize: 14,
-            lineNumbers: "on",
-            quickSuggestions: false,
-            suggest: {
-              showWords: false,
-              showSnippets: false,
-            },
-            "semanticHighlighting.enabled": false,
-          }}
-          beforeMount={(monaco) => {
-            const diagnosticsOptions = {
-              noSemanticValidation: true,
-              noSyntaxValidation: true,
-              noSuggestionDiagnostics: true,
-            };
-
-            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
-            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
-          }}
         />
         {(formik.touched.content || formik.submitCount > 0) &&
           formik.errors.content && (

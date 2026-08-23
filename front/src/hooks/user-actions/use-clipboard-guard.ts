@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { isAllowedEditorAction } from "./allowed-editor-actions";
+import { isFocusedEditorExemptFromActionGuards } from "./editor-action-guard";
 import { ClipboardAction, RegisterClipboardAttempt } from "./types";
 
 interface UseClipboardGuardOptions {
@@ -19,7 +19,7 @@ export function useClipboardGuard({
     }
 
     const preventClipboardAction = (event: ClipboardEvent) => {
-      if (isAllowedEditorAction()) {
+      if (isFocusedEditorExemptFromActionGuards()) {
         return;
       }
 

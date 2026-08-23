@@ -1,10 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
-import { Editor } from '@monaco-editor/react';
 import { Separator } from '../ui/separator';
 import { Code } from 'lucide-react';
 import { Template } from '@/app/interface/scheduler-api/template';
-import { readOnlyMonacoOptions } from '@/lib/monaco-options';
-import { getWorkerLanguageConfig } from '@/lib/monaco/worker-language';
+import { getWorkerLanguageConfig } from '@/lib/monaco/worker-editor-config';
+import { MonacoCodeEditor } from '@/components/editor/monaco-code-editor';
 
 interface TemplatePreviewDialogProps {
   template: Template | null;
@@ -30,13 +29,12 @@ export default function TemplatePreviewDialog({ template, open, onOpenChange }: 
           <div>
             <h4 className="text-sm font-medium text-slate-300 mb-2">Conteúdo do Template</h4>
             <div className="bg-slate-900 border border-slate-600 rounded-md overflow-auto min-w-0">
-              <Editor
+              <MonacoCodeEditor
+                preset="read-only-preview"
                 path={`template-${template.id}${getWorkerLanguageConfig(template.workerType).fileExtension}`}
                 value={template.content}
-                language={getWorkerLanguageConfig(template.workerType).editorLanguage}
-                theme="vs-dark"
+                workerType={template.workerType}
                 height="300px"
-                options={readOnlyMonacoOptions}
               />
             </div>
           </div>

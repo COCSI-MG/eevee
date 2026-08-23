@@ -203,7 +203,7 @@ function AnswerKeyEditor({
             <WorkspaceCodeEditor
               file={activeFile}
               onEditorChange={handleEditorChange}
-              allowRestrictedUserActions
+              actionGuardMode="exempt"
               readOnly={!isAdmin}
             />
           </div>

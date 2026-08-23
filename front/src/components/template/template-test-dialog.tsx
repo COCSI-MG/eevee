@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
 import { AxiosError } from "axios";
 import { CheckCircle2, FlaskConical, Loader2, XCircle } from "lucide-react";
 
@@ -33,9 +32,8 @@ import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { TemplateParamType } from "@/app/interface/scheduler-api/template";
 import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
 import { Tooltip } from "../ui/tooltip";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";
+import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 type ParamValueState = Record<string, string>;
 
@@ -68,7 +66,8 @@ export function TemplateTestDialog({
   const [paramValues, setParamValues] = useState<ParamValueState>({});
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
   const isJavascriptDefault = workerType === WorkerType.JAVASCRIPT_DEFAULT;
-  const applicationExtension = isJavascriptDefault ? "js" : "ts";
+  const applicationLanguage = getWorkerLanguageConfig(workerType);
+  const applicationExtension = applicationLanguage.fileExtension.replace(/^\./, "");
 
   const defaultAppContent =
     WorkerDefaultTemplateMap[workerType] ??
@@ -141,20 +140,17 @@ export function TemplateTestDialog({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="flex items-baseline justify-between">
-              <Label className="text-slate-200">{`app${getWorkerLanguageConfig(workerType).fileExtension} (código de aplicação)`}</Label>
+              <Label className="text-slate-200">{`app${applicationLanguage.fileExtension} (código de aplicação)`}</Label>
             </div>
             <div className="rounded-md border border-slate-700 overflow-hidden">
-              <Editor
+              <MonacoCodeEditor
+                preset="form-field"
                 height="320px"
-                defaultLanguage={getWorkerLanguageConfig(workerType).editorLanguage}
-                theme="vs-dark"
+                path={`template-test-app${applicationLanguage.fileExtension}`}
+                workerType={workerType}
                 value={applicationFileContent}
-                onChange={(value) => setApplicationFileContent(value ?? "")}
-                options={{
-                  minimap: { enabled: false },
-                  scrollBeyondLastLine: false,
-                  wordWrap: "on",
-                  wrappingIndent: "indent",
+                onChange={setApplicationFileContent}
+                optionOverrides={{
                   fontSize: 13,
                   lineNumbers: "on",
                 }}
