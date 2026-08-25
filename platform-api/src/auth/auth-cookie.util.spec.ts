@@ -1,5 +1,7 @@
 import {
   AUTH_COOKIE_NAME,
+  DEFAULT_AUTH_SESSION_TTL_SECONDS,
+  getAuthSessionTtlSeconds,
   clearAuthCookie,
   getAuthCookieOptions,
   getTokenFromCookieHeader,
@@ -24,7 +26,7 @@ describe('auth cookie util', () => {
       sameSite: 'lax',
       secure: false,
       domain: undefined,
-      maxAge: 60 * 60 * 1000,
+      maxAge: DEFAULT_AUTH_SESSION_TTL_SECONDS * 1000,
     });
   });
 
@@ -42,7 +44,7 @@ describe('auth cookie util', () => {
       sameSite: 'lax',
       secure: true,
       domain: '.eeveecodelab.online',
-      maxAge: 60 * 60 * 1000,
+      maxAge: DEFAULT_AUTH_SESSION_TTL_SECONDS * 1000,
     });
   });
 
@@ -65,7 +67,7 @@ describe('auth cookie util', () => {
         path: '/',
         sameSite: 'lax',
         secure: false,
-        maxAge: 60 * 60 * 1000,
+        maxAge: DEFAULT_AUTH_SESSION_TTL_SECONDS * 1000,
       }),
     );
   });
@@ -91,7 +93,7 @@ describe('auth cookie util', () => {
         sameSite: 'lax',
         secure: true,
         domain: '.eeveecodelab.online',
-        maxAge: 60 * 60 * 1000,
+        maxAge: DEFAULT_AUTH_SESSION_TTL_SECONDS * 1000,
       }),
     );
   });
@@ -106,5 +108,38 @@ describe('auth cookie util', () => {
     expect(
       getTokenFromCookieHeader(`foo=bar; ${AUTH_COOKIE_NAME}=signed-token`),
     ).toBe('signed-token');
+  });
+
+  it('reads the session ttl from AUTH_SESSION_TTL_SECONDS', () => {
+    expect(
+      getAuthSessionTtlSeconds(
+        createConfigService({ AUTH_SESSION_TTL_SECONDS: '1800' }),
+      ),
+    ).toBe(1800);
+  });
+
+  it('falls back to the default ttl when the variable is unset', () => {
+    expect(getAuthSessionTtlSeconds(createConfigService({}))).toBe(
+      DEFAULT_AUTH_SESSION_TTL_SECONDS,
+    );
+  });
+
+  it.each(['0', 'abc', ''])(
+    'falls back to the default ttl for the invalid value %p',
+    (value) => {
+      expect(
+        getAuthSessionTtlSeconds(
+          createConfigService({ AUTH_SESSION_TTL_SECONDS: value }),
+        ),
+      ).toBe(DEFAULT_AUTH_SESSION_TTL_SECONDS);
+    },
+  );
+
+  it('keeps the cookie maxAge in sync with the configured ttl', () => {
+    const options = getAuthCookieOptions(
+      createConfigService({ ENV: 'local', AUTH_SESSION_TTL_SECONDS: '1800' }),
+    );
+
+    expect(options.maxAge).toBe(1800 * 1000);
   });
 });
