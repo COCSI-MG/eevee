@@ -37,6 +37,7 @@ import {
   setRefreshCookie,
 } from './auth-cookie.util';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RequestContextService } from 'src/request-context/request-context.service';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 
@@ -46,6 +47,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly passwordResetService: PasswordResetService,
     private readonly configService: ConfigService,
+    private readonly requestContextService: RequestContextService,
   ) {}
 
   @Post('login')
@@ -59,7 +61,8 @@ export class AuthController {
     const result = await this.authService.validateUserAndLogin(loginAuthDto);
 
     if (result) {
-      setAuthCookie(response, result.token, this.configService);
+      setAuthCookie(response, result.accessToken, this.configService);
+      setRefreshCookie(response, result.refreshToken, this.configService);
       return result.session;
     }
 
@@ -76,7 +79,8 @@ export class AuthController {
   ) {
     const result = await this.authService.registerUser(registerAuthDto);
     if (result) {
-      setAuthCookie(response, result.token, this.configService);
+      setAuthCookie(response, result.accessToken, this.configService);
+      setRefreshCookie(response, result.refreshToken, this.configService);
       return result.session;
     }
     throw new InternalServerErrorException(
@@ -162,7 +166,12 @@ export class AuthController {
   @SkipThrottle()
   @HttpCode(204)
   @ApiNoContentResponse()
-  logout(@Res({ passthrough: true }) response: Response) {
+  async logout(@Res({ passthrough: true }) response: Response) {
+    await this.authService.endSession(
+      this.requestContextService.getUser()?.familyId,
+    );
+
     clearAuthCookie(response, this.configService);
+    clearRefreshCookie(response, this.configService);
   }
 }

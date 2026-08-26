@@ -14,12 +14,14 @@ import { DEFAULT_AUTH_SESSION_TTL_SECONDS } from './auth-cookie.util';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PasswordResetService } from './password-reset.service';
+import { RequestContextService } from 'src/request-context/request-context.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
 
   const authService = {
     refreshSession: jest.fn(),
+    endSession: jest.fn(),
     validateUserAndLogin: jest.fn(),
     registerUser: jest.fn(),
     buildSession: jest.fn(),
@@ -34,6 +36,9 @@ describe('AuthController', () => {
     get: jest.fn().mockReturnValue('local'),
   };
 
+  const requestContextService = {
+    getUser: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -42,6 +47,10 @@ describe('AuthController', () => {
         { provide: AuthService, useValue: authService },
         { provide: PasswordResetService, useValue: passwordResetService },
         { provide: ConfigService, useValue: configService },
+        {
+          provide: RequestContextService,
+          useValue: requestContextService,
+        },
       ],
     }).compile();
 
@@ -54,7 +63,8 @@ describe('AuthController', () => {
 
   it('sets the auth cookie and returns the session on login', async () => {
     authService.validateUserAndLogin.mockResolvedValue({
-      token: 'signed-token',
+      accessToken: 'signed-token',
+      refreshToken: 'refresh-token',
       session: {
         userId: 12,
         email: 'admin@example.com',
@@ -94,7 +104,8 @@ describe('AuthController', () => {
 
   it('sets the auth cookie and returns the session on register', async () => {
     authService.registerUser.mockResolvedValue({
-      token: 'signed-token',
+      accessToken: 'signed-token',
+      refreshToken: 'refresh-token',
       session: {
         userId: 33,
         email: 'student@example.com',
@@ -133,12 +144,12 @@ describe('AuthController', () => {
     );
   });
 
-  it('clears the auth cookie on logout', () => {
+  it('clears the auth cookie on logout', async () => {
     const response = {
       clearCookie: jest.fn(),
     } as any;
 
-    controller.logout(response);
+    await controller.logout(response);
 
     expect(response.clearCookie).toHaveBeenCalledWith(
       'eevee_auth',
@@ -288,6 +299,34 @@ describe('AuthController', () => {
       ),
     ).toBe(true);
   });
+  it('revokes the session and clears both cookies on logout', async () => {
+    requestContextService.getUser.mockReturnValue({
+      userId: 12,
+      email: 'admin@example.com',
+      isAdmin: true,
+      familyId: 'family-1',
+    });
+    const response = { clearCookie: jest.fn() } as any;
+
+    await controller.logout(response);
+
+    expect(authService.endSession).toHaveBeenCalledWith('family-1');
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'eevee_refresh',
+      expect.objectContaining({ path: '/auth/refresh' }),
+    );
+  });
+
+  it('still clears the cookies when the token carries no session', async () => {
+    requestContextService.getUser.mockReturnValue(undefined);
+    const response = { clearCookie: jest.fn() } as any;
+
+    await expect(controller.logout(response)).resolves.toBeUndefined();
+
+    expect(authService.endSession).toHaveBeenCalledWith(undefined);
+    expect(response.clearCookie).toHaveBeenCalledTimes(2);
+  });
+
   describe('refresh', () => {
     const buildResponse = () =>
       ({ cookie: jest.fn(), clearCookie: jest.fn() }) as any;

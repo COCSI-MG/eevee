@@ -9,6 +9,7 @@ import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserModule } from 'src/user/user.module';
 import { MailModule } from 'src/mail/mail.module';
+import { RequestContextModule } from 'src/request-context/request-context.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PasswordReset } from './entities/password-reset.entity';
 import { RefreshSession } from './entities/refresh-session.entity';
@@ -31,6 +32,7 @@ import { getAuthSessionTtlSeconds } from './auth-cookie.util';
     }),
     UserModule,
     MailModule,
+    RequestContextModule,
   ],
 })
 export class AuthModule {}

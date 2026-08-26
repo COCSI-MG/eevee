@@ -9,6 +9,12 @@ import { RegisterRequestDto } from './dto/request/register-request.dto';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { RefreshSessionService } from './refresh-session.service';
 
+export interface StartedSession {
+  accessToken: string;
+  refreshToken: string;
+  session: AuthSessionResponseDto;
+}
+
 export type RefreshOutcome =
   | {
       status: 'refreshed';
@@ -60,62 +66,72 @@ export class AuthService {
     };
   }
 
-  async validateUserAndLogin(
-    loginData: LoginRequestDto,
-  ): Promise<{ session: LoginResponseDto; token: string } | undefined> {
+  async validateUserAndLogin(loginData: LoginRequestDto) {
     const { email, password } = loginData;
     const user = await this.userService.findByEmail(email);
 
     console.log('User pass hash', user?.passwordHash);
 
     if (user && HashUtils.comparePassword(password, user.passwordHash)) {
-      const payload: JwtPayload = {
+      return this.startSession({
+        id: user.id,
         email: user.email,
-        userId: user.id,
         isAdmin: user.isAdmin,
-      };
-
-      const token = this.jwtService.sign(payload);
-
-      return {
-        token,
-        session: {
-          userId: user.id,
-          email: user.email,
-          isAdmin: user.isAdmin,
-        },
-      };
+      });
     }
   }
 
-  async registerUser(
-    registerData: RegisterRequestDto,
-  ): Promise<{ session: LoginResponseDto; token: string } | undefined> {
+  async registerUser(registerData: RegisterRequestDto) {
     const { email } = registerData;
     const user = await this.userService.findByEmail(email);
+
     if (!user) {
       const createdUser = await this.userService.createOrReplace({
         ...registerData,
         email,
         isAdmin: false,
       });
-      const payload: JwtPayload = {
+
+      return this.startSession({
+        id: createdUser.id,
         email: createdUser.email,
-        userId: createdUser.id,
         isAdmin: false,
-      };
-
-      const token = this.jwtService.sign(payload);
-
-      return {
-        token,
-        session: {
-          userId: createdUser.id,
-          email: createdUser.email,
-          isAdmin: false,
-        },
-      };
+      });
     }
+  }
+
+  async endSession(familyId?: string) {
+    if (!familyId) {
+      return;
+    }
+
+    await this.refreshSessionService.revokeFamily(familyId);
+  }
+
+  private async startSession(user: {
+    id: number;
+    email: string;
+    isAdmin: boolean;
+  }): Promise<StartedSession> {
+    const { token: refreshToken, session } =
+      await this.refreshSessionService.create(user.id);
+
+    const payload: JwtPayload = {
+      email: user.email,
+      userId: user.id,
+      isAdmin: user.isAdmin,
+      familyId: session.familyId,
+    };
+
+    return {
+      accessToken: this.jwtService.sign(payload),
+      refreshToken,
+      session: {
+        userId: user.id,
+        email: user.email,
+        isAdmin: user.isAdmin,
+      },
+    };
   }
 
   buildSession(payload: JwtPayload): AuthSessionResponseDto {

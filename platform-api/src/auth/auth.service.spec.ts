@@ -19,6 +19,7 @@ describe('AuthService', () => {
   };
 
   const refreshSessionService = {
+    create: jest.fn(),
     rotate: jest.fn(),
     revokeFamily: jest.fn(),
   };
@@ -35,6 +36,10 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
 
+    refreshSessionService.create.mockResolvedValue({
+      token: 'refresh-token',
+      session: { userId: 12, familyId: 'family-1' },
+    });
   });
 
   afterEach(() => {
@@ -58,7 +63,8 @@ describe('AuthService', () => {
         password: 'secret',
       }),
     ).resolves.toEqual({
-      token: 'signed-token',
+      accessToken: 'signed-token',
+      refreshToken: 'refresh-token',
       session: {
         userId: 12,
         email: 'admin@example.com',
@@ -70,6 +76,7 @@ describe('AuthService', () => {
       userId: 12,
       email: 'admin@example.com',
       isAdmin: true,
+      familyId: 'family-1',
     });
   });
 
@@ -108,7 +115,8 @@ describe('AuthService', () => {
         name: 'Student',
       }),
     ).resolves.toEqual({
-      token: 'signed-token',
+      accessToken: 'signed-token',
+      refreshToken: 'refresh-token',
       session: {
         userId: 33,
         email: 'student@example.com',
