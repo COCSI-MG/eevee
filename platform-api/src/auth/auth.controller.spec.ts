@@ -6,6 +6,7 @@ import {
   THROTTLER_SKIP,
   THROTTLER_TTL,
 } from '@nestjs/throttler/dist/throttler.constants';
+import { DEFAULT_AUTH_SESSION_TTL_SECONDS } from './auth-cookie.util';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PasswordResetService } from './password-reset.service';
@@ -80,7 +81,7 @@ describe('AuthController', () => {
         path: '/',
         sameSite: 'lax',
         secure: false,
-        maxAge: 60 * 60 * 1000,
+        maxAge: DEFAULT_AUTH_SESSION_TTL_SECONDS * 1000,
       }),
     );
   });
@@ -121,7 +122,7 @@ describe('AuthController', () => {
         path: '/',
         sameSite: 'lax',
         secure: false,
-        maxAge: 60 * 60 * 1000,
+        maxAge: DEFAULT_AUTH_SESSION_TTL_SECONDS * 1000,
       }),
     );
   });
@@ -140,7 +141,7 @@ describe('AuthController', () => {
         path: '/',
         sameSite: 'lax',
         secure: false,
-        maxAge: 60 * 60 * 1000,
+        maxAge: DEFAULT_AUTH_SESSION_TTL_SECONDS * 1000,
       }),
     );
   });
