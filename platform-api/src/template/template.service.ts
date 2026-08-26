@@ -91,9 +91,12 @@ export class TemplateService {
             .orWhere('LOWER(template.description) LIKE LOWER(:search)', {
               search: `%${search}%`,
             })
-            .orWhere('LOWER(template.workerType) LIKE LOWER(:search)', {
-              search: `%${search}%`,
-            });
+            .orWhere(
+              'LOWER(CAST(template.workerType AS TEXT)) LIKE LOWER(:search)',
+              {
+                search: `%${search}%`
+              }
+            );
         }),
       );
     }

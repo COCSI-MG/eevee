@@ -423,9 +423,12 @@ export class AssignmentService {
             .orWhere('LOWER(class.name) LIKE LOWER(:search)', {
               search: `%${search}%`,
             })
-            .orWhere('LOWER(assignment.workerType) LIKE LOWER(:search)', {
-              search: `%${search}%`,
-            });
+            .orWhere(
+              'LOWER(CAST(assignment.workerType AS TEXT)) LIKE LOWER(:search)',
+              {
+                search: `%${search}%`
+              }
+            );
         }),
       );
     }
