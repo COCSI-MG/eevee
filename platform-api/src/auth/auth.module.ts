@@ -11,14 +11,16 @@ import { UserModule } from 'src/user/user.module';
 import { MailModule } from 'src/mail/mail.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PasswordReset } from './entities/password-reset.entity';
+import { RefreshSession } from './entities/refresh-session.entity';
+import { RefreshSessionService } from './refresh-session.service';
 import { User } from 'src/user/entities/user.entity';
 import { getAuthSessionTtlSeconds } from './auth-cookie.util';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, PasswordResetService, LocalStrategy, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, PasswordResetService, RefreshSessionService, LocalStrategy, JwtStrategy, JwtAuthGuard],
   imports: [
-    TypeOrmModule.forFeature([PasswordReset, User]),
+    TypeOrmModule.forFeature([PasswordReset, RefreshSession, User]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

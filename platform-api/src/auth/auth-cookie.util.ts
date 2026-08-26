@@ -10,6 +10,14 @@ export function getAuthSessionTtlSeconds(configService: ConfigService) {
   );
 }
 
+export const DEFAULT_AUTH_REFRESH_TTL_SECONDS = 14 * 24 * 60 * 60;
+export function getRefreshTtlSeconds(configService: ConfigService) {
+  return (
+    Number(configService.get<string>('AUTH_REFRESH_TTL_SECONDS')) ||
+    DEFAULT_AUTH_REFRESH_TTL_SECONDS
+  );
+}
+
 export function parseCookieHeader(cookieHeader?: string) {
   return (cookieHeader ?? '')
     .split(';')
