@@ -4,11 +4,9 @@ import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorMessage } from "formik";
 import { FileText } from "lucide-react";
-import dynamic from "next/dynamic";
 import { Tooltip } from "@/components/ui/tooltip";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";
+import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 export interface AssignmentBoilerplateFormProps {
   values: Partial<Assignment>;
@@ -38,19 +36,13 @@ export const AssignmentBoilerplateForm: React.FC<
           {WorkerExibitionMap[values.workerType as WorkerType]}
           &quot;:
         </span>
-        <Editor
+        <MonacoCodeEditor
+          preset="form-field"
           path={`boilerplate${langConfig.fileExtension}`}
           height={400}
-          defaultLanguage={langConfig.editorLanguage}
-          theme="vs-dark"
-          value={values.boilerplate}
+          workerType={values.workerType}
+          value={values.boilerplate ?? ""}
           onChange={(value) => setFieldValue("boilerplate", value)}
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: "on",
-            automaticLayout: true,
-          }}
         />
         <ErrorMessage
           name="boilerplate"

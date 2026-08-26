@@ -1,38 +1,22 @@
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import WORKER_SOURCE_MAP from "./worker-source-map.json";
+import {
+  findWorkerEditorConfig,
+  MonacoCompilerPreset,
+} from "../worker-editor-config";
 
 type MonacoNamespace = typeof import("monaco-editor");
 
 /**
- * Maps a {@link WorkerType} to the worker image folder whose
- * `package.json` / `tsconfig.json` describe the runtime the student code will
- * actually execute in. Everything below is derived from those workers so the
- * in-browser editor mirrors the real execution environment.
- */
-const workerSourceMap = WORKER_SOURCE_MAP as Record<string, string>;
-
-const DEFAULT_PACK_DIR = "node-default";
-
-/**
- * Resolves the type-pack / worker directory name for a given worker type.
- */
-export function resolvePackDir(workerType?: WorkerType | string): string {
-  if (!workerType) return DEFAULT_PACK_DIR;
-  return workerSourceMap[workerType] ?? DEFAULT_PACK_DIR;
-}
-
-/**
- * Compiler options derived from each worker's `tsconfig.json`, translated into
- * the Monaco TypeScript worker representation. Monaco only understands the enum
- * values exposed on `monaco.languages.typescript`, so we build them lazily from
- * the live namespace instead of hardcoding numbers.
+ * Compiler options manually translated from the worker tsconfig files into
+ * the enum values understood by Monaco's TypeScript worker.
  */
 export function getCompilerOptions(
   monaco: MonacoNamespace,
   workerType?: WorkerType | string,
 ): import("monaco-editor").languages.typescript.CompilerOptions {
   const ts = monaco.languages.typescript;
-  const dir = resolvePackDir(workerType);
+  const preset =
+    findWorkerEditorConfig(workerType)?.compilerPreset ?? "node";
 
   const jsxAutomatic = ts.JsxEmit.ReactJSX ?? ts.JsxEmit.React;
 
@@ -53,9 +37,19 @@ export function getCompilerOptions(
     strict: false,
   };
 
-  switch (dir) {
-    case "nest.js":
-      // images/node/nest.js/tsconfig.json
+  return compilerOptionsForPreset(ts, preset, base, jsxAutomatic);
+}
+
+function compilerOptionsForPreset(
+  ts: MonacoNamespace["languages"]["typescript"],
+  preset: MonacoCompilerPreset,
+  base: import("monaco-editor").languages.typescript.CompilerOptions,
+  jsxAutomatic: import("monaco-editor").languages.typescript.JsxEmit,
+): import("monaco-editor").languages.typescript.CompilerOptions {
+
+  switch (preset) {
+    case "nest":
+
       return {
         ...base,
         module: ts.ModuleKind.CommonJS,
@@ -67,15 +61,15 @@ export function getCompilerOptions(
       };
 
     case "grpc":
-      // images/node/grpc/tsconfig.json
+
       return {
         ...base,
         module: ts.ModuleKind.CommonJS,
         lib: ["esnext"],
       };
 
-    case "next.js-cypress":
-      // images/node/next.js-cypress/tsconfig.json
+    case "next":
+
       return {
         ...base,
         module: ts.ModuleKind.ESNext,
@@ -83,8 +77,8 @@ export function getCompilerOptions(
         lib: ["dom", "dom.iterable", "esnext"],
       };
 
-    case "reactjs-cypress":
-      // images/node/reactjs-cypress/tsconfig.app.json
+    case "react":
+
       return {
         ...base,
         module: ts.ModuleKind.ESNext,
@@ -93,10 +87,8 @@ export function getCompilerOptions(
         lib: ["es2022", "dom", "dom.iterable"],
       };
 
-    case "node-teraorm":
-    case "node-default":
-    default:
-      // images/node/node-default/tsconfig.json (also node-teraorm)
+    case "node":
+
       return {
         ...base,
         module: ts.ModuleKind.CommonJS,
@@ -106,36 +98,21 @@ export function getCompilerOptions(
   }
 }
 
-/**
- * Diagnostics we silence regardless of the loaded type packs. These are the
- * codes that would otherwise produce false positives when a dependency ships no
- * declaration file, keeping IntelliSense (completions/hovers) useful without
- * red-squiggling valid student code.
- *
- * - 2307: Cannot find module '...'          (dependency without a type pack)
- * - 2580: Cannot find name 'require'/'module'/'process'
- * - 7016: Could not find a declaration file for module '...'
- * - 2792: Cannot find module (did you mean moduleResolution?)
- */
 const DIAGNOSTIC_CODES_TO_IGNORE = [2307, 2580, 7016, 2792];
 
-/**
- * Applies the derived compiler options + diagnostics to both the TypeScript and
- * JavaScript language defaults. Safe to call on every editor mount.
- */
 export function applyLanguageDefaults(
   monaco: MonacoNamespace,
   workerType?: WorkerType | string,
 ): void {
   const options = getCompilerOptions(monaco, workerType);
+
   const diagnostics = {
     noSemanticValidation: false,
     noSyntaxValidation: false,
     diagnosticCodesToIgnore: DIAGNOSTIC_CODES_TO_IGNORE,
   };
 
-  const { typescriptDefaults, javascriptDefaults } =
-    monaco.languages.typescript;
+  const { typescriptDefaults, javascriptDefaults } = monaco.languages.typescript;
 
   typescriptDefaults.setCompilerOptions(options);
   typescriptDefaults.setDiagnosticsOptions(diagnostics);

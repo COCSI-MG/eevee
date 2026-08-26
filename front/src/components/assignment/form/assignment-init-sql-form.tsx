@@ -3,9 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorMessage } from "formik";
 import { Database } from "lucide-react";
-import dynamic from "next/dynamic";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 export interface AssignmentInitSqlFormProps {
   initSqlScript?: string;
@@ -31,19 +29,12 @@ export const AssignmentInitSqlForm: React.FC<AssignmentInitSqlFormProps> = ({
           dados PostgreSQL antes da execução do código do aluno. Utilize este
           campo para criar tabelas, inserir dados iniciais (seeds), etc.
         </span>
-        <Editor
-          path={"init.sql"}
+        <MonacoCodeEditor
+          preset="form-field"
+          path="init.sql"
           height={400}
-          defaultLanguage="sql"
-          theme="vs-dark"
           value={initSqlScript ?? ""}
           onChange={(value) => setFieldValue("initSqlScript", value)}
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: "on",
-            automaticLayout: true,
-          }}
         />
         <ErrorMessage
           name="initSqlScript"
