@@ -15,44 +15,14 @@ def main():
 export const DEFAULT_PYTHON_DEFAULT_VALIDATION_SCRIPT = `from app import main
 
 
-def math_add(a, b):
-    return a + b
+def test_main_is_callable():
+    assert callable(main)
 
 
-def math_sub(a, b):
-    return a - b
-
-
-def math_mul(a, b):
-    return a * b
-
-
-def math_div(a, b):
-    return a / b
-
-
-def test_main_can_sum():
-    correct_result = math_add(2, 3)
-    provided_result = main(2, 3)
-    assert provided_result[0] == correct_result
-
-
-def test_main_can_subtract():
-    correct_result = math_sub(2, 3)
-    provided_result = main(2, 3)
-    assert provided_result[1] == correct_result
-
-
-def test_main_can_multiply():
-    correct_result = math_mul(2, 3)
-    provided_result = main(2, 3)
-    assert provided_result[2] == correct_result
-
-
-def test_main_can_divide():
-    correct_result = math_div(2, 3)
-    provided_result = main(2, 3)
-    assert provided_result[3] == correct_result`;
+def test_main_prints_hello_world(capsys):
+    main()
+    captured = capsys.readouterr()
+    assert captured.out.strip() == "Hello, world!"`;
 
 export const DEFAULT_JAVASCRIPT_ASSIGNMENT_TEMPLATE = `// PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
 export function main(a, b) {

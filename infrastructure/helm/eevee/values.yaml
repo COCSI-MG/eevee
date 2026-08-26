@@ -138,6 +138,7 @@ workerImages:
   nodeReactjsCypress: ghcr.io/cocsi-mg/worker-react-cypress-img:develop
   nodeDefaultPostgresql: ghcr.io/cocsi-mg/worker-node-default-img:develop
   nodeNestjsPostgresql: ghcr.io/cocsi-mg/worker-nestjs-default-img:develop
+  pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:develop
 
 # -----------------------------------------------------------------------------
 # Frontend (Next.js)
