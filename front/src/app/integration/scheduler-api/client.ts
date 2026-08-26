@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { Route } from "@/app/routes";
 import axios, { AxiosError } from "axios";
 
@@ -18,6 +19,38 @@ export const axiosClientWithAuth = axios.create({
   },
   withCredentials: true,
 });
+
+let renewalInFlight: Promise<AuthSession | null> | null = null;
+
+export function renewSession(): Promise<AuthSession | null> {
+  if (!renewalInFlight) {
+    renewalInFlight = requestRenewal().finally(() => {
+      renewalInFlight = null;
+    });
+  }
+
+  return renewalInFlight;
+}
+
+async function requestRenewal(): Promise<AuthSession | null> {
+  try {
+    const { data } = await axiosClient.post<AuthSession>("/auth/refresh");
+    return data;
+  } catch (error) {
+    if ((error as AxiosError).response?.status !== 409) {
+      return null;
+    }
+
+    // 409 significa que outra aba renovou primeiro. Os cookies novos já estão
+    // no navegador, falta só descobrir o prazo do token que chegou.
+    try {
+      const { data } = await axiosClient.get<AuthSession>("/auth/me");
+      return data;
+    } catch {
+      return null;
+    }
+  }
+}
 
 axiosClientWithAuth.interceptors.response.use(
   (response) => {
