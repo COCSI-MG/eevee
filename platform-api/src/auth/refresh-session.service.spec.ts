@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { DataSource, IsNull } from 'typeorm';
+import { DataSource, IsNull, LessThan } from 'typeorm';
 import { createHash } from 'crypto';
 import { RefreshSessionService } from './refresh-session.service';
 import { RefreshSession } from './entities/refresh-session.entity';
@@ -16,6 +16,8 @@ describe('RefreshSessionService', () => {
     save: jest.Mock;
     findOne: jest.Mock;
     update: jest.Mock;
+    delete: jest.Mock;
+    count: jest.Mock;
   };
   let manager: { save: jest.Mock; update: jest.Mock };
   let dataSource: { transaction: jest.Mock };
@@ -38,6 +40,8 @@ describe('RefreshSessionService', () => {
       save: jest.fn(),
       findOne: jest.fn(),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
+      delete: jest.fn().mockResolvedValue({ affected: 0 }),
+      count: jest.fn().mockResolvedValue(0),
     };
 
     manager = {
@@ -260,6 +264,42 @@ describe('RefreshSessionService', () => {
         { userId: 7, revokedAt: IsNull() },
         { revokedAt: expect.any(Date) },
       );
+    });
+  });
+  describe('cleanupExpiredSessions', () => {
+    it('deletes only families expired past the retention window', async () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-20T03:00:00Z'));
+      refreshSessionRepository.delete.mockResolvedValue({ affected: 42 });
+
+      await service.cleanupExpiredSessions();
+
+      expect(refreshSessionRepository.delete).toHaveBeenCalledWith({
+        expiresAt: LessThan(new Date('2026-01-13T03:00:00Z')),
+      });
+    });
+
+    it('reports how many rows went and how many stayed', async () => {
+      const logSpy = jest
+        .spyOn((service as any).logger, 'log')
+        .mockImplementation(() => undefined);
+      refreshSessionRepository.delete.mockResolvedValue({ affected: 42 });
+      refreshSessionRepository.count.mockResolvedValue(1_337);
+
+      await service.cleanupExpiredSessions();
+
+      const message = logSpy.mock.calls[0][0] as string;
+      expect(message).toContain('42 linha(s) removida(s)');
+      expect(message).toContain('1337 linha(s) restante(s)');
+    });
+
+    it('logs the failure instead of breaking the schedule', async () => {
+      const errorSpy = jest
+        .spyOn((service as any).logger, 'error')
+        .mockImplementation(() => undefined);
+      refreshSessionRepository.delete.mockRejectedValue(new Error('banco fora'));
+
+      await expect(service.cleanupExpiredSessions()).resolves.toBeUndefined();
+      expect(errorSpy).toHaveBeenCalled();
     });
   });
 });

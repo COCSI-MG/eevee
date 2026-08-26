@@ -1,12 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, IsNull, Repository } from 'typeorm';
+import { DataSource, IsNull, LessThan, Repository } from 'typeorm';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { Cron } from '@nestjs/schedule';
 import { RefreshSession } from './entities/refresh-session.entity';
 import { getRefreshTtlSeconds } from './auth-cookie.util';
 
 const ROTATION_GRACE_MS = 15 * 1000;
+const SESSION_HISTORY_RETENTION_DAYS = 7;
 
 class RotationRaceError extends Error {}
 
@@ -120,6 +122,33 @@ export class RefreshSessionService {
       { userId, revokedAt: IsNull() },
       { revokedAt: new Date() },
     );
+  }
+
+  @Cron('0 3 * * *') // Todo dia às 03:00
+  async cleanupExpiredSessions() {
+    const cutoff = new Date(
+      Date.now() - SESSION_HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+    );
+    const startedAt = Date.now();
+
+    try {
+      const { affected } = await this.refreshSessionRepository.delete({
+        expiresAt: LessThan(cutoff),
+      });
+
+      const remaining = await this.refreshSessionRepository.count();
+
+      this.logger.log(
+        `Limpeza de sessões concluída: ${affected ?? 0} linha(s) removida(s) ` +
+          `com vencimento anterior a ${cutoff.toISOString()}, ` +
+          `${remaining} linha(s) restante(s), em ${Date.now() - startedAt}ms`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Falha na limpeza de sessões com vencimento anterior a ${cutoff.toISOString()}`,
+        error,
+      );
+    }
   }
 
   private generateToken() {
