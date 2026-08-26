@@ -1,4 +1,8 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -15,6 +19,7 @@ describe('AuthController', () => {
   let controller: AuthController;
 
   const authService = {
+    refreshSession: jest.fn(),
     validateUserAndLogin: jest.fn(),
     registerUser: jest.fn(),
     buildSession: jest.fn(),
@@ -28,6 +33,7 @@ describe('AuthController', () => {
   const configService = {
     get: jest.fn().mockReturnValue('local'),
   };
+
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -281,5 +287,89 @@ describe('AuthController', () => {
         AuthController.prototype.logout,
       ),
     ).toBe(true);
+  });
+  describe('refresh', () => {
+    const buildResponse = () =>
+      ({ cookie: jest.fn(), clearCookie: jest.fn() }) as any;
+
+    it('rejects and clears both cookies when there is no refresh cookie', async () => {
+      const response = buildResponse();
+
+      await expect(
+        controller.refresh({ headers: {} } as any, response),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(response.clearCookie).toHaveBeenCalledWith(
+        'eevee_auth',
+        expect.anything(),
+      );
+      expect(response.clearCookie).toHaveBeenCalledWith(
+        'eevee_refresh',
+        expect.anything(),
+      );
+      expect(authService.refreshSession).not.toHaveBeenCalled();
+    });
+
+    it('rejects and clears both cookies when the session was denied', async () => {
+      authService.refreshSession.mockResolvedValue({ status: 'denied' });
+      const response = buildResponse();
+
+      await expect(
+        controller.refresh(
+          { headers: { cookie: 'eevee_refresh=token' } } as any,
+          response,
+        ),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(response.clearCookie).toHaveBeenCalledTimes(2);
+      expect(response.cookie).not.toHaveBeenCalled();
+    });
+
+    it('answers 409 and keeps the cookies on a race', async () => {
+      authService.refreshSession.mockResolvedValue({ status: 'raced' });
+      const response = buildResponse();
+
+      await expect(
+        controller.refresh(
+          { headers: { cookie: 'eevee_refresh=token' } } as any,
+          response,
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(response.clearCookie).not.toHaveBeenCalled();
+      expect(response.cookie).not.toHaveBeenCalled();
+    });
+
+    it('writes both cookies and returns the session on success', async () => {
+      authService.refreshSession.mockResolvedValue({
+        status: 'refreshed',
+        accessToken: 'novo-access',
+        refreshToken: 'novo-refresh',
+        session: { userId: 12, email: 'admin@example.com', isAdmin: true },
+      });
+      const response = buildResponse();
+
+      await expect(
+        controller.refresh(
+          { headers: { cookie: 'eevee_refresh=token' } } as any,
+          response,
+        ),
+      ).resolves.toEqual({
+        userId: 12,
+        email: 'admin@example.com',
+        isAdmin: true,
+      });
+
+      expect(response.cookie).toHaveBeenCalledWith(
+        'eevee_auth',
+        'novo-access',
+        expect.objectContaining({ path: '/' }),
+      );
+      expect(response.cookie).toHaveBeenCalledWith(
+        'eevee_refresh',
+        'novo-refresh',
+        expect.objectContaining({ path: '/auth/refresh' }),
+      );
+    });
   });
 });

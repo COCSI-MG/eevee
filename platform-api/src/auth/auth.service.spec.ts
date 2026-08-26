@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { HashUtils } from 'src/utils/hash.utils';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
+import { RefreshSessionService } from './refresh-session.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -10,10 +11,16 @@ describe('AuthService', () => {
   const userService = {
     findByEmail: jest.fn(),
     createOrReplace: jest.fn(),
+    findOne: jest.fn(),
   };
 
   const jwtService = {
     sign: jest.fn(),
+  };
+
+  const refreshSessionService = {
+    rotate: jest.fn(),
+    revokeFamily: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -22,10 +29,12 @@ describe('AuthService', () => {
         AuthService,
         { provide: UserService, useValue: userService },
         { provide: JwtService, useValue: jwtService },
+        { provide: RefreshSessionService, useValue: refreshSessionService },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
+
   });
 
   afterEach(() => {
@@ -132,5 +141,85 @@ describe('AuthService', () => {
     ).resolves.toBeUndefined();
 
     expect(userService.createOrReplace).not.toHaveBeenCalled();
+  });
+  describe('refreshSession', () => {
+    const rotated = {
+      status: 'rotated',
+      token: 'novo-refresh',
+      session: { userId: 12, familyId: 'family-1' },
+    };
+
+    it('reports a race without touching the user', async () => {
+      refreshSessionService.rotate.mockResolvedValue({ status: 'raced' });
+
+      await expect(service.refreshSession('token')).resolves.toEqual({
+        status: 'raced',
+      });
+      expect(userService.findOne).not.toHaveBeenCalled();
+    });
+
+    it('denies when the rotation was refused', async () => {
+      refreshSessionService.rotate.mockResolvedValue({ status: 'denied' });
+
+      await expect(service.refreshSession('token')).resolves.toEqual({
+        status: 'denied',
+      });
+    });
+
+    it('denies and revokes the family when the user no longer exists', async () => {
+      refreshSessionService.rotate.mockResolvedValue(rotated);
+      userService.findOne.mockResolvedValue(null);
+
+      await expect(service.refreshSession('token')).resolves.toEqual({
+        status: 'denied',
+      });
+      expect(refreshSessionService.revokeFamily).toHaveBeenCalledWith(
+        'family-1',
+      );
+    });
+
+    it('signs a new access token carrying the family id', async () => {
+      refreshSessionService.rotate.mockResolvedValue(rotated);
+      userService.findOne.mockResolvedValue({
+        id: 12,
+        email: 'admin@example.com',
+        isAdmin: true,
+      });
+      jwtService.sign.mockReturnValue('novo-access');
+
+      await expect(service.refreshSession('token')).resolves.toEqual({
+        status: 'refreshed',
+        accessToken: 'novo-access',
+        refreshToken: 'novo-refresh',
+        session: {
+          userId: 12,
+          email: 'admin@example.com',
+          isAdmin: true,
+        },
+      });
+
+      expect(jwtService.sign).toHaveBeenCalledWith({
+        email: 'admin@example.com',
+        userId: 12,
+        isAdmin: true,
+        familyId: 'family-1',
+      });
+    });
+
+    it('uses current user data instead of stale session data', async () => {
+      refreshSessionService.rotate.mockResolvedValue(rotated);
+      userService.findOne.mockResolvedValue({
+        id: 12,
+        email: 'novo@example.com',
+        isAdmin: false,
+      });
+      jwtService.sign.mockReturnValue('novo-access');
+
+      const result = await service.refreshSession('token');
+
+      expect(result).toMatchObject({
+        session: { email: 'novo@example.com', isAdmin: false },
+      });
+    });
   });
 });

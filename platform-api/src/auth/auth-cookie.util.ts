@@ -2,6 +2,8 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 
 export const AUTH_COOKIE_NAME = 'eevee_auth';
+export const REFRESH_COOKIE_NAME = 'eevee_refresh';
+export const REFRESH_COOKIE_PATH = '/auth/refresh';
 export const DEFAULT_AUTH_SESSION_TTL_SECONDS = 12 * 60 * 60;
 export function getAuthSessionTtlSeconds(configService: ConfigService) {
   return (
@@ -48,6 +50,41 @@ export function getAuthCookieOptions(configService: ConfigService) {
     domain: cookieDomain,
     maxAge: getAuthSessionTtlSeconds(configService) * 1000,
   };
+}
+
+export function getRefreshCookieOptions(configService: ConfigService) {
+  return {
+    ...getAuthCookieOptions(configService),
+    path: REFRESH_COOKIE_PATH,
+    maxAge: getRefreshTtlSeconds(configService) * 1000,
+  };
+}
+
+export function setRefreshCookie(
+  response: Response,
+  token: string,
+  configService: ConfigService,
+) {
+  response.cookie(
+    REFRESH_COOKIE_NAME,
+    token,
+    getRefreshCookieOptions(configService),
+  );
+}
+
+export function clearRefreshCookie(
+  response: Response,
+  configService: ConfigService,
+) {
+  response.clearCookie(
+    REFRESH_COOKIE_NAME,
+    getRefreshCookieOptions(configService),
+  );
+}
+
+export function getRefreshTokenFromCookieHeader(cookieHeader?: string) {
+  const cookies = parseCookieHeader(cookieHeader);
+  return cookies[REFRESH_COOKIE_NAME] || null;
 }
 
 export function setAuthCookie(

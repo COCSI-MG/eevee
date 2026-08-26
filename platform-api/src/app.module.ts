@@ -111,6 +111,10 @@ export class AppModule {
           path: 'auth/reset-password',
           method: RequestMethod.POST,
         },
+        {
+          path: 'auth/refresh',
+          method: RequestMethod.POST,
+        },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

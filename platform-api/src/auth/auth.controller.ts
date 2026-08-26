@@ -3,6 +3,7 @@ import {
   Post,
   Body,
   BadRequestException,
+  ConflictException,
   UnauthorizedException,
   InternalServerErrorException,
   Res,
@@ -16,13 +17,25 @@ import { PasswordResetService } from './password-reset.service';
 import { LoginRequestDto } from './dto/request/login-request.dto';
 import { ResetPasswordRequestDto } from './dto/request/reset-password-request.dto';
 import { ResetPasswordConfirmDto } from './dto/request/reset-password-confirm.dto';
-import { ApiInternalServerErrorResponse, ApiNoContentResponse, ApiOkResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import {
+  ApiConflictResponse,
+  ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { LoginResponseDto } from './dto/response/login-response.dto';
 import { RegisterRequestDto } from './dto/request/register-request.dto';
 import { RegisterResponseDto } from './dto/response/register-response.dto';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { clearAuthCookie, setAuthCookie } from './auth-cookie.util';
+import {
+  clearAuthCookie,
+  clearRefreshCookie,
+  getRefreshTokenFromCookieHeader,
+  setAuthCookie,
+  setRefreshCookie,
+} from './auth-cookie.util';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
@@ -96,6 +109,44 @@ export class AuthController {
     }
 
     return { message: 'Senha alterada com sucesso' };
+  }
+
+  @Post('refresh')
+  @ApiOkResponse({ type: AuthSessionResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiConflictResponse({ description: 'Outra requisição já renovou a sessão' })
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const denySession = () => {
+      clearAuthCookie(response, this.configService);
+      clearRefreshCookie(response, this.configService);
+      return new UnauthorizedException();
+    };
+
+    const refreshToken = getRefreshTokenFromCookieHeader(
+      request.headers?.cookie,
+    );
+
+    if (!refreshToken) {
+      throw denySession();
+    }
+
+    const result = await this.authService.refreshSession(refreshToken);
+
+    if (result.status === 'raced') {
+      throw new ConflictException('Sessão já renovada por outra requisição');
+    }
+
+    if (result.status !== 'refreshed') {
+      throw denySession();
+    }
+
+    setAuthCookie(response, result.accessToken, this.configService);
+    setRefreshCookie(response, result.refreshToken, this.configService);
+
+    return result.session;
   }
 
   @Get('me')
