@@ -172,8 +172,20 @@ describe('AuthController', () => {
       },
     } as any;
 
-    expect(controller.getMe(request)).toEqual(request.user);
-    expect(authService.buildSession).not.toHaveBeenCalled();
+    authService.buildSession.mockReturnValue({
+      userId: 12,
+      email: 'admin@example.com',
+      isAdmin: true,
+      expiresIn: 900,
+    });
+
+    expect(controller.getMe(request)).toEqual({
+      userId: 12,
+      email: 'admin@example.com',
+      isAdmin: true,
+      expiresIn: 900,
+    });
+    expect(authService.buildSession).toHaveBeenCalledWith(request.user);
   });
 
   it('forwards the email to the service on forgot-password', async () => {

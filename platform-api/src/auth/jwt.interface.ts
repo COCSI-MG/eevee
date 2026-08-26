@@ -3,4 +3,5 @@ export interface JwtPayload {
   userId: number;
   isAdmin: boolean;
   familyId?: string;
+  exp?: number;
 }

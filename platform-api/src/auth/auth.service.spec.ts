@@ -16,6 +16,7 @@ describe('AuthService', () => {
 
   const jwtService = {
     sign: jest.fn(),
+    decode: jest.fn().mockReturnValue({ exp: 0 }),
   };
 
   const refreshSessionService = {
@@ -69,6 +70,7 @@ describe('AuthService', () => {
         userId: 12,
         email: 'admin@example.com',
         isAdmin: true,
+        expiresIn: 0,
       },
     });
 
@@ -121,6 +123,7 @@ describe('AuthService', () => {
         userId: 33,
         email: 'student@example.com',
         isAdmin: false,
+        expiresIn: 0,
       },
     });
 
@@ -203,6 +206,7 @@ describe('AuthService', () => {
           userId: 12,
           email: 'admin@example.com',
           isAdmin: true,
+          expiresIn: 0,
         },
       });
 
@@ -228,6 +232,61 @@ describe('AuthService', () => {
       expect(result).toMatchObject({
         session: { email: 'novo@example.com', isAdmin: false },
       });
+    });
+  });
+  describe('buildSession', () => {
+    it('reports the seconds left until the access token expires', () => {
+      jest.useFakeTimers().setSystemTime(new Date('2026-01-01T00:00:00Z'));
+      const exp = Math.floor(Date.now() / 1000) + 900;
+
+      expect(
+        service.buildSession({
+          userId: 12,
+          email: 'admin@example.com',
+          isAdmin: true,
+          exp,
+        }),
+      ).toEqual({
+        userId: 12,
+        email: 'admin@example.com',
+        isAdmin: true,
+        expiresIn: 900,
+      });
+
+      jest.useRealTimers();
+    });
+
+    it('reports zero for a token that carries no expiry', () => {
+      expect(
+        service.buildSession({
+          userId: 12,
+          email: 'admin@example.com',
+          isAdmin: true,
+        }).expiresIn,
+      ).toBe(0);
+    });
+
+    it('never reports a negative window for an expired token', () => {
+      expect(
+        service.buildSession({
+          userId: 12,
+          email: 'admin@example.com',
+          isAdmin: true,
+          exp: Math.floor(Date.now() / 1000) - 60,
+        }).expiresIn,
+      ).toBe(0);
+    });
+
+    it('does not expose the session family', () => {
+      const session = service.buildSession({
+        userId: 12,
+        email: 'admin@example.com',
+        isAdmin: true,
+        familyId: 'family-1',
+        exp: Math.floor(Date.now() / 1000) + 60,
+      });
+
+      expect(session).not.toHaveProperty('familyId');
     });
   });
 });

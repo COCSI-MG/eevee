@@ -37,6 +37,7 @@ import {
   setRefreshCookie,
 } from './auth-cookie.util';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtPayload } from './jwt.interface';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
@@ -158,8 +159,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({ type: AuthSessionResponseDto })
   @ApiUnauthorizedResponse()
-  getMe(@Req() request: Request & { user: AuthSessionResponseDto }) {
-    return request.user;
+  getMe(@Req() request: Request & { user: JwtPayload }) {
+    return this.authService.buildSession(request.user);
   }
 
   @Post('logout')

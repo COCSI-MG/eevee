@@ -54,15 +54,13 @@ export class AuthService {
       familyId: rotation.session.familyId,
     };
 
+    const accessToken = this.jwtService.sign(payload);
+
     return {
       status: 'refreshed',
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
       refreshToken: rotation.token,
-      session: {
-        userId: user.id,
-        email: user.email,
-        isAdmin: user.isAdmin,
-      },
+      session: this.buildSession(this.withTokenExpiry(payload, accessToken)),
     };
   }
 
@@ -121,22 +119,31 @@ export class AuthService {
       familyId: session.familyId,
     };
 
+    const accessToken = this.jwtService.sign(payload);
+
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
       refreshToken,
-      session: {
-        userId: user.id,
-        email: user.email,
-        isAdmin: user.isAdmin,
-      },
+      session: this.buildSession(this.withTokenExpiry(payload, accessToken)),
     };
   }
 
+  private withTokenExpiry(payload: JwtPayload, token: string): JwtPayload {
+    const { exp } = this.jwtService.decode(token) as { exp?: number };
+
+    return { ...payload, exp };
+  }
+
   buildSession(payload: JwtPayload): AuthSessionResponseDto {
+    const expiresIn = payload.exp
+      ? Math.max(0, payload.exp - Math.floor(Date.now() / 1000))
+      : 0;
+
     return {
       userId: payload.userId,
       email: payload.email,
       isAdmin: payload.isAdmin,
+      expiresIn,
     };
   }
 }
