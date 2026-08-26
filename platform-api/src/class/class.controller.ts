@@ -27,7 +27,6 @@ export class ClassController {
   @UseGuards(AdminGuard)
   @ApiOkResponse({ type: ClassResponseDto })
   create(@Body() createClassDto: CreateOrReplaceClassDto) {
-    console.log('createClassDto', createClassDto);
     return this.classService.createOrReplace(createClassDto);
   }
 

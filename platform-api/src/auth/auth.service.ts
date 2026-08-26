@@ -70,8 +70,6 @@ export class AuthService {
     const { email, password } = loginData;
     const user = await this.userService.findByEmail(email);
 
-    console.log('User pass hash', user?.passwordHash);
-
     if (user && HashUtils.comparePassword(password, user.passwordHash)) {
       return this.startSession({
         id: user.id,
