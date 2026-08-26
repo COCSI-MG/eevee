@@ -2,6 +2,13 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 
 export const AUTH_COOKIE_NAME = 'eevee_auth';
+export const DEFAULT_AUTH_SESSION_TTL_SECONDS = 12 * 60 * 60;
+export function getAuthSessionTtlSeconds(configService: ConfigService) {
+  return (
+    Number(configService.get<string>('AUTH_SESSION_TTL_SECONDS')) ||
+    DEFAULT_AUTH_SESSION_TTL_SECONDS
+  );
+}
 
 export function parseCookieHeader(cookieHeader?: string) {
   return (cookieHeader ?? '')
@@ -31,7 +38,7 @@ export function getAuthCookieOptions(configService: ConfigService) {
     sameSite: 'lax' as const,
     secure: isProduction,
     domain: cookieDomain,
-    maxAge: 60 * 60 * 1000,
+    maxAge: getAuthSessionTtlSeconds(configService) * 1000,
   };
 }
 

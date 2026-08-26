@@ -12,6 +12,7 @@ import { MailModule } from 'src/mail/mail.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PasswordReset } from './entities/password-reset.entity';
 import { User } from 'src/user/entities/user.entity';
+import { getAuthSessionTtlSeconds } from './auth-cookie.util';
 
 @Module({
   controllers: [AuthController],
@@ -22,7 +23,7 @@ import { User } from 'src/user/entities/user.entity';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '60m' },
+        signOptions: { expiresIn: getAuthSessionTtlSeconds(configService) },
       }),
       inject: [ConfigService],
     }),
