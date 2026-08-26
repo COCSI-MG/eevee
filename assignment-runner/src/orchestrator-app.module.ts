@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
-import { AssignmentRunnerExecutionModule } from './execution/execution-orchestrator.module';
+import { CodeEvaluatorEngineModule } from './execution/execution-orchestrator.module';
 import { EXECUTION_REQUEST_QUEUE } from '@eevee/execution-contracts';
 
 @Module({
@@ -12,7 +12,7 @@ import { EXECUTION_REQUEST_QUEUE } from '@eevee/execution-contracts';
       },
     }),
     BullModule.registerQueue({ name: EXECUTION_REQUEST_QUEUE }),
-    AssignmentRunnerExecutionModule,
+    CodeEvaluatorEngineModule,
   ],
 })
-export class AssignmentRunnerAppModule {}
+export class CodeEvaluatorEngineAppModule {}

@@ -37,7 +37,7 @@ Posteriormente é feito o merge entre os arquivos enviados pelo cliente e a estr
 
 ### Utilizando banco de dados
 
-Atualmente, existe apenas um worker com Node.js + PostgreSQL, é preciso carregar a imagem do Postgres para o minikube. O scheduler-api espera uma imagem do postgres com a tag `postgres:16`, então é necessário criar um tag local com essa referência:
+Atualmente, existe apenas um worker com Node.js + PostgreSQL, é preciso carregar a imagem do Postgres para o minikube. O Assignment Runner espera uma imagem do Postgres com a tag `postgres:16`, então é necessário criar uma tag local com essa referência:
 
 ```bash
 docker pull postgres:16
@@ -62,7 +62,7 @@ Atualmente, as imagens disponíveis suportam motores de execução baseados em N
 
 - [Next.Js](./next.js/Dockerfile) - Imagem especializada para execução de aplicações Next.js. Esta imagem inclui todas as dependências necessárias para rodar aplicações Next.js de forma eficiente.
 
-- [Python + pytest](./python-default/Dockerfile) - Imagem para execução de exercícios em Python, rodando os testes com pytest. O trigger emite um resumo compatível com o Jest, então o parser de logs do scheduler continua funcionando sem alterações.
+- [Python + pytest](./python-default/Dockerfile) - Imagem para execução de exercícios em Python, rodando os testes com pytest. O trigger emite um resumo compatível com o Jest consumido pelo Assignment Runner.
 
 ## Como Utilizar
 

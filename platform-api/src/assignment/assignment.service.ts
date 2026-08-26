@@ -14,9 +14,7 @@ import {
   Brackets,
   DataSource,
   EntityManager,
-  FindOneOptions,
   In,
-  IsNull,
   Repository,
 } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
@@ -270,25 +268,6 @@ export class AssignmentService {
     };
   }
 
-  private getTeacherVisibilityWhere(): FindOneOptions<Assignment>['where'] {
-    const user = this.requestContextService.getUser();
-    if (!user?.isAdmin) return undefined;
-    return [{ createdById: user.userId }, { createdById: IsNull() }];
-  }
-
-  private assertTeacherOwnsAssignment(assignment: Assignment): void {
-    const user = this.requestContextService.getUser();
-    if (!user?.isAdmin) return;
-
-    // Legacy assignments (createdById IS NULL) are accessible to teachers, but once
-    // updated they'll be "claimed" by that teacher (see update()).
-    if (assignment.createdById && assignment.createdById !== user.userId) {
-      throw new ForbiddenException(
-        'You are not authorized to access this assignment.',
-      );
-    }
-  }
-
   async create(
     createAssignmentDto: CreateAssignmentDto,
     manager?: EntityManager,
@@ -376,6 +355,10 @@ export class AssignmentService {
   async findAllUserAssignments() {
     const user = this.requestContextService.getUser();
 
+    if (user.isAdmin) {
+      return this.findAll();
+    }
+
     const query = this.assignmentRepository
       .createQueryBuilder('assignment')
       .innerJoin('assignment.class', 'class')
@@ -401,8 +384,6 @@ export class AssignmentService {
   }
 
   findAll() {
-    const user = this.requestContextService.getUser();
-
     return this.assignmentRepository
       .find({
         relations: [
@@ -411,7 +392,6 @@ export class AssignmentService {
           'class.userClasses',
           'suspensions',
         ],
-        where: user?.isAdmin ? this.getTeacherVisibilityWhere() : undefined,
       })
       .then((assignments) =>
         Promise.all(assignments.map((a) => this.attachBoilerplate(a))),
@@ -422,7 +402,6 @@ export class AssignmentService {
     query: ListAssignmentsQueryDto,
   ): Promise<PaginatedResult<Assignment>> {
     const { page, pageSize, skip } = buildPaginationParams(query);
-    const visibilityWhere = this.getTeacherVisibilityWhere();
 
     const qb = this.assignmentRepository
       .createQueryBuilder('assignment')
@@ -432,10 +411,6 @@ export class AssignmentService {
       .leftJoinAndSelect('assignment.suspensions', 'suspensions')
       .leftJoin('assignment.examAssignment', 'examAssignment')
       .orderBy('assignment.id', 'DESC');
-
-    if (visibilityWhere) {
-      qb.where(visibilityWhere as any);
-    }
 
     const search = query.search?.trim();
     if (search) {
@@ -498,16 +473,6 @@ export class AssignmentService {
       .where('assignment.classId = :classId', { classId })
       .andWhere('examAssignment.id IS NULL');
 
-    if (user?.isAdmin) {
-      query.andWhere(
-        new Brackets((qb) => {
-          qb.where('assignment.createdById = :userId', {
-            userId: user.userId,
-          }).orWhere('assignment.createdById IS NULL');
-        }),
-      );
-    }
-
     const assignments = await query.getMany();
 
     return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
@@ -542,13 +507,6 @@ export class AssignmentService {
         .leftJoinAndSelect(
           'assignment.assignmentAttempts',
           'assignmentAttempts',
-        )
-        .andWhere(
-          new Brackets((qb) => {
-            qb.where('assignment.createdById = :userId', {
-              userId: user.userId,
-            }).orWhere('assignment.createdById IS NULL');
-          }),
         );
     } else {
       query
@@ -599,14 +557,6 @@ export class AssignmentService {
 
     if (!assignment) {
       throw new NotFoundException('Tarefa não encontrada');
-    }
-
-    this.assertTeacherOwnsAssignment(assignment);
-
-    const user = this.requestContextService.getUser();
-    if (user?.isAdmin && !assignment.createdById) {
-      await this.assignmentRepository.update(id, { createdById: user.userId });
-      assignment.createdById = user.userId;
     }
 
     const resolvedBoilerplateContent = this.resolvePayloadBoilerplateContent({
@@ -675,8 +625,6 @@ export class AssignmentService {
 
     if (!assignmentExists)
       throw new NotFoundException('Assignment não encontrado!');
-
-    this.assertTeacherOwnsAssignment(assignmentExists);
 
     const attemptCount = await this.attemptRepository.count({
       where: { assignmentId: id },

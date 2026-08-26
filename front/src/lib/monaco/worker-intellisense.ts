@@ -4,14 +4,14 @@ import WORKER_SOURCE_MAP from "./worker-source-map.json";
 type MonacoNamespace = typeof import("monaco-editor");
 
 /**
- * Maps a {@link WorkerType} to the `images/node/<dir>` folder whose
+ * Maps a {@link WorkerType} to the worker image folder whose
  * `package.json` / `tsconfig.json` describe the runtime the student code will
  * actually execute in. Everything below is derived from those workers so the
  * in-browser editor mirrors the real execution environment.
  */
 const workerSourceMap = WORKER_SOURCE_MAP as Record<string, string>;
 
-const DEFAULT_PACK_DIR = "node";
+const DEFAULT_PACK_DIR = "node-default";
 
 /**
  * Resolves the type-pack / worker directory name for a given worker type.
@@ -94,7 +94,7 @@ export function getCompilerOptions(
       };
 
     case "node-teraorm":
-    case "node":
+    case "node-default":
     default:
       // images/node/node-default/tsconfig.json (also node-teraorm)
       return {

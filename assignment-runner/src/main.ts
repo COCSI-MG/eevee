@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { AssignmentRunnerAppModule } from './orchestrator-app.module';
+import { CodeEvaluatorEngineAppModule } from './orchestrator-app.module';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(
-    AssignmentRunnerAppModule,
+    CodeEvaluatorEngineAppModule,
   );
   app.enableShutdownHooks();
 }

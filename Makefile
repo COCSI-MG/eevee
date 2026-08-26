@@ -133,7 +133,7 @@ push-worker-nestjs-default:
 
 .PHONY: build-worker-node-grpcjs push-worker-node-grpcjs
 build-worker-node-grpcjs:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG) -f images/node/grpc/Dockerfile images/node
+	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG) -f images/node/grpc/Dockerfile images
 push-worker-node-grpcjs:
 	docker push $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG)
 

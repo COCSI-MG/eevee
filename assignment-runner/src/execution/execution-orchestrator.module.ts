@@ -8,4 +8,4 @@ import { ExecutionRequestProcessor } from './execution-request.processor';
   imports: [WorkerModule, ExecutionModule],
   providers: [ExecutionCommandProcessor, ExecutionRequestProcessor],
 })
-export class AssignmentRunnerExecutionModule {}
+export class CodeEvaluatorEngineModule {}

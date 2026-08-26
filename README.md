@@ -28,14 +28,14 @@ npm install
 npm run start:dev
 ```
 
-#### 2.1 Assignment Runner
+#### 2.1 Code Evaluator Engine
 
 O avaliador é uma aplicação NestJS que consome comandos do Redis + BullMQ, executa os jobs Kubernetes e publica os resultados para a Platform API.
 
 Lembre-se de preencher os valores de REDIS_HOST e REDIS_PORT no `.env` do avaliador. Se estiver usando o Docker, o host do Redis será localhost e a porta fixa será 6379.
 
 ```bash
-cd assignment-runner/ && npm run start:dev
+cd code-evaluator-engine/ && npm run start:dev
 ```
 
 ## _Testando a infraestrutura_
@@ -62,7 +62,7 @@ minikube image load postgres:16
 ### Node Default Worker
 
 ```
-cd images\node\node-default
+cd node-worker-images\node
 docker build . -t worker-node-default-img:latest
 ```
 
@@ -77,7 +77,7 @@ minikube image load worker-node-default-img:latest
 Worker dedicado para os exercicios comparativos SDK nativo vs TeraORM.
 
 ```
-cd images\node\node-teraorm
+cd node-worker-images\node-teraorm
 docker build . -t worker-node-teraorm-img:latest
 ```
 
@@ -90,7 +90,7 @@ minikube image load worker-node-teraorm-img:latest
 ### Node NestJS Worker
 
 ```
-cd images\node\nest.js
+cd node-worker-images\nest.js
 docker build . -t worker-node-nestjs-img:latest
 ```
 
@@ -103,7 +103,7 @@ minikube image load worker-node-nestjs-img:latest
 ### Node GRPC Worker
 
 ```
-cd images\node\grpc
+cd node-worker-images\grpc
 docker build . -t worker-node-grpcjs-img:latest
 ```
 
@@ -116,7 +116,7 @@ minikube image load worker-node-grpcjs-img:latest
 ### Node Next.js + Cypress Worker
 
 ```
-cd images\node\next.js-cypress
+cd node-worker-images\next.js-cypress
 docker build . -t worker-node-nextjs-cypress-img:latest
 ```
 
@@ -129,7 +129,7 @@ minikube image load worker-node-nextjs-cypress-img:latest
 ### Python + Pytest Worker
 
 ```
-cd images\python-default
+cd node-worker-images\python-default
 docker build . -t worker-python-default-img:latest
 ```
 

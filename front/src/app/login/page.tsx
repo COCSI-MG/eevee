@@ -97,7 +97,7 @@ export default function Login() {
             </div>
           </div>
           <h1 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
-            EEVEE CEFET Code Lab
+            EEVEE Code Lab
           </h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
             Faça login na sua conta para acessar seu painel

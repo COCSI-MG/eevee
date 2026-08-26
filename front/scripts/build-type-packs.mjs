@@ -1,7 +1,7 @@
 // @ts-check
 /**
  * Generates offline TypeScript type packs for the Monaco editor, derived
- * entirely from the real worker images in `images/node/`.
+ * entirely from the real worker images in `images/`.
  *
  * For each unique worker directory it:
  *   1. reads the worker's own `package.json` (deps + devDeps),
@@ -31,7 +31,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const FRONT_DIR = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(FRONT_DIR, "..");
-const WORKERS_ROOT = path.join(REPO_ROOT, "images", "node");
+const NODE_WORKERS_ROOT = path.join(REPO_ROOT, "images", "node");
+const WORKER_DIR_OVERRIDES = new Map([
+  [
+    "javascript-default",
+    path.join(REPO_ROOT, "images", "javascript-default"),
+  ],
+]);
 const OUTPUT_ROOT = path.join(FRONT_DIR, "public", "type-packs");
 
 const sourceMap = JSON.parse(
@@ -109,8 +115,8 @@ function isToolingPackage(name) {
  * @returns {string[]} declared dependency names worth harvesting types for:
  * all runtime dependencies plus `@types/*` / test-authoring devDependencies.
  */
-function readDeclaredDependencies(dir) {
-  const pkgPath = path.join(WORKERS_ROOT, dir, "package.json");
+function readDeclaredDependencies(workerDir) {
+  const pkgPath = path.join(workerDir, "package.json");
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
   const runtime = Object.keys(pkg.dependencies ?? {});
   const dev = Object.keys(pkg.devDependencies ?? {});
@@ -243,7 +249,8 @@ function resolveDependencyClosure(workerDir, seeds) {
  */
 function buildPack(dir) {
   console.log(`\nBuilding type pack for "${dir}"`);
-  const workerDir = path.join(WORKERS_ROOT, dir);
+  const workerDir =
+    WORKER_DIR_OVERRIDES.get(dir) ?? path.join(NODE_WORKERS_ROOT, dir);
   if (!fs.existsSync(workerDir)) {
     console.warn(`  worker dir not found, skipping: ${workerDir}`);
     return;
@@ -251,7 +258,7 @@ function buildPack(dir) {
 
   installDependencies(workerDir);
 
-  const declared = readDeclaredDependencies(dir);
+  const declared = readDeclaredDependencies(workerDir);
   const closure = resolveDependencyClosure(workerDir, declared);
   const nodeModulesDir = path.join(workerDir, "node_modules");
 

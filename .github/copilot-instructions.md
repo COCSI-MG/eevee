@@ -6,7 +6,7 @@
 
 - **`front/`** (Next.js 15) - Web UI for assignments and code submission
 - **`platform-api/`** (NestJS) - Public API: manages users, assignments, attempts, and realtime updates
-- **`assignment-runner/`** (NestJS) - Internal consumer that evaluates prepared code submissions in Kubernetes
+- **`code-evaluator-engine/`** (NestJS) - Internal consumer that evaluates prepared code submissions in Kubernetes
 - **`images/`** - Containerized execution environments; runtime workers are grouped in `images/node/`
 - **`infrastructure/`** - Docker Compose services (Redis, PostgreSQL, Helm and Minikube config)
 
@@ -30,7 +30,7 @@ cd infrastructure && docker compose up -d
 cd platform-api && npm install && npm run start:dev
 
 # Terminal 4: Frontend
-cd assignment-runner && npm install && npm run start:dev
+cd code-evaluator-engine && npm install && npm run start:dev
 cd front && npm install && npm run dev
 ```
 
@@ -89,7 +89,7 @@ DTOs use decorators for validation: `@IsEnum()`, `@IsString()`, `@MinLength()`, 
 **Add a new worker type:**
 
 1. Add to `WorkerType` enum
-2. Create the Dockerfile under `images/new-type/` or `images/node/new-type/`
+2. Create Dockerfile in `images/new-type/`
 3. Create `new-type/worker-definition.json`
 4. Add handler method in `WorkerService`
 5. Register in `SchedulingService.workerMap` constructor
