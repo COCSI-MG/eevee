@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   OnGatewayConnection,
+  OnGatewayDisconnect,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
@@ -54,8 +55,11 @@ function userRoom(userId: number): string {
     credentials: true,
   },
 })
-export class RealtimeGateway implements OnGatewayConnection {
+export class RealtimeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(RealtimeGateway.name);
+  private readonly expiryTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   @WebSocketServer()
   private readonly server!: Server;
@@ -74,6 +78,7 @@ export class RealtimeGateway implements OnGatewayConnection {
     try {
       const payload = this.jwtService.verify<JwtPayload>(token);
       void client.join(userRoom(payload.userId));
+      this.scheduleExpiryDisconnect(client, payload.exp);
       this.logger.debug(
         `Realtime client ${client.id} joined room for user ${payload.userId}`,
       );
@@ -81,6 +86,36 @@ export class RealtimeGateway implements OnGatewayConnection {
       this.logger.debug('Rejecting realtime connection with invalid token');
       client.disconnect(true);
     }
+  }
+
+  handleDisconnect(client: Socket) {
+    const timer = this.expiryTimers.get(client.id);
+
+    if (timer) {
+      clearTimeout(timer);
+      this.expiryTimers.delete(client.id);
+    }
+  }
+
+  private scheduleExpiryDisconnect(client: Socket, exp?: number) {
+    if (!exp) {
+      return;
+    }
+
+    const delay = exp * 1000 - Date.now();
+
+    if (delay <= 0) {
+      client.disconnect(true);
+      return;
+    }
+
+    // O handshake congela o cookie na conexão, então revalidar o socket em pé
+    // leria sempre o token antigo. Derrubar faz o cliente reconectar com o
+    // cookie atual, que o front já renovou.
+    this.expiryTimers.set(
+      client.id,
+      setTimeout(() => client.disconnect(true), delay),
+    );
   }
 
   emitSchedulingEvent(event: SchedulingRealtimeEvent) {
