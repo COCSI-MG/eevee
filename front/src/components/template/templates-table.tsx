@@ -116,7 +116,6 @@ export default function TemplatesTable({
                         value={template.content}
                         height="420px"
                         optionOverrides={{
-                          hover: { enabled: "off" },
                           links: false,
                         }}
                       />
