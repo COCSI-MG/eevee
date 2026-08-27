@@ -17,6 +17,7 @@ export type MonacoEditorOptionOverrides = Pick<
   | "lineNumbers"
   | "hover"
   | "links"
+  | "semanticHighlighting.enabled"
 >;
 
 interface BaseMonacoCodeEditorProps {

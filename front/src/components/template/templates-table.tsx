@@ -108,7 +108,7 @@ export default function TemplatesTable({
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="bg-slate-900 border border-slate-600 rounded-md p-4 max-h-[50vh] overflow-auto min-w-0">
+                    <div className="bg-editor-bg border border-border rounded-md p-4 max-h-[50vh] overflow-auto min-w-0">
                       <MonacoCodeEditor
                         preset="read-only-preview"
                         path={`template-${template.id}${getWorkerLanguageConfig(template.workerType).fileExtension}`}
@@ -116,7 +116,7 @@ export default function TemplatesTable({
                         value={template.content}
                         height="420px"
                         optionOverrides={{
-                          hover: { enabled: false },
+                          hover: { enabled: "off" },
                           links: false,
                         }}
                       />

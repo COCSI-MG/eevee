@@ -140,20 +140,20 @@ export function TemplateTestDialog({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
             <div className="flex items-baseline justify-between">
-              <Label className="text-slate-200">{`app${applicationLanguage.fileExtension} (código de aplicação)`}</Label>
+              <Label className="text-foreground">{`app${applicationLanguage.fileExtension} (código de aplicação)`}</Label>
             </div>
-            <div className="rounded-md border border-slate-700 overflow-hidden">
+            <div className="rounded-md border border-border overflow-hidden">
               <MonacoCodeEditor
                 preset="form-field"
                 height="320px"
                 path={`template-test-app${applicationLanguage.fileExtension}`}
+                language={applicationLanguage.editorLanguage}
                 workerType={workerType}
                 value={applicationFileContent}
                 onChange={setApplicationFileContent}
                 optionOverrides={{
                   fontSize: 13,
                   lineNumbers: "on",
-                  "semanticHighlighting.enabled": false,
                 }}
               />
             </div>

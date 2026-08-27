@@ -68,7 +68,7 @@ export default function TemplateConfigDialog({
                       <span className="text-destructive ml-1">*</span>
                     </Label>
                     <div className="relative">
-                      <div className="border border-slate-600 rounded-md overflow-auto min-w-0">
+                      <div className="border border-border rounded-md overflow-auto min-w-0">
                         <MonacoCodeEditor
                           preset="parameter-input"
                           value={paramsValues[param.id] || ""}

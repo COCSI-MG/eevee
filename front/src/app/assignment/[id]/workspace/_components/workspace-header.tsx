@@ -109,9 +109,6 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         <Button variant="ghost" size="sm" onClick={() => back()}>
           Voltar
         </Button>
-        <Button variant="ghost" size="sm">
-          Ajuda
-        </Button>
 
         <div className="flex items-center gap-2 ml-4">
           <AlertDialog

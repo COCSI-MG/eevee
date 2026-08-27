@@ -539,7 +539,7 @@ export default function TemplateForm() {
                       onChange={(value) =>
                         formik.setFieldValue("content", value || "")
                       }
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-editor-bg border-border text-foreground"
                     />
                   </div>
                   {(formik.touched.content || formik.submitCount > 0) &&
@@ -603,37 +603,7 @@ export default function TemplateForm() {
           workerType={formik.values.workerType}
           value={formik.values.content}
           onChange={(value) => formik.setFieldValue("content", value || "")}
-<<<<<<< HEAD
-          className="flex-1 min-h-0 bg-slate-700 border-slate-600 text-white"
-=======
-          theme={EEVEE_MONACO_THEME}
           className="flex-1 min-h-0 bg-primary/20 border-border text-foreground"
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: "on",
-            wrappingIndent: "indent",
-            fontSize: 14,
-            lineNumbers: "on",
-            quickSuggestions: false,
-            suggest: {
-              showWords: false,
-              showSnippets: false,
-            },
-            "semanticHighlighting.enabled": false,
-          }}
-          beforeMount={(monaco) => {
-            registerEeveeMonacoTheme(monaco);
-            const diagnosticsOptions = {
-              noSemanticValidation: true,
-              noSyntaxValidation: true,
-              noSuggestionDiagnostics: true,
-            };
-
-            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
-            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
-          }}
->>>>>>> 48e302a (feat: colocaracao do eevee)
         />
         {(formik.touched.content || formik.submitCount > 0) &&
           formik.errors.content && (

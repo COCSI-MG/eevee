@@ -27,8 +27,8 @@ export default function TemplatePreviewDialog({ template, open, onOpenChange }: 
           <p className="text-foreground">{template.description}</p>
           <Separator className="bg-primary/30" />
           <div>
-            <h4 className="text-sm font-medium text-slate-300 mb-2">Conteúdo do Template</h4>
-            <div className="bg-slate-900 border border-slate-600 rounded-md overflow-auto min-w-0">
+            <h4 className="text-sm font-medium text-muted-foreground mb-2">Conteúdo do Template</h4>
+            <div className="bg-editor-bg border border-border rounded-md overflow-auto min-w-0">
               <MonacoCodeEditor
                 preset="read-only-preview"
                 path={`template-${template.id}${getWorkerLanguageConfig(template.workerType).fileExtension}`}

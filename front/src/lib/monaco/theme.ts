@@ -35,7 +35,28 @@ function resolveCssColor(
   context: CanvasRenderingContext2D,
   variableName: string,
 ): string {
-  const rawColor = styles.getPropertyValue(variableName).trim();
+  const resolveVariable = (
+    currentVariableName: string,
+    visited: Set<string>,
+  ): string => {
+    if (visited.has(currentVariableName)) {
+      throw new Error(`Referencia circular na variavel "${currentVariableName}".`);
+    }
+
+    const rawValue = styles.getPropertyValue(currentVariableName).trim();
+    if (!rawValue) {
+      throw new Error(`A variavel "${currentVariableName}" não foi definida.`);
+    }
+
+    const nextVisited = new Set(visited).add(currentVariableName);
+    return rawValue.replace(
+      /var\(\s*(--[\w-]+)\s*\)/g,
+      (_, referencedVariableName: string) =>
+        resolveVariable(referencedVariableName, nextVisited),
+    );
+  };
+
+  const rawColor = resolveVariable(variableName, new Set());
 
   if (!rawColor) {
     throw new Error(`A variavel "${variableName}" não foi definida.`);
