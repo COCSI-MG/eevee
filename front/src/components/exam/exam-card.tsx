@@ -25,22 +25,22 @@ export default function ExamCard({ exam, classId }: ExamCardProps) {
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between space-x-2 text-white">
+        <CardTitle className="flex items-center justify-between space-x-2 text-foreground">
           {exam.title}
-          <GraduationCap className="h-5 w-5 text-slate-400" />
+          <GraduationCap className="h-5 w-5 text-muted-foreground" />
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col space-y-4">
           {exam.description && (
-            <CardDescription className="text-slate-400 line-clamp-2">
+            <CardDescription className="text-muted-foreground line-clamp-2">
               {exam.description}
             </CardDescription>
           )}
 
           {dueDate && (
-            <p className="text-sm text-slate-500">
-              <span className="font-medium text-slate-300">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">
                 Data de entrega:
               </span>{" "}
               {dueDate}
@@ -48,7 +48,7 @@ export default function ExamCard({ exam, classId }: ExamCardProps) {
           )}
 
           <Button
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={() => push(`/classes/${classId}/exam/${exam.id}`)}
           >
             <GraduationCap className="h-4 w-4 mr-2" />

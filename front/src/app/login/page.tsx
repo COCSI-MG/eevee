@@ -88,7 +88,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
@@ -96,10 +96,10 @@ export default function Login() {
               <Code className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h1 className="mt-4 text-3xl font-extrabold text-foreground">
             EEVEE Code Lab
           </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-sm text-muted-foreground">
             Faça login na sua conta para acessar seu painel
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function Login() {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-muted-foreground"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? (

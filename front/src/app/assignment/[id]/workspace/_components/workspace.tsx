@@ -169,7 +169,7 @@ export default function Workspace({
   return (
     <div className="flex flex-1 min-h-0">
       <div
-        className="relative shrink-0 min-w-[150px] max-w-[400px] bg-gray-800 border-r border-gray-700 h-full min-h-0"
+        className="relative shrink-0 min-w-[150px] max-w-[400px] bg-card border-r border-border h-full min-h-0"
         style={{ width: explorerWidth }}
       >
         <WorkspaceExplorer
@@ -182,7 +182,7 @@ export default function Workspace({
           role="separator"
           aria-label="Redimensionar explorador"
           aria-orientation="vertical"
-          className="absolute right-0 top-0 h-full w-1 cursor-ew-resize bg-transparent transition-colors hover:bg-blue-500/40"
+          className="absolute right-0 top-0 h-full w-1 cursor-ew-resize bg-transparent transition-colors hover:bg-primary/40"
           onMouseDown={(event) => startResize("explorer", event)}
         />
       </div>
@@ -192,7 +192,7 @@ export default function Workspace({
           title={assignment.title}
           description={assignment.description}
         />
-        <div className="flex items-center justify-end gap-2 border-b border-gray-800 px-2 py-1">
+        <div className="flex items-center justify-end gap-2 border-b border-border px-2 py-1">
           {isSplitView && (
               <Button
                 variant="ghost"
@@ -213,7 +213,7 @@ export default function Workspace({
         </div>
 
         {isSplitView ? (
-          <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-gray-800">
+          <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-border">
             <div className="min-w-0 min-h-0 flex flex-col">
               <WorkspaceCodeEditor
                 file={activeFile}

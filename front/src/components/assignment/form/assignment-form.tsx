@@ -333,7 +333,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                         }
                       }}
                       disabled={currentStep === 1}
-                      className="border-slate-600 text-slate-200 hover:bg-slate-700 disabled:opacity-50"
+                      className="border-border text-foreground hover:bg-primary/20 disabled:opacity-50"
                     >
                       <ChevronLeft className="w-4 h-4 mr-2" />
                       Anterior
@@ -357,7 +357,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                         <Button
                           type="submit"
                           disabled={isSubmitting}
-                          className="bg-green-600 hover:bg-green-700 transition-colors"
+                          className="bg-success hover:bg-success/90 transition-colors"
                         >
                           <Save className="w-4 h-4 mr-2" />
                           {existingAssignmentId

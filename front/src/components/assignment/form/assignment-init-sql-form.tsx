@@ -16,15 +16,15 @@ export const AssignmentInitSqlForm: React.FC<AssignmentInitSqlFormProps> = ({
   setFieldValue,
 }) => {
   return (
-    <Card className="bg-slate-800 border-slate-700 max-h-[600px]">
+    <Card className="bg-card border-border max-h-[600px]">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <Database className="w-5 h-5" />
           Script SQL de Inicialização
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <span className="text-sm text-slate-400 mb-2 block">
+        <span className="text-sm text-muted-foreground mb-2 block">
           Forneça o script SQL que será executado para inicializar o banco de
           dados PostgreSQL antes da execução do código do aluno. Utilize este
           campo para criar tabelas, inserir dados iniciais (seeds), etc.
@@ -39,7 +39,7 @@ export const AssignmentInitSqlForm: React.FC<AssignmentInitSqlFormProps> = ({
         <ErrorMessage
           name="initSqlScript"
           component="div"
-          className="text-red-500 text-sm"
+          className="text-destructive text-sm"
         />
       </CardContent>
     </Card>

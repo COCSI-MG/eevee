@@ -105,15 +105,15 @@ export default function WorkspaceExplorer({
   }, []);
 
   return (
-    <div className="w-full bg-gray-800 h-full min-h-0 flex flex-col">
-      <div className="px-3 py-2 border-b border-gray-700">
+    <div className="w-full bg-card h-full min-h-0 flex flex-col">
+      <div className="px-3 py-2 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
             Explorador
           </h3>
         </div>
 
-        <div className="text-xs text-gray-500 mb-2 space-y-1">
+        <div className="text-xs text-muted-foreground mb-2 space-y-1">
           <div>
             Arquivos: {treeInfo.fileCount}/{maxFiles}
           </div>
@@ -126,7 +126,7 @@ export default function WorkspaceExplorer({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/20"
             onClick={() => openCreateItemDialog("file")}
             title={`Criar arquivo em ${createTargetLabel}`}
           >
@@ -136,7 +136,7 @@ export default function WorkspaceExplorer({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-gray-400 hover:text-white hover:bg-gray-700"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-primary/20"
             onClick={() => openCreateItemDialog("folder")}
             title={`Criar pasta em ${createTargetLabel}`}
           >
@@ -146,7 +146,7 @@ export default function WorkspaceExplorer({
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-gray-400 hover:text-red-400 hover:bg-gray-700"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-primary/20"
             onClick={() => handleDeleteRequest()}
             title={
               hasSelection
@@ -167,15 +167,15 @@ export default function WorkspaceExplorer({
             }
           }}
         >
-          <DialogContent className="bg-gray-800 border-gray-700">
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-white">
+              <DialogTitle className="text-foreground">
                 Criar Novo {newItemType === "file" ? "Arquivo" : "Pasta"}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name" className="text-gray-300">
+                <Label htmlFor="name" className="text-foreground">
                   Nome do {newItemType === "file" ? "Arquivo" : "Pasta"}
                 </Label>
                 <Input
@@ -188,22 +188,22 @@ export default function WorkspaceExplorer({
                   placeholder={
                     newItemType === "file" ? "example.js" : "folder-name"
                   }
-                  className="bg-gray-700 border-gray-600 text-white mt-1"
+                  className="bg-primary/20 border-border text-foreground mt-1"
                   onKeyDown={(e) => e.key === "Enter" && handleCreateItem()}
                 />
-                {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
+                {error && <p className="text-destructive text-sm mt-1">{error}</p>}
               </div>
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={resetCreateDialog}
-                  className="border-gray-600 text-gray-300 hover:text-white"
+                  className="border-border text-foreground hover:text-foreground"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleCreateItem}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   Criar
                 </Button>
@@ -220,19 +220,19 @@ export default function WorkspaceExplorer({
             }
           }}
         >
-          <DialogContent className="bg-gray-800 border-gray-700">
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-white">Confirmar Exclusão</DialogTitle>
+              <DialogTitle className="text-foreground">Confirmar Exclusão</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <p className="text-gray-300">
+              <p className="text-foreground">
                 Tem certeza que deseja excluir{" "}
-                <span className="font-semibold text-white">
+                <span className="font-semibold text-foreground">
                   &quot;{selectedItem.id || deleteTargetLabel}&quot;
                 </span>
                 ?
                 {selectedItem.type === "folder" && (
-                  <span className="block text-sm text-red-400 mt-1">
+                  <span className="block text-sm text-destructive mt-1">
                     Isso também excluirá todos os arquivos e pastas dentro dela.
                   </span>
                 )}
@@ -241,13 +241,13 @@ export default function WorkspaceExplorer({
                 <Button
                   variant="outline"
                   onClick={closeDeleteDialog}
-                  className="border-gray-600 text-gray-300 hover:text-white"
+                  className="border-border text-foreground hover:text-foreground"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleDeleteConfirm}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                 >
                   Excluir
                 </Button>
@@ -264,13 +264,13 @@ export default function WorkspaceExplorer({
             }
           }}
         >
-          <DialogContent className="bg-gray-800 border-gray-700">
+          <DialogContent className="bg-card border-border">
             <DialogHeader>
-              <DialogTitle className="text-white">Renomear Item</DialogTitle>
+              <DialogTitle className="text-foreground">Renomear Item</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="rename-name" className="text-gray-300">
+                <Label htmlFor="rename-name" className="text-foreground">
                   Novo nome
                 </Label>
                 <Input
@@ -280,22 +280,22 @@ export default function WorkspaceExplorer({
                     setRenameValue(e.target.value);
                     setError("");
                   }}
-                  className="bg-gray-700 border-gray-600 text-white mt-1"
+                  className="bg-primary/20 border-border text-foreground mt-1"
                   onKeyDown={(e) => e.key === "Enter" && handleRename()}
                 />
-                {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
+                {error && <p className="text-destructive text-sm mt-1">{error}</p>}
               </div>
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={closeRenameDialog}
-                  className="border-gray-600 text-gray-300 hover:text-white"
+                  className="border-border text-foreground hover:text-foreground"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleRename}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   Renomear
                 </Button>

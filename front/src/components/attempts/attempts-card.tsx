@@ -89,13 +89,13 @@ export default function AttemptsCard() {
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {isAssignmentAttemptsError ? (
-          <div className="text-center text-red-400">
+          <div className="text-center text-destructive">
             Ocorreu um erro ao carregar as tentativas desta tarefa.
           </div>
         ) : assingmentData === undefined ||
           assingmentData?.assignmentAttempts === undefined ||
           assingmentData?.assignmentAttempts.length === 0 ? (
-          <div className="text-center text-gray-500">
+          <div className="text-center text-muted-foreground">
             Nenhuma tentativa encontrada para esta tarefa.
           </div>
         ) : (
@@ -110,11 +110,11 @@ export default function AttemptsCard() {
                     "opacity-50": attempt.status !== "running",
                   },
                   {
-                    "border border-red-600 text-white":
+                    "border border-destructive text-foreground":
                       attempt.status === "failed" || !attempt.isAcceptable,
                   },
                   {
-                    "border border-green-600 text-white":
+                    "border border-success text-foreground":
                       attempt.status === "running",
                   },
                 )}
@@ -125,21 +125,21 @@ export default function AttemptsCard() {
                     {attempt.status === "running" ? (
                       <Badge
                         variant="default"
-                        className="bg-yellow-600 text-white animate-pulse"
+                        className="bg-warning text-warning-foreground animate-pulse"
                       >
                         Em execução
                       </Badge>
                     ) : attempt.status === "failed" || !attempt.isAcceptable ? (
                       <Badge
                         variant="destructive"
-                        className="ml-2 bg-red-600 text-white"
+                        className="ml-2 bg-destructive text-destructive-foreground"
                       >
                         Falhou
                       </Badge>
                     ) : (
                       <Badge
                         variant="outline"
-                        className="ml-2 bg-green-600 text-white"
+                        className="ml-2 bg-success text-success-foreground"
                       >
                         Aceito
                       </Badge>
@@ -153,13 +153,13 @@ export default function AttemptsCard() {
                         {formatDateTime(attempt.createdAt)}
                       </p>
                     )}
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-foreground">
                       Resultado: {attempt.score}
                     </p>
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-foreground">
                       Passou: {attempt.passes}
                     </p>
-                    <p className="text-sm text-white">
+                    <p className="text-sm text-foreground">
                       Falhas: {attempt.fails}
                     </p>
                     {attempt.report && (

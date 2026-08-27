@@ -94,15 +94,15 @@ export default function TemplatesTable({
                   <Button
                     variant={"outline"}
                     size="sm"
-                    className="text-slate-40 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <Eye className="h-4 w-4" />
                     {TEMPLATE_TABLE_TEXT.viewButton}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80vh]">
+                <DialogContent className="bg-card border-border max-w-4xl max-h-[80vh]">
                   <DialogHeader>
-                    <DialogTitle className="text-white flex items-center gap-2">
+                    <DialogTitle className="text-foreground flex items-center gap-2">
                       <Code className="w-5 h-5" />
                       {template.title}
                     </DialogTitle>

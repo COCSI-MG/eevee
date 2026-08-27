@@ -153,10 +153,11 @@ export function TemplateTestDialog({
                 optionOverrides={{
                   fontSize: 13,
                   lineNumbers: "on",
+                  "semanticHighlighting.enabled": false,
                 }}
               />
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-muted-foreground">
               No seu teste, importe o app de{" "}
               <code className="rounded bg-muted px-1">{"../src/app"}</code>{" "}
               (caminho canônico) ou{" "}
@@ -167,10 +168,10 @@ export function TemplateTestDialog({
 
           <div className="space-y-3">
             <div>
-              <Label className="text-slate-200">Parâmetros do template</Label>
+              <Label className="text-foreground">Parâmetros do template</Label>
             </div>
             {paramEntries.length === 0 ? (
-              <p className="text-sm text-slate-400 italic">
+              <p className="text-sm text-muted-foreground italic">
                 Este template não declara parâmetros.
               </p>
             ) : (
@@ -192,7 +193,7 @@ export function TemplateTestDialog({
         </div>
 
         <DialogFooter className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between">
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-muted-foreground">
             Worker: <span className="font-mono">{workerType}</span>
             {dependencies.length > 0 && (
               <>
@@ -233,8 +234,8 @@ export function TemplateTestDialog({
         </DialogFooter>
 
         {hasError && (
-          <Card className="border-red-700 bg-red-950/40">
-            <CardContent className="p-4 text-sm text-red-200 space-y-2">
+          <Card className="border-destructive bg-destructive/10">
+            <CardContent className="p-4 text-sm text-destructive space-y-2">
               <p className="font-semibold">Falha ao executar o teste.</p>
               <p>
                 {error instanceof AxiosError
@@ -245,30 +246,30 @@ export function TemplateTestDialog({
                     ? error.message
                     : "Erro desconhecido."}
               </p>
-              <p className="text-xs text-red-300/80">
+              <p className="text-xs text-destructive">
                 Causas comuns: (1) o pod não conseguiu pullar a imagem do
                 worker — verifique{" "}
-                <code className="rounded bg-black/30 px-1">
+                <code className="rounded bg-background/30 px-1">
                   {isJavascriptDefault
                     ? "WORKER_IMAGE_JAVASCRIPT_DEFAULT"
                     : "WORKER_IMAGE_NODE_DEFAULT"}
                 </code>{" "}
                 e{" "}
-                <code className="rounded bg-black/30 px-1">
+                <code className="rounded bg-background/30 px-1">
                   WORKER_BOOTSTRAP_IMAGE
                 </code>{" "}
                 no backend; (2) o teste referencia um módulo que não existe
                 no pod (ex.:{" "}
-                <code className="rounded bg-black/30 px-1">
+                <code className="rounded bg-background/30 px-1">
                   require(&quot;./isEven&quot;)
                 </code>{" "}
                 quando o app só está em{" "}
-                <code className="rounded bg-black/30 px-1">
+                <code className="rounded bg-background/30 px-1">
                   /app/src/app.{applicationExtension}
                 </code>
                 ); (3) o pod foi morto antes do Jest terminar (timeout).
                 Inspecione o pod com{" "}
-                <code className="rounded bg-black/30 px-1">
+                <code className="rounded bg-background/30 px-1">
                   kubectl describe pod
                 </code>{" "}
                 para detalhes.
@@ -291,12 +292,12 @@ export function TemplateTestDialog({
                 <CardContent className="p-3 flex items-center justify-center gap-2 text-sm font-medium h-full">
                   {isAcceptable ? (
                     <>
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                       Aceitável
                     </>
                   ) : (
                     <>
-                      <XCircle className="h-4 w-4 text-red-500" />
+                      <XCircle className="h-4 w-4 text-destructive" />
                     </>
                   )}
                 </CardContent>
@@ -304,8 +305,8 @@ export function TemplateTestDialog({
             </div>
 
             <div>
-              <Label className="text-slate-200">Log completo</Label>
-              <pre className="mt-1 max-h-72 overflow-auto rounded-md border border-slate-700 bg-slate-950 p-3 text-xs text-slate-200 whitespace-pre-wrap">
+              <Label className="text-foreground">Log completo</Label>
+              <pre className="mt-1 max-h-72 overflow-auto rounded-md border border-border bg-background p-3 text-xs text-foreground whitespace-pre-wrap">
                 {data.completeTrace || "(sem saída)"}
               </pre>
             </div>
@@ -351,7 +352,7 @@ function ResultStat({
   value: number | string;
   tone: "ok" | "bad";
 }) {
-  const color = tone === "ok" ? "text-emerald-500" : "text-red-500";
+  const color = tone === "ok" ? "text-success" : "text-destructive";
   return (
     <Card>
       <CardContent className="p-3 flex flex-col items-center justify-center text-center">
@@ -376,10 +377,10 @@ function ParamField({
   if (type === TemplateParamType.BOOLEAN) {
     const checked = value === "true";
     return (
-      <div className="flex items-center justify-between rounded-md border border-slate-700 bg-slate-800 px-3 py-2">
+      <div className="flex items-center justify-between rounded-md border border-border bg-card px-3 py-2">
         <div>
-          <Label className="text-slate-200">{name}</Label>
-          <p className="text-xs text-slate-400">boolean</p>
+          <Label className="text-foreground">{name}</Label>
+          <p className="text-xs text-muted-foreground">boolean</p>
         </div>
         <Checkbox
           checked={checked}
@@ -393,14 +394,14 @@ function ParamField({
   if (type === TemplateParamType.NUMBER) {
     return (
       <div className="space-y-1">
-        <Label className="text-slate-200">
-          {name} <span className="text-xs text-slate-400">(number)</span>
+        <Label className="text-foreground">
+          {name} <span className="text-xs text-muted-foreground">(number)</span>
         </Label>
         <Input
           type="number"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="bg-slate-700 border-slate-600 text-white"
+          className="bg-primary/20 border-border text-foreground"
         />
       </div>
     );
@@ -409,15 +410,15 @@ function ParamField({
   if (type === TemplateParamType.OBJECT) {
     return (
       <div className="space-y-1">
-        <Label className="text-slate-200">
-          {name} <span className="text-xs text-slate-400">(object JSON)</span>
+        <Label className="text-foreground">
+          {name} <span className="text-xs text-muted-foreground">(object JSON)</span>
         </Label>
         <Textarea
           rows={3}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder='{"key": "value"}'
-          className="bg-slate-700 border-slate-600 text-white font-mono text-xs"
+          className="bg-primary/20 border-border text-foreground font-mono text-xs"
         />
       </div>
     );
@@ -425,13 +426,13 @@ function ParamField({
 
   return (
     <div className="space-y-1">
-      <Label className="text-slate-200">
-        {name} <span className="text-xs text-slate-400">(string)</span>
+      <Label className="text-foreground">
+        {name} <span className="text-xs text-muted-foreground">(string)</span>
       </Label>
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-slate-700 border-slate-600 text-white"
+        className="bg-primary/20 border-border text-foreground"
       />
     </div>
   );

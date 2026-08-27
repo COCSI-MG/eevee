@@ -20,15 +20,15 @@ export const AssignmentBoilerplateForm: React.FC<
   const langConfig = getWorkerLanguageConfig(values.workerType);
 
   return (
-    <Card className="bg-slate-800 border-slate-700 max-h-[600px]">
+    <Card className="bg-card border-border max-h-[600px]">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <FileText className="w-5 h-5" />
           Código Boilerplate <Tooltip message="Código que será fornecido ao aluno no início do trabalho para ser usado como base para o desenvolvimento dos exercícios." />
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <span className="text-sm text-slate-400 mb-2 block">
+        <span className="text-sm text-muted-foreground mb-2 block">
           Forneça o código que será entregue ao aluno no início do trabalho.
           Certifique-se de que o código esteja alinhado com o tipo de worker
           selecionado. Segue um exemplo de código boilerplate para o tipo de
@@ -47,7 +47,7 @@ export const AssignmentBoilerplateForm: React.FC<
         <ErrorMessage
           name="boilerplate"
           component="div"
-          className="text-red-500 text-sm"
+          className="text-destructive text-sm"
         />
       </CardContent>
     </Card>

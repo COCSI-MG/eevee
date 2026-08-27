@@ -190,20 +190,20 @@ function AdminAttemptsPageContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-100">Tentativas de testes</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Tentativas de testes</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
           Selecione uma atividade para listar as tentativas, analisar detalhes e reexecutar testes.
         </p>
       </div>
 
-      <section className="rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 to-slate-800/80 p-4 md:p-6">
+      <section className="rounded-2xl border border-border bg-gradient-to-r from-background to-card/80 p-4 md:p-6">
         <div className="grid gap-4 md:grid-cols-[1.2fr_1fr_auto] md:items-end">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Filtrar por atividade
             </p>
             <Select value={selectedAssignmentId} onValueChange={handleAssignmentChange}>
-              <SelectTrigger className="border-slate-700 bg-slate-950 text-slate-100">
+              <SelectTrigger className="border-border bg-background text-foreground">
                 <SelectValue placeholder="Selecione uma atividade" />
               </SelectTrigger>
               <SelectContent>
@@ -217,21 +217,21 @@ function AdminAttemptsPageContent() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               Buscar usuário
             </p>
             <Input
               value={userSearch}
               onChange={(event) => handleSearchChange(event.target.value)}
               placeholder="Buscar por e-mail ou ID"
-              className="border-slate-700 bg-slate-950 text-slate-100 placeholder:text-slate-500"
+              className="border-border bg-background text-foreground placeholder:text-muted-foreground"
               disabled={!selectedAssignmentId}
             />
           </div>
 
           <Button
             variant="outline"
-            className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-800"
+            className="border-border bg-background text-foreground hover:bg-card"
             onClick={() => refetch()}
             disabled={!selectedAssignmentId || isAttemptsFetching}
           >
@@ -241,24 +241,24 @@ function AdminAttemptsPageContent() {
         </div>
 
         {selectedAssignment && (
-          <p className="mt-3 text-xs text-slate-400">
-            Atividade selecionada: <span className="text-slate-200">{selectedAssignment.title}</span>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Atividade selecionada: <span className="text-foreground">{selectedAssignment.title}</span>
           </p>
         )}
 
         {showRefreshingIndicator && (
-          <p className="mt-2 text-xs text-slate-400">Atualizando tentativas...</p>
+          <p className="mt-2 text-xs text-muted-foreground">Atualizando tentativas...</p>
         )}
       </section>
 
       {isAssignmentsError && (
-        <div className="rounded-md border border-red-800 bg-red-950/40 p-4 text-sm text-red-200">
+        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
           Não foi possível carregar atividades para o filtro.
         </div>
       )}
 
       {!selectedAssignmentId && (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 text-center text-slate-400">
+        <div className="rounded-2xl border border-border bg-background/70 p-8 text-center text-muted-foreground">
           Selecione uma atividade para carregar as tentativas.
         </div>
       )}
@@ -266,7 +266,7 @@ function AdminAttemptsPageContent() {
       {showInitialLoader && <Loader />}
 
       {selectedAssignmentId && isAttemptsError && !isAttemptsFetching && (
-        <div className="rounded-md border border-red-800 bg-red-950/40 p-4 text-sm text-red-200">
+        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
           Não foi possível carregar as tentativas para esta atividade.
         </div>
       )}

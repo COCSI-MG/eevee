@@ -26,13 +26,13 @@ export function WorkspaceFocusDialog({ id }: { id: string }) {
   }
 
   return (
-    <div className="flex items-center justify-center h-screen opacity-50 bg-black fixed inset-0 z-50">
-      <div className="text-center border border-slate-300 p-6 rounded-lg shadow-lg space-y-6">
+    <div className="flex items-center justify-center h-screen opacity-50 bg-background fixed inset-0 z-50">
+      <div className="text-center border border-border p-6 rounded-lg shadow-lg space-y-6">
         <h1 className="text-2xl font-bold mb-4">Atenção!</h1>
         <p className="text-lg mb-4">
           Você está tentando acessar outra aba ou janela do navegador.
         </p>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-foreground">
           Se você continuar, será redirecionado para a página inicial.
         </p>
         <div className="flex items-center justify-center mt-4">

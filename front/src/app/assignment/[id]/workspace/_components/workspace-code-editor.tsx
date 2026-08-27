@@ -26,7 +26,7 @@ export default function WorkspaceCodeEditor({
 
   if (file === null || file.name.trim() === "") {
     return (
-      <div className="flex items-center justify-center h-full min-h-0 text-gray-500">
+      <div className="flex items-center justify-center h-full min-h-0 text-muted-foreground">
         Selecione um arquivo para começar a editar.
       </div>
     );
