@@ -4,7 +4,6 @@ import { UserService } from 'src/user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { HashUtils } from 'src/utils/hash.utils';
 import { JwtPayload } from './jwt.interface';
-import { LoginResponseDto } from './dto/response/login-response.dto';
 import { RegisterRequestDto } from './dto/request/register-request.dto';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { RefreshSessionService } from './refresh-session.service';
