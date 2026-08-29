@@ -325,7 +325,7 @@ describe('AuthController', () => {
     expect(authService.endSession).toHaveBeenCalledWith('family-1');
     expect(response.clearCookie).toHaveBeenCalledWith(
       'eevee_refresh',
-      expect.objectContaining({ path: '/auth/refresh' }),
+      expect.objectContaining({ path: '/v1/auth/refresh' }),
     );
   });
 
@@ -419,7 +419,7 @@ describe('AuthController', () => {
       expect(response.cookie).toHaveBeenCalledWith(
         'eevee_refresh',
         'novo-refresh',
-        expect.objectContaining({ path: '/auth/refresh' }),
+        expect.objectContaining({ path: '/v1/auth/refresh' }),
       );
     });
   });

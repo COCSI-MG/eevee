@@ -3,7 +3,7 @@ import { Response } from 'express';
 
 export const AUTH_COOKIE_NAME = 'eevee_auth';
 export const REFRESH_COOKIE_NAME = 'eevee_refresh';
-export const REFRESH_COOKIE_PATH = '/auth/refresh';
+export const REFRESH_COOKIE_PATH = '/v1/auth/refresh';
 export const DEFAULT_AUTH_SESSION_TTL_SECONDS = 12 * 60 * 60;
 export function getAuthSessionTtlSeconds(configService: ConfigService) {
   return (

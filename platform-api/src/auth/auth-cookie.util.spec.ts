@@ -153,7 +153,7 @@ describe('auth cookie util', () => {
 
     expect(options).toEqual({
       httpOnly: true,
-      path: '/auth/refresh',
+      path: '/v1/auth/refresh',
       sameSite: 'lax',
       secure: true,
       domain: '.eeveecodelab.online',
