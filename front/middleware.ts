@@ -8,24 +8,6 @@ const redirectToLogin = (request: NextRequest) =>
 const redirectToClasses = (request: NextRequest) =>
   NextResponse.redirect(new URL('/classes', request.url));
 
-const fetchSession = (cookieHeader: string) =>
-  fetch(new URL('/auth/me', API_URL), {
-    headers: { cookie: cookieHeader },
-    cache: 'no-store',
-  });
-
-const renewSession = (cookieHeader: string) =>
-  fetch(new URL('/auth/refresh', API_URL), {
-    method: 'POST',
-    headers: { cookie: cookieHeader },
-    cache: 'no-store',
-  });
-
-const withRenewedCookies = (response: NextResponse, cookies: string[]) => {
-  cookies.forEach((cookie) => response.headers.append('set-cookie', cookie));
-  return response;
-};
-
 export async function middleware(request: NextRequest) {
   if (!API_URL) {
     return redirectToLogin(request);
@@ -37,15 +19,12 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    let response = await fetchSession(cookieHeader);
-    let renewedCookies: string[] = [];
-
-    // O token de acesso vence enquanto a aba está fechada, então navegação
-    // direta em /admin costuma chegar aqui sem sessão válida.
-    if (response.status === 401) {
-      response = await renewSession(cookieHeader);
-      renewedCookies = response.headers.getSetCookie();
-    }
+    const response = await fetch(new URL('/auth/me', API_URL), {
+      headers: {
+        cookie: cookieHeader,
+      },
+      cache: 'no-store',
+    });
 
     if (!response.ok) {
       return redirectToLogin(request);
@@ -58,10 +37,10 @@ export async function middleware(request: NextRequest) {
     };
 
     if (!session.isAdmin) {
-      return withRenewedCookies(redirectToClasses(request), renewedCookies);
+      return redirectToClasses(request);
     }
 
-    return withRenewedCookies(NextResponse.next(), renewedCookies);
+    return NextResponse.next();
   } catch (error) {
     console.error('Failed to validate admin session:', error);
     return redirectToLogin(request);
