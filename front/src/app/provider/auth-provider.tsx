@@ -55,10 +55,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const status = (error as { response?: { status?: number } }).response?.status;
+
       if (status !== 401) {
         console.error("Error loading auth session:", error);
+        setSession(null);
+        return;
       }
-      setSession(null);
+
+      // O /auth/me não passa pelo interceptor, então é aqui que um token
+      // vencido tem a única chance de ser renovado. Sem isso, voltar à
+      // plataforma depois de um tempo fora cai no login.
+      const renewed = await renewSession();
+
+      if (requestId !== refreshRequestIdRef.current) {
+        return;
+      }
+
+      setSession(renewed);
     }
   }, [setSession]);
 
