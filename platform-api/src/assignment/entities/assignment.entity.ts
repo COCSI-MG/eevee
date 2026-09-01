@@ -77,6 +77,12 @@ export class Assignment {
   @Column()
   maxAttempts: number;
 
+  @Column({ type: 'timestamp', nullable: true })
+  startDate?: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  dueDate?: Date | null;
+
   @Column({
     type: 'enum',
     enum: WorkerType,

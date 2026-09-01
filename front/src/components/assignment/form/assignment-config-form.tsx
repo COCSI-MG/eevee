@@ -163,6 +163,48 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             />
           </div>
 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="startDate" className="block text-sm font-medium">
+                Data de início
+              </Label>
+              <Field
+                id="startDate"
+                type="datetime-local"
+                name="startDate"
+                className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+              />
+              <p className="text-xs text-slate-400">
+                Opcional. A tarefa será exibida aos alunos a partir desta data.
+              </p>
+              <ErrorMessage
+                name="startDate"
+                component="div"
+                className="text-red-500 text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dueDate" className="block text-sm font-medium">
+                Data de entrega
+              </Label>
+              <Field
+                id="dueDate"
+                type="datetime-local"
+                name="dueDate"
+                className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+              />
+              <p className="text-xs text-slate-400">
+                Opcional. Novas entregas serão bloqueadas após esta data.
+              </p>
+              <ErrorMessage
+                name="dueDate"
+                component="div"
+                className="text-red-500 text-sm"
+              />
+            </div>
+          </div>
+
           <AnswerKeyVisibilityControl />
         </CardContent>
       </Card>

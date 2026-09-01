@@ -29,6 +29,7 @@ import { AssignmentConfigForm } from "./assignment-config-form";
 import { AssignmentBoilerplateForm } from "./assignment-boilerplate-form";
 import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
 import QueryErrorState from "@/components/shared/query-error-state";
+import { isoToLocalDatetime } from "@/utils/date";
 
 const validationSchema = Yup.object({
   title: Yup.string().required("Título é obrigatório"),
@@ -41,6 +42,20 @@ const validationSchema = Yup.object({
     .required("Tipo de worker é obrigatório"),
   boilerplate: Yup.string().required("Boilerplate é obrigatório"),
   classId: Yup.string().required("Turma é obrigatória"),
+  startDate: Yup.string().optional(),
+  dueDate: Yup.string()
+    .optional()
+    .test(
+      "due-date-after-start-date",
+      "A data de entrega não pode ser anterior à data de início",
+      function (dueDate) {
+        const startDate = this.parent.startDate as string | undefined;
+
+        if (!startDate || !dueDate) return true;
+
+        return new Date(startDate) <= new Date(dueDate);
+      },
+    ),
 });
 
 const STEP_CONFIG: StepDefinition = {
@@ -111,6 +126,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     title: existingAssignment?.title ?? "",
     description: existingAssignment?.description ?? "",
     maxAttempts: existingAssignment?.maxAttempts ?? 1,
+    startDate: isoToLocalDatetime(existingAssignment?.startDate),
+    dueDate: isoToLocalDatetime(existingAssignment?.dueDate),
     workerType: existingAssignment?.workerType ?? WorkerType.NODE_DEFAULT,
     boilerplate:
       existingAssignment?.boilerplateContent ??
@@ -124,14 +141,18 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     answerKeyVisible: existingAssignment?.answerKeyVisible ?? false,
   };
 
-  console.log(initialValues);
-
   const handleSubmit = (values: typeof initialValues) => {
     return upsertAssignment({
       newAssignment: {
         ...values,
         boilerplateContent: values.boilerplate,
         classId: Number(values.classId),
+        startDate: values.startDate
+          ? new Date(values.startDate).toISOString()
+          : null,
+        dueDate: values.dueDate
+          ? new Date(values.dueDate).toISOString()
+          : null,
       } as Assignment,
       templates: selectedTemplates,
     });

@@ -2,6 +2,7 @@ import { axiosClientWithAuth } from "./client";
 import {
   Assignment,
   CreateAssignmentRequest,
+  UpdateAssignmentRequest,
 } from "@/app/interface/scheduler-api/assignment";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 
@@ -39,7 +40,7 @@ export class AssignmentService {
     return <Assignment>response.data;
   }
 
-  static async UpdateAssignment(id: number, data: CreateAssignmentRequest) {
+  static async UpdateAssignment(id: number, data: UpdateAssignmentRequest) {
     const response = await axiosClientWithAuth.patch(`/assignment/${id}`, data);
 
     return <Assignment>response.data;
