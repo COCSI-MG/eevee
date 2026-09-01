@@ -2,6 +2,8 @@
 
 import React from "react";
 import { FileNode } from "@/types/shared";
+import { toast } from "@/hooks/use-toast";
+import { WORKSPACE_DRAG_MIME_TYPE } from "../_utils/workspace-drag-drop";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import {
   addItemToTree,
@@ -13,21 +15,25 @@ import {
   getWorkspaceCreateTargetLabel,
   getWorkspaceCreateTargetPath,
   moveItemInTree,
+  rebaseMovedPath,
   removeItemFromTree,
   renameItemInTree,
   validateCreateWorkspaceItem,
   validateRenameWorkspaceItem,
+  validateMoveItemInTree,
   WorkspaceItemType,
 } from "../_utils/workspace-tree.utils";
 
 interface UseWorkspaceExplorerParams {
   onTreeChange: (newTree: FileNode) => void | Promise<void>;
+  onItemMoved?: (oldPath: string, newPath: string) => void;
   maxDepth: number;
   maxFiles: number;
 }
 
 export function useWorkspaceExplorer({
   onTreeChange,
+  onItemMoved,
   maxDepth,
   maxFiles,
 }: UseWorkspaceExplorerParams) {
@@ -259,17 +265,35 @@ export function useWorkspaceExplorer({
 
   const handleDragStart = React.useCallback(
     (event: React.DragEvent, node: FileNode) => {
-      event.dataTransfer.setData("text/plain", node.path);
+      event.dataTransfer.setData(WORKSPACE_DRAG_MIME_TYPE, node.path);
       event.dataTransfer.effectAllowed = "move";
       setDraggedNodePath(node.path);
     },
     [],
   );
 
-  const handleDragOver = React.useCallback((event: React.DragEvent) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  }, []);
+  const handleDragOver = React.useCallback(
+    (event: React.DragEvent, targetNode: FileNode) => {
+      event.preventDefault();
+
+      if (!treeData || !draggedNodePath) {
+        event.dataTransfer.dropEffect = "none";
+        return false;
+      }
+
+      const validationError = validateMoveItemInTree(
+        treeData,
+        draggedNodePath,
+        targetNode.path,
+        maxDepth,
+      );
+
+      const isValid = validationError === null;
+      event.dataTransfer.dropEffect = isValid ? "move" : "none";
+      return isValid;
+    },
+    [draggedNodePath, maxDepth, treeData],
+  );
 
   const handleDragLeave = React.useCallback(() => {
     // visual feedback handled inside tree item component
@@ -281,47 +305,66 @@ export function useWorkspaceExplorer({
 
       if (!treeData) {
         setDraggedNodePath("");
-        return;
+        return false;
       }
 
-      const sourcePath = event.dataTransfer.getData("text/plain") || draggedNodePath;
+      const sourcePath = event.dataTransfer.getData(WORKSPACE_DRAG_MIME_TYPE) || draggedNodePath;
+
       if (!sourcePath) {
         setDraggedNodePath("");
-        return;
+        return false;
       }
 
-      const targetFolderPath = targetNode.isFile
-        ? getParentPath(targetNode.path)
-        : targetNode.path;
-
-      const moveResult = moveItemInTree(treeData, sourcePath, targetFolderPath);
-      if (!moveResult) {
+      const moveResult = moveItemInTree(
+        treeData,
+        sourcePath,
+        targetNode.path,
+        maxDepth,
+      );
+      if (!moveResult.ok) {
+        toast({
+          title: "Não foi possível mover o item",
+          description: moveResult.message,
+          variant: "destructive",
+        });
         setDraggedNodePath("");
-        return;
+        return false;
       }
 
       const { movedTree, oldPath, newPath } = moveResult;
       void onTreeChange(movedTree);
+      onItemMoved?.(oldPath, newPath);
 
-      if (selectedItem.path === oldPath) {
+      const updatedSelectedPath = rebaseMovedPath(
+        selectedItem.path,
+        oldPath,
+        newPath,
+      );
+      if (updatedSelectedPath !== selectedItem.path) {
         selectItem({
           ...selectedItem,
-          path: newPath,
-          id: getBaseName(newPath),
-        });
-      } else if (selectedItem.path.startsWith(`${oldPath}/`)) {
-        const updatedPath = `${newPath}${selectedItem.path.slice(oldPath.length)}`;
-        selectItem({
-          ...selectedItem,
-          path: updatedPath,
-          id: getBaseName(updatedPath),
+          path: updatedSelectedPath,
+          id: getBaseName(updatedSelectedPath),
         });
       }
 
       setDraggedNodePath("");
+      return true;
     },
-    [draggedNodePath, onTreeChange, selectItem, selectedItem, treeData],
+    [
+      draggedNodePath,
+      maxDepth,
+      onItemMoved,
+      onTreeChange,
+      selectItem,
+      selectedItem,
+      treeData,
+    ],
   );
+
+  const handleDragEnd = React.useCallback(() => {
+    setDraggedNodePath("");
+  }, []);
 
   return {
     selectedItem,
@@ -354,9 +397,11 @@ export function useWorkspaceExplorer({
     handleRenameRequest,
     handleRename,
     handleDragStart,
+    handleDragEnd,
     handleDragOver,
     handleDragLeave,
     handleDrop,
+    draggedNodePath,
     setIsCreateDialogOpen,
     setIsDeleteDialogOpen,
     setIsRenameDialogOpen,

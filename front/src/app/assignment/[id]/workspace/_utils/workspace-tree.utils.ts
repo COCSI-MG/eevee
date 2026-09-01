@@ -2,6 +2,30 @@ import { FileNode, SelectedItem } from "@/types/shared";
 
 export type WorkspaceItemType = "file" | "folder";
 
+export type WorkspaceMoveFailureReason =
+  | "source-not-found"
+  | "root"
+  | "invalid-target"
+  | "same-location"
+  | "descendant"
+  | "duplicate"
+  | "max-depth";
+
+export type WorkspaceMoveFailure = {
+  ok: false;
+  reason: WorkspaceMoveFailureReason;
+  message: string;
+};
+
+export type WorkspaceMoveResult =
+  | {
+      ok: true;
+      movedTree: FileNode;
+      oldPath: string;
+      newPath: string;
+    }
+  | WorkspaceMoveFailure;
+
 const INVALID_NAME_PATTERN = /[<>:"/\\|?*\x00-\x1F]/;
 
 export function getPathDepth(path: string): number {
@@ -373,31 +397,87 @@ function insertItemInFolder(
   };
 }
 
+function getSubtreeRelativeDepth(node: FileNode): number {
+  if (!node.children?.length) return 0
+
+  return 1 + Math.max(...node.children.map((child) => getSubtreeRelativeDepth(child)));
+}
+
+function moveFailure(
+  reason: WorkspaceMoveFailureReason,
+  message: string,
+): WorkspaceMoveFailure {
+  return {
+    ok: false,
+    reason,
+    message
+  };
+}
+
+export function validateMoveItemInTree(
+  tree: FileNode,
+  sourcePath: string,
+  targetFolderPath: string,
+  maxDepth: number,
+): WorkspaceMoveFailure | null {
+  const sourceNode = findNodeByPath(tree, sourcePath);
+
+  if (!sourceNode) return moveFailure("source-not-found", "O item arrastado não foi encontrado.")
+
+  if (sourcePath === tree.path) return moveFailure("root", "A pasta raiz do workspace não pode ser movida.")
+
+  const targetNode = findNodeByPath(tree, targetFolderPath);
+
+  if (!targetNode || targetNode.isFile) return moveFailure("invalid-target", "Solte o item sobre uma pasta ou na raiz do workspace.")
+
+  if (getParentPath(sourcePath) === targetFolderPath) return moveFailure("same-location", "O item já está nesta pasta.")
+
+  if (
+    sourcePath === targetFolderPath ||
+    targetFolderPath.startsWith(`${sourcePath}/`)
+  ) return moveFailure(
+      "descendant",
+      "Uma pasta não pode ser movida para dentro dela mesma."
+    );
+
+  if (fileNameExistsInNode(tree, targetFolderPath, sourceNode.id)) return moveFailure(
+      "duplicate",
+      `Já existe um item chamado "${sourceNode.id}" nessa pasta.`
+    );
+
+  const deepestMovedPath = getPathDepth(targetFolderPath) + 1 + getSubtreeRelativeDepth(sourceNode)
+
+  if (deepestMovedPath > maxDepth) return moveFailure(
+      "max-depth",
+      `O movimento ultrapassaria o limite de ${maxDepth} níveis.`
+    )
+
+  return null
+}
+
 export function moveItemInTree(
   tree: FileNode,
   sourcePath: string,
   targetFolderPath: string,
-): { movedTree: FileNode; oldPath: string; newPath: string } | null {
-  if (sourcePath === targetFolderPath) {
-    return null;
-  }
-
-  if (targetFolderPath.startsWith(`${sourcePath}/`)) {
-    return null;
-  }
+  maxDepth: number,
+): WorkspaceMoveResult {
+  const validationError = validateMoveItemInTree(
+    tree,
+    sourcePath,
+    targetFolderPath,
+    maxDepth,
+  );
+  if (validationError) return validationError
 
   const { tree: treeWithoutSource, extracted } = extractNodeFromTree(
     tree,
     sourcePath,
   );
 
-  if (!extracted) {
-    return null;
-  }
-
-  if (fileNameExistsInNode(treeWithoutSource, targetFolderPath, extracted.id)) {
-    return null;
-  }
+  if (!extracted) return moveFailure(
+      "source-not-found",
+      "O item arrastado não foi encontrado.",
+    )
 
   const oldPath = extracted.path;
   const newPath = targetFolderPath
@@ -411,7 +491,19 @@ export function moveItemInTree(
     movedNode,
   );
 
-  return { movedTree, oldPath, newPath };
+  return { ok: true, movedTree, oldPath, newPath };
+}
+
+export function rebaseMovedPath(
+  currentPath: string,
+  oldPath: string,
+  newPath: string,
+): string {
+  if (currentPath === oldPath) return newPath
+
+  if (currentPath.startsWith(`${oldPath}/`)) return `${newPath}${currentPath.slice(oldPath.length)}`
+
+  return currentPath;
 }
 
 export function renameItemInTree(

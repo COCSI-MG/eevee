@@ -16,6 +16,10 @@ import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { SecurityViolationReason } from "@/hooks/user-actions/types";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import {
+  WORKSPACE_DRAG_AREA_SELECTOR,
+  WORKSPACE_DRAG_MIME_TYPE,
+} from "../_utils/workspace-drag-drop";
 
 interface WorkspaceContextType {
   selectedItem: SelectedItem;
@@ -153,6 +157,8 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   usePreventUserActions({
     enabled: enableSecurityGuards && shouldPreventUserActions,
+    allowedDragAreaSelector: WORKSPACE_DRAG_AREA_SELECTOR,
+    allowedDragMimeType: WORKSPACE_DRAG_MIME_TYPE,
     clipboardViolationLimit: 10,
     onClipboardViolationLimit: handleClipboardViolationLimit,
     onSecurityViolation: handleSecurityViolation,

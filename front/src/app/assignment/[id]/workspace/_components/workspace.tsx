@@ -13,7 +13,11 @@ import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { FileNode, SelectedItem } from "@/types/shared";
-import { updateFileContent, findNodeByPath } from "../_utils/workspace-tree.utils";
+import {
+  updateFileContent,
+  findNodeByPath,
+  rebaseMovedPath,
+} from "../_utils/workspace-tree.utils";
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { Button } from "@/components/ui/button";
 
@@ -124,6 +128,26 @@ export default function Workspace({
     setIsSplitView(true);
   }, []);
 
+  const handleItemMoved = React.useCallback(
+    (oldPath: string, newPath: string) => {
+      setSecondarySelectedItem((current) => {
+
+        if (!current) return current
+
+        const updatedPath = rebaseMovedPath(current.path, oldPath, newPath);
+
+        if (updatedPath === current.path) return current
+
+        return {
+          ...current,
+          id: updatedPath.split("/").pop() || current.id,
+          path: updatedPath,
+        };
+      });
+    },
+    [],
+  );
+
   React.useEffect(() => {
     if (!secondarySelectedItem?.path) {
       return;
@@ -176,6 +200,7 @@ export default function Workspace({
           onFileSelect={handleFileSelect}
           onTreeChange={handleTreeChange}
           onOpenInSecondary={handleOpenInSecondary}
+          onItemMoved={handleItemMoved}
         />
 
         <div
