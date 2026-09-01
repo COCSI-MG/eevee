@@ -70,8 +70,8 @@ export default function Page() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Carregando suspensões...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-border mx-auto"></div>
+          <p className="mt-2 text-sm text-muted-foreground">Carregando suspensões...</p>
         </div>
       </div>
     );
@@ -81,8 +81,8 @@ export default function Page() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">Falha ao carregar suspensões</p>
+          <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Falha ao carregar suspensões</p>
         </div>
       </div>
     );
@@ -103,9 +103,9 @@ export default function Page() {
         <CardContent>
           {!suspensions || suspensions.length === 0 ? (
             <div className="text-center py-8">
-              <UserX className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900">Nenhuma suspensão</h3>
-              <p className="text-sm text-gray-500">
+              <UserX className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground">Nenhuma suspensão</h3>
+              <p className="text-sm text-muted-foreground">
                 Não há usuários suspensos para esta atividade no momento.
               </p>
             </div>
@@ -131,10 +131,10 @@ export default function Page() {
                       {suspension.reason ? (
                         <span className="text-sm">{suspension.reason}</span>
                       ) : (
-                        <span className="text-sm text-gray-400 italic">Nenhum motivo fornecido</span>
+                        <span className="text-sm text-muted-foreground italic">Nenhum motivo fornecido</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-600">
+                    <TableCell className="text-sm text-muted-foreground">
                       {formatDate(suspension.createdAt)}
                     </TableCell>
                     <TableCell className="text-right">
@@ -143,7 +143,7 @@ export default function Page() {
                         size="sm"
                         onClick={() => handleRemoveSuspension(suspension.userId)}
                         disabled={removeSuspensionMutation.isPending}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Remover

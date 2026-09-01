@@ -203,7 +203,7 @@ export default function UserEditPage() {
                 placeholder="Insira o nome do usuário"
               />
               {formik.errors.name && formik.touched.name && (
-                <p className="text-red-500 text-sm">{formik.errors.name}</p>
+                <p className="text-destructive text-sm">{formik.errors.name}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -215,7 +215,7 @@ export default function UserEditPage() {
                 placeholder="Insira o endereço de e-mail"
               />
               {formik.errors.email && formik.touched.email && (
-                <p className="text-red-500 text-sm">{formik.errors.email}</p>
+                <p className="text-destructive text-sm">{formik.errors.email}</p>
               )}
             </div>
             <div className="space-y-2">
@@ -232,7 +232,7 @@ export default function UserEditPage() {
                 minLength={8}
               />
               {formik.errors.password && formik.touched.password && (
-                <p className="text-red-500 text-sm">{formik.errors.password}</p>
+                <p className="text-destructive text-sm">{formik.errors.password}</p>
               )}
             </div>
             <div className="flex items-center space-x-2">
@@ -246,7 +246,7 @@ export default function UserEditPage() {
               <Label htmlFor="isAdmin">Administrador</Label>
             </div>
             {formik.errors.isAdmin && formik.touched.isAdmin && (
-              <p className="text-red-500 text-sm">{formik.errors.isAdmin}</p>
+              <p className="text-destructive text-sm">{formik.errors.isAdmin}</p>
             )}
           </CardContent>
           <CardFooter className="flex justify-between">

@@ -16,14 +16,14 @@ export default function AdminDashboardLayout({
 }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen">
-      <div className="hidden md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-50 bg-gray-900">
+      <div className="hidden md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-50 bg-sidebar text-sidebar-foreground">
         <div className="flex flex-col flex-1 overflow-y-auto">
           <div className="px-3 py-4 flex flex-1 flex-col">
             <Link href="/admin" className="flex items-center pl-3 mb-10">
               <div className="relative w-8 h-8 mr-2 rounded-full bg-primary flex items-center justify-center">
                 <Code className="w-4 h-4 text-primary-foreground" />
               </div>
-              <h1 className="text-xl font-bold text-white">EEVEE</h1>
+              <h1 className="text-xl font-bold text-foreground">EEVEE</h1>
             </Link>
 
             <AdminSidebar />

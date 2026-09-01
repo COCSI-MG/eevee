@@ -59,8 +59,8 @@ export default function ExamStudentsSection({
             className="max-w-md"
           />
           {students.isError && (
-            <div className="rounded-md border border-red-800 bg-red-950/40 p-4">
-              <p className="text-sm text-red-400">
+            <div className="rounded-md border border-destructive bg-destructive/10 p-4">
+              <p className="text-sm text-destructive">
                 {students.error instanceof Error
                   ? students.error.message
                   : "Erro ao carregar notas dos alunos."}

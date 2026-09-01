@@ -49,31 +49,31 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
 
   return (
     <>
-      <Card className="bg-slate-800 border-slate-700 max-h-[700px]">
+      <Card className="bg-card border-border max-h-[700px]">
         <CardHeader>
-          <CardTitle className="text-white">Informacoes da Atividade</CardTitle>
+          <CardTitle className="text-foreground">Informacoes da Atividade</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-white">
+            <Label htmlFor="title" className="text-foreground">
               Titulo
             </Label>
             <Field
               type="text"
               name="title"
-              className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+              className="w-full p-2 bg-primary/20 border border-border rounded-md text-foreground"
               placeholder="Titulo da Atividade"
             />
             <ErrorMessage
               name="title"
               component="div"
-              className="text-red-500 text-sm"
+              className="text-destructive text-sm"
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="description" className="text-white">
+              <Label htmlFor="description" className="text-foreground">
                 Descricao
               </Label>
               <ExpandableTrigger
@@ -84,13 +84,13 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             <Field
               as="textarea"
               name="description"
-              className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+              className="w-full p-2 bg-primary/20 border border-border rounded-md text-foreground"
               placeholder="Descreva o que os alunos devem fazer"
             />
             <ErrorMessage
               name="description"
               component="div"
-              className="text-red-500 text-sm"
+              className="text-destructive text-sm"
             />
           </div>
 
@@ -101,7 +101,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             <Field
               as="select"
               name="classId"
-              className="mt-1 block w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md shadow-sm sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border text-muted-foreground border-border rounded-md shadow-sm sm:text-sm"
             >
               <option value="">Selecione uma turma</option>
               {classes?.map((classRecord) => (
@@ -113,7 +113,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             <ErrorMessage
               name="classId"
               component="div"
-              className="text-red-500 text-sm"
+              className="text-destructive text-sm"
             />
           </div>
 
@@ -130,7 +130,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
               as="select"
               id="workerType"
               name="workerType"
-              className="mt-1 block w-full px-3 py-2 border text-gray-700 border-gray-300 rounded-md shadow-sm sm:text-sm"
+              className="mt-1 block w-full px-3 py-2 border text-muted-foreground border-border rounded-md shadow-sm sm:text-sm"
             >
               {Object.entries(WorkerType).map(([key, value]) => (
                 <option key={key} value={value}>
@@ -141,7 +141,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             <ErrorMessage
               name="workerType"
               component="div"
-              className="text-red-500 text-sm"
+              className="text-destructive text-sm"
             />
           </div>
 
@@ -153,13 +153,13 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             <Field
               type="number"
               name="maxAttempts"
-              className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
+              className="w-full p-2 bg-primary/20 border border-border rounded-md text-foreground"
               placeholder="Numero maximo de tentativas permitidas"
             />
             <ErrorMessage
               name="maxAttempts"
               component="div"
-              className="text-red-500 text-sm"
+              className="text-destructive text-sm"
             />
           </div>
 
@@ -178,13 +178,13 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
           as="textarea"
           name="description"
           autoFocus
-          className="flex-1 w-full p-3 bg-slate-700 border border-slate-600 rounded-md text-white resize-none"
+          className="flex-1 w-full p-3 bg-primary/20 border border-border rounded-md text-foreground resize-none"
           placeholder="Descreva o que os alunos devem fazer"
         />
         <ErrorMessage
           name="description"
           component="div"
-          className="text-red-500 text-sm mt-2"
+          className="text-destructive text-sm mt-2"
         />
       </ExpandableDialog>
     </>

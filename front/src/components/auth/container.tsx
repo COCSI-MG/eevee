@@ -15,10 +15,10 @@ export default function AuthContainer({ ...props }: AuthContainerProps) {
             <Code className="h-8 w-8 text-primary-foreground" />
           </div>
         </div>
-        <h1 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
+        <h1 className="mt-4 text-3xl font-extrabold text-foreground">
           EEVEE Code Lab
         </h1>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        <p className="mt-2 text-sm text-muted-foreground">
           {props.context === 'login'
             ? 'Faca login na sua conta para acessar seu painel'
             : 'Crie sua conta e comece a programar conosco'}

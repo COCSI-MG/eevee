@@ -327,7 +327,7 @@ export default function AssignmentInterviewPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
-        <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-300">
+        <div className="rounded-md border border-warning bg-warning/10 p-4 text-warning">
           Você precisa concluir ao menos uma tentativa com sucesso para
           responder.
         </div>
@@ -346,7 +346,7 @@ export default function AssignmentInterviewPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
         </Button>
-        <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-4 text-yellow-300">
+        <div className="rounded-md border border-warning bg-warning/10 p-4 text-warning">
           Conclua todos os exercícios desta turma para responder a entrevista
           final.
         </div>
@@ -390,7 +390,7 @@ export default function AssignmentInterviewPage() {
           Assignment: {assignment?.title}
         </p>
         {existingResponse && (
-          <p className="text-xs text-yellow-300 mt-1">
+          <p className="text-xs text-warning mt-1">
             Você já respondeu antes. Enviar novamente irá atualizar sua
             resposta.
           </p>

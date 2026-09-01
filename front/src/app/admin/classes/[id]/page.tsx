@@ -228,7 +228,7 @@ export default function ClassEditPage() {
                   placeholder="Insira o nome da turma"
                 />
                 {formik.errors.name && (
-                  <div className="text-red-500">{formik.errors.name}</div>
+                  <div className="text-destructive">{formik.errors.name}</div>
                 )}
               </div>
               <div className="space-y-2">
@@ -242,7 +242,7 @@ export default function ClassEditPage() {
                   placeholder="Insira a descrição da turma"
                 />
                 {formik.errors.description && (
-                  <div className="text-red-500">
+                  <div className="text-destructive">
                     {formik.errors.description}
                   </div>
                 )}
@@ -259,7 +259,7 @@ export default function ClassEditPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {formik.errors.students && (
-                <div className="text-red-500">Nenhum aluno selecionado.</div>
+                <div className="text-destructive">Nenhum aluno selecionado.</div>
               )}
 
               <UsersCard

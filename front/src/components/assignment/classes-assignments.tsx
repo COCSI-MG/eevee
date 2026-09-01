@@ -40,7 +40,7 @@ export default function ClassesAssignments() {
       </div>
 
       {isError ? (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-destructive">
           Ocorreu um erro ao carregar as tarefas desta turma.
         </div>
       ) : data.length > 0 ? (

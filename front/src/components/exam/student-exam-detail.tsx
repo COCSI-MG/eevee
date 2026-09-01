@@ -139,8 +139,8 @@ export default function StudentExamDetail() {
             "Esta prova contém as atividades listadas abaixo."}
         </p>
         {exam.dueDate && (
-          <p className="text-sm text-slate-500 mt-2">
-            <span className="font-medium text-slate-300">Data de entrega:</span>{" "}
+          <p className="text-sm text-muted-foreground mt-2">
+            <span className="font-medium text-foreground">Data de entrega:</span>{" "}
             {formatDateTime(exam.dueDate)}
           </p>
         )}

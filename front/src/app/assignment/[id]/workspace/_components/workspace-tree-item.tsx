@@ -100,12 +100,12 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     <div>
       <div
         className={cn(
-          "flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-gray-700 transition-colors",
-          isSelected && "bg-gray-700",
+          "flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-primary/20 transition-colors",
+          isSelected && "bg-primary/20",
           !node.isFile && "font-medium",
           isDragOver &&
             !node.isFile &&
-            "bg-blue-900/40 ring-1 ring-blue-500/50",
+            "bg-primary/10 ring-1 ring-primary/50",
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         onClick={handleClick}
@@ -119,22 +119,22 @@ const TreeNode: React.FC<TreeNodeProps> = ({
         {!node.isFile && (
           <ChevronRight
             className={cn(
-              "w-4 h-4 transition-transform text-gray-400",
+              "w-4 h-4 transition-transform text-muted-foreground",
               isOpen && "rotate-90",
             )}
           />
         )}
         {node.isFile ? (
-          <File className="w-4 h-4 text-blue-400" />
+          <File className="w-4 h-4 text-primary" />
         ) : (
           <Folder
             className={cn(
               "w-4 h-4",
-              isOpen ? "text-yellow-400" : "text-gray-400",
+              isOpen ? "text-warning" : "text-muted-foreground",
             )}
           />
         )}
-        <span className="text-sm text-gray-200 truncate">{node.id}</span>
+        <span className="text-sm text-foreground truncate">{node.id}</span>
       </div>
 
       {!node.isFile && isOpen && node.children && (
@@ -227,7 +227,7 @@ export default function WorkspaceFileTree({
 
   if (!treeData) {
     return (
-      <div className="flex items-center justify-center h-32 text-gray-500">
+      <div className="flex items-center justify-center h-32 text-muted-foreground">
         <p className="text-sm">Nenhum arquivo disponível</p>
       </div>
     );

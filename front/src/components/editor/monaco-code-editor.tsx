@@ -3,6 +3,10 @@
 import dynamic from "next/dynamic";
 
 import { resolveMonacoLanguage } from "@/lib/monaco/language";
+import {
+  EEVEE_MONACO_THEME,
+  registerEeveeMonacoTheme,
+} from "@/lib/monaco/theme";
 import { workspaceModelPath } from "@/lib/monaco/workspace/models";
 
 import type { MonacoCodeEditorProps } from "./monaco-code-editor.types";
@@ -54,7 +58,7 @@ export function MonacoCodeEditor({
   return (
     <Editor
       height={height}
-      theme="vs-dark"
+      theme={EEVEE_MONACO_THEME}
       path={effectivePath}
       value={value}
       language={effectiveLanguage}
@@ -62,6 +66,7 @@ export function MonacoCodeEditor({
       keepCurrentModel={false}
       onChange={(nextValue) => onChange?.(nextValue ?? "")}
       onMount={handleMount}
+      beforeMount={registerEeveeMonacoTheme}
       className={className}
       options={options}
     />

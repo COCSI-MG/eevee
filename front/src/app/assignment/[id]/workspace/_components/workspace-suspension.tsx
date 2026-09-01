@@ -9,7 +9,7 @@ export function WorkspaceSuspension() {
   return (
     <div className="flex flex-col items-center justify-center h-screen">
       <div className="text-center">
-        <p className="text-lg text-red-500">
+        <p className="text-lg text-destructive">
           Você está suspenso desta atividade. Entre em contato com o professor
           para mais informações.
         </p>
