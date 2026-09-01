@@ -3,7 +3,7 @@
 import React from "react";
 import { FileNode } from "@/types/shared";
 import { toast } from "@/hooks/use-toast";
-import { WORKSPACE_DRAG_MIME_TYPE } from "../_utils/workspace-drag-drop";
+import { WORKSPACE_DRAG_MIME_TYPE } from "../_utils/constant";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import {
   addItemToTree,

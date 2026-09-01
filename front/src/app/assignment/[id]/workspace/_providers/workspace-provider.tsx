@@ -19,7 +19,7 @@ import { useParams } from "next/navigation";
 import {
   WORKSPACE_DRAG_AREA_SELECTOR,
   WORKSPACE_DRAG_MIME_TYPE,
-} from "../_utils/workspace-drag-drop";
+} from "../_utils/constant";
 
 interface WorkspaceContextType {
   selectedItem: SelectedItem;

@@ -1,15 +1,15 @@
 import { FileNode, SelectedItem } from "@/types/shared";
 
-export type WorkspaceItemType = "file" | "folder";
+import {
+  INVALID_WORKSPACE_ITEM_NAME_PATTERN,
+  WORKSPACE_ITEM_TYPE,
+  WORKSPACE_MOVE_FAILURE_REASON,
+  WORKSPACE_TREE_MESSAGES,
+} from "./constant";
 
-export type WorkspaceMoveFailureReason =
-  | "source-not-found"
-  | "root"
-  | "invalid-target"
-  | "same-location"
-  | "descendant"
-  | "duplicate"
-  | "max-depth";
+export type WorkspaceItemType = (typeof WORKSPACE_ITEM_TYPE)[keyof typeof WORKSPACE_ITEM_TYPE];
+
+export type WorkspaceMoveFailureReason = (typeof WORKSPACE_MOVE_FAILURE_REASON)[keyof typeof WORKSPACE_MOVE_FAILURE_REASON];
 
 export type WorkspaceMoveFailure = {
   ok: false;
@@ -25,8 +25,6 @@ export type WorkspaceMoveResult =
       newPath: string;
     }
   | WorkspaceMoveFailure;
-
-const INVALID_NAME_PATTERN = /[<>:"/\\|?*\x00-\x1F]/;
 
 export function getPathDepth(path: string): number {
   if (!path) return 0;
@@ -129,11 +127,11 @@ export function fileNameExistsInNode(
 
 export function validateWorkspaceItemName(name: string): string | null {
   if (!name || name.trim() === "") {
-    return "Name cannot be empty";
+    return WORKSPACE_TREE_MESSAGES.emptyName;
   }
 
-  if (INVALID_NAME_PATTERN.test(name)) {
-    return "Name contains invalid characters";
+  if (INVALID_WORKSPACE_ITEM_NAME_PATTERN.test(name)) {
+    return WORKSPACE_TREE_MESSAGES.invalidName;
   }
 
   return null;
@@ -143,7 +141,7 @@ export function getWorkspaceCreateTargetPath(
   selectedItem: SelectedItem,
   treeData: FileNode | null,
 ): string {
-  if (selectedItem.type === "folder" && selectedItem.path) {
+  if (selectedItem.type === WORKSPACE_ITEM_TYPE.FOLDER && selectedItem.path) {
     return selectedItem.path;
   }
 
@@ -158,12 +156,12 @@ export function getWorkspaceCreateTargetLabel(
   selectedItem: SelectedItem,
   treeData: FileNode | null,
 ): string {
-  if (selectedItem.type === "folder" && selectedItem.id) {
+  if (selectedItem.type === WORKSPACE_ITEM_TYPE.FOLDER && selectedItem.id) {
     return selectedItem.id;
   }
 
   const targetPath = getWorkspaceCreateTargetPath(selectedItem, treeData);
-  return targetPath || "root";
+  return targetPath || WORKSPACE_TREE_MESSAGES.rootLabel;
 }
 
 export function validateCreateWorkspaceItem(params: {
@@ -182,15 +180,15 @@ export function validateCreateWorkspaceItem(params: {
   }
 
   if (treeData && fileNameExistsInNode(treeData, targetPath, name)) {
-    return "An item with this name already exists in the target location";
+    return WORKSPACE_TREE_MESSAGES.duplicateName;
   }
 
   if (getPathDepth(targetPath) + 1 > maxDepth) {
-    return `Maximum depth of ${maxDepth} levels reached. Cannot create items deeper.`;
+    return WORKSPACE_TREE_MESSAGES.maxCreateDepth(maxDepth);
   }
 
-  if (itemType === "file" && countFiles(treeData) >= maxFiles) {
-    return `Maximum of ${maxFiles} files reached. Delete some files first.`;
+  if (itemType === WORKSPACE_ITEM_TYPE.FILE && countFiles(treeData) >= maxFiles) {
+    return WORKSPACE_TREE_MESSAGES.maxFiles(maxFiles);
   }
 
   return null;
@@ -205,7 +203,7 @@ export function validateRenameWorkspaceItem(params: {
   const targetNode = findNodeByPath(treeData, targetPath);
 
   if (!targetNode) {
-    return "Item not found";
+    return WORKSPACE_TREE_MESSAGES.itemNotFound;
   }
 
   const trimmedName = newName.trim();
@@ -220,7 +218,7 @@ export function validateRenameWorkspaceItem(params: {
     treeData &&
     fileNameExistsInNode(treeData, parentPath, trimmedName)
   ) {
-    return "An item with this name already exists in the target location";
+    return WORKSPACE_TREE_MESSAGES.duplicateName;
   }
 
   return null;
@@ -422,37 +420,42 @@ export function validateMoveItemInTree(
 ): WorkspaceMoveFailure | null {
   const sourceNode = findNodeByPath(tree, sourcePath);
 
-  if (!sourceNode) return moveFailure("source-not-found", "O item arrastado não foi encontrado.")
+  if (!sourceNode) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.SOURCE_NOT_FOUND, WORKSPACE_TREE_MESSAGES.sourceNotFound);
+  }
 
-  if (sourcePath === tree.path) return moveFailure("root", "A pasta raiz do workspace não pode ser movida.")
+  if (sourcePath === tree.path) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.ROOT, WORKSPACE_TREE_MESSAGES.rootMoveForbidden);
+  }
 
   const targetNode = findNodeByPath(tree, targetFolderPath);
 
-  if (!targetNode || targetNode.isFile) return moveFailure("invalid-target", "Solte o item sobre uma pasta ou na raiz do workspace.")
+  if (!targetNode || targetNode.isFile) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.INVALID_TARGET, WORKSPACE_TREE_MESSAGES.invalidMoveTarget);
+  }
 
-  if (getParentPath(sourcePath) === targetFolderPath) return moveFailure("same-location", "O item já está nesta pasta.")
+  if (getParentPath(sourcePath) === targetFolderPath) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.SAME_LOCATION, WORKSPACE_TREE_MESSAGES.sameMoveLocation);
+  }
 
   if (
     sourcePath === targetFolderPath ||
     targetFolderPath.startsWith(`${sourcePath}/`)
-  ) return moveFailure(
-      "descendant",
-      "Uma pasta não pode ser movida para dentro dela mesma."
-    );
+  ) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.DESCENDANT, WORKSPACE_TREE_MESSAGES.descendantMoveForbidden);
+  }
 
-  if (fileNameExistsInNode(tree, targetFolderPath, sourceNode.id)) return moveFailure(
-      "duplicate",
-      `Já existe um item chamado "${sourceNode.id}" nessa pasta.`
-    );
+  if (fileNameExistsInNode(tree, targetFolderPath, sourceNode.id)) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.DUPLICATE, WORKSPACE_TREE_MESSAGES.duplicateMove(sourceNode.id));
+  }
 
-  const deepestMovedPath = getPathDepth(targetFolderPath) + 1 + getSubtreeRelativeDepth(sourceNode)
+  const deepestMovedPath = getPathDepth(targetFolderPath) + 1 + getSubtreeRelativeDepth(sourceNode);
 
-  if (deepestMovedPath > maxDepth) return moveFailure(
-      "max-depth",
-      `O movimento ultrapassaria o limite de ${maxDepth} níveis.`
-    )
+  if (deepestMovedPath > maxDepth) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.MAX_DEPTH, WORKSPACE_TREE_MESSAGES.maxMoveDepth(maxDepth));
+  }
 
-  return null
+  return null;
 }
 
 export function moveItemInTree(
@@ -467,17 +470,16 @@ export function moveItemInTree(
     targetFolderPath,
     maxDepth,
   );
-  if (validationError) return validationError
+  if (validationError) return validationError;
 
   const { tree: treeWithoutSource, extracted } = extractNodeFromTree(
     tree,
     sourcePath,
   );
 
-  if (!extracted) return moveFailure(
-      "source-not-found",
-      "O item arrastado não foi encontrado.",
-    )
+  if (!extracted) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.SOURCE_NOT_FOUND, WORKSPACE_TREE_MESSAGES.sourceNotFound);
+  }
 
   const oldPath = extracted.path;
   const newPath = targetFolderPath

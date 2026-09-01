@@ -10,18 +10,24 @@ import {
 } from "@/app/interface/scheduler-api/scheduling";
 import { FileNode } from "@/types/shared";
 
-const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
-const ACTIVE_PREVIEW_RUN_STATUSES = new Set<SchedulingPreviewRunStatus>([
-  "pending",
-  "running",
-]);
+import {
+  ACTIVE_PREVIEW_RUN_STATUSES,
+  APPLICATION_FILE_CANDIDATES_BY_WORKER,
+  COMPLETED_PREVIEW_RUN_STATUS,
+  DEFAULT_APPLICATION_FILE_CANDIDATES,
+  FAILED_PREVIEW_RUN_STATUS,
+  PREVIEW_RUN_FALLBACK_ERROR,
+  PROCESSING_ATTEMPT_STATUSES,
+  SCHEDULING_APPLICATION_FILE_PATHS,
+  WORKSPACE_STORAGE_KEY_PREFIX,
+} from "./constant";
 
 export function createWorkspaceStorageKey(
   kind: "preview-run" | "correction-running",
   userId: number,
   assignmentId: number,
 ): string {
-  return `workspace-${kind}:${userId}:${assignmentId}`;
+  return `${WORKSPACE_STORAGE_KEY_PREFIX}-${kind}:${userId}:${assignmentId}`;
 }
 
 export function isProcessingAttemptStatus(status: string): boolean {
@@ -65,13 +71,10 @@ export function getApplicationFileContentForTemplateTest(
   files: Record<string, string>,
 ): string {
   const candidatePaths =
-    workerType === WorkerType.PYTHON_DEFAULT
-      ? ["src/app.py", "app.py"]
-      : workerType === WorkerType.NODE_REACTJS_CYPRESS
-        ? ["src/App.tsx", "src/App.jsx"]
-        : workerType === WorkerType.NODE_NEXTJS_CYPRESS
-          ? ["src/page.tsx", "src/page.jsx"]
-          : ["src/app.ts", "src/app.js", "app.ts", "app.js"];
+    (workerType
+      ? APPLICATION_FILE_CANDIDATES_BY_WORKER[workerType as WorkerType]
+      : undefined
+    ) ?? DEFAULT_APPLICATION_FILE_CANDIDATES;
 
   return candidatePaths.map((path) => files[path]).find(Boolean) ?? "";
 }
@@ -82,13 +85,9 @@ export function buildSchedulingPayloadFromFileTree(
 ): Scheduling {
   const files = flattenFileTreeToSchedulingFiles(fileTree);
 
-  const applicationFileContent =
-    files["app.ts"] ??
-    files["src/app.ts"] ??
-    files["app.js"] ??
-    files["src/app.js"] ??
-    files["app.py"] ??
-    files["src/app.py"];
+  const applicationFileContent = SCHEDULING_APPLICATION_FILE_PATHS
+    .map((path) => files[path])
+    .find((content) => content !== undefined && content !== null);
 
   return {
     assignmentId,
@@ -100,7 +99,7 @@ export function buildSchedulingPayloadFromFileTree(
 export function mapPreviewRunToResponse(
   previewRun: SchedulingPreviewRun | null | undefined,
 ): SchedulingResponse | null {
-  if (!previewRun || previewRun.status !== "completed") {
+  if (!previewRun || previewRun.status !== COMPLETED_PREVIEW_RUN_STATUS) {
     return null;
   }
 
@@ -117,9 +116,9 @@ export function mapPreviewRunToResponse(
 export function getPreviewRunError(
   previewRun: SchedulingPreviewRun | null | undefined,
 ): string | null {
-  if (!previewRun || previewRun.status !== "failed") {
+  if (!previewRun || previewRun.status !== FAILED_PREVIEW_RUN_STATUS) {
     return null;
   }
 
-  return previewRun.errorMessage ?? "Preview failed";
+  return previewRun.errorMessage ?? PREVIEW_RUN_FALLBACK_ERROR;
 }

@@ -106,6 +106,26 @@ const TreeNode: React.FC<TreeNodeProps> = ({
     }
   };
 
+  const interactiveProps = {
+    ...(isDraggable
+      ? {
+          onDragStart: handleDragStart,
+          onDragEnd,
+        }
+      : {}),
+    ...(onDragOver
+      ? {
+          onDragOver: handleDragOver,
+          onDragLeave: handleDragLeave,
+        }
+      : {}),
+    ...(onDrop
+      ? {
+          onDrop: handleDrop,
+        }
+      : {}),
+  };
+
   return (
     <div>
       <div
@@ -115,19 +135,17 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           !node.isFile && "font-medium",
           isDraggable && "cursor-grab active:cursor-grabbing",
           isDragging && "opacity-50",
-          dropState === "valid" && "bg-blue-900/40 ring-1 ring-inset ring-blue-500/50",
-          dropState === "invalid" && "cursor-not-allowed bg-red-950/30 ring-1 ring-inset ring-red-500/40",
+          dropState === "valid" &&
+            "bg-info/20 ring-1 ring-inset ring-info/50",
+          dropState === "invalid" &&
+            "cursor-not-allowed bg-destructive/20 ring-1 ring-inset ring-destructive/40",
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         onClick={handleClick}
         onContextMenu={handleContextMenu}
         draggable={isDraggable}
         aria-grabbed={isDragging}
-        onDragStart={isDraggable ? handleDragStart : undefined}
-        onDragEnd={isDraggable ? onDragEnd : undefined}
-        onDragOver={onDragOver ? handleDragOver : undefined}
-        onDragLeave={onDragOver ? handleDragLeave : undefined}
-        onDrop={onDrop ? handleDrop : undefined}
+        {...interactiveProps}
       >
         {!node.isFile && (
           <ChevronRight
@@ -278,8 +296,8 @@ export default function WorkspaceFileTree({
     <div
       className={cn(
         "min-h-full py-2 transition-colors",
-        backgroundDropState === "valid" && "bg-blue-950/20",
-        backgroundDropState === "invalid" && "bg-red-950/10",
+        backgroundDropState === "valid" && "bg-info/10",
+        backgroundDropState === "invalid" && "bg-destructive/10",
       )}
       onDragOver={onDragOver ? handleBackgroundDragOver : undefined}
       onDragLeave={onDragOver ? handleBackgroundDragLeave : undefined}
