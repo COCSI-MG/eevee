@@ -658,10 +658,10 @@ export class AssignmentService {
 
     const parsedStartDate = this.parseOptionalDate(startDateValue);
     const parsedDueDate = this.parseOptionalDate(dueDateValue);
-    const effectiveStartDate =
-      parsedStartDate !== undefined ? parsedStartDate : assignment.startDate;
-    const effectiveDueDate =
-      parsedDueDate !== undefined ? parsedDueDate : assignment.dueDate;
+
+    const effectiveStartDate = parsedStartDate !== undefined ? parsedStartDate : assignment.startDate;
+    const effectiveDueDate   = parsedDueDate   !== undefined ? parsedDueDate : assignment.dueDate;
+
     this.assertValidDateRange(effectiveStartDate, effectiveDueDate);
 
     const dataToUpdate: Partial<Assignment> = {
