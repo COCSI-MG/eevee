@@ -16,7 +16,7 @@ Um template é um teste executável que pode ser reutilizado em mais de uma ativ
 Os tipos de parâmetro são `STRING`, `NUMBER`, `BOOLEAN` e `OBJECT`. E podem ser passados ao associar o template com uma atividade.
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/form-new-template.png){ .screenshot }
+  ![Formulário de editar turma](../images/form-new-template.png){ .screenshot }
   <figcaption>Formulário utilizado para criar um novo tempalte.</figcaption>
 </figure>
 
@@ -114,11 +114,10 @@ Essa prévia cria e aguarda diretamente um worker Kubernetes. Ela não cria uma 
 Para testar clique em "Testar" dentro da atividade e coloque o código correspondente.
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/test-template.png){ .screenshot }
+  ![Formulário de editar turma](../images/test-template.png){ .screenshot }
   <figcaption>Teste utilizado para validar um tempalte.</figcaption>
 </figure>
 
 ## Dependências e cuidados
 
 As dependências declaradas são instaladas com npm dentro do worker. Use somente os pacotes necessários, fixe versões quando a reprodutibilidade for importante e considere que a instalação demanda rede. O sistema atual não duplica dependências vindas de templates diferentes.
-

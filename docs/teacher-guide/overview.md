@@ -20,7 +20,7 @@ flowchart LR
 4. **Atividade:** escolha a turma, o executor, os templates, o código inicial e o limite de tentativas.
 5. **Acompanhamento:** consulte as tentativas por atividade e estudante.
 
-![imagem principal do painel](/images/painel-principal.png)
+![imagem principal do painel](../images/painel-principal.png)
 
 ## O que o professor configura
 

@@ -7,7 +7,7 @@ Abra o endereço do EEVEE fornecido pela instituição e informe seu e-mail e su
 Caso não possua conta, clique em **Crie uma conta** e siga as instruções. A criação de conta exige um e-mail válido.
 
 <figure markdown="span">
-  ![Formulário de criar conta](/images/form-create-account.png){ .screenshot }
+  ![Formulário de criar conta](../images/form-create-account.png){ .screenshot }
   <figcaption>Formulário de criar conta</figcaption>
 </figure>
 
@@ -22,7 +22,7 @@ Cada cartão de turma mostra:
 Somente as turmas associadas à sua conta são listadas. Se a página informar que nenhuma turma foi encontrada, entre em contato com o professor para confirmar a matrícula.
 
 <figure markdown="span">
-  ![Lista de turmas](/images/list-class-student.png){ .screenshot }
+  ![Lista de turmas](../images/list-class-student.png){ .screenshot }
   <figcaption>Lista de turmas</figcaption>
 </figure>
 
@@ -37,7 +37,7 @@ Na página **Tarefas da Turma**, cada cartão apresenta o título, a descrição
 | **Responder Entrevista** | Abre as perguntas da atividade; o envio exige uma tentativa aceita. |
 
 <figure markdown="span">
-  ![Lista de atividades](/images/list-assignments-student.png){ .screenshot }
+  ![Lista de atividades](../images/list-assignments-student.png){ .screenshot }
   <figcaption>Lista de atividades</figcaption>
 </figure>
 

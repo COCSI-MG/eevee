@@ -12,7 +12,7 @@ Na área administrativa, abra **Turmas** e crie uma nova turma. O formulário tr
     É necessário adicionar **pelo menos uma conta de estudante** antes de salvar a turma.
 
 <figure markdown="span">
-  ![Formulário de nova turma](/images/form-new-class.png){ .screenshot }
+  ![Formulário de nova turma](../images/form-new-class.png){ .screenshot }
   <figcaption>Formulário utilizado para criar uma nova turma.</figcaption>
 </figure>
 
@@ -24,7 +24,6 @@ Com isso, esse aluno para de conseguir visualizar e responder as atividades prop
 
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/form-edit-class.png){ .screenshot }
+  ![Formulário de editar turma](../images/form-edit-class.png){ .screenshot }
   <figcaption>Formulário utilizado para editar uma turma.</figcaption>
 </figure>
-

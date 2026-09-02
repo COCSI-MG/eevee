@@ -17,7 +17,7 @@ O workspace mostra um termo de uso, armazena arquivos no navegador e aplica meca
 
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/assingment-term-of-use.png){ .screenshot }
+  ![Formulário de editar turma](../images/assingment-term-of-use.png){ .screenshot }
   <figcaption>Termo de uso por atividade</figcaption>
 </figure>
 
@@ -29,14 +29,14 @@ O workspace mostra um termo de uso, armazena arquivos no navegador e aplica meca
 Para acessar os alunos bloqueados, vá até atividades e clique nos 3 pontinhos de ações para entrar em "Usuários Suspensos".
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/assingment-actions.png){ .screenshot }
+  ![Formulário de editar turma](../images/assingment-actions.png){ .screenshot }
   <figcaption>Usuários bloqueados por tarefa</figcaption>
 </figure>
 
 Em seguida consulte o nome do usuário correspondente na lista e remova o bloqueio dele. É possível validar também o motivo de sua suspensão.
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/assingment-users-block-list.png){ .screenshot }
+  ![Formulário de editar turma](../images/assingment-users-block-list.png){ .screenshot }
   <figcaption>Lista de usuários bloqueados</figcaption>
 </figure>
 
@@ -87,6 +87,6 @@ Em **Tentativas**, o administrador seleciona uma atividade, filtra por estudante
 A ação administrativa de reexecução usa os arquivos armazenados e cria **uma nova tentativa** para o estudante. Ela não altera a tentativa anterior e não aplica o limite máximo ao administrador.
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/assingment-exec-again.png){ .screenshot }
+  ![Formulário de editar turma](../images/assingment-exec-again.png){ .screenshot }
   <figcaption>Lista de tentativas de execução detalhada</figcaption>
 </figure>

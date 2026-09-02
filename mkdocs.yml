@@ -1,6 +1,6 @@
 site_name: Documentação do EEVEE
 site_description: Plataforma educacional para atividades de programação com testes e correção automatizados
-site_url: http://localhost:8000/
+site_url: https://cocsi-mg.github.io/eevee/
 repo_url: https://github.com/COCSI-MG/eevee
 repo_name: COCSI-MG/eevee
 docs_dir: docs

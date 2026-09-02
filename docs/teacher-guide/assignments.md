@@ -3,14 +3,14 @@
 A interface administrativa usa um assistente em etapas. Uma atividade representa um exercício de programação associado a exatamente uma turma.
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/steps-by-assingment.png){ .screenshot }
+  ![Formulário de editar turma](../images/steps-by-assingment.png){ .screenshot }
   <figcaption>Etapas para criar uma atividade</figcaption>
 </figure>
 
 Caso esteja usando um worker com banco de dados, aparecerá um novo campo para preencher o script de sql inicial.
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/steps-by-assingment-sql.png){ .screenshot }
+  ![Formulário de editar turma](../images/steps-by-assingment-sql.png){ .screenshot }
   <figcaption>Etapas para criar uma atividade com banco de dados</figcaption>
 </figure>
 
@@ -27,7 +27,7 @@ Informe:
 O tipo escolhido controla os templates exibidos nas etapas seguintes. A descrição deve conter todas as informações que o estudante precisa para compreender e realizar a atividade
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/form-basic-settings-assingment.png){ .screenshot }
+  ![Formulário de editar turma](../images/form-basic-settings-assingment.png){ .screenshot }
   <figcaption>Formulário de configuração básica de atividade</figcaption>
 </figure>
 
@@ -36,12 +36,12 @@ O tipo escolhido controla os templates exibidos nas etapas seguintes. A descriç
 Selecione os templates compatíveis. Para cada um, preencha todos os parâmetros exibidos.
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/form-template-assingment.png){ .screenshot }
+  ![Formulário de editar turma](../images/form-template-assingment.png){ .screenshot }
   <figcaption>Formulário de configuração dos templates na atividade</figcaption>
 </figure>
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/form-template-params-assingment.png){ .screenshot }
+  ![Formulário de editar turma](../images/form-template-params-assingment.png){ .screenshot }
   <figcaption>Formulário de configuração dos parâmetros do template na atividade</figcaption>
 </figure>
 
@@ -50,7 +50,7 @@ Selecione os templates compatíveis. Para cada um, preencha todos os parâmetros
 O boilerplate é a base apresentada no workspace que o aluno efetuará a prova. A interface sugere um conteúdo por executor. Mantenha os caminhos exigidos pela pré-validação:
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/form-start-code-assingment.png){ .screenshot }
+  ![Formulário de editar turma](../images/form-start-code-assingment.png){ .screenshot }
   <figcaption>Formulário de configuração do código inicial na atividade</figcaption>
 </figure>
 
@@ -59,7 +59,7 @@ O boilerplate é a base apresentada no workspace que o aluno efetuará a prova. 
 Para workers que se utilizam de banco de dados, a interface apresenta um campo opcional de inicialização SQL.
 
 <figure markdown="span">
-  ![Formulário de editar turma](/images/form-sql-script-assingment.png){ .screenshot }
+  ![Formulário de editar turma](../images/form-sql-script-assingment.png){ .screenshot }
   <figcaption>Formulário de configuração do script de sql inicial na atividade</figcaption>
 </figure>
 
