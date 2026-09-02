@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { RefreshSession } from './entities/refresh-session.entity';
 import { getRefreshTtlSeconds } from './auth-cookie.util';
+import { SessionStatus } from './enums/session-status.enum';
 
 const ROTATION_GRACE_MS = 15 * 1000;
 const SESSION_HISTORY_RETENTION_DAYS = 7;
@@ -13,9 +14,9 @@ const SESSION_HISTORY_RETENTION_DAYS = 7;
 class RotationRaceError extends Error {}
 
 export type RotationResult =
-  | { status: 'rotated'; token: string; session: RefreshSession }
-  | { status: 'raced' }
-  | { status: 'denied' };
+  | { status: SessionStatus.ROTATED; token: string; session: RefreshSession }
+  | { status: SessionStatus.RACED }
+  | { status: SessionStatus.DENIED };
 
 @Injectable()
 export class RefreshSessionService {
@@ -50,7 +51,7 @@ export class RefreshSessionService {
     });
 
     if (!current || current.expiresAt <= new Date()) {
-      return { status: 'denied' };
+      return { status: SessionStatus.DENIED };
     }
 
     if (current.revokedAt) {
@@ -61,7 +62,7 @@ export class RefreshSessionService {
           `Rotação concorrente ignorada (userId=${current.userId}, familyId=${current.familyId})`,
         );
 
-        return { status: 'raced' };
+        return { status: SessionStatus.RACED };
       }
 
       // Registrado antes de revogar: se a revogação falhar, a suspeita não se
@@ -71,7 +72,7 @@ export class RefreshSessionService {
       );
 
       await this.revokeFamily(current.familyId);
-      return { status: 'denied' };
+      return { status: SessionStatus.DENIED };
     }
 
     const token = this.generateToken();
@@ -100,10 +101,10 @@ export class RefreshSessionService {
         return created;
       });
 
-      return { status: 'rotated', token, session };
+      return { status: SessionStatus.ROTATED, token, session };
     } catch (error) {
       if (error instanceof RotationRaceError) {
-        return { status: 'raced' };
+        return { status: SessionStatus.RACED };
       }
 
       throw error;

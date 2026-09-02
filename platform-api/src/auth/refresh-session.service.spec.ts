@@ -5,6 +5,7 @@ import { DataSource, IsNull, LessThan } from 'typeorm';
 import { createHash } from 'crypto';
 import { RefreshSessionService } from './refresh-session.service';
 import { RefreshSession } from './entities/refresh-session.entity';
+import { SessionStatus } from './enums/session-status.enum';
 import { DEFAULT_AUTH_REFRESH_TTL_SECONDS } from './auth-cookie.util';
 
 const hashOf = (token: string) =>
@@ -119,7 +120,7 @@ describe('RefreshSessionService', () => {
       refreshSessionRepository.findOne.mockResolvedValue(null);
 
       await expect(service.rotate('qualquer')).resolves.toEqual({
-        status: 'denied',
+        status: SessionStatus.DENIED,
       });
       expect(dataSource.transaction).not.toHaveBeenCalled();
     });
@@ -130,7 +131,7 @@ describe('RefreshSessionService', () => {
       );
 
       await expect(service.rotate('token-atual')).resolves.toEqual({
-        status: 'denied',
+        status: SessionStatus.DENIED,
       });
       expect(refreshSessionRepository.update).not.toHaveBeenCalled();
     });
@@ -145,7 +146,7 @@ describe('RefreshSessionService', () => {
 
       const result = await service.rotate('token-atual');
 
-      expect(result.status).toBe('rotated');
+      expect(result.status).toBe(SessionStatus.ROTATED);
 
       const [, created] = manager.save.mock.calls[0];
       expect(created.familyId).toBe(current.familyId);
@@ -167,8 +168,8 @@ describe('RefreshSessionService', () => {
 
       const result = await service.rotate('token-atual');
 
-      expect(result.status).toBe('rotated');
-      if (result.status !== 'rotated') return;
+      expect(result.status).toBe(SessionStatus.ROTATED);
+      if (result.status !== SessionStatus.ROTATED) return;
 
       const [, created] = manager.save.mock.calls[0];
       expect(created.tokenHash).toBe(hashOf(result.token));
@@ -183,7 +184,7 @@ describe('RefreshSessionService', () => {
       );
 
       await expect(service.rotate('token-atual')).resolves.toEqual({
-        status: 'denied',
+        status: SessionStatus.DENIED,
       });
       expect(refreshSessionRepository.update).toHaveBeenCalledWith(
         { familyId: 'family-1', revokedAt: IsNull() },
@@ -223,7 +224,7 @@ describe('RefreshSessionService', () => {
       );
 
       await expect(service.rotate('token-atual')).resolves.toEqual({
-        status: 'raced',
+        status: SessionStatus.RACED,
       });
       expect(refreshSessionRepository.update).not.toHaveBeenCalled();
       expect(debugSpy).toHaveBeenCalled();
@@ -242,7 +243,7 @@ describe('RefreshSessionService', () => {
       });
 
       await expect(service.rotate('token-atual')).resolves.toEqual({
-        status: 'raced',
+        status: SessionStatus.RACED,
       });
     });
   });

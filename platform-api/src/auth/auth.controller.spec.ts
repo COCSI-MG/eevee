@@ -12,6 +12,7 @@ import {
 } from '@nestjs/throttler/dist/throttler.constants';
 import { DEFAULT_AUTH_SESSION_TTL_SECONDS } from './auth-cookie.util';
 import { AuthController } from './auth.controller';
+import { SessionStatus } from './enums/session-status.enum';
 import { AuthService } from './auth.service';
 import { PasswordResetService } from './password-reset.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
@@ -362,7 +363,7 @@ describe('AuthController', () => {
     });
 
     it('rejects and clears both cookies when the session was denied', async () => {
-      authService.refreshSession.mockResolvedValue({ status: 'denied' });
+      authService.refreshSession.mockResolvedValue({ status: SessionStatus.DENIED });
       const response = buildResponse();
 
       await expect(
@@ -377,7 +378,7 @@ describe('AuthController', () => {
     });
 
     it('answers 409 and keeps the cookies on a race', async () => {
-      authService.refreshSession.mockResolvedValue({ status: 'raced' });
+      authService.refreshSession.mockResolvedValue({ status: SessionStatus.RACED });
       const response = buildResponse();
 
       await expect(
@@ -393,7 +394,7 @@ describe('AuthController', () => {
 
     it('writes both cookies and returns the session on success', async () => {
       authService.refreshSession.mockResolvedValue({
-        status: 'refreshed',
+        status: SessionStatus.REFRESHED,
         accessToken: 'novo-access',
         refreshToken: 'novo-refresh',
         session: { userId: 12, email: 'admin@example.com', isAdmin: true },

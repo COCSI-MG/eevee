@@ -7,6 +7,7 @@ import { JwtPayload } from './jwt.interface';
 import { RegisterRequestDto } from './dto/request/register-request.dto';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { RefreshSessionService } from './refresh-session.service';
+import { SessionStatus } from './enums/session-status.enum';
 
 export interface StartedSession {
   accessToken: string;
@@ -16,13 +17,13 @@ export interface StartedSession {
 
 export type RefreshOutcome =
   | {
-      status: 'refreshed';
+      status: SessionStatus.REFRESHED;
       accessToken: string;
       refreshToken: string;
       session: AuthSessionResponseDto;
     }
-  | { status: 'raced' }
-  | { status: 'denied' };
+  | { status: SessionStatus.RACED }
+  | { status: SessionStatus.DENIED };
 
 @Injectable()
 export class AuthService {
@@ -35,15 +36,15 @@ export class AuthService {
   async refreshSession(rawToken: string): Promise<RefreshOutcome> {
     const rotation = await this.refreshSessionService.rotate(rawToken);
 
-    if (rotation.status !== 'rotated') {
-      return { status: rotation.status === 'raced' ? 'raced' : 'denied' };
+    if (rotation.status !== SessionStatus.ROTATED) {
+      return { status: rotation.status };
     }
 
     const user = await this.userService.findOne(rotation.session.userId);
 
     if (!user) {
       await this.refreshSessionService.revokeFamily(rotation.session.familyId);
-      return { status: 'denied' };
+      return { status: SessionStatus.DENIED };
     }
 
     const payload: JwtPayload = {
@@ -56,7 +57,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload);
 
     return {
-      status: 'refreshed',
+      status: SessionStatus.REFRESHED,
       accessToken,
       refreshToken: rotation.token,
       session: this.buildSession(this.withTokenExpiry(payload, accessToken)),

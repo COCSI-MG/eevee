@@ -38,6 +38,7 @@ import {
 } from './auth-cookie.util';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtPayload } from './jwt.interface';
+import { SessionStatus } from './enums/session-status.enum';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
@@ -140,11 +141,11 @@ export class AuthController {
 
     const result = await this.authService.refreshSession(refreshToken);
 
-    if (result.status === 'raced') {
+    if (result.status === SessionStatus.RACED) {
       throw new ConflictException('Sessão já renovada por outra requisição');
     }
 
-    if (result.status !== 'refreshed') {
+    if (result.status !== SessionStatus.REFRESHED) {
       throw denySession();
     }
 

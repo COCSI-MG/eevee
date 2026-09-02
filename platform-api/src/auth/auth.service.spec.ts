@@ -4,6 +4,7 @@ import { HashUtils } from 'src/utils/hash.utils';
 import { UserService } from 'src/user/user.service';
 import { AuthService } from './auth.service';
 import { RefreshSessionService } from './refresh-session.service';
+import { SessionStatus } from './enums/session-status.enum';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -155,25 +156,25 @@ describe('AuthService', () => {
   });
   describe('refreshSession', () => {
     const rotated = {
-      status: 'rotated',
+      status: SessionStatus.ROTATED,
       token: 'novo-refresh',
       session: { userId: 12, familyId: 'family-1' },
     };
 
     it('reports a race without touching the user', async () => {
-      refreshSessionService.rotate.mockResolvedValue({ status: 'raced' });
+      refreshSessionService.rotate.mockResolvedValue({ status: SessionStatus.RACED });
 
       await expect(service.refreshSession('token')).resolves.toEqual({
-        status: 'raced',
+        status: SessionStatus.RACED,
       });
       expect(userService.findOne).not.toHaveBeenCalled();
     });
 
     it('denies when the rotation was refused', async () => {
-      refreshSessionService.rotate.mockResolvedValue({ status: 'denied' });
+      refreshSessionService.rotate.mockResolvedValue({ status: SessionStatus.DENIED });
 
       await expect(service.refreshSession('token')).resolves.toEqual({
-        status: 'denied',
+        status: SessionStatus.DENIED,
       });
     });
 
@@ -182,7 +183,7 @@ describe('AuthService', () => {
       userService.findOne.mockResolvedValue(null);
 
       await expect(service.refreshSession('token')).resolves.toEqual({
-        status: 'denied',
+        status: SessionStatus.DENIED,
       });
       expect(refreshSessionService.revokeFamily).toHaveBeenCalledWith(
         'family-1',
@@ -199,7 +200,7 @@ describe('AuthService', () => {
       jwtService.sign.mockReturnValue('novo-access');
 
       await expect(service.refreshSession('token')).resolves.toEqual({
-        status: 'refreshed',
+        status: SessionStatus.REFRESHED,
         accessToken: 'novo-access',
         refreshToken: 'novo-refresh',
         session: {
