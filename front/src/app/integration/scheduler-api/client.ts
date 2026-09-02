@@ -41,7 +41,9 @@ async function requestRenewal(): Promise<AuthSession | null> {
     const { data } = await axiosClient.post<AuthSession>("/auth/refresh");
     return data;
   } catch (error) {
-    if ((error as AxiosError).response?.status !== 409) {
+    const { response } = error as AxiosError;
+
+    if (response?.status !== 409) {
       return null;
     }
 
