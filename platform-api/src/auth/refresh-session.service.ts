@@ -1,15 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, IsNull, LessThan, Repository } from 'typeorm';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
-import { Cron } from '@nestjs/schedule';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import { RefreshSession } from './entities/refresh-session.entity';
 import { getRefreshTtlSeconds } from './auth-cookie.util';
 import { SessionStatus } from './enums/session-status.enum';
 
 const DEFAULT_ROTATION_GRACE_SECONDS = 15;
 const DEFAULT_SESSION_HISTORY_RETENTION_DAYS = 7;
+const DEFAULT_CLEANUP_CRON = '0 3 * * *';
 
 class RotationRaceError extends Error {}
 
@@ -19,7 +21,7 @@ export type RotationResult =
   | { status: SessionStatus.DENIED };
 
 @Injectable()
-export class RefreshSessionService {
+export class RefreshSessionService implements OnModuleInit {
   private readonly logger = new Logger(RefreshSessionService.name);
 
   constructor(
@@ -27,7 +29,22 @@ export class RefreshSessionService {
     private readonly refreshSessionRepository: Repository<RefreshSession>,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
+    @InjectQueue('session-cleanup-queue')
+    private readonly cleanupQueue: Queue,
   ) {}
+
+  async onModuleInit() {
+    const scheduled = await this.cleanupQueue.getRepeatableJobs();
+    await Promise.all(
+      scheduled.map((job) => this.cleanupQueue.removeRepeatableByKey(job.key)),
+    );
+
+    await this.cleanupQueue.add(
+      'cleanup-expired-sessions',
+      {},
+      { repeat: { pattern: this.cleanupCron() }, removeOnComplete: true },
+    );
+  }
 
   async create(userId: number) {
     const token = this.generateToken();
@@ -65,8 +82,6 @@ export class RefreshSessionService {
         return { status: SessionStatus.RACED };
       }
 
-      // Registrado antes de revogar: se a revogação falhar, a suspeita não se
-      // perde. Nunca inclui o token nem o hash.
       this.logger.warn(
         `Reuso de refresh token detectado, família revogada (userId=${current.userId}, familyId=${current.familyId})`,
       );
@@ -125,7 +140,6 @@ export class RefreshSessionService {
     );
   }
 
-  @Cron('0 3 * * *') // Todo dia às 03:00
   async cleanupExpiredSessions() {
     const cutoff = new Date(
       Date.now() - this.historyRetentionDays() * 24 * 60 * 60 * 1000,
@@ -150,6 +164,13 @@ export class RefreshSessionService {
         error,
       );
     }
+  }
+
+  private cleanupCron() {
+    return (
+      this.configService.get<string>('AUTH_SESSION_CLEANUP_CRON') ||
+      DEFAULT_CLEANUP_CRON
+    );
   }
 
   private rotationGraceMs() {

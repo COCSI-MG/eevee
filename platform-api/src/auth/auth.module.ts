@@ -10,16 +10,18 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserModule } from 'src/user/user.module';
 import { MailModule } from 'src/mail/mail.module';
 import { RequestContextModule } from 'src/request-context/request-context.module';
+import { BullMQModule } from 'src/bullmq/bullmq.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PasswordReset } from './entities/password-reset.entity';
 import { RefreshSession } from './entities/refresh-session.entity';
 import { RefreshSessionService } from './refresh-session.service';
+import { SessionCleanupConsumer } from './session-cleanup.processor';
 import { User } from 'src/user/entities/user.entity';
 import { getAuthSessionTtlSeconds } from './auth-cookie.util';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, PasswordResetService, RefreshSessionService, LocalStrategy, JwtStrategy, JwtAuthGuard],
+  providers: [AuthService, PasswordResetService, RefreshSessionService, SessionCleanupConsumer, LocalStrategy, JwtStrategy, JwtAuthGuard],
   imports: [
     TypeOrmModule.forFeature([PasswordReset, RefreshSession, User]),
     JwtModule.registerAsync({
@@ -33,6 +35,7 @@ import { getAuthSessionTtlSeconds } from './auth-cookie.util';
     UserModule,
     MailModule,
     RequestContextModule,
+    BullMQModule,
   ],
 })
 export class AuthModule {}

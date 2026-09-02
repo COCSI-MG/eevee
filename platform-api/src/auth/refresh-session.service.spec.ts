@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { getQueueToken } from '@nestjs/bullmq';
 import { ConfigService } from '@nestjs/config';
 import { DataSource, IsNull, LessThan } from 'typeorm';
 import { createHash } from 'crypto';
@@ -22,6 +23,11 @@ describe('RefreshSessionService', () => {
   };
   let manager: { save: jest.Mock; update: jest.Mock };
   let dataSource: { transaction: jest.Mock };
+  let cleanupQueue: {
+    add: jest.Mock;
+    getRepeatableJobs: jest.Mock;
+    removeRepeatableByKey: jest.Mock;
+  };
 
   const buildSession = (overrides: Partial<RefreshSession> = {}) =>
     ({
@@ -54,6 +60,12 @@ describe('RefreshSessionService', () => {
       transaction: jest.fn((callback: any) => callback(manager)),
     };
 
+    cleanupQueue = {
+      add: jest.fn(),
+      getRepeatableJobs: jest.fn().mockResolvedValue([]),
+      removeRepeatableByKey: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RefreshSessionService,
@@ -63,6 +75,7 @@ describe('RefreshSessionService', () => {
         },
         { provide: DataSource, useValue: dataSource },
         { provide: ConfigService, useValue: { get: jest.fn() } },
+        { provide: getQueueToken('session-cleanup-queue'), useValue: cleanupQueue },
       ],
     }).compile();
 
@@ -301,6 +314,31 @@ describe('RefreshSessionService', () => {
 
       await expect(service.cleanupExpiredSessions()).resolves.toBeUndefined();
       expect(errorSpy).toHaveBeenCalled();
+    });
+  });
+  describe('onModuleInit', () => {
+    it('schedules the cleanup as a repeatable job', async () => {
+      await service.onModuleInit();
+
+      expect(cleanupQueue.add).toHaveBeenCalledWith(
+        'cleanup-expired-sessions',
+        {},
+        expect.objectContaining({
+          repeat: { pattern: '0 3 * * *' },
+        }),
+      );
+    });
+
+    it('clears previous schedules so a changed interval does not double up', async () => {
+      cleanupQueue.getRepeatableJobs.mockResolvedValue([
+        { key: 'antigo-1' },
+        { key: 'antigo-2' },
+      ]);
+
+      await service.onModuleInit();
+
+      expect(cleanupQueue.removeRepeatableByKey).toHaveBeenCalledWith('antigo-1');
+      expect(cleanupQueue.removeRepeatableByKey).toHaveBeenCalledWith('antigo-2');
     });
   });
 });
