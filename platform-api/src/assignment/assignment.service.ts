@@ -398,6 +398,21 @@ export class AssignmentService {
       );
   }
 
+  findOptions(classId?: number) {
+    return this.assignmentRepository.find({
+      select: {
+        id: true,
+        title: true,
+        classId: true
+      },
+      ...(classId ? { where: { classId } } : {}),
+      order: {
+        id: 'ASC',
+        title: 'ASC'
+      },
+    });
+  }
+
   async findAllPaginated(
     query: ListAssignmentsQueryDto,
   ): Promise<PaginatedResult<Assignment>> {

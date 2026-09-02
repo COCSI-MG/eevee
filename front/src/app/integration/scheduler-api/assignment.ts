@@ -4,6 +4,7 @@ import {
   CreateAssignmentRequest,
 } from "@/app/interface/scheduler-api/assignment";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
+import { AdminAttemptAssignmentOption } from "@/app/interface/scheduler-api/admin-attempt";
 
 interface ListPaginatedAssignmentsParams {
   page?: number;
@@ -12,6 +13,16 @@ interface ListPaginatedAssignmentsParams {
 }
 
 export class AssignmentService {
+  static async listOptions(
+    classId?: number,
+  ): Promise<AdminAttemptAssignmentOption[]> {
+    const response = await axiosClientWithAuth.get<AdminAttemptAssignmentOption[]>("/assignment/options", {
+      params: classId ? { classId } : undefined,
+    });
+
+    return response.data;
+  }
+
   static async GetMyAssignments() {
     const response = await axiosClientWithAuth.get("/assignment/me");
 

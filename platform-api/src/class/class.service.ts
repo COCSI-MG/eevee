@@ -58,7 +58,7 @@ export class ClassService {
         description: createClassDto.description,
       });
       const savedClass = await this.classRepository.save(newClass);
-      newIdentifier = savedClass; 
+      newIdentifier = savedClass;
     }
 
     if (createClassDto.students) {
@@ -117,6 +117,19 @@ export class ClassService {
         relations: ['userClasses', 'userClasses.user', 'userClasses.class'],
       })
     ).map(ClassHelper.toResponseDto);
+  }
+
+  findOptions() {
+    return this.classRepository.find({
+      select: {
+        id: true,
+        name: true
+      },
+      order: {
+        name: 'ASC',
+        id: 'ASC'
+      },
+    });
   }
 
   async findAllPaginated(query: ListClassesQueryDto): Promise<PaginatedResult<ClassResponseDto>> {

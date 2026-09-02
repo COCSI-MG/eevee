@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 
 interface UseAdminAttemptsParams {
   assignmentId?: number;
+  classId?: number;
   userSearch?: string;
   page: number;
   pageSize: number;
@@ -12,21 +13,22 @@ interface UseAdminAttemptsParams {
 
 export const useAdminAttempts = ({
   assignmentId,
+  classId,
   userSearch,
   page,
   pageSize,
 }: UseAdminAttemptsParams) => {
   return useQuery({
-    queryKey: ["adminAttempts", assignmentId, userSearch, page, pageSize],
+    queryKey: ["adminAttempts", classId, assignmentId, userSearch, page, pageSize],
     queryFn: () =>
       AttemptAdminService.getAdminAttempts({
-        assignmentId: assignmentId!,
+        assignmentId,
+        classId,
         userSearch,
         page,
         pageSize,
       }),
-    enabled: Boolean(assignmentId),
-    placeholderData: (previousData) => previousData,
+    enabled: Boolean(assignmentId || classId),
     refetchOnWindowFocus: false,
   });
 };
