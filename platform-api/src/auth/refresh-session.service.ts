@@ -8,8 +8,8 @@ import { RefreshSession } from './entities/refresh-session.entity';
 import { getRefreshTtlSeconds } from './auth-cookie.util';
 import { SessionStatus } from './enums/session-status.enum';
 
-const ROTATION_GRACE_MS = 15 * 1000;
-const SESSION_HISTORY_RETENTION_DAYS = 7;
+const DEFAULT_ROTATION_GRACE_SECONDS = 15;
+const DEFAULT_SESSION_HISTORY_RETENTION_DAYS = 7;
 
 class RotationRaceError extends Error {}
 
@@ -57,7 +57,7 @@ export class RefreshSessionService {
     if (current.revokedAt) {
       const rotatedAgo = Date.now() - current.revokedAt.getTime();
 
-      if (current.replacedBy && rotatedAgo <= ROTATION_GRACE_MS) {
+      if (current.replacedBy && rotatedAgo <= this.rotationGraceMs()) {
         this.logger.debug(
           `Rotação concorrente ignorada (userId=${current.userId}, familyId=${current.familyId})`,
         );
@@ -128,7 +128,7 @@ export class RefreshSessionService {
   @Cron('0 3 * * *') // Todo dia às 03:00
   async cleanupExpiredSessions() {
     const cutoff = new Date(
-      Date.now() - SESSION_HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000,
+      Date.now() - this.historyRetentionDays() * 24 * 60 * 60 * 1000,
     );
     const startedAt = Date.now();
 
@@ -150,6 +150,20 @@ export class RefreshSessionService {
         error,
       );
     }
+  }
+
+  private rotationGraceMs() {
+    return (
+      (Number(this.configService.get<string>('AUTH_ROTATION_GRACE_SECONDS')) ||
+        DEFAULT_ROTATION_GRACE_SECONDS) * 1000
+    );
+  }
+
+  private historyRetentionDays() {
+    return (
+      Number(this.configService.get<string>('AUTH_SESSION_HISTORY_DAYS')) ||
+      DEFAULT_SESSION_HISTORY_RETENTION_DAYS
+    );
   }
 
   private generateToken() {
