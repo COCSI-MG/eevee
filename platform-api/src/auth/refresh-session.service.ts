@@ -133,13 +133,6 @@ export class RefreshSessionService implements OnModuleInit {
     );
   }
 
-  revokeAllForUser(userId: number) {
-    return this.refreshSessionRepository.update(
-      { userId, revokedAt: IsNull() },
-      { revokedAt: new Date() },
-    );
-  }
-
   async cleanupExpiredSessions() {
     const cutoff = new Date(
       Date.now() - this.historyRetentionDays() * 24 * 60 * 60 * 1000,

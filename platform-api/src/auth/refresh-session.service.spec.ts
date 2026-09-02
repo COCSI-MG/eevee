@@ -270,15 +270,6 @@ describe('RefreshSessionService', () => {
         { revokedAt: expect.any(Date) },
       );
     });
-
-    it('revokes only the active rows of a user', async () => {
-      await service.revokeAllForUser(7);
-
-      expect(refreshSessionRepository.update).toHaveBeenCalledWith(
-        { userId: 7, revokedAt: IsNull() },
-        { revokedAt: expect.any(Date) },
-      );
-    });
   });
   describe('cleanupExpiredSessions', () => {
     it('deletes only families expired past the retention window', async () => {
