@@ -62,9 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // O /auth/me não passa pelo interceptor, então é aqui que um token
-      // vencido tem a única chance de ser renovado. Sem isso, voltar à
-      // plataforma depois de um tempo fora cai no login.
       const renewed = await renewSession();
 
       if (requestId !== refreshRequestIdRef.current) {

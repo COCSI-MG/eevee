@@ -109,9 +109,6 @@ export class RealtimeGateway
       return;
     }
 
-    // O handshake congela o cookie na conexão, então revalidar o socket em pé
-    // leria sempre o token antigo. Derrubar faz o cliente reconectar com o
-    // cookie atual, que o front já renovou.
     this.expiryTimers.set(
       client.id,
       setTimeout(() => client.disconnect(true), delay),
