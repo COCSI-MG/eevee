@@ -1,0 +1,100 @@
+site_name: Documentação do EEVEE
+site_description: Plataforma educacional para atividades de programação com testes e correção automatizados
+site_url: http://localhost:8000/
+repo_url: https://github.com/COCSI-MG/eevee
+repo_name: COCSI-MG/eevee
+docs_dir: docs
+site_dir: site
+strict: true
+
+theme:
+  name: material
+  language: pt-BR
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+    - content.tabs.link
+    - search.highlight
+    - search.suggest
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Usar tema escuro
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Usar tema claro
+
+plugins:
+  - search:
+      lang: pt
+  - glightbox
+  - panzoom:
+      full_screen: true
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Início:
+      - Início: index.md
+      - Primeiros passos: getting-started.md
+      - Como funciona: how-it-works.md
+  - Guia do aluno:
+      - Visão geral: student-guide/overview.md
+      - Turmas e atividades: student-guide/classes-and-assignments.md
+      - Workspace: student-guide/workspace.md
+      - Execução e resultados: student-guide/submissions-and-results.md
+      - Entrevista: student-guide/interview.md
+  - Guia do professor:
+      - Visão geral: teacher-guide/overview.md
+      - Turmas e matrículas: teacher-guide/classes-and-users.md
+      - Templates e testes: teacher-guide/templates-and-tests.md
+      - Atividades: teacher-guide/assignments.md
+      - Aplicar atividades e acompanhar resultados: teacher-guide/application-and-results.md
+      - Testar como estudante: teacher-guide/application-testing.md
+  - Desenvolvimento:
+      - Arquitetura: architecture.md
+      - Estrutura do projeto: project-structure.md
+      - Tecnologias: technologies.md
+      - Ambiente local e Docker: local-development.md
+      - Fluxo de execução: execution-flow.md
+      - Banco de dados: database.md
+      - Infraestrutura: infrastructure.md
+      - Testes do projeto: testing.md
+      - Como contribuir: contributing.md
+  - Publicações:
+      - Visão geral: research/overview.md
+      - Publicações: research/publications.md
+      - Como citar: research/citations.md

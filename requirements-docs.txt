@@ -1,0 +1,4 @@
+mkdocs==1.6.1
+mkdocs-material==9.7.6
+mkdocs-glightbox
+mkdocs-panzoom-plugin

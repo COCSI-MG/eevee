@@ -8,7 +8,10 @@ NAMESPACE    ?= eevee-cefetrj
 CHART        ?= infrastructure/helm/eevee
 VALUES       ?= infrastructure/helm/eevee/values.yaml
 
-up: up-minikube up-docker up-platform-api up-front up-assignment-runner
+DOCS_IMAGE ?= eevee-docs:local
+DOCS_PORT  ?= 8000
+
+up: up-minikube up-docker up-scheduler up-front up-queue-worker
 
 up-infra: up-minikube up-docker
 
@@ -182,3 +185,18 @@ uninstall:
 
 status:
 	helm status $(HELM_RELEASE) -n $(NAMESPACE)
+
+.PHONY: docs-build docs-up docs-check
+docs-build:
+	docker build -f Dockerfile.docs -t $(DOCS_IMAGE) .
+
+docs-up: docs-build
+	docker run --rm --init \
+		--publish $(DOCS_PORT):8000 \
+		--volume "$(CURDIR)/mkdocs.yml:/workspace/mkdocs.yml:ro" \
+		--volume "$(CURDIR)/docs:/workspace/docs:ro" \
+		$(DOCS_IMAGE)
+
+docs-check: docs-build
+	docker run --rm $(DOCS_IMAGE) \
+		mkdocs build --strict --site-dir /tmp/site

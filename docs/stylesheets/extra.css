@@ -1,0 +1,20 @@
+:root > * {
+  --md-primary-fg-color: #633C15;
+  --md-primary-fg-color--light: #C5915D;
+  --md-primary-fg-color--dark: #332011;
+
+  --md-accent-fg-color: #C5915D;
+}
+
+[data-md-color-scheme="default"] {
+  --md-default-bg-color: #FCF3E4;
+}
+
+.md-typeset img.screenshot {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  margin: 1.5rem auto;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 8px;
+}
