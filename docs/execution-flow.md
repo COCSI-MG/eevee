@@ -1,6 +1,6 @@
 # Fluxo de execução
 
-Esta página descreve o caminho principal usado por **Enviar para Correção**, do navegador até a persistência do resultado.
+Esta página descreve o caminho de **Enviar para correção**, do navegador até a nota persistida.
 
 ## Sequência principal
 
@@ -8,101 +8,73 @@ Esta página descreve o caminho principal usado por **Enviar para Correção**, 
 sequenceDiagram
     actor S as Estudante
     participant F as Frontend
-    participant A as API NestJS
+    participant A as Platform API
     participant DB as PostgreSQL
     participant R as Redis / BullMQ
-    participant Q as Queue Worker
-    participant K as Kubernetes API
-    participant I as Bootstrap
+    participant Q as Assignment Runner
+    participant K as Kubernetes
     participant W as Worker
 
-    S->>F: Enviar para Correção
+    S->>F: Enviar para correção
     F->>F: Validar arquivos e sintaxe
     F->>A: POST /v1/scheduling/await
-    A->>DB: Ler atividade, turma e tentativas
-    A->>DB: Criar Attempt pending + receivedWork
-    A->>R: process-scheduling-job
+    A->>DB: Autorizar e carregar configuração
+    A->>DB: Criar Attempt pending
+    A->>R: Publicar evaluate-code
     A-->>F: Tentativa criada
-    R-->>Q: Consumir job
-    Q->>DB: Marcar Attempt running
-    Q->>DB: Carregar atividade, templates e parâmetros
-    Q->>K: Criar Job attempt-ID-worker
-    K->>I: Escrever solução e testes em emptyDir
-    I-->>W: Volume preparado
-    W->>W: Gerar variáveis e instalar dependências
-    W->>W: Executar Biblioteca de testes
-    W-->>K: stdout/stderr nos logs do pod
-    K-->>Q: Estado e logs
-    Q->>Q: Interpretar aprovados e reprovados
-    Q->>DB: Persistir score, relatório e completed/failed
-    Q-->>F: Evento Socket.IO de progresso
-    F->>A: Consultar resultados
-    A-->>F: Tentativas persistidas
+    R-->>Q: Consumir execution-commands
+    Q->>R: Publicar execution.started.v1
+    R-->>A: Atualizar Attempt running + Socket.IO
+    Q->>K: Criar Kubernetes Job
+    K->>W: Bootstrap + executor
+    W-->>Q: Estado e logs
+    Q->>Q: Interpretar testes e calcular score
+    Q->>R: Publicar completed ou failed
+    R-->>A: Persistir resultado + Socket.IO
+    F->>A: Consultar tentativa atualizada
+    A-->>F: Resultado persistido
 ```
 
-## 1. Requisição inicial
+## 1. Requisição e autorização
 
-O frontend envia `POST /v1/scheduling/await` com o identificador da atividade e um mapa `files` no formato caminho-conteúdo. `applicationFileContent` permanece por compatibilidade com fluxos anteriores.
+O frontend envia a atividade e o mapa de arquivos no formato caminho-conteúdo. A Platform API autentica o usuário, verifica seu acesso à atividade, impede conflitos de execução e aplica o limite de tentativas.
 
-Antes da chamada, o frontend verifica a estrutura mínima esperada para o executor e tenta transpilar arquivos relevantes. A API aplica o `JwtAuthGuard`, o limite de 30 requisições por minuto e o `ValidationPipe` global.
+O payload completo do worker é preparado antes do registro da tentativa. Em seguida, a API cria um `Attempt` com estado `pending`, arquivos recebidos e nota inicial zero, e publica um comando `evaluate-code` em `execution-commands`.
 
-## 2. Autorização e tentativa
+## 2. Início no Runner
 
-`SchedulingController.createAsync` chama `SchedulingService.createSchedulingJobAsync`. O serviço:
+O Assignment Runner consome o comando com concorrência 5. Antes de criar o Job, publica `execution.started.v1`. A Platform API consome esse evento, marca a tentativa como `running` e avisa o frontend por Socket.IO.
 
-1. carrega a atividade por `AssignmentService.findOne`, que restringe o acesso do estudante às suas turmas;
-2. verifica se há tentativa em execução;
-3. conta as tentativas existentes;
-4. aplica `maxAttempts`;
-5. cria `Attempt` com estado `pending`, nota zero e `receivedWork`;
-6. adiciona `process-scheduling-job` à `scheduling-queue`.
+Os contratos identificam se o destino é uma tentativa ou uma prévia. Assim, o Runner não precisa acessar as entidades educacionais nem o PostgreSQL da plataforma.
 
-A checagem impede estado `running`, mas não bloqueia explicitamente outra tentativa ainda `pending`.
+## 3. Preparação do Kubernetes Job
 
-## 3. Consumo assíncrono
+O payload já contém arquivos da solução, testes, dependências, parâmetros, boilerplate e SQL inicial aplicáveis. A estratégia do executor transforma isso em um Job:
 
-O processo iniciado por `start:worker:dev` consome a mensagem. Se a tentativa não estiver em `pending`, ela não é processada. Caso contrário, o estado muda para `running` e o serviço prepara o worker.
+1. O bootstrap escreve solução e testes no `emptyDir`;
+2. O contêiner principal monta esse volume;
+3. O executor instala dependências e roda seu framework;
+4. Variantes PostgreSQL inicializam também o serviço auxiliar e seus dados.
 
-Um cron executado a cada cinco minutos marca como falhas tentativas `pending`, `enqueded` ou `running` com mais de dez minutos. Essa rotina atualiza o banco, mas não encerra o Kubernetes Job associado.
+Os Jobs são isolados por execução. Seus arquivos e contêineres são efêmeros.
 
-## 4. Preparação
+## 4. Resultado e persistência
 
-`SchedulingWorkerPreparationService` exige ao menos um template. Ele carrega:
-
-- executor da atividade;
-- arquivos do estudante;
-- conteúdo de cada template;
-- dependências npm;
-- valores e tipos de parâmetros;
-- boilerplate e SQL inicial quando aplicáveis.
-
-Os templates viram arquivos numerados de teste. O backend ajusta imports relativos e gera `template-variables.ts`. Depois, `WorkerPayloadBuilderService` cria o payload final para a estratégia do executor.
-
-## 5. Kubernetes Job
-
-`WorkerService.createWorkerWithInitContainer` serializa a definição como JSON/Base64 e monta as opções do Job. Para uma tentativa de ID 42, o nome é `attempt-42-worker`.
-
-O bootstrap escreve primeiro os arquivos da solução e depois os arquivos de teste no `emptyDir`. O contêiner principal monta o mesmo volume, instala as dependências informadas e executa o gatilho da imagem.
-
-Executores PostgreSQL adicionam um contêiner auxiliar e executam o script inicial.
-
-## 6. Espera, stdout e stderr
-
-`KubernetesService` consulta o estado a cada dois segundos, por até 100 repetições, aproximadamente 200 segundos. Não há `activeDeadlineSeconds` no Job. Ao terminar, o serviço encontra o primeiro pod e busca os logs do contêiner principal, removendo sequências ANSI.
-
-As imagens worker executam os frameworks por processos filhos. A saída de testes e erros é encaminhada aos logs do pod. O backend não persiste stdout e stderr em campos separados; o texto consolidado vira `report`.
-
-## 7. Interpretação
-
-Para Jest, o parser procura a linha `Tests:` e extrai `passed` e `total`. Falhas são `total - passed`. Para Cypress, procura `Passing:` e `Failing:`; se não encontrar, usa o parser Jest como fallback.
+O Runner acompanha o Job, lê os logs e extrai testes aprovados e reprovados. A pontuação é calculada por:
 
 ```text
 score = passes / (passes + failures || 1)
 isAcceptable = score >= 0.7
 ```
 
-O consumidor persiste `completed`, contagens, pontuação, aceite e relatório. Erros de preparação ou infraestrutura persistem `failed`, nota zero e mensagem de erro.
+Na conclusão, publica `execution.completed.v1`, falhas de preparação, infraestrutura ou framework geram `execution.failed.v1`. A Platform API persiste estado, pontuação, contagens e relatório, e emite a atualização por Socket.IO.
 
-## Execução prévia
+## 5. Recuperação de execuções presas
 
-`POST /v1/scheduling/preview` cria um `SchedulingPreviewRun`, não um `Attempt`. O job recebe ID próprio, pode ser cancelado por `DELETE /v1/scheduling/preview/:id` e usa o mesmo preparo e executor. Apenas uma prévia pendente/em execução é reutilizada por usuário e atividade.
+A cada cinco minutos, a Platform API procura tentativas `pending`, `enqueded` ou `running` com mais de dez minutos e as marca como falhas. Essa recuperação corrige o estado persistido, mas não garante o encerramento de um Kubernetes Job que ainda exista.
+
+## Previews e teste de template
+
+A prévia do estudante cria um `SchedulingPreviewRun`, sem consumir tentativa. Ela usa `execution-commands`, possui estado próprio e pode ser cancelada, o cancelamento é enviado ao Runner por `execution-requests`.
+
+O teste administrativo de template usa `execution-requests`: a Platform API envia a requisição e aguarda a resposta do Runner. Esse teste não cria tentativa e não salva automaticamente o template.

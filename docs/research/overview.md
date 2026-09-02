@@ -29,9 +29,3 @@ O EEVEE separa a execução das soluções da aplicação principal e registra o
 Essa arquitetura permite que uma mesma atividade seja aplicada a diferentes estudantes utilizando critérios equivalentes de execução e avaliação.
 
 Algumas funcionalidades também foram desenvolvidas para apoiar experimentos acadêmicos, como o registro de respostas de questionários e a associação dessas respostas às atividades e tentativas realizadas.
-
-## Publicações
-
-Os resultados e estudos relacionados ao EEVEE são apresentados na seção de [Publicações](publications.md).
-
-Alguns trabalhos ainda estão em processo de publicação. As referências bibliográficas completas serão adicionadas à documentação assim que estiverem disponíveis.

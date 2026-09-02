@@ -26,6 +26,10 @@ Somente as turmas associadas à sua conta são listadas. Se a página informar q
   <figcaption>Lista de turmas</figcaption>
 </figure>
 
+## Escolher entre tarefas e provas
+
+Ao abrir uma turma, use **Tarefas** para consultar todas as atividades disponíveis ou **Provas** para consultar os agrupamentos liberados pelo professor. Provas sem data de início ou cujo horário ainda não chegou não aparecem para estudantes.
+
 ## Escolher uma atividade
 
 Na página **Tarefas da Turma**, cada cartão apresenta o título, a descrição e as ações disponíveis. Descrições longas podem ser abertas por completo com **Ver mais**.
@@ -34,7 +38,8 @@ Na página **Tarefas da Turma**, cada cartão apresenta o título, a descrição
 | --- | --- |
 | **Iniciar** | Abre o workspace para desenvolver ou continuar a solução. |
 | **Visualizar Resultados** | Abre o histórico quando já existe pelo menos uma tentativa. |
-| **Responder Entrevista** | Abre as perguntas da atividade; o envio exige uma tentativa aceita. |
+| **Responder Entrevista** | Abre as perguntas da atividade, o envio exige uma tentativa aceita. |
+| **Gabarito** | Abre a solução de referência quando ela existe e foi liberada pelo professor. |
 
 <figure markdown="span">
   ![Lista de atividades](../images/list-assignments-student.png){ .screenshot }
@@ -56,4 +61,5 @@ Na página **Tarefas da Turma**, cada cartão apresenta o título, a descrição
 ## Continuar
 
 - [Conhecer o workspace](workspace.md)
+- [Consultar provas](exams.md)
 - [Executar e enviar uma solução](submissions-and-results.md)

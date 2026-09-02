@@ -22,9 +22,10 @@ Informe:
 - descrição;
 - turma;
 - tipo de executor;
-- número máximo de tentativas.
+- número máximo de tentativas;
+- visibilidade do gabarito.
 
-O tipo escolhido controla os templates exibidos nas etapas seguintes. A descrição deve conter todas as informações que o estudante precisa para compreender e realizar a atividade
+O tipo escolhido controla os templates exibidos nas etapas seguintes. A descrição deve conter todas as informações que o estudante precisa para compreender e realizar a atividade. A visibilidade só produz acesso para estudantes depois que um gabarito for salvo.
 
 <figure markdown="span">
   ![Formulário de editar turma](../images/form-basic-settings-assingment.png){ .screenshot }
@@ -36,18 +37,13 @@ O tipo escolhido controla os templates exibidos nas etapas seguintes. A descriç
 Selecione os templates compatíveis. Para cada um, preencha todos os parâmetros exibidos.
 
 <figure markdown="span">
-  ![Formulário de editar turma](../images/form-template-assingment.png){ .screenshot }
-  <figcaption>Formulário de configuração dos templates na atividade</figcaption>
-</figure>
-
-<figure markdown="span">
   ![Formulário de editar turma](../images/form-template-params-assingment.png){ .screenshot }
   <figcaption>Formulário de configuração dos parâmetros do template na atividade</figcaption>
 </figure>
 
 ## 3. Código inicial
 
-O boilerplate é a base apresentada no workspace que o aluno efetuará a prova. A interface sugere um conteúdo por executor. Mantenha os caminhos exigidos pela pré-validação:
+O boilerplate é a base apresentada no workspace em que o estudante desenvolverá a solução. A interface sugere um conteúdo por executor. Mantenha os caminhos exigidos pela pré-validação:
 
 <figure markdown="span">
   ![Formulário de editar turma](../images/form-start-code-assingment.png){ .screenshot }
@@ -65,8 +61,10 @@ Para workers que se utilizam de banco de dados, a interface apresenta um campo o
 
 ## 5. Revisão e salvamento
 
-Revise os valores e salve. ASsim que publicada a atividade salva pode ser consultada pelos estudantes matriculados na turma.
+Revise os valores e salve. Assim que publicada, a atividade pode ser consultada pelos estudantes matriculados na turma.
 
 ## Editar uma atividade
 
-Na edição, a interface que aparece é a mesma, basta se utilizar dela e editar os itens que deseja.
+Na edição, a interface apresenta as mesmas etapas. Alterações em executor, templates, código inicial ou SQL podem afetar as próximas execuções, mas não reescrevem tentativas já registradas.
+
+Depois de salvar, consulte [Gabaritos](answer-keys.md) para preparar uma solução de referência ou [Provas e notas](exams.md) para vincular a atividade a uma prova.

@@ -7,7 +7,7 @@ No EEVEE, o aluno acessa as atividades das turmas em que está matriculado, dese
 ```mermaid
 flowchart LR
     L[Entrar no EEVEE] --> C[Escolher a turma]
-    C --> A[Escolher a atividade]
+    C --> A[Escolher uma tarefa ou prova]
     A --> T[Aceitar o termo]
     T --> W[Desenvolver no workspace]
     W --> P[Executar uma prévia]
@@ -19,7 +19,7 @@ flowchart LR
 
 1. **Acesso:** Entre com sua conta de estudante.
 2. **Turma:** Escolha uma das turmas em que você está matriculado.
-3. **Atividade:** Leia o enunciado e verifique o estado das tentativas anteriores.
+3. **Tarefa ou prova:** Escolha uma atividade diretamente ou dentro de uma prova disponível.
 4. **Workspace:** Edite os arquivos fornecidos e crie outros quando necessário.
 5. **Execução:** Teste a solução sem consumir uma tentativa de correção.
 6. **Correção:** Envie os arquivos e aguarde o processamento.
@@ -44,13 +44,16 @@ Você precisa de:
 | --- | --- |
 | Turmas | Lista as turmas associadas à conta. |
 | Atividades | Mostra os exercícios, o estado da última tentativa e os acessos disponíveis. |
+| Provas | Agrupa atividades da turma e mostra quantos pontos cada uma vale. |
 | Workspace | Reúne enunciado, arquivos, editor e ações de execução e envio. |
 | Resultados | Apresenta o histórico de tentativas, pontuação e feedback. |
+| Gabarito | Exibe uma solução de referência quando o professor libera o acesso. |
 | Entrevista | Registra respostas sobre a experiência após uma solução aceita. |
 
 ## Próximos passos
 
 - [Acessar turmas e atividades](classes-and-assignments.md)
+- [Consultar provas](exams.md)
 - [Desenvolver no workspace](workspace.md)
 - [Executar, enviar e interpretar resultados](submissions-and-results.md)
 - [Responder à entrevista](interview.md)

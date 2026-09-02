@@ -1,47 +1,63 @@
 # Testes do projeto
 
-## Backend
+Os componentes possuem pipelines independentes. Compile primeiro `packages/execution-contracts`, pois Platform API e Assignment Runner dependem desse pacote local.
 
-O backend usa Jest. Os arquivos `*.spec.ts` cobrem controllers, services, utilitários, autenticação, paginação, Kubernetes, scheduling, templates, arquivos e workers.
-
-Comandos declarados em `scheduler-api/package.json`:
+## Contratos compartilhados
 
 ```bash
-cd scheduler-api
-npm run test
-npm run test:e2e
-npm run test:cov
-```
-
-- `test`: executa os testes unitários em série;
-- `test:e2e`: usa `test/jest-e2e.json` e `test/app.e2e-spec.ts`;
-- `test:cov`: gera cobertura no diretório `coverage/`.
-
-O build TypeScript é:
-
-```bash
+cd packages/execution-contracts
+npm ci
 npm run build
 ```
 
-O lint declarado executa ESLint com `--fix`, portanto pode alterar arquivos:
+## Platform API
+
+```bash
+cd platform-api
+npm run test
+npm run build
+```
+
+Os testes Jest cobrem regras de domínio, autenticação, filas, resultados, templates, gabaritos, provas e utilitários.
+
+O script de lint usa correção automática e pode alterar arquivos:
 
 ```bash
 npm run lint
 ```
 
-Execute-o somente quando modificações automáticas forem desejadas.
+## Assignment Runner
+
+```bash
+cd assignment-runner
+npm run test
+npm run build
+```
+
+A suíte cobre contratos de execução, estratégias, orquestração Kubernetes, parsing de resultados, cancelamento e publicação de eventos.
 
 ## Frontend
 
-Existem testes para paginação administrativa e busca paginada:
+```bash
+cd front
+npm run lint
+npm run build
+```
 
-- `src/components/admin/admin-pagination.test.tsx`;
-- `src/hooks/use-paginated-search.test.tsx`.
+O lint do frontend também pode aplicar correções.
+
+## Documentação
+
+```bash
+make check-docs
+```
+
+Esse comando executa o build do MkDocs em modo estrito e detecta páginas, links ou configurações inválidas.
 
 ## Testes das soluções
 
-Os testes das atividades não fazem parte da suíte interna do repositório. Eles são templates armazenados no banco e executados nos workers pela biblioteca de testes de cada linguagem.
+Os testes educacionais não fazem parte das suítes internas. Eles são templates armazenados no banco e executados em Kubernetes Jobs com Jest, Cypress ou Pytest.
 
-## CI observada
+## CI
 
-Os workflows atuais executam Node.js 22. O backend possui etapas de teste e build e o frontend possui etapas de lint/build.
+Os workflows usam Node.js 22 e separam Platform API, Assignment Runner, frontend e documentação. Os dois serviços executam testes e build, o frontend executa lint e build, a documentação executa sua verificação estrita.

@@ -1,74 +1,61 @@
 # Estrutura do projeto
 
-O repositório é organizado por aplicações e infraestrutura. Esta visão lista somente os diretórios que participam do funcionamento atual.
+O repositório separa a aplicação web, o domínio da plataforma, a execução isolada de código e a infraestrutura.
 
 ```text
 eevee/
-├── front/                  # interface Next.js
-├── scheduler-api/          # API, filas, domínio e integração Kubernetes
-├── node-worker-images/     # imagens que executam as soluções
-├── eevee-infrastructure/   # Docker Compose e chart Helm
-├── scripts/                # utilitários operacionais
-├── Makefile                # atalhos locais, imagens e Helm
-└── docs/                   # documentação MkDocs
+├── front/                    # interface Next.js
+├── platform-api/             # API, domínio, persistência e realtime
+├── assignment-runner/        # consumidor de execuções e orquestração Kubernetes
+├── packages/
+│   └── execution-contracts/  # contratos compartilhados das filas
+├── images/                   # imagens dos executores
+├── infrastructure/           # Docker Compose, Helm, gateway e proxy
+├── scripts/                  # utilitários operacionais
+├── Makefile                  # comandos de desenvolvimento e implantação
+└── docs/                     # documentação MkDocs
 ```
 
 ## `front/`
 
 ```text
 front/src/
-├── app/             # rotas Next.js, telas e integração com a API
+├── app/             # rotas, telas e integração com a API
 ├── components/      # componentes de interface e administração
-├── hooks/           # consultas, estado e comportamentos reutilizáveis
+├── hooks/           # consultas e comportamentos reutilizáveis
 └── providers/       # sessão e estado do workspace
 ```
 
-Dentro de `app/admin/` ficam os fluxos de turmas, templates, atividades, usuários e tentativas. `app/integration/scheduler-api/` centraliza o cliente HTTP e o Socket.IO. O workspace combina editor Monaco, explorador de arquivos, pré-validação e armazenamento IndexedDB.
+As telas administrativas ficam em `app/admin/`. O cliente HTTP e o Socket.IO ficam em `app/integration/scheduler-api/`. O workspace combina Monaco Editor, explorador de arquivos, validações no cliente e armazenamento IndexedDB.
 
-## `scheduler-api/`
+## `platform-api/`
 
-```text
-scheduler-api/src/
-├── auth/                    # login, cookie JWT e guards
-├── user/, class/           # usuários, turmas e matrículas
-├── assignment/             # atividades
-├── template/               # templates de testes
-├── assignment-template/    # associação atividade-template
-├── assignment-params/      # valores de parâmetros por atividade
-├── scheduling/             # tentativas, previews e filas
-├── attempt/                # resultados persistidos
-├── worker/                 # estratégias e definição dos Jobs
-├── kubernetes/             # cliente e acompanhamento de Jobs
-├── realtime/               # eventos Socket.IO
-├── file-saver/             # upload local e sincronização incompleta
-├── interview-response/     # questionários da pesquisa
-└── database/               # conexão TypeORM
-```
+A aplicação NestJS expõe HTTP e Socket.IO, aplica as regras do domínio e persiste dados no PostgreSQL. Seus módulos cobrem autenticação e recuperação de senha, usuários, turmas, atividades, templates, gabaritos, provas, tentativas, previews, questionários e arquivos.
 
-Os módulos seguem o padrão NestJS:
+Também prepara os payloads de execução, publica comandos no Redis, recebe resultados do Assignment Runner e processa a fila opcional de feedback por IA. A Platform API não cria Kubernetes Jobs diretamente.
 
-- **controller:** recebe HTTP, aplica guards e delega;
-- **service:** implementa regras e orquestra repositórios/integrações;
-- **entity:** mapeia tabelas TypeORM;
-- **DTO:** declara formato e validação de entrada;
-- **module:** conecta dependências.
+Entradas importantes:
 
-### Entradas de processo
-
-- `src/main.ts`: servidor HTTP;
-- `src/main-worker.ts`: consumidores BullMQ;
+- `src/main.ts`: servidor HTTP e realtime;
 - `data-source.ts`: CLI de migrations;
-- `scripts/seed.ts`: usuários e dados de desenvolvimento;
-- `scripts/seed-teraorm-ab-study.ts`: módulo experimental.
+- `scripts/seed.ts`: dados locais de demonstração.
 
-## `node-worker-images/`
+## `assignment-runner/`
 
-Cada subdiretório possui uma imagem e um gatilho de execução. Os diretórios principais são `worker-bootstrap`, `node`, `nest.js`, `grpc`, `next.js-cypress`, `reactjs-cypress` e `node-teraorm`.
+Serviço NestJS sem API HTTP pública. Ele consome comandos e requisições de execução, escolhe a estratégia do executor, cria e acompanha Kubernetes Jobs, interpreta o resultado dos testes e publica eventos de progresso e término.
 
-O bootstrap não executa testes; ele materializa os arquivos no volume compartilhado. Os outros contêineres instalam dependências e acionam Jest ou Cypress.
+As responsabilidades de orquestração Kubernetes e as estratégias de worker ficam neste componente, isoladas do domínio educacional da Platform API.
 
-## `eevee-infrastructure/`
+## `packages/execution-contracts/`
+
+Pacote TypeScript compartilhado pelos dois serviços. Define nomes de filas, comandos, requisições, resultados, estados e identificadores de destino (`attempt` ou `preview`). Deve ser compilado antes dos serviços que o consomem.
+
+## `images/`
+
+Contém o bootstrap e as imagens para JavaScript, Node.js, NestJS, gRPC, Next.js/Cypress, React/Cypress, TeraORM e Python. O bootstrap materializa os arquivos no volume compartilhado, o executor principal instala dependências e roda Jest, Cypress ou Pytest, conforme o tipo.
+
+## `infrastructure/`
 
 - `docker-compose.yml`: PostgreSQL e Redis para desenvolvimento;
-- `helm/eevee/`: chart agregador com frontend, API, consumidor, dados, Nginx e recursos opcionais;
-- configurações de proxy e NetworkPolicy para o cenário TeraORM.
+- `helm/eevee/`: chart da aplicação;
+- arquivos de gateway, proxy de saída e políticas de rede usados na implantação.

@@ -4,48 +4,45 @@
 
 | Tecnologia | Uso no projeto |
 | --- | --- |
-| Next.js 15 | Renderiza a aplicação web e organiza rotas. |
-| React 19 | Componentes e estado de interface. |
-| TypeScript | Tipagem do frontend e backend. |
-| Tailwind CSS 3 | Estilos. |
-| Radix UI e shadcn/ui | Componentes acessíveis e base visual. |
-| Monaco Editor | Edição de código e dos testes. |
-| TanStack Query | Cache, polling e estado de requisições. |
-| Axios | Cliente HTTP com credenciais. |
+| Next.js 15 e React 19 | Aplicação web e rotas. |
+| TypeScript | Tipagem do frontend, serviços e contratos. |
+| Tailwind CSS 3, Radix UI e shadcn/ui | Estilos e componentes. |
+| Monaco Editor | Edição de soluções, templates e gabaritos. |
+| TanStack Query e Axios | Estado remoto e cliente HTTP. |
 | Formik e Yup | Formulários e validação no cliente. |
 | Socket.IO Client | Atualizações de execução em tempo real. |
-| IndexedDB | Persistência local dos arquivos do workspace. |
+| IndexedDB | Persistência local dos workspaces. |
 
-## Backend e dados
+## Serviços e dados
 
 | Tecnologia | Uso no projeto |
 | --- | --- |
-| NestJS 11 | API modular, injeção de dependências e processo consumidor. |
-| TypeORM | Entidades, consultas, migrations e conexão PostgreSQL. |
-| PostgreSQL 16 | Dados de usuários, turmas, atividades, tentativas e resultados. |
-| Redis | Backend das filas. |
-| BullMQ | Tentativas, previews, feedback e fila declarada de arquivos. |
-| Passport/JWT | Autenticação por token em cookie. |
-| bcrypt | Hash de senhas. |
+| NestJS 11 | Platform API e Assignment Runner. |
+| TypeORM | Entidades, consultas e migrations. |
+| PostgreSQL 16 | Dados educacionais, usuários e resultados. |
+| Redis e BullMQ | Comandos, requisições, resultados e feedback. |
+| Passport/JWT e bcrypt | Sessão por cookie e hash de senhas. |
+| Nodemailer | Recuperação de senha por SMTP Gmail. |
 | class-validator | Validação dos DTOs. |
-| Swagger/OpenAPI | Catálogo interativo da API em `/api`. |
-| Socket.IO | Gateway de eventos autenticado pelo cookie. |
+| Swagger/OpenAPI | Catálogo da API em `/api`. |
+| Socket.IO | Eventos autenticados de execução. |
 
-## Execução e testes
+## Execução e qualidade
 
 | Tecnologia | Uso no projeto |
 | --- | --- |
-| Docker | Imagens da API, frontend e executores. |
-| Kubernetes | Um Job por execução de solução. |
-| Jest | Testes internos do backend. |
-| Cypress | Testes de interfaces Next.js e React. |
-| Kind | Cluster local descrito pelo guia mais recente. |
-| Helm | Implantação conjunta dos componentes no cluster. |
+| Docker | Imagens da aplicação e dos executores. |
+| Kubernetes | Um Job isolado por execução. |
+| Minikube | Cluster local. |
+| Helm | Instalação dos componentes no cluster. |
+| Jest | Testes internos e workers JavaScript/TypeScript. |
+| Cypress | Correção de interfaces React e Next.js. |
+| Pytest | Correção do executor Python. |
+| MkDocs Material | Site da documentação. |
 
 ## Integrações opcionais
 
 | Serviço | Uso no projeto |
 | --- | --- |
-| Groq | Gera feedback refinado por API compatível com OpenAI. |
-| GitHub API | Destino planejado para sincronização de arquivos; fluxo atual está incompleto. |
+| Gmail SMTP | Envio do link de recuperação de senha. |
 

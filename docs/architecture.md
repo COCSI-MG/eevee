@@ -1,6 +1,6 @@
 # Arquitetura
 
-O EEVEE combina uma aplicação web, uma API, processos assíncronos e executores efêmeros. O frontend e a API atendem as interações, Redis desacopla a submissão da execução, PostgreSQL preserva o estado e Kubernetes cria um ambiente por execução.
+O EEVEE possui três componentes de aplicação. O frontend atende estudantes e administradores, a Platform API concentra domínio e persistência, o Assignment Runner executa código de forma isolada no Kubernetes. Redis desacopla os dois serviços e PostgreSQL mantém o estado durável.
 
 ## Componentes
 
@@ -8,94 +8,87 @@ O EEVEE combina uma aplicação web, uma API, processos assíncronos e executore
 flowchart TB
     subgraph Browser[Navegador]
         UI[Frontend Next.js]
-        IDB[(IndexedDB / FileStash)]
+        IDB[(IndexedDB)]
         UI <--> IDB
     end
 
-    subgraph App[Serviços da aplicação]
-        API[API NestJS]
-        QW[Queue Worker NestJS]
-        RT[Socket.IO / realtime]
+    subgraph Platform[Plataforma]
+        API[Platform API NestJS]
+        RT[Socket.IO]
+        AI[Processador de feedback IA]
         API --- RT
+        API --- AI
     end
 
-    subgraph Data[Persistência e filas]
+    subgraph Data[Dados e mensageria]
         PG[(PostgreSQL)]
         R[(Redis / BullMQ)]
     end
 
-    subgraph Cluster[Kubernetes]
-        KAPI[Kubernetes API]
-        INIT[Init container bootstrap]
-        EXEC[Worker Jest ou Cypress]
+    subgraph Runner[Execução]
+        AR[Assignment Runner]
+        K[Kubernetes API]
+        INIT[Bootstrap init container]
+        WORKER[Worker Jest, Cypress ou Pytest]
         VOL[(emptyDir)]
-        KAPI --> INIT
+        AR --> K
+        K --> INIT
         INIT --> VOL
-        VOL --> EXEC
+        VOL --> WORKER
     end
 
     UI <-->|HTTP /v1 + cookie JWT| API
     UI <-->|WebSocket| RT
     API <--> PG
     API <--> R
-    QW <--> R
-    QW <--> PG
-    API -. prévia de template .-> KAPI
-    QW --> KAPI
-    EXEC -->|logs| QW
-    API -. feedback opcional .-> GROQ[Groq]
+    AR <--> R
+    AI -. opcional .-> GROQ[Groq]
+    API -. recuperação de senha .-> MAIL[SMTP Gmail]
 ```
 
 ## Frontend
 
-O diretório `front/` contém uma aplicação Next.js. Ela oferece as áreas de estudante e administração, usa Axios para a API, TanStack Query para estado remoto, Monaco como editor e Socket.IO para eventos de execução.
+O diretório `front/` contém uma aplicação Next.js. Ela usa Axios para a API, TanStack Query para estado remoto, Monaco como editor e Socket.IO para acompanhar execuções.
 
-O workspace mantém sua árvore de arquivos em IndexedDB por usuário e atividade. Portanto, editar um arquivo não implica persistência imediata no backend.
+Os arquivos do workspace permanecem no IndexedDB, separados por usuário e atividade. Editar um arquivo não o persiste automaticamente na Platform API, ele é enviado quando uma tentativa ou prévia é iniciada.
 
-## API HTTP
+## Platform API
 
-O processo iniciado por `npm run start:dev` expõe a API NestJS. Ele:
+O processo de `platform-api/`:
 
-- autentica usuários com JWT em cookie;
-- aplica validação, CORS e throttling;
-- administra entidades educacionais;
-- persiste tentativas e previews;
-- publica jobs BullMQ;
-- fornece o gateway Socket.IO;
-- executa diretamente a prévia administrativa de templates.
+- autentica por JWT em cookie;
+- aplica validação, CORS e limitação de requisições;
+- administra usuários, turmas, atividades, templates, gabaritos e provas;
+- persiste tentativas, previews e respostas de pesquisa;
+- prepara payloads e publica execuções no BullMQ;
+- consome eventos do Assignment Runner e atualiza PostgreSQL e Socket.IO;
+- processa `ai-report-queue`, com concorrência 10, quando o feedback da Groq está configurado;
+- envia e-mails de recuperação de senha quando o SMTP está configurado.
 
-O versionamento por URI está habilitado com versão padrão `v1`, resultando em rotas como `/v1/auth/login`. O Swagger é servido em `/api`, fora desse prefixo.
+O versionamento por URI usa `v1`, com rotas como `/v1/auth/login`. O Swagger é servido em `/api`.
 
-## Consumidor de filas
+## Filas e contratos
 
-`npm run start:worker:dev` inicia outra aplicação NestJS, sem servidor HTTP. Ela consome:
+Os contratos em `packages/execution-contracts/` definem três filas:
 
-- `scheduling-queue`, para tentativas;
-- `preview-queue`, para execuções prévias;
-- `ai-report-queue`, para feedback refinado.
+| Fila | Direção | Finalidade |
+| --- | --- | --- |
+| `execution-commands` | Platform API → Runner | Tentativas e previews assíncronos. |
+| `execution-results` | Runner → Platform API | Eventos de início, conclusão e falha. |
+| `execution-requests` | Platform API ↔ Runner | Execução com espera pela resposta e cancelamento. |
 
-As concorrências configuradas são 5, 5 e 10, respectivamente.
+O Runner processa comandos e requisições com concorrência 5 em cada consumidor. Os eventos de ciclo de vida são `execution.started.v1`, `execution.completed.v1` e `execution.failed.v1`.
 
-## Workers
+## Assignment Runner e workers
 
-São definidos por um conjunto de containers efêmeros, cada um com uma imagem Docker específica, que são utilizados para a execução dos testes automatizados.
+Cada tipo de executor possui uma estratégia que define imagem, arquivos, comando de teste e serviços auxiliares. Um Kubernetes Job normalmente contém:
 
-Eles são criados pelo kubernetes Job, que é gerenciado pelo consumidor de filas. Cada worker é isolado, garantindo que a execução de um teste não afete outros processos.
-
-## Execução de código
-
-Cada tipo de worker possui uma estratégia que determina imagem, diretórios, testes e serviços auxiliares. O Kubernetes Job normalmente contém:
-
-1. um init container `worker-bootstrap`, que recebe a definição em Base64 e escreve arquivos;
+1. um init container de bootstrap, que recebe a definição e escreve os arquivos;
 2. um volume `emptyDir` compartilhado;
 3. o contêiner principal do executor;
-4. quando necessário, um contêiner PostgreSQL auxiliar.
+4. contêineres auxiliares, como PostgreSQL, quando necessários.
 
-O Job possui `restartPolicy: Never`, `backoffLimit: 0` e não monta automaticamente o token da service account. O processo aguarda o estado do Job e obtém os logs do contêiner principal.
+O Job usa `restartPolicy: Never` e `backoffLimit: 0`. O Runner acompanha seu estado, coleta os logs do contêiner principal, calcula o resultado e publica o evento correspondente no Redis.
 
-## Fluxo de dados
-
-Arquivos submetidos são persistidos em `Attempt.receivedWork` como JSONB. Templates e parâmetros vêm do PostgreSQL. O consumidor combina esses dados, cria o Job e interpreta sua saída. Nota, contagens e relatórios retornam ao PostgreSQL; atualizações de progresso podem ser emitidas por Socket.IO.
-
-Para os detalhes de cada transição, consulte [Fluxo de execução](execution-flow.md).
+Veja a sequência completa em [Fluxo de execução](execution-flow.md).
 

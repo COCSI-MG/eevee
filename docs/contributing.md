@@ -17,12 +17,12 @@ Antes de registrar uma contribuição, consulte as [issues existentes](https://g
 
 Ao relatar um problema, informe:
 
-- o que você estava tentando fazer;
-- o resultado esperado e o que aconteceu de fato;
-- os passos necessários para reproduzir o comportamento;
-- o navegador utilizado;
-- mensagens de erro relevantes;
-- uma captura de tela, quando ela ajudar a demonstrar o problema.
+- O que você estava tentando fazer;
+- O resultado esperado e o que aconteceu de fato;
+- Os passos necessários para reproduzir o comportamento;
+- O navegador utilizado;
+- Mensagens de erro relevantes;
+- Uma captura de tela, quando ela ajudar a demonstrar o problema.
 
 Ao sugerir uma melhoria, descreva primeiro o problema observado e quem seria beneficiado. Uma proposta não precisa incluir detalhes técnicos de implementação.
 
@@ -35,16 +35,15 @@ Contribuições com código seguem o fluxo de branches e Pull Requests do projet
 
 ### Preparar o ambiente
 
-Siga [Ambiente local e Docker](local-development.md) e inicie API, queue worker, frontend, PostgreSQL, Redis e Minikube. Para mudanças que não executam soluções, ainda é possível trabalhar em partes isoladas, mas o fluxo ponta a ponta depende de todos esses componentes.
+Siga [Ambiente local e Docker](local-development.md) e inicie Platform API, Assignment Runner, frontend, PostgreSQL, Redis e Minikube. Para mudanças que não executam soluções, ainda é possível trabalhar em partes isoladas, mas o fluxo ponta a ponta depende de todos esses componentes.
 
 ### Antes de alterar
 
 1. Identifique se a mudança pertence ao frontend, domínio, scheduling, estratégia de worker ou infraestrutura;
 2. Preserve os contratos `/v1` consumidos pelo frontend;
 3. Adicione migrations para alterações de entidades ou enums;
-4. Não dependa de `synchronize: true` para evolução de produção;
-5. Considere segurança e isolamento em qualquer mudança de executor;
-6. Crie uma branch específica para a alteração antes de iniciar o desenvolvimento.
+4. Considere segurança e isolamento em qualquer mudança de executor;
+5. Crie uma branch específica para a alteração antes de iniciar o desenvolvimento.
 
 ### Fluxo de branches
 
@@ -57,9 +56,9 @@ feature/nome-da-funcionalidade
         ↓
      develop
         ↓
-       main
-        ↓
     tag vX.Y.Z
+        ↓
+       main
 ```
 
 As principais branches são:
@@ -93,19 +92,9 @@ develop
    ↓
 Pull Request
    ↓
-main
-   ↓
 tag
-```
-
-Após a atualização da `main`, uma tag identifica a versão entregue:
-
-```bash
-git checkout main
-git pull
-
-git tag -a v1.2.0 -m "Release v1.2.0"
-git push origin v1.2.0
+   ↓
+main
 ```
 
 O fluxo completo pode ser representado como:
@@ -143,7 +132,7 @@ gitGraph
 
 Assim, alterações não são enviadas diretamente para `main`. O caminho esperado para uma funcionalidade é sempre:
 
-**`feature/*` → `develop` → `main` → `tag`**.
+**`feature/*` → `develop` → `tag` → `main`**.
 
 ### Pull Requests
 
@@ -172,12 +161,12 @@ refactor: separa estratégia de execução do worker
 
 A descrição deve explicar, quando aplicável:
 
-* qual problema está sendo resolvido;
-* qual solução foi implementada;
-* quais componentes foram alterados;
+* Qual problema está sendo resolvido;
+* Qual solução foi implementada;
+* Quais componentes foram alterados;
 * como validar a mudança;
-* se existem migrations ou alterações de infraestrutura;
-* se há algum impacto conhecido ou incompatibilidade.
+* Se existem migrations ou alterações de infraestrutura;
+* Se há algum impacto conhecido ou incompatibilidade.
 
 Uma PR deve permanecer pequena o suficiente para ser revisada de forma objetiva. Alterações independentes devem, sempre que possível, ser separadas em PRs diferentes.
 
@@ -205,10 +194,25 @@ Uma PR só deve ser integrada quando as validações automatizadas estiverem con
 
 ### Validação mínima
 
-Backend:
+Contratos compartilhados:
 
 ```bash
-cd scheduler-api
+cd packages/execution-contracts
+npm run build
+```
+
+Platform API:
+
+```bash
+cd platform-api
+npm run test
+npm run build
+```
+
+Assignment Runner:
+
+```bash
+cd assignment-runner
 npm run test
 npm run build
 ```
@@ -226,23 +230,23 @@ Mudanças relacionadas à execução de código também devem ser validadas no a
 
 Uma adição completa exige mudanças coordenadas:
 
-1. Adicionar o valor em `scheduler-api/src/worker/enum/worker-type.enum.ts`;
-2. Definir prefixo e imagem em `worker.constants.ts`;
-3. Implementar e registrar uma estratégia em `WorkerService`;
-4. Criar a imagem em `node-worker-images/`;
-5. Criar migration para os enums PostgreSQL de atividade e template;
-6. Espelhar o enum e as configurações no frontend;
+1. Adicionar o valor aos enums da Platform API e do Assignment Runner;
+2. Implementar e registrar a estratégia em `assignment-runner/`;
+3. Criar a imagem correspondente em `images/`;
+4. Criar migration para os enums PostgreSQL de atividade e template;
+5. Espelhar o enum e suas opções no frontend;
+6. Atualizar Makefile e variáveis de imagem do Helm/Runner, quando aplicável;
 7. Construir e carregar a imagem no cluster;
-8. Testar template preview, preview de estudante, submissão e parser de resultado;
+8. Testar template, preview, submissão, cancelamento e parser do resultado;
 9. Documentar arquivos obrigatórios, framework de testes, rede e credenciais.
 
 ### Alterar templates ou correção
 
 Mantenha compatibilidade entre `WorkerType`, caminhos montados e imports normalizados. Cubra, no mínimo:
 
-* zero testes e falha de preparação;
-* todos os testes aprovados;
-* erro do framework;
-* timeout e falha do Kubernetes;
-* dependência indisponível;
-* concorrência de tentativas.
+* Zero testes e falha de preparação;
+* Todos os testes aprovados;
+* Erro do framework;
+* Timeout e falha do Kubernetes;
+* Dependência indisponível;
+* Concorrência de tentativas.

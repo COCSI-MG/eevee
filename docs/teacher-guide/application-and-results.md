@@ -6,10 +6,10 @@ Depois que a atividade é salva, os estudantes da turma podem encontrá-la na p�
 
 Antes da aplicação, confirme:
 
-- matrículas da turma;
-- pelo menos um template compatível;
-- limite de tentativas adequado;
-- dependências e serviços externos, quando usados.
+- Matrículas da turma;
+- Pelo menos um template compatível;
+- Limite de tentativas adequado;
+- Dependências e serviços externos, quando usados.
 
 ## Durante a atividade
 
@@ -20,9 +20,6 @@ O workspace mostra um termo de uso, armazena arquivos no navegador e aplica meca
   ![Formulário de editar turma](../images/assingment-term-of-use.png){ .screenshot }
   <figcaption>Termo de uso por atividade</figcaption>
 </figure>
-
-!!! warning "Monitoramento experimental"
-    O monitoramento ocorre principalmente no frontend e pode produzir falsos positivos ou ser contornado. Caso um aluno tenha sido bloqueado de forma errada ou deseja dar uma segunda chance para ela basta consultar as suspensões dentro de atividades e remover-lo.
 
 ### Bloqueio
 
@@ -48,11 +45,11 @@ Ao escolher **Executar** o registro é processado e pode ser acompanhado ou canc
 
 Ao escolher **Enviar para Correção**, o sistema:
 
-1. verifica a atividade, a matrícula e o limite de tentativas;
-2. persiste os arquivos enviados;
-3. coloca a tentativa na fila;
-4. executa os testes;
-5. persiste pontuação, contagens e relatório.
+1. Verifica a atividade, a matrícula e o limite de tentativas;
+2. Persiste os arquivos enviados;
+3. Coloca a tentativa na fila;
+4. Executa os testes;
+5. Persiste pontuação, contagens e relatório.
 
 O consumidor da fila é um processo separado da API. Se ele não estiver em execução, a submissão é aceita pela API, mas permanece pendente.
 
@@ -79,10 +76,10 @@ O relatório bruto contém a saída tratada do executor. Erros de infraestrutura
 
 Em **Tentativas**, o administrador seleciona uma atividade, filtra por estudante e expande cada registro para ver:
 
-- estado, nota e contagens;
-- relatório bruto;
-- arquivos recebidos;
-- dados da tentativa.
+- Estado, nota e contagens;
+- Relatório bruto;
+- Arquivos recebidos;
+- Dados da tentativa.
 
 A ação administrativa de reexecução usa os arquivos armazenados e cria **uma nova tentativa** para o estudante. Ela não altera a tentativa anterior e não aplica o limite máximo ao administrador.
 

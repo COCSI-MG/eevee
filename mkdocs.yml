@@ -70,10 +70,12 @@ nav:
   - Início:
       - Início: index.md
       - Primeiros passos: getting-started.md
+      - Conta e acesso: account-access.md
       - Como funciona: how-it-works.md
   - Guia do aluno:
       - Visão geral: student-guide/overview.md
       - Turmas e atividades: student-guide/classes-and-assignments.md
+      - Provas: student-guide/exams.md
       - Workspace: student-guide/workspace.md
       - Execução e resultados: student-guide/submissions-and-results.md
       - Entrevista: student-guide/interview.md
@@ -82,6 +84,8 @@ nav:
       - Turmas e matrículas: teacher-guide/classes-and-users.md
       - Templates e testes: teacher-guide/templates-and-tests.md
       - Atividades: teacher-guide/assignments.md
+      - Gabaritos: teacher-guide/answer-keys.md
+      - Provas e notas: teacher-guide/exams.md
       - Aplicar atividades e acompanhar resultados: teacher-guide/application-and-results.md
       - Testar como estudante: teacher-guide/application-testing.md
   - Desenvolvimento:
@@ -94,7 +98,5 @@ nav:
       - Infraestrutura: infrastructure.md
       - Testes do projeto: testing.md
       - Como contribuir: contributing.md
-  - Publicações:
+  - Pesquisa:
       - Visão geral: research/overview.md
-      - Publicações: research/publications.md
-      - Como citar: research/citations.md
