@@ -133,7 +133,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 )}
 
                 {lastAttemptStatus === "completed" && (
-                  <Badge className="bg-warning text-warning-foreground animate-pulse">
+                  <Badge className="bg-warning text-warning-foreground animate-pulse text-[10px] px-2 py-0.5">
                     Resultados disponíveis
                   </Badge>
                 )}
@@ -141,11 +141,12 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 {lastAttemptStatus === "completed" &&
                   lastAttempt?.score != null && (
                     <Badge
-                      className={
+                      className={cn(
+                        "text-[10px] px-2 py-0.5",
                         lastAttempt.isAcceptable
                           ? "bg-success text-success-foreground"
-                          : "bg-destructive/10 text-destructive"
-                      }
+                          : "bg-destructive/10 text-destructive",
+                      )}
                     >
                       {formatScorePercentage(lastAttempt.score)} de acerto
                     </Badge>
