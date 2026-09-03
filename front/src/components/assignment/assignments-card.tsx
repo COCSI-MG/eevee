@@ -21,6 +21,7 @@ import { Route } from "@/app/routes";
 import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { formatScorePercentage } from "@/utils/score";
 
 interface AssignmentsCardProps {
   data: Assignment[];
@@ -66,11 +67,6 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     return [...assignment.assignmentAttempts].sort(
       (a, b) => b.attempt - a.attempt,
     )[0];
-  };
-
-  const formatScorePercentage = (score: number) => {
-    const normalized = score <= 1 ? score * 100 : score;
-    return `${Math.round(normalized)}%`;
   };
 
   return (

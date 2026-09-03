@@ -19,6 +19,7 @@ import {
 import { ScrollArea } from "../ui/scroll-area";
 import { useAttemptFeedback } from "@/hooks/use-attempt-feedback";
 import { AssignmentAttempt } from "@/app/interface/scheduler-api/assignment-attempt";
+import { formatScorePercentage } from "@/utils/score";
 
 function AttemptFeedbackDialog({ attempt }: { attempt: AssignmentAttempt }) {
   const { isOpen, handleOpenChange, feedback, isGenerating } =
@@ -154,7 +155,7 @@ export default function AttemptsCard() {
                       </p>
                     )}
                     <p className="text-sm text-foreground">
-                      Resultado: {attempt.score}
+                      Resultado: {formatScorePercentage(attempt.score)}
                     </p>
                     <p className="text-sm text-foreground">
                       Passou: {attempt.passes}
