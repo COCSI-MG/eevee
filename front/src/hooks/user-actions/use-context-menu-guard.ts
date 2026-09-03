@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 
-const BLOCKED_POINTER_EVENTS = [
-  "contextmenu",
+const BLOCKED_DRAG_AND_SELECT_EVENTS = [
   "dragstart",
   "dragover",
   "drop",
@@ -30,13 +29,31 @@ export function useContextMenuGuard({ enabled }: UseContextMenuGuardOptions) {
       return false;
     };
 
-    BLOCKED_POINTER_EVENTS.forEach((eventName) => {
+    const suppressNativeContextMenu = (event: Event) => {
+      event.preventDefault();
+    };
+
+    window.addEventListener("contextmenu", suppressNativeContextMenu, true);
+    document.addEventListener("contextmenu", suppressNativeContextMenu, true);
+
+    BLOCKED_DRAG_AND_SELECT_EVENTS.forEach((eventName) => {
       window.addEventListener(eventName, preventPointerAction, true);
       document.addEventListener(eventName, preventPointerAction, true);
     });
 
     return () => {
-      BLOCKED_POINTER_EVENTS.forEach((eventName) => {
+      window.removeEventListener(
+        "contextmenu",
+        suppressNativeContextMenu,
+        true,
+      );
+      document.removeEventListener(
+        "contextmenu",
+        suppressNativeContextMenu,
+        true,
+      );
+
+      BLOCKED_DRAG_AND_SELECT_EVENTS.forEach((eventName) => {
         window.removeEventListener(eventName, preventPointerAction, true);
         document.removeEventListener(eventName, preventPointerAction, true);
       });
