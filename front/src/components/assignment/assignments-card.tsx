@@ -59,20 +59,25 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     );
   };
 
-  const getLastAttemptStatus = (assignment: Assignment) => {
+  const getLastAttempt = (assignment: Assignment) => {
     if (!assignment.assignmentAttempts?.length) {
       return null;
     }
-    const lastAttempt = [...assignment.assignmentAttempts].sort(
+    return [...assignment.assignmentAttempts].sort(
       (a, b) => b.attempt - a.attempt,
     )[0];
-    return lastAttempt?.status;
+  };
+
+  const formatScorePercentage = (score: number) => {
+    const normalized = score <= 1 ? score * 100 : score;
+    return `${Math.round(normalized)}%`;
   };
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {data.map((assignment) => {
-        const lastAttemptStatus = getLastAttemptStatus(assignment);
+        const lastAttempt = getLastAttempt(assignment);
+        const lastAttemptStatus = lastAttempt?.status;
         const canAccess = canAccessAssignment(assignment);
 
         const isProcessing = lastAttemptStatus
@@ -136,6 +141,13 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     Resultados disponíveis
                   </Badge>
                 )}
+
+                {lastAttemptStatus === "completed" &&
+                  lastAttempt?.score != null && (
+                    <Badge className="bg-success text-success-foreground">
+                      {formatScorePercentage(lastAttempt.score)} de acerto
+                    </Badge>
+                  )}
               </CardTitle>
             </CardHeader>
             <CardContent>
