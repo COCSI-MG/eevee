@@ -3,6 +3,7 @@
 import React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MarkdownContent } from "@/components/shared/markdown-content";
 
 interface WorkspaceQuestionPanelProps {
   title: string;
@@ -47,9 +48,9 @@ export default function WorkspaceQuestionPanel({
               <h4 className="text-xs font-semibold text-foreground mb-2 uppercase tracking-wide">
                 {title}
               </h4>
-              <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                {description || "Nenhuma descrição fornecida."}
-              </div>
+              <MarkdownContent
+                content={description || "Nenhuma descrição fornecida."}
+              />
             </div>
           </div>
         </div>
