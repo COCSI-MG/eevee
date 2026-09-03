@@ -28,6 +28,7 @@ interface AssignmentsCardProps {
 }
 
 const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
+const BADGE_COMPACT_CLASS = "text-[10px] px-2 py-0.5";
 
 export default function AssignmentsCard({ data }: AssignmentsCardProps) {
   const { user } = useAuthContext();
@@ -102,55 +103,82 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
             )}
           >
             <CardHeader>
-              <CardTitle className="flex items-center justify-between space-x-2 text-foreground">
-                {assignment.title}
+              <CardTitle className="flex items-start justify-between gap-2 text-foreground">
+                <span className="min-w-0 flex-1 break-words">
+                  {assignment.title}
+                </span>
 
-                {assignment.score != null && (
-                  <Badge className="bg-primary text-primary-foreground">
-                    Vale {assignment.score} pts
-                  </Badge>
-                )}
-
-                {!canAccess && (
-                  <Badge
-                    variant={"destructive"}
-                    className="bg-destructive/10 text-destructive"
-                  >
-                    Tarefa suspensa por quebra de conduta
-                  </Badge>
-                )}
-
-                {lastAttemptStatus === "failed" && (
-                  <Badge className="bg-destructive/10 text-destructive animate-pulse">
-                    Tentativa com falha
-                  </Badge>
-                )}
-
-                {isProcessing && (
-                  <Badge className="bg-success text-success-foreground animate-pulse">
-                    Em execução
-                  </Badge>
-                )}
-
-                {lastAttemptStatus === "completed" && (
-                  <Badge className="bg-warning text-warning-foreground animate-pulse text-[10px] px-2 py-0.5">
-                    Resultados disponíveis
-                  </Badge>
-                )}
-
-                {lastAttemptStatus === "completed" &&
-                  lastAttempt?.score != null && (
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                  {assignment.score != null && (
                     <Badge
                       className={cn(
-                        "text-[10px] px-2 py-0.5",
-                        lastAttempt.isAcceptable
-                          ? "bg-success text-success-foreground"
-                          : "bg-destructive/10 text-destructive",
+                        BADGE_COMPACT_CLASS,
+                        "bg-primary text-primary-foreground",
                       )}
                     >
-                      {formatScorePercentage(lastAttempt.score)}
+                      Vale {assignment.score} pts
                     </Badge>
                   )}
+
+                  {!canAccess && (
+                    <Badge
+                      variant={"destructive"}
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-destructive/10 text-destructive",
+                      )}
+                    >
+                      Tarefa suspensa por quebra de conduta
+                    </Badge>
+                  )}
+
+                  {lastAttemptStatus === "failed" && (
+                    <Badge
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-destructive/10 text-destructive animate-pulse",
+                      )}
+                    >
+                      Tentativa com falha
+                    </Badge>
+                  )}
+
+                  {isProcessing && (
+                    <Badge
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-success text-success-foreground animate-pulse",
+                      )}
+                    >
+                      Em execução
+                    </Badge>
+                  )}
+
+                  {lastAttemptStatus === "completed" && (
+                    <Badge
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-warning text-warning-foreground animate-pulse",
+                      )}
+                    >
+                      Resultados disponíveis
+                    </Badge>
+                  )}
+
+                  {lastAttemptStatus === "completed" &&
+                    lastAttempt?.score != null && (
+                      <Badge
+                        className={cn(
+                          BADGE_COMPACT_CLASS,
+                          lastAttempt.isAcceptable
+                            ? "bg-success text-success-foreground"
+                            : "bg-destructive/10 text-destructive",
+                        )}
+                      >
+                        {formatScorePercentage(lastAttempt.score)}
+                      </Badge>
+                    )}
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
