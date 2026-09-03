@@ -148,7 +148,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                           : "bg-destructive/10 text-destructive",
                       )}
                     >
-                      {formatScorePercentage(lastAttempt.score)} de acerto
+                      {formatScorePercentage(lastAttempt.score)}
                     </Badge>
                   )}
               </CardTitle>
