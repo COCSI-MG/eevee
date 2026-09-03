@@ -155,7 +155,17 @@ export default function AttemptsCard() {
                       </p>
                     )}
                     <p className="text-sm text-foreground">
-                      Resultado: {formatScorePercentage(attempt.score)}
+                      Resultado:{" "}
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          attempt.isAcceptable
+                            ? "text-success"
+                            : "text-destructive",
+                        )}
+                      >
+                        {formatScorePercentage(attempt.score)}
+                      </span>
                     </p>
                     <p className="text-sm text-foreground">
                       Passou: {attempt.passes}

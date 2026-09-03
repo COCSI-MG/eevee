@@ -140,7 +140,13 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
 
                 {lastAttemptStatus === "completed" &&
                   lastAttempt?.score != null && (
-                    <Badge className="bg-success text-success-foreground">
+                    <Badge
+                      className={
+                        lastAttempt.isAcceptable
+                          ? "bg-success text-success-foreground"
+                          : "bg-destructive/10 text-destructive"
+                      }
+                    >
                       {formatScorePercentage(lastAttempt.score)} de acerto
                     </Badge>
                   )}
