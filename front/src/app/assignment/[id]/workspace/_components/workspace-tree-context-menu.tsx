@@ -30,7 +30,7 @@ export function WorkspaceTreeContextMenu({
       {contextMenu.node.isFile && onOpenInSecondary && (
         <button
           type="button"
-          className="block w-full px-3 py-1.5 text-left text-sm text-primary hover:bg-primary/20"
+          className="block w-full px-3 py-1.5 text-left text-sm text-foreground hover:bg-primary/20"
           onClick={() => {
             onOpenInSecondary(contextMenu.node);
             onClose();

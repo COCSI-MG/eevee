@@ -97,10 +97,12 @@ export default function WorkspaceExplorer({
 
     document.addEventListener("click", handleClose);
     document.addEventListener("keydown", handleClose);
+    document.addEventListener("contextmenu", handleClose, true);
 
     return () => {
       document.removeEventListener("click", handleClose);
       document.removeEventListener("keydown", handleClose);
+      document.removeEventListener("contextmenu", handleClose, true);
     };
   }, []);
 
