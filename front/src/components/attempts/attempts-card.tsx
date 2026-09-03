@@ -108,9 +108,6 @@ export default function AttemptsCard() {
                 className={cn(
                   "overflow-hidden hover:shadow-md transition-shadow",
                   {
-                    "opacity-50": attempt.status !== "running",
-                  },
-                  {
                     "border border-destructive text-foreground":
                       attempt.status === "failed" || !attempt.isAcceptable,
                   },
