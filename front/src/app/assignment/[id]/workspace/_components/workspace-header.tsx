@@ -29,9 +29,10 @@ import {
   DialogTrigger,
 } from "../../../../../components/ui/dialog";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { formatDateTime } from "@/utils/date";
 
 interface WorkspaceHeaderProps {
-  assignment: Pick<Assignment, "title" | "description">;
+  assignment: Pick<Assignment, "title" | "description" | "startDate" | "dueDate">;
   onRunClick: () => void;
   onSubmitClick: () => void;
   onSaveClick: () => void;
@@ -41,6 +42,7 @@ interface WorkspaceHeaderProps {
   isSaving?: boolean;
   isClearing?: boolean;
   canClear?: boolean;
+  isSubmissionClosed?: boolean;
 }
 
 const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
@@ -54,6 +56,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   isSaving = false,
   isClearing = false,
   canClear = true,
+  isSubmissionClosed = false,
 }) => {
   const { back } = useRouter();
   const [isClearDialogOpen, setIsClearDialogOpen] = React.useState(false);
@@ -99,6 +102,16 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
                 <p className="text-foreground leading-relaxed whitespace-pre-wrap text-base space-y-3">
                   {assignment?.description || "Nenhuma descrição fornecida."}
                 </p>
+                {(assignment.startDate || assignment.dueDate) && (
+                  <div className="mt-4 space-y-1 text-sm text-slate-400">
+                    {assignment.startDate && (
+                      <p>Início: {formatDateTime(assignment.startDate)}</p>
+                    )}
+                    {assignment.dueDate && (
+                      <p>Entrega: {formatDateTime(assignment.dueDate)}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </DialogContent>
@@ -176,14 +189,18 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             size={"sm"}
             className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={onSubmitClick}
-            disabled={isActionDisabled}
+            disabled={isActionDisabled || isSubmissionClosed}
           >
             {isSubmittingCorrection ? (
               <Loader2 className="w-4 h-4 mr-1 animate-spin" />
             ) : (
               <SendHorizonal className="w-4 h-4 mr-1" />
             )}
-            {isSubmittingCorrection ? "Enviando..." : "Enviar para Correção"}
+            {isSubmittingCorrection
+              ? "Enviando..."
+              : isSubmissionClosed
+                ? "Prazo encerrado"
+                : "Enviar para Correção"}
           </Button>
 
           <Button

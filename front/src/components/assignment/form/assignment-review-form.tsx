@@ -9,6 +9,7 @@ import {
   Database,
   Layers,
 } from "lucide-react";
+import { formatDateTime } from "@/utils/date";
 
 interface AssignmentFormReviewProps {
   values: Partial<Assignment>;
@@ -65,6 +66,20 @@ const AssigmentReview = ({
               Máximo de Tentativas
             </p>
             <p className="text-foreground">{values.maxAttempts}</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="text-xs text-slate-400 uppercase tracking-wide">
+              Data de início
+            </p>
+            <p className="text-white">{formatDateTime(values.startDate)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-slate-400 uppercase tracking-wide">
+              Data de entrega
+            </p>
+            <p className="text-white">{formatDateTime(values.dueDate)}</p>
           </div>
         </div>
       </div>

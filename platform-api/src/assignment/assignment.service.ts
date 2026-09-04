@@ -5,6 +5,7 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { AssignmentTemplateDto, CreateAssignmentDto } from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
@@ -253,6 +254,25 @@ export class AssignmentService {
     return undefined;
   }
 
+  private parseOptionalDate(
+    value: string | null | undefined,
+  ): Date | null | undefined {
+    if (value === undefined) return undefined;
+
+    if (value === null) return null;
+
+    return new Date(value);
+  }
+
+  private assertValidDateRange(
+    startDate: Date | null | undefined,
+    dueDate: Date | null | undefined,
+  ): void {
+    if (startDate && dueDate && startDate > dueDate) {
+      throw new BadRequestException('startDate must not be after dueDate');
+    }
+  }
+
   private async attachBoilerplate(assignment: Assignment) {
     const boilerplateContent =
       await this.resolveStoredBoilerplateContent(assignment);
@@ -290,8 +310,14 @@ export class AssignmentService {
       boilerplateContent,
       boilerplate,
       validationScript,
+      startDate: startDateValue,
+      dueDate: dueDateValue,
       ...assignmentData
     } = createAssignmentDto;
+
+    const startDate = this.parseOptionalDate(startDateValue) ?? null;
+    const dueDate = this.parseOptionalDate(dueDateValue) ?? null;
+    this.assertValidDateRange(startDate, dueDate);
 
     const classExists = await this.classservice.findOne(
       createAssignmentDto.classId,
@@ -316,6 +342,8 @@ export class AssignmentService {
       title: assignmentData.title,
       description: assignmentData.description,
       maxAttempts: assignmentData.maxAttempts,
+      startDate,
+      dueDate,
       workerType: assignmentData.workerType,
       initSqlScript: assignmentData.initSqlScript,
       boilerplateContent: resolvedBoilerplateContent,
@@ -359,6 +387,7 @@ export class AssignmentService {
       return this.findAll();
     }
 
+    const now = new Date();
     const query = this.assignmentRepository
       .createQueryBuilder('assignment')
       .innerJoin('assignment.class', 'class')
@@ -375,6 +404,21 @@ export class AssignmentService {
         { userId: user.userId },
       )
       .leftJoinAndSelect('assignment.suspensions', 'suspensions');
+
+    query
+      .leftJoinAndSelect(
+        'assignment.examAssignment',
+        'visibilityExamAssignment'
+      )
+      .leftJoinAndSelect('visibilityExamAssignment.exam', 'visibilityExam')
+      .andWhere(
+        '(assignment.startDate IS NULL OR assignment.startDate <= :assignmentNow)',
+        { assignmentNow: now }
+      )
+      .andWhere(
+        '(visibilityExamAssignment.id IS NULL OR (visibilityExam.startDate IS NOT NULL AND visibilityExam.startDate <= :examNow))',
+        { examNow: now }
+      );
 
     const assignments = await query.getMany();
 
@@ -476,6 +520,13 @@ export class AssignmentService {
       .where('assignment.classId = :classId', { classId })
       .andWhere('examAssignment.id IS NULL');
 
+    if (!user.isAdmin) {
+      query.andWhere(
+        '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
+        { now: new Date() }
+      );
+    }
+
     const assignments = await query.getMany();
 
     return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
@@ -498,11 +549,12 @@ export class AssignmentService {
 
   async findOne(id: number) {
     const user = this.requestContextService.getUser();
+    const now = new Date();
 
-    const query = this.createAssignmentDetailsQuery(id).orderBy(
-      'assignmentAttempts.createdAt',
-      'DESC',
-    );
+    const query = this.createAssignmentDetailsQuery(id)
+      .leftJoinAndSelect('assignment.examAssignment', 'detailsExamAssignment')
+      .leftJoinAndSelect('detailsExamAssignment.exam', 'detailsExam')
+      .orderBy('assignmentAttempts.createdAt', 'DESC');
 
     if (user.isAdmin) {
       query
@@ -524,6 +576,14 @@ export class AssignmentService {
           'userClasses',
           'userClasses.userId = :userId',
           { userId: user.userId },
+        )
+        .andWhere(
+          '(assignment.startDate IS NULL OR assignment.startDate <= :assignmentNow)',
+          { assignmentNow: now }
+        )
+        .andWhere(
+          '(detailsExamAssignment.id IS NULL OR (detailsExam.startDate IS NOT NULL AND detailsExam.startDate <= :examNow))',
+          { examNow: now }
         );
     }
 
@@ -545,13 +605,47 @@ export class AssignmentService {
     return await this.attachBoilerplate(assignment);
   }
 
+  async assertSubmissionOpen(assignmentId: number): Promise<void> {
+    const user = this.requestContextService.getUser();
+    if (user?.isAdmin) return;
+
+    const window = await this.assignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoin('assignment.examAssignment', 'submissionExamAssignment')
+      .leftJoin('submissionExamAssignment.exam', 'submissionExam')
+      .select('assignment.dueDate', 'assignmentDueDate')
+      .addSelect('submissionExam.dueDate', 'examDueDate')
+      .where('assignment.id = :assignmentId', { assignmentId })
+      .getRawOne<{
+        assignmentDueDate: Date | string | null;
+        examDueDate: Date | string | null;
+      }>();
+
+    if (!window) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    const now = new Date();
+    const deadlines = [window.assignmentDueDate, window.examDueDate]
+      .filter((value): value is Date | string => value != null)
+      .map((value) => new Date(value));
+
+    if (deadlines.some((deadline) => now > deadline)) {
+      throw new UnprocessableEntityException(
+        'Prazo de entrega da tarefa encerrado.',
+      );
+    }
+  }
+
   async update(id: number, updateAssignmentDto: UpdateAssignmentDto) {
     const {
       templates,
       boilerplateContent,
       boilerplate,
       validationScript,
-      ...dataToUpdate
+      startDate: startDateValue,
+      dueDate: dueDateValue,
+      ...assignmentDataToUpdate
     } = updateAssignmentDto;
 
     const assignment = await this.assignmentRepository.findOne({
@@ -560,6 +654,24 @@ export class AssignmentService {
 
     if (!assignment) {
       throw new NotFoundException('Tarefa não encontrada');
+    }
+
+    const parsedStartDate = this.parseOptionalDate(startDateValue);
+    const parsedDueDate = this.parseOptionalDate(dueDateValue);
+
+    const effectiveStartDate = parsedStartDate !== undefined ? parsedStartDate : assignment.startDate;
+    const effectiveDueDate   = parsedDueDate   !== undefined ? parsedDueDate : assignment.dueDate;
+
+    this.assertValidDateRange(effectiveStartDate, effectiveDueDate);
+
+    const dataToUpdate: Partial<Assignment> = {
+      ...assignmentDataToUpdate,
+    };
+    if (parsedStartDate !== undefined) {
+      dataToUpdate.startDate = parsedStartDate;
+    }
+    if (parsedDueDate !== undefined) {
+      dataToUpdate.dueDate = parsedDueDate;
     }
 
     const resolvedBoilerplateContent = this.resolvePayloadBoilerplateContent({
@@ -584,14 +696,16 @@ export class AssignmentService {
       updateAssignmentDto.templates.length > 0
     ) {
       const effectiveWorkerType =
-        (dataToUpdate as any).workerType ?? assignment.workerType;
+        dataToUpdate.workerType ?? assignment.workerType;
 
       await this.assertTemplatesCompatibleWithWorkerType({
         templates: updateAssignmentDto.templates,
         workerType: effectiveWorkerType,
       });
 
-      const weights = this.normalizeTemplateWeights(updateAssignmentDto.templates);
+      const weights = this.normalizeTemplateWeights(
+        updateAssignmentDto.templates,
+      );
 
       await this.assignmentTemplateRepository.delete({ assignmentId: id });
       await this.assignmentParamsRepository.delete({ assignmentId: id });

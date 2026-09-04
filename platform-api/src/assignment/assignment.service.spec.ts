@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -559,6 +561,7 @@ describe('AssignmentService', () => {
     } as Assignment;
     const query = {
       leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
       innerJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
@@ -828,6 +831,129 @@ describe('AssignmentService', () => {
         { assignmentId: 55, templateId: 2, weight: 33.33 },
         { assignmentId: 55, templateId: 3, weight: 33.34 },
       ]);
+    });
+  });
+
+  describe('assignment dates', () => {
+    it('creates an assignment with parsed dates', async () => {
+      const {
+        service,
+        classService,
+        assignmentRepository,
+        requestContextService,
+      } = await setup();
+      const startDate = new Date('2026-08-24T12:00:00.000Z');
+      const dueDate = new Date('2026-08-25T12:00:00.000Z');
+
+      classService.findOne.mockResolvedValue({ id: 1 });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: true,
+      });
+      assignmentRepository.save.mockImplementation(async (value) => ({
+        id: 90,
+        ...value,
+      }));
+
+      await service.create({
+        classId: 1,
+        title: 'Timed assignment',
+        description: 'Description',
+        maxAttempts: 3,
+        workerType: WorkerType.NODE_DEFAULT,
+        validationScript: undefined as any,
+        templates: [],
+        startDate: startDate.toISOString(),
+        dueDate: dueDate.toISOString(),
+      });
+
+      expect(assignmentRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ startDate, dueDate }),
+      );
+    });
+
+    it('rejects a start date after the due date', async () => {
+      const { service, assignmentRepository } = await setup();
+
+      await expect(
+        service.create({
+          classId: 1,
+          title: 'Invalid assignment',
+          description: 'Description',
+          maxAttempts: 3,
+          workerType: WorkerType.NODE_DEFAULT,
+          validationScript: undefined as any,
+          templates: [],
+          startDate: '2026-08-26T12:00:00.000Z',
+          dueDate: '2026-08-25T12:00:00.000Z',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(assignmentRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('validates partial updates against the persisted date', async () => {
+      const { service, assignmentRepository } = await setup();
+      assignmentRepository.findOne.mockResolvedValue({
+        id: 55,
+        workerType: WorkerType.NODE_DEFAULT,
+        dueDate: new Date('2026-08-25T12:00:00.000Z'),
+      });
+
+      await expect(
+        service.update(55, {
+          startDate: '2026-08-26T12:00:00.000Z',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+
+      expect(assignmentRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('clears a date when null is supplied', async () => {
+      const { service, assignmentRepository } = await setup();
+      assignmentRepository.findOne
+        .mockResolvedValueOnce({
+          id: 55,
+          workerType: WorkerType.NODE_DEFAULT,
+          startDate: new Date('2026-08-24T12:00:00.000Z'),
+          dueDate: new Date('2026-08-25T12:00:00.000Z'),
+        })
+        .mockResolvedValueOnce({
+          id: 55,
+          startDate: null,
+          dueDate: new Date('2026-08-25T12:00:00.000Z'),
+          boilerplateContent: '',
+        });
+
+      await service.update(55, { startDate: null });
+
+      expect(assignmentRepository.update).toHaveBeenCalledWith(55, {
+        startDate: null,
+      });
+    });
+
+    it('blocks submission when either the task or exam deadline passed', async () => {
+      const { service, assignmentRepository, requestContextService } =
+        await setup();
+      const query = {
+        leftJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getRawOne: jest.fn().mockResolvedValue({
+          assignmentDueDate: '2099-01-01T00:00:00.000Z',
+          examDueDate: '2020-01-01T00:00:00.000Z',
+        }),
+      };
+      assignmentRepository.createQueryBuilder.mockReturnValue(query);
+      requestContextService.getUser.mockReturnValue({
+        userId: 10,
+        isAdmin: false,
+      });
+
+      await expect(service.assertSubmissionOpen(42)).rejects.toBeInstanceOf(
+        UnprocessableEntityException,
+      );
     });
   });
 });

@@ -9,17 +9,26 @@ import { WorkspaceSuspension } from "@/app/assignment/[id]/workspace/_components
 import { useWorkspaceCorrection } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-correction";
 import { useWorkspacePreview } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-preview";
 import { useWorkspaceSaveFile } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-save-file";
+import { Route } from "@/app/routes";
 import { useFetchAssignment } from "@/hooks/use-assignments";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { toast } from "@/hooks/use-toast";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import QueryErrorState from "@/components/shared/query-error-state";
+import { isAxiosError } from "axios";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { earliestDate, isDeadlinePassed } from "@/utils/date";
 
 export default function Page() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { user } = useAuthContext();
   const userId = user?.userId;
+  const assignmentId = Number(id);
+  const isInvalidAssignmentId =
+    !Number.isInteger(assignmentId) || assignmentId <= 0;
+  const handledUnavailableAssignmentRef = useRef<string | null>(null);
   // Estado para controlar se o usuário aceitou o acordo
   const [hasAcceptedAgreement, setHasAcceptedAgreement] =
     useState<boolean>(false);
@@ -40,8 +49,44 @@ export default function Page() {
   const {
     data: assignmentData,
     isLoading: isLoadingAssignment,
+    isFetching: isFetchingAssignment,
+    isError: isAssignmentError,
+    error: assignmentError,
     refetch: refetchAssignment,
-  } = useFetchAssignment(Number(id));
+  } = useFetchAssignment(assignmentId);
+
+  const isAssignmentNotFound = isAssignmentError && isAxiosError(assignmentError) && (assignmentError.response?.status ?? assignmentError.status) === 404;
+
+  const isAssignmentUnavailable = isInvalidAssignmentId || isAssignmentNotFound;
+
+  useEffect(() => {
+    if (
+      !userId ||
+      !isAssignmentUnavailable ||
+      handledUnavailableAssignmentRef.current === id
+    ) {
+      return;
+    }
+
+    handledUnavailableAssignmentRef.current = id;
+
+    toast({
+      title: "Atividade indisponível",
+      description:
+        "A atividade não existe ou não está disponível para o seu usuário.",
+      variant: "destructive",
+    });
+
+
+    setTimeout(() => {
+      if (window.history.length > 1) {
+        router.back();
+        return;
+      }
+
+      router.replace(user?.isAdmin ? Route.AdminAssignments : `/${Route.Classes}`);
+    }, 2000)
+  }, [id, isAssignmentUnavailable, router, user?.isAdmin, userId]);
 
   const handleClearWorkspace = async () => {
     if (!resetWorkspaceAction || !assignmentData) {
@@ -129,10 +174,36 @@ export default function Page() {
     return <WorkspaceLoading />;
   }
 
+  if (isAssignmentUnavailable) {
+    return <WorkspaceLoading />;
+  }
+
+  if (isAssignmentError && !assignmentData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 p-6">
+        <QueryErrorState
+          title="Não foi possível carregar a atividade"
+          description="Ocorreu um erro ao buscar os dados da atividade. Tente novamente."
+          onRetry={() => void refetchAssignment()}
+          isRetrying={isFetchingAssignment}
+          className="w-full max-w-xl"
+        />
+      </div>
+    );
+  }
+
   // Suspension check
   if (assignmentData && isUserSuspended(assignmentData)) {
     return <WorkspaceSuspension />;
   }
+
+  const effectiveDueDate = earliestDate(assignmentData?.dueDate, assignmentData?.examAssignment?.exam?.dueDate);
+
+  const isSubmissionClosed = Boolean(
+    assignmentData &&
+    !user?.isAdmin &&
+    isDeadlinePassed(effectiveDueDate),
+  );
 
   // Agreement check - APENAS para não-admins que ainda não aceitaram
   if (user && !user.isAdmin && assignmentData && !hasAcceptedAgreement) {
@@ -152,6 +223,8 @@ export default function Page() {
         assignment={{
           title: assignmentData ? assignmentData.title : "",
           description: assignmentData ? assignmentData.description : "",
+          startDate: assignmentData?.startDate,
+          dueDate: effectiveDueDate,
         }}
         onRunClick={() => runPreview()}
         onSubmitClick={() => submitAssignment()}
@@ -162,6 +235,7 @@ export default function Page() {
         isSaving={isSaving}
         isClearing={isResettingWorkspace || isRefreshingAssignmentForClear}
         canClear={Boolean(resetWorkspaceAction)}
+        isSubmissionClosed={isSubmissionClosed}
       />
 
       <WorkspaceRunPreviewDialog

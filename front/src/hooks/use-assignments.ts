@@ -1,6 +1,7 @@
 import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { useQuery } from '@tanstack/react-query';
 import { Assignment } from '@/app/interface/scheduler-api/assignment';
+import { isAxiosError } from 'axios';
 
 const PROCESSING_ATTEMPT_STATUSES = new Set(['pending', 'enqueded', 'running']);
 
@@ -24,7 +25,12 @@ const useFetchAssignment = (id: number) => {
   return useQuery({
     queryKey: ['assignment', id],
     queryFn: () => AssignmentService.GetAssignmentById(id),
-    enabled: Number.isFinite(id) && id > 0,
+    enabled: Number.isInteger(id) && id > 0,
+    retry: (failureCount, error) =>
+      !(
+        isAxiosError(error) &&
+        (error.response?.status ?? error.status) === 404
+      ) && failureCount < 3,
     refetchOnWindowFocus: false,
     refetchInterval: (query) =>
       hasProcessingAttempt(query.state.data) ? 5000 : false,
