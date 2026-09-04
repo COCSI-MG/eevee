@@ -76,10 +76,21 @@ export interface Assignment {
   interviewConfig?: AssignmentInterviewConfig;
   answerKeyId?: number | null;
   answerKeyVisible: boolean;
+  allowProjectImport?: boolean;
   score?: number;
   examAssignment?: {
     exam?: Pick<Exam, "startDate" | "dueDate">;
   };
+}
+
+export interface AssignmentImportSource {
+  id: number;
+  title: string;
+  submittedAt: string;
+}
+
+export interface AssignmentImportProject extends AssignmentImportSource {
+  files: Record<string, string>;
 }
 
 export interface CreateAssignmentRequest {
@@ -104,6 +115,7 @@ export interface CreateAssignmentRequest {
   workerType: string;
   workerDefinition: WorkerDefinition;
   answerKeyVisible?: boolean;
+  allowProjectImport?: boolean;
 }
 
 export interface UpdateAssignmentRequest {
@@ -129,4 +141,5 @@ export interface UpdateAssignmentRequest {
     weight?: number;
   }[];
   answerKeyVisible?: boolean;
+  allowProjectImport?: boolean;
 }

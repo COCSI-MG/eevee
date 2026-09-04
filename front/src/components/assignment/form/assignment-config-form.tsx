@@ -189,18 +189,29 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             </div>
           </div>
 
-          <div className="flex gap-16" >
-            <FormikToggle
-              name="answerKeyVisible"
-              label={ASSIGNMENT_FORM_TEXT.CONFIG.ANSWER_KEY_VISIBLE_LABEL}
-              tooltip={ASSIGNMENT_FORM_TEXT.CONFIG.ANSWER_KEY_VISIBLE_TOOLTIP}
-            />
+          <div className="flex flex-col gap-8" >
+            <div className="flex gap-16">
+              <FormikToggle
+                name="answerKeyVisible"
+                label={ASSIGNMENT_FORM_TEXT.CONFIG.ANSWER_KEY_VISIBLE_LABEL}
+                tooltip={ASSIGNMENT_FORM_TEXT.CONFIG.ANSWER_KEY_VISIBLE_TOOLTIP}
+              />
 
-            <FormikToggle
-              name="allowCopyPaste"
-              label={ASSIGNMENT_FORM_TEXT.CONFIG.ALLOW_COPY_PASTE_LABEL}
-              tooltip={ASSIGNMENT_FORM_TEXT.CONFIG.ALLOW_COPY_PASTE_TOOLTIP}
-            />
+              <FormikToggle
+                name="allowCopyPaste"
+                label={ASSIGNMENT_FORM_TEXT.CONFIG.ALLOW_COPY_PASTE_LABEL}
+                tooltip={ASSIGNMENT_FORM_TEXT.CONFIG.ALLOW_COPY_PASTE_TOOLTIP}
+              />
+            </div>
+
+            <div>
+              <FormikToggle
+                name="projectImportControl"
+                label={ASSIGNMENT_FORM_TEXT.CONFIG.PROJECT_IMPORT_CONTROL_LABEL}
+                tooltip={ASSIGNMENT_FORM_TEXT.CONFIG.PROJECT_IMPORT_CONTROL_TOOLTIP}
+              />
+            </div>
+
           </div>
         </CardContent>
       </Card>

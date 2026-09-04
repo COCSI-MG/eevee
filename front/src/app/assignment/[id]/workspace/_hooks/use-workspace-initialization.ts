@@ -29,6 +29,7 @@ export function useWorkspaceInitialization({
   selectItem,
 }: UseWorkspaceInitializationParams) {
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
+  const [isInitialized, setIsInitialized] = React.useState(false);
 
   const workspaceAssignment = React.useMemo(
     () =>
@@ -70,6 +71,7 @@ export function useWorkspaceInitialization({
     }
 
     initializedWorkspaceKeyRef.current = initializationKey;
+    setIsInitialized(false);
 
     let fileTree: FileNode | null = null;
     let shouldPersistInitialState = false;
@@ -128,6 +130,8 @@ export function useWorkspaceInitialization({
         fileTree,
       });
     }
+
+    setIsInitialized(true);
   }, [
     initializationKey,
     replaceFileTree,
@@ -141,4 +145,6 @@ export function useWorkspaceInitialization({
   React.useEffect(() => {
     void initializeWorkspace();
   }, [initializeWorkspace]);
+
+  return { isInitialized };
 }

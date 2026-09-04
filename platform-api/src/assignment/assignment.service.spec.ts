@@ -192,6 +192,138 @@ describe('AssignmentService', () => {
     expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
   });
 
+  describe('project import from submitted attempts', () => {
+    it('lists compatible assignments with submitted work in title order', async () => {
+      const { service, assignmentRepository, requestContextService } = await setup();
+
+      const firstSubmittedAt = new Date('2026-09-01T12:00:00.000Z');
+      const secondSubmittedAt = new Date('2026-09-02T12:00:00.000Z');
+
+      const query = {
+        innerJoin: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        groupBy: jest.fn().mockReturnThis(),
+        addGroupBy: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue([
+          {
+            id: '2',
+            title: 'Atividade A',
+            submittedAt: firstSubmittedAt
+          },
+          {
+            id: '3',
+            title: 'Atividade B',
+            submittedAt: secondSubmittedAt
+          }
+        ])
+      };
+      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
+      jest.spyOn(service, 'findOne').mockResolvedValue({ id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true } as any)
+
+      assignmentRepository.createQueryBuilder.mockReturnValue(query)
+
+      await expect(service.findImportSources(5)).resolves.toEqual([
+        {
+          id: 2,
+          title: 'Atividade A',
+          submittedAt: firstSubmittedAt
+        },
+        {
+          id: 3,
+          title: 'Atividade B',
+          submittedAt: secondSubmittedAt
+        }
+      ]);
+
+      expect(query.where).toHaveBeenCalledWith('source.classId = :classId', { classId: 12 });
+
+      expect(query.innerJoin).toHaveBeenCalledWith(
+        'source.assignmentAttempts',
+        'attempt',
+        'attempt.userId = :userId AND attempt.receivedWork IS NOT NULL',
+        { userId: 7 }
+      );
+      expect(query.andWhere).toHaveBeenCalledWith(
+        'source.workerType = :workerType',
+        { workerType: WorkerType.NODE_DEFAULT }
+      );
+      expect(query.andWhere).toHaveBeenCalledWith(
+        'source.id != :destinationAssignmentId',
+        { destinationAssignmentId: 5 }
+      );
+      expect(query.orderBy).toHaveBeenCalledWith('LOWER(source.title)', 'ASC');
+      expect(query.addSelect).toHaveBeenCalledWith(
+        'MAX(attempt.createdAt)',
+        'submittedAt'
+      );
+    });
+
+    it('rejects import source listing when the destination disallows it', async () => {
+      const { service, assignmentRepository } = await setup();
+      jest.spyOn(service, 'findOne').mockResolvedValue({ id: 5, allowProjectImport: false } as any);
+
+      await expect(service.findImportSources(5)).rejects.toBeInstanceOf(ForbiddenException);
+      expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
+    it('returns the latest submitted work for the current user', async () => {
+      const {
+        service,
+        assignmentRepository,
+        attemptRepository,
+        requestContextService
+      } = await setup();
+      const submittedAt = new Date('2026-09-02T12:00:00.000Z')
+
+      const files = { 'src/app.ts': 'export const value = 1;' }
+
+      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
+      jest.spyOn(service, 'findOne').mockResolvedValue({ id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true } as any);
+
+      assignmentRepository.findOne.mockResolvedValue({ id: 2, title: 'Origem', classId: 12, workerType: WorkerType.NODE_DEFAULT });
+      attemptRepository.findOne.mockResolvedValue({ assignmentId: 2, userId: 7, attempt: 3, receivedWork: files, createdAt: submittedAt });
+
+      await expect(service.findImportSource(5, 2)).resolves.toEqual({ id: 2, title: 'Origem', files, submittedAt });
+
+      expect(attemptRepository.findOne).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ assignmentId: 2, userId: 7 }),
+          order: { attempt: 'DESC' },
+        }),
+      );
+    });
+
+    it('rejects a source from another class or worker', async () => {
+      const { service, assignmentRepository, attemptRepository } = await setup();
+
+      jest.spyOn(service, 'findOne').mockResolvedValue({ id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true } as any)
+      assignmentRepository.findOne.mockResolvedValue({ id: 2, title: 'Origem', classId: 99, workerType: WorkerType.NODE_DEFAULT })
+
+      await expect(service.findImportSource(5, 2)).rejects.toBeInstanceOf( BadRequestException)
+      expect(attemptRepository.findOne).not.toHaveBeenCalled()
+    });
+
+    it('rejects a compatible source without submitted work', async () => {
+      const {
+        service,
+        assignmentRepository,
+        attemptRepository,
+        requestContextService
+      } = await setup();
+      requestContextService.getUser.mockReturnValue({userId: 7, isAdmin: false})
+      jest.spyOn(service, 'findOne').mockResolvedValue({id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true} as any)
+      assignmentRepository.findOne.mockResolvedValue({id: 2, title: 'Origem', classId: 12, workerType: WorkerType.NODE_DEFAULT })
+      attemptRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.findImportSource(5, 2)).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
   it('create throws when class does not exist', async () => {
     const {
       service,
@@ -259,6 +391,7 @@ describe('AssignmentService', () => {
       workerType: WorkerType.NODE_DEFAULT,
       validationScript: undefined as any,
       boilerplateContent: 'console.log("hi");',
+      allowProjectImport: true,
       templates: [
         {
           templateId: 1,
@@ -284,6 +417,7 @@ describe('AssignmentService', () => {
         allowCopyPaste: true,
         workerType: WorkerType.NODE_DEFAULT,
         boilerplateContent: 'console.log("hi");',
+        allowProjectImport: true,
         createdById: 7,
       }),
     );

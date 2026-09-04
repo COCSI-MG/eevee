@@ -141,6 +141,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     initSqlScript: existingAssignment?.initSqlScript ?? "",
     answerKeyVisible: existingAssignment?.answerKeyVisible ?? false,
     allowCopyPaste: existingAssignment?.allowCopyPaste ?? false,
+    allowProjectImport: existingAssignment?.allowProjectImport ?? false
   };
 
   const handleSubmit = (values: typeof initialValues) => {
@@ -215,8 +216,6 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
         {({ isSubmitting, values, setFieldValue, isValid }) => {
           // eslint-disable-next-line react-hooks/rules-of-hooks
           useEffect(() => {
-            console.log("Worker type changed:", values.workerType);
-            console.log("steps:", currentStepDef?.id );
             if (
               values.workerType &&
               Object.values(WorkerType).includes(

@@ -20,6 +20,7 @@ import {
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { Button } from "@/components/ui/button";
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
+import WorkspaceImportControl from "./workspace-import-control";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -175,7 +176,7 @@ export default function Workspace({
     selectItem,
   });
 
-  useWorkspaceInitialization({
+  const { isInitialized: isWorkspaceInitialized } = useWorkspaceInitialization({
     assignment,
     userId,
     setActiveFileContent,
@@ -198,7 +199,7 @@ export default function Workspace({
   return (
     <div className="flex flex-1 min-h-0">
       <div
-        className="relative shrink-0 min-w-[150px] max-w-[400px] bg-card border-r border-border h-full min-h-0"
+        className="relative flex shrink-0 min-w-[150px] max-w-[400px] flex-col bg-card border-r border-border h-full min-h-0"
         style={{ width: explorerWidth }}
       >
         <WorkspaceExplorer
@@ -207,6 +208,20 @@ export default function Workspace({
           onOpenInSecondary={handleOpenInSecondary}
           onItemMoved={handleItemMoved}
         />
+
+        <WorkspaceImportControl
+          assignment={assignment}
+          user={user}
+          isWorkspaceInitialized={isWorkspaceInitialized}
+        />
+
+        <div className="min-h-0 flex-1">
+          <WorkspaceExplorer
+            onFileSelect={handleFileSelect}
+            onTreeChange={handleTreeChange}
+            onOpenInSecondary={handleOpenInSecondary}
+          />
+        </div>
 
         <div
           role="separator"
