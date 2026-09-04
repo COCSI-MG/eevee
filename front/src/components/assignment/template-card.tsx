@@ -218,14 +218,14 @@ export default function TemplateCard({
 
   if (isFetchingTemplates) {
     return (
-      <Card className="bg-slate-800 border-slate-700 flex flex-col">
+      <Card className="bg-card border-border flex flex-col">
         <CardHeader className="flex-shrink-0">
-          <CardTitle className="text-white">Carregando templates...</CardTitle>
+          <CardTitle className="text-foreground">Carregando templates...</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-slate-700 rounded-lg" />
+              <div key={i} className="h-20 bg-primary/20 rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -248,18 +248,18 @@ export default function TemplateCard({
   }
 
   return (
-    <Card className="bg-slate-800 border-slate-700 flex flex-col max-h-[500px]">
+    <Card className="bg-card border-border flex flex-col max-h-[500px]">
       <CardHeader className="flex-shrink-0">
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <FileCode className="w-5 h-5" />
           Templates
         </CardTitle>
       </CardHeader>
       <CardContent className="overflow-y-auto flex-1">
         {isSuccessTemplates && visibleTemplates.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">
-            <Code className="w-16 h-16 mx-auto mb-4 text-slate-600" />
-            <h3 className="text-lg font-medium text-slate-300 mb-2">
+          <div className="text-center py-12 text-muted-foreground">
+            <Code className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               Nenhum template encontrado
             </h3>
             <p className="text-sm mb-6">
@@ -269,7 +269,7 @@ export default function TemplateCard({
               <Button
                 type="button"
                 variant="outline"
-                className="border-blue-600 text-blue-400 hover:bg-blue-600/10"
+                className="border-primary text-primary hover:bg-primary/20"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Template
@@ -280,7 +280,7 @@ export default function TemplateCard({
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
             {/* Available Templates */}
             <div className="space-y-4">
-              <h4 className="text-white font-medium text-sm uppercase tracking-wide">
+              <h4 className="text-foreground font-medium text-sm uppercase tracking-wide">
                 Templates Disponíveis <Tooltip message="Template de teste usado para corrigir as provas, selecione e adicione seus parâmetros" />
               </h4>
               <ScrollArea className="h-[300px] space-y-3">
@@ -290,8 +290,8 @@ export default function TemplateCard({
                     className={cn(
                       "group p-4 rounded-lg border transition-all cursor-pointer",
                       isTemplateSelected(template.id)
-                        ? "border-green-500 bg-green-500/10"
-                        : "border-slate-600 bg-slate-700/30 hover:bg-slate-700/50 hover:border-slate-500"
+                        ? "border-success bg-success/10"
+                        : "border-border bg-primary/10 hover:bg-primary/20 hover:border-border"
                     )}
                     onClick={() => {
                       if (!isTemplateSelected(template.id)) {
@@ -302,31 +302,31 @@ export default function TemplateCard({
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                          <h5 className="text-white font-medium truncate">
+                          <h5 className="text-foreground font-medium truncate">
                             {template.title}
                           </h5>
                           {isTemplateSelected(template.id) && (
                             <Badge
                               variant="secondary"
-                              className="bg-green-500/20 text-green-400 border-green-500/30"
+                              className="bg-success/10 text-success border-success"
                             >
                               <Check className="w-3 h-3 mr-1" />
                               Selecionado
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-slate-300 mb-3 line-clamp-2">
+                        <p className="text-sm text-foreground mb-3 line-clamp-2">
                           {template.description}
                         </p>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-muted-foreground">
                             {template.templateParams.length} parâmetro(s)
                           </span>
                           {template.templateParams.slice(0, 3).map((param) => (
                             <Badge
                               key={param.id}
                               variant="outline"
-                              className="text-xs border-slate-600 text-slate-300"
+                              className="text-xs border-border text-foreground"
                             >
                               {param.name}
                             </Badge>
@@ -334,7 +334,7 @@ export default function TemplateCard({
                           {template.templateParams.length > 3 && (
                             <Badge
                               variant="outline"
-                              className="text-xs border-slate-600 text-slate-400"
+                              className="text-xs border-border text-muted-foreground"
                             >
                               +{template.templateParams.length - 3} mais
                             </Badge>
@@ -367,7 +367,7 @@ export default function TemplateCard({
                             variant="ghost"
                             size="sm"
                             type="button"
-                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleRemoveTemplate(template.id);
@@ -380,7 +380,7 @@ export default function TemplateCard({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            className="text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                            className="text-success hover:text-success hover:bg-success/10"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenConfigDialog(template);
@@ -418,7 +418,7 @@ export default function TemplateCard({
         )}
       </CardContent>
       <CardFooter className="flex-shrink-0">
-        <Badge className="bg-blue-600 hover:bg-blue-700 mt-4">
+        <Badge className="bg-primary hover:bg-primary/90 mt-4">
           {(selectedTemplates || []).length} Template(s) Selecionado(s)
         </Badge>
       </CardFooter>

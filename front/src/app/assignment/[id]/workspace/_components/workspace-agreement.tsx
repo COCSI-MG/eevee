@@ -41,7 +41,7 @@ export default function WorkspaceAgreement({
   if (hasAgreed === null) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-gray-400">Carregando...</div>
+        <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
   }
@@ -51,41 +51,41 @@ export default function WorkspaceAgreement({
   }
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-900">
-      <div className="m-auto border border-gray-700 bg-gray-800 p-6 rounded-lg shadow-lg space-y-6 w-full max-w-2xl">
+    <div className="flex h-screen items-center justify-center bg-background">
+      <div className="m-auto border border-border bg-card p-6 rounded-lg shadow-lg space-y-6 w-full max-w-2xl">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2 text-white">
+          <h1 className="text-2xl font-bold mb-2 text-foreground">
             Bem-vindo à tarefa {title}
           </h1>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Leia atentamente as regras antes de continuar
           </p>
         </div>
 
-        <div className="border border-gray-700 bg-gray-900/50 p-4 rounded-md space-y-3">
+        <div className="border border-border bg-background/50 p-4 rounded-md space-y-3">
           <div className="flex items-center gap-2">
-            <Badge className="bg-red-600 text-white hover:bg-red-700">
+            <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Penalidades
             </Badge>
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-gray-300">
+            <h3 className="text-sm font-semibold text-foreground">
               O que resulta em penalidades?
             </h3>
-            <ul className="text-sm text-gray-400 space-y-1 list-disc list-inside">
+            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               <li>Perder o foco da janela por mais de 5 segundos</li>
               <li>Abrir o console do navegador</li>
               <li>Tentar acessar outra aba/janela do navegador</li>
               <li>Compartilhar seu código com outras pessoas</li>
             </ul>
-            <p className="text-sm text-yellow-400 mt-2">
+            <p className="text-sm text-warning mt-2">
               ⚠️ Estaremos monitorando sua atividade!
             </p>
           </div>
         </div>
 
-        <div className="flex items-start gap-3 p-3 bg-gray-900/30 rounded-md">
+        <div className="flex items-start gap-3 p-3 bg-background/30 rounded-md">
           <Checkbox
             id="acknowledge"
             checked={checked}
@@ -94,7 +94,7 @@ export default function WorkspaceAgreement({
           />
           <Label
             htmlFor="acknowledge"
-            className="text-sm text-gray-300 cursor-pointer leading-relaxed"
+            className="text-sm text-foreground cursor-pointer leading-relaxed"
           >
             Eu li e entendi as regras desta tarefa. Concordo em seguir as
             diretrizes e aceito as penalidades em caso de violação.
@@ -105,14 +105,14 @@ export default function WorkspaceAgreement({
           <Button
             variant="outline"
             onClick={() => back()}
-            className="w-32 border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white"
+            className="w-32 border-border text-foreground hover:bg-primary/20 hover:text-foreground"
           >
             Recusar
           </Button>
           <Button
             onClick={handleAccept}
             disabled={!checked}
-            className="w-32 bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500"
+            className="w-32 bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/20 disabled:text-muted-foreground"
           >
             Continuar
           </Button>

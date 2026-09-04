@@ -28,7 +28,7 @@ export default function ClassViewTabs() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-6 border-b border-slate-700/50 pb-4">
+      <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
         {VIEWS.map(({ key, label, icon: Icon }) => (
           <Button
             key={key}

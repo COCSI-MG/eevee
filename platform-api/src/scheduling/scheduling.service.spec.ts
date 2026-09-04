@@ -43,7 +43,10 @@ describe('SchedulingService', () => {
     >
   >;
   let assignmentService: jest.Mocked<
-    Pick<AssignmentService, 'findOne' | 'findOneForExecution'>
+    Pick<
+      AssignmentService,
+      'findOne' | 'findOneForExecution' | 'assertSubmissionOpen'
+    >
   >;
   let scorePolicyService: jest.Mocked<
     Pick<ScorePolicyService, 'calculateScore' | 'isAcceptable'>
@@ -81,6 +84,7 @@ describe('SchedulingService', () => {
     assignmentService = {
       findOne: jest.fn(),
       findOneForExecution: jest.fn(),
+      assertSubmissionOpen: jest.fn(),
     };
 
     scorePolicyService = {
@@ -258,8 +262,26 @@ describe('SchedulingService', () => {
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
+  it('does not create or enqueue an attempt when the deadline is closed', async () => {
+    assignmentService.findOne.mockResolvedValue({ id: 10 } as never);
+    assignmentService.assertSubmissionOpen.mockRejectedValue(
+      new UnprocessableEntityException('Prazo encerrado'),
+    );
+
+    await expect(
+      service.createSchedulingJobAsync({
+        assignmentId: 10,
+        applicationFileContent: '',
+        files: {},
+      }),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+
+    expect(attemptService.create).not.toHaveBeenCalled();
+    expect(schedulingQueue.add).not.toHaveBeenCalled();
+  });
+
   it('returns existing preview run when one is already active', async () => {
-    assignmentService.findOneForExecution.mockResolvedValue({
+    assignmentService.findOne.mockResolvedValue({
       id: 10,
       workerType: WorkerType.NODE_DEFAULT,
     } as never);
@@ -277,6 +299,7 @@ describe('SchedulingService', () => {
     });
 
     expect(schedulingPreviewRunRepository.save).not.toHaveBeenCalled();
+    expect(assignmentService.assertSubmissionOpen).not.toHaveBeenCalled();
     expect(result).toEqual(
       expect.objectContaining({
         id: 99,
@@ -285,7 +308,7 @@ describe('SchedulingService', () => {
   });
 
   it('prepares and enqueues a preview directly for Assignment Runner', async () => {
-    assignmentService.findOneForExecution.mockResolvedValue({
+    assignmentService.findOne.mockResolvedValue({
       id: 10,
       workerType: WorkerType.NODE_DEFAULT,
       assignmentTemplates: [{}],
@@ -407,4 +430,3 @@ describe('SchedulingService', () => {
   });
 
 });
-

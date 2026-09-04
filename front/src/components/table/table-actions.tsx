@@ -104,7 +104,7 @@ export default function TableActions({
           )}
           {onUnlink && (
             <DropdownMenuItem
-              className="text-amber-600 focus:text-amber-600"
+              className="text-warning focus:text-warning"
               onClick={handleUnlinkClick}
             >
               <Unlink className="h-4 w-4 mr-2" />

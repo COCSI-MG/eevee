@@ -17,6 +17,7 @@ import {
 } from "../assignment/activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
 import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
+import { formatDateTime } from "@/utils/date";
 
 interface ExamAssignmentsTableProps {
   assignments: Array<AssignmentSummary>;
@@ -56,6 +57,8 @@ export default function ExamAssignmentsTable({
           <TableHead>
             <div className="flex items-center">Worker Type</div>
           </TableHead>
+          <TableHead>Data de início</TableHead>
+          <TableHead>Data de entrega</TableHead>
           <TableHead className="w-[100px]">Ações</TableHead>
         </TableRow>
       </TableHeader>
@@ -63,7 +66,7 @@ export default function ExamAssignmentsTable({
         {list.length === 0 && (
           <TableRow>
             <TableCell
-              colSpan={6}
+              colSpan={8}
               className="text-center text-muted-foreground"
             >
               {emptyMessage}
@@ -110,6 +113,8 @@ export default function ExamAssignmentsTable({
               </TableCell>
               <TableCell>{assignment.maxAttempts}</TableCell>
               <TableCell>{assignment.workerType}</TableCell>
+              <TableCell>{formatDateTime(assignment.startDate)}</TableCell>
+              <TableCell>{formatDateTime(assignment.dueDate)}</TableCell>
               <TableCell>
                 <TableActions
                   href={`${AppRoutes.AdminAssignments}/${assignment.id}`}

@@ -16,7 +16,6 @@ import { TemplatesService } from "@/app/integration/scheduler-api/templates";
 import { toast } from "@/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import dynamic from "next/dynamic";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { AxiosError } from "axios";
@@ -43,11 +42,7 @@ import {
 import { Tooltip } from "../ui/tooltip";
 import { TemplateTestDialog } from "./template-test-dialog";
 import QueryErrorState from "@/components/shared/query-error-state";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
-});
+import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 const upsertTemplateSchema = Yup.object().shape({
   title: Yup.string()
@@ -226,10 +221,6 @@ export default function TemplateForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formik.values.workerType, isNewTemplate]);
 
-  const editorLanguage = getWorkerLanguageConfig(
-    formik.values.workerType,
-  ).editorLanguage;
-
   const handleParamsBlur = (value: string) => {
     const paramsArray = parseParamsInput(value);
     formik.setFieldValue("params", paramsArray);
@@ -303,15 +294,15 @@ export default function TemplateForm() {
         <form onSubmit={formik.handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-6">
-              <Card className="bg-slate-800 border-slate-700">
+              <Card className="bg-card border-border">
                 <CardHeader>
-                  <CardTitle className="text-white">
+                  <CardTitle className="text-foreground">
                     {TEMPLATE_FORM_TEXT.infoCardTitle}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-slate-200">
+                    <Label htmlFor="title" className="text-foreground">
                       {TEMPLATE_FORM_TEXT.titleLabel}
                     </Label>
                     <Input
@@ -320,12 +311,12 @@ export default function TemplateForm() {
                       value={formik.values.title}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-primary/20 border-border text-foreground"
                       placeholder={TEMPLATE_FORM_TEXT.titlePlaceholder}
                     />
                     {(formik.touched.title || formik.submitCount > 0) &&
                       formik.errors.title && (
-                        <div className="text-red-500">
+                        <div className="text-destructive">
                           {formik.errors.title}
                         </div>
                       )}
@@ -333,7 +324,7 @@ export default function TemplateForm() {
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="description" className="text-slate-200">
+                      <Label htmlFor="description" className="text-foreground">
                         {TEMPLATE_FORM_TEXT.descriptionLabel}
                       </Label>
                       <ExpandableTrigger
@@ -347,19 +338,19 @@ export default function TemplateForm() {
                       value={formik.values.description}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="bg-slate-700 border-slate-600 text-white max-h-[120px]"
+                      className="bg-primary/20 border-border text-foreground max-h-[120px]"
                       placeholder={TEMPLATE_FORM_TEXT.descriptionPlaceholder}
                     />
                     {(formik.touched.description || formik.submitCount > 0) &&
                       formik.errors.description && (
-                        <div className="text-red-500">
+                        <div className="text-destructive">
                           {formik.errors.description}
                         </div>
                       )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="workerType" className="text-slate-200">
+                    <Label htmlFor="workerType" className="text-foreground">
                       {TEMPLATE_FORM_TEXT.workerTypeLabel}{" "}
                       <Tooltip message="Escolha o tipo de ambiente de execução que será utilizado no template" />
                     </Label>
@@ -369,7 +360,7 @@ export default function TemplateForm() {
                         formik.setFieldValue("workerType", value)
                       }
                     >
-                      <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                      <SelectTrigger className="bg-primary/20 border-border text-foreground">
                         <SelectValue
                           placeholder={TEMPLATE_FORM_TEXT.workerTypePlaceholder}
                         />
@@ -384,14 +375,14 @@ export default function TemplateForm() {
                     </Select>
                     {(formik.touched.workerType || formik.submitCount > 0) &&
                       formik.errors.workerType && (
-                        <div className="text-red-500">
+                        <div className="text-destructive">
                           {formik.errors.workerType as string}
                         </div>
                       )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="params" className="text-slate-200">
+                    <Label htmlFor="params" className="text-foreground">
                       {TEMPLATE_FORM_TEXT.paramsLabel} <br />
                       {TEMPLATE_FORM_TEXT.paramsHelper}{" "}
                       <Tooltip message="Parâmetros que serão passados para o template" />
@@ -401,12 +392,12 @@ export default function TemplateForm() {
                       value={paramsInput}
                       onChange={(e) => handleParamsChange(e.target.value)}
                       onBlur={(e) => handleParamsBlur(e.target.value)}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-primary/20 border-border text-foreground"
                       placeholder={TEMPLATE_FORM_TEXT.paramsPlaceholder}
                     />
                     {(formik.touched.params || formik.submitCount > 0) &&
                       formik.errors.params && (
-                        <div className="text-red-500">
+                        <div className="text-destructive">
                           {formik.errors.params}
                         </div>
                       )}
@@ -414,7 +405,7 @@ export default function TemplateForm() {
 
                   {!!formik.values.params.length && (
                     <div className="space-y-3">
-                      <Label className="text-slate-200">
+                      <Label className="text-foreground">
                         {TEMPLATE_FORM_TEXT.paramTypesTitle}
                       </Label>
 
@@ -422,10 +413,10 @@ export default function TemplateForm() {
                         {formik.values.params.map((name) => (
                           <div key={name} className="flex items-center gap-3">
                             <div className="flex-1 min-w-0">
-                              <span className="text-slate-200 text-sm truncate block">
+                              <span className="text-foreground text-sm truncate block">
                                 {name}
                               </span>
-                              <span className="text-slate-400 text-xs">
+                              <span className="text-muted-foreground text-xs">
                                 {TEMPLATE_FORM_TEXT.paramTypesHelp}
                               </span>
                             </div>
@@ -443,7 +434,7 @@ export default function TemplateForm() {
                                   )
                                 }
                               >
-                                <SelectTrigger className="bg-slate-700 border-slate-600 text-white">
+                                <SelectTrigger className="bg-primary/20 border-border text-foreground">
                                   <SelectValue
                                     placeholder={
                                       TEMPLATE_FORM_TEXT.paramTypePlaceholder
@@ -466,7 +457,7 @@ export default function TemplateForm() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="dependencies" className="text-slate-200">
+                    <Label htmlFor="dependencies" className="text-foreground">
                       {TEMPLATE_FORM_TEXT.dependenciesLabel} <br />
                       {TEMPLATE_FORM_TEXT.dependenciesHelper}
                     </Label>
@@ -475,11 +466,11 @@ export default function TemplateForm() {
                       value={dependenciesInput}
                       onChange={(e) => handleDependenciesChange(e.target.value)}
                       onBlur={(e) => handleDependenciesBlur(e.target.value)}
-                      className="bg-slate-700 border-slate-600 text-white"
+                      className="bg-primary/20 border-border text-foreground"
                       placeholder={TEMPLATE_FORM_TEXT.dependenciesPlaceholder}
                     />
                     {formik.errors.dependencies && (
-                      <div className="text-red-500">
+                      <div className="text-destructive">
                         {formik.errors.dependencies}
                       </div>
                     )}
@@ -489,7 +480,7 @@ export default function TemplateForm() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                      className="border-border text-foreground hover:bg-primary/20"
                       onClick={() => {
                         formik.resetForm();
                         setParamsInput("");
@@ -502,7 +493,7 @@ export default function TemplateForm() {
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-slate-600 text-slate-200 hover:bg-slate-700"
+                      className="border-border text-foreground hover:bg-primary/20"
                       onClick={() => setTestDialogOpen(true)}
                       title="Testar o conteúdo do template contra uma aplicação de exemplo em um pod efêmero. Nada é persistido."
                     >
@@ -511,7 +502,7 @@ export default function TemplateForm() {
                     </Button>
                     <Button
                       type="submit"
-                      className="flex-1 hover:bg-slate-700"
+                      className="flex-1 hover:bg-primary/20"
                       variant={"outline"}
                       disabled={mutationStatus === "pending"}
                     >
@@ -528,9 +519,9 @@ export default function TemplateForm() {
             </div>
 
             <div className="space-y-6">
-              <Card className="bg-slate-800 border-slate-700">
+              <Card className="bg-card border-border">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                  <CardTitle className="text-white">
+                  <CardTitle className="text-foreground">
                     {TEMPLATE_FORM_TEXT.codeCardTitle}
                   </CardTitle>
                   <ExpandableTrigger
@@ -540,50 +531,20 @@ export default function TemplateForm() {
                 </CardHeader>
                 <CardContent className="pb-6">
                   <div style={{ height: "600px" }}>
-                    <Editor
+                    <MonacoCodeEditor
+                      preset="template-authoring"
                       height="600px"
-                      defaultLanguage={editorLanguage}
+                      workerType={formik.values.workerType}
                       value={formik.values.content}
                       onChange={(value) =>
                         formik.setFieldValue("content", value || "")
                       }
-                      theme="vs-dark"
-                      className="bg-slate-700 border-slate-600 text-white"
-                      options={{
-                        minimap: { enabled: false },
-                        scrollBeyondLastLine: false,
-                        wordWrap: "on",
-                        wrappingIndent: "indent",
-                        fontSize: 14,
-                        lineNumbers: "on",
-                        quickSuggestions: false,
-                        suggest: {
-                          showWords: false,
-                          showSnippets: false,
-                        },
-                        "semanticHighlighting.enabled": false,
-                      }}
-                      beforeMount={(monaco) => {
-                        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          },
-                        );
-                        monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(
-                          {
-                            noSemanticValidation: true,
-                            noSyntaxValidation: true,
-                            noSuggestionDiagnostics: true,
-                          },
-                        );
-                      }}
+                      className="bg-editor-bg border-border text-foreground"
                     />
                   </div>
                   {(formik.touched.content || formik.submitCount > 0) &&
                     formik.errors.content && (
-                      <div className="text-red-500">
+                      <div className="text-destructive">
                         {formik.errors.content}
                       </div>
                     )}
@@ -618,12 +579,12 @@ export default function TemplateForm() {
           value={formik.values.description}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
-          className="flex-1 w-full bg-slate-700 border-slate-600 text-white resize-none"
+          className="flex-1 w-full bg-primary/20 border-border text-foreground resize-none"
           placeholder={TEMPLATE_FORM_TEXT.descriptionPlaceholder}
         />
         {(formik.touched.description || formik.submitCount > 0) &&
           formik.errors.description && (
-            <div className="text-red-500 mt-2">
+            <div className="text-destructive mt-2">
               {formik.errors.description}
             </div>
           )}
@@ -636,41 +597,17 @@ export default function TemplateForm() {
         minimizeLabel="Minimizar"
         contentClassName="flex flex-col"
       >
-        <Editor
+        <MonacoCodeEditor
+          preset="template-authoring"
           height="100%"
-          defaultLanguage={editorLanguage}
+          workerType={formik.values.workerType}
           value={formik.values.content}
           onChange={(value) => formik.setFieldValue("content", value || "")}
-          theme="vs-dark"
-          className="flex-1 min-h-0 bg-slate-700 border-slate-600 text-white"
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: "on",
-            wrappingIndent: "indent",
-            fontSize: 14,
-            lineNumbers: "on",
-            quickSuggestions: false,
-            suggest: {
-              showWords: false,
-              showSnippets: false,
-            },
-            "semanticHighlighting.enabled": false,
-          }}
-          beforeMount={(monaco) => {
-            const diagnosticsOptions = {
-              noSemanticValidation: true,
-              noSyntaxValidation: true,
-              noSuggestionDiagnostics: true,
-            };
-
-            monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
-            monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions(diagnosticsOptions);
-          }}
+          className="flex-1 min-h-0 bg-primary/20 border-border text-foreground"
         />
         {(formik.touched.content || formik.submitCount > 0) &&
           formik.errors.content && (
-            <div className="text-red-500 mt-2">{formik.errors.content}</div>
+            <div className="text-destructive mt-2">{formik.errors.content}</div>
           )}
       </ExpandableDialog>
     </div>

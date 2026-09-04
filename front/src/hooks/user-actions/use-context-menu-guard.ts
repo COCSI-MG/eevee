@@ -10,15 +10,37 @@ const BLOCKED_POINTER_EVENTS = [
 
 interface UseContextMenuGuardOptions {
   enabled: boolean;
+  allowedDragAreaSelector?: string;
+  allowedDragMimeType?: string;
 }
 
-export function useContextMenuGuard({ enabled }: UseContextMenuGuardOptions) {
+export function useContextMenuGuard({
+  enabled,
+  allowedDragAreaSelector,
+  allowedDragMimeType
+}: UseContextMenuGuardOptions) {
   useEffect(() => {
     if (!enabled) {
       return;
     }
 
+    const isAllowedInternalDrag = (event: Event) => {
+      if (
+        !(event instanceof DragEvent) ||
+        !allowedDragAreaSelector ||
+        !allowedDragMimeType ||
+        !(event.target instanceof Element) ||
+        !event.target.closest(allowedDragAreaSelector)
+      ) return false
+
+      if (event.type === "dragstart") return true
+
+      return Array.from(event.dataTransfer?.types ?? []).includes(allowedDragMimeType)
+    };
+
     const preventPointerAction = (event: Event) => {
+      if (isAllowedInternalDrag(event)) return true
+
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
@@ -41,5 +63,5 @@ export function useContextMenuGuard({ enabled }: UseContextMenuGuardOptions) {
         document.removeEventListener(eventName, preventPointerAction, true);
       });
     };
-  }, [enabled]);
+  }, [allowedDragAreaSelector, allowedDragMimeType, enabled]);
 }

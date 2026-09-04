@@ -16,7 +16,7 @@ export default function AssignmentStepContainer({
   steps: StepDefinition[];
 }) {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 border rounded-lg border-slate-700 bg-slate-800/50">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 border rounded-lg border-border bg-card/50">
       {/* Mobile: Vertical Layout */}
       <div className="flex flex-col space-y-4 md:hidden">
         {steps.map((step, index) => {
@@ -27,10 +27,10 @@ export default function AssignmentStepContainer({
                 className={cn(
                   "w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center transition-colors",
                   currentStep === stepNumber
-                    ? "bg-blue-600 text-white"
+                    ? "bg-primary text-primary-foreground"
                     : currentStep > stepNumber
-                      ? "bg-green-600 text-white"
-                      : "bg-slate-600 text-slate-300",
+                      ? "bg-success text-success-foreground"
+                      : "bg-primary/30 text-foreground",
                 )}
               >
                 {currentStep > stepNumber ? (
@@ -44,10 +44,10 @@ export default function AssignmentStepContainer({
                   className={cn(
                     "text-sm font-medium transition-colors",
                     currentStep === stepNumber
-                      ? "text-blue-400"
+                      ? "text-primary"
                       : currentStep > stepNumber
-                        ? "text-green-400"
-                        : "text-slate-400",
+                        ? "text-success"
+                        : "text-muted-foreground",
                   )}
                 >
                   Passo {stepNumber}
@@ -56,10 +56,10 @@ export default function AssignmentStepContainer({
                   className={cn(
                     "text-xs transition-colors",
                     currentStep === stepNumber
-                      ? "text-blue-300"
+                      ? "text-primary"
                       : currentStep > stepNumber
-                        ? "text-green-300"
-                        : "text-slate-500",
+                        ? "text-success"
+                        : "text-muted-foreground",
                   )}
                 >
                   {step.title}
@@ -81,10 +81,10 @@ export default function AssignmentStepContainer({
                   className={cn(
                     "w-8 h-8 lg:w-10 lg:h-10 rounded-full flex items-center justify-center transition-colors flex-shrink-0",
                     currentStep === stepNumber
-                      ? "bg-blue-600 text-white"
+                      ? "bg-primary text-primary-foreground"
                       : currentStep > stepNumber
-                        ? "bg-green-600 text-white"
-                        : "bg-slate-600 text-slate-300",
+                        ? "bg-success text-success-foreground"
+                        : "bg-primary/30 text-foreground",
                   )}
                 >
                   {currentStep > stepNumber ? (
@@ -98,10 +98,10 @@ export default function AssignmentStepContainer({
                     className={cn(
                       "text-xs lg:text-sm font-medium transition-colors",
                       currentStep === stepNumber
-                        ? "text-blue-400"
+                        ? "text-primary"
                         : currentStep > stepNumber
-                          ? "text-green-400"
-                          : "text-slate-400",
+                          ? "text-success"
+                          : "text-muted-foreground",
                     )}
                   >
                     Passo {stepNumber}
@@ -110,10 +110,10 @@ export default function AssignmentStepContainer({
                     className={cn(
                       "text-xs transition-colors whitespace-nowrap truncate max-w-[80px] lg:max-w-none",
                       currentStep === stepNumber
-                        ? "text-blue-300"
+                        ? "text-primary"
                         : currentStep > stepNumber
-                          ? "text-green-300"
-                          : "text-slate-500",
+                          ? "text-success"
+                          : "text-muted-foreground",
                     )}
                   >
                     {step.title}
@@ -124,7 +124,7 @@ export default function AssignmentStepContainer({
                 <div
                   className={cn(
                     "flex-1 h-px mx-2 lg:mx-4 transition-colors min-w-[16px]",
-                    currentStep > stepNumber ? "bg-green-600" : "bg-slate-600",
+                    currentStep > stepNumber ? "bg-success" : "bg-primary/30",
                   )}
                 />
               )}

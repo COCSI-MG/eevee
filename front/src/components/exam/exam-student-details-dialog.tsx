@@ -25,20 +25,20 @@ import { Fragment } from "react";
 const getAttemptStatusInfo = (assignment: { isAcceptable: boolean; lastAttempt: { status?: string } | null }) => {
 
   if (!assignment.lastAttempt) {
-    return { label: 'Pendente', className: 'border-amber-500/40 text-amber-300', Icon: Clock };
+    return { label: 'Pendente', className: 'border-warning text-warning', Icon: Clock };
   }
 
   if (assignment.isAcceptable) {
-    return { label: 'Acertou', className: 'border-emerald-500/40 text-emerald-300', Icon: CheckCircle2 };
+    return { label: 'Acertou', className: 'border-success text-success', Icon: CheckCircle2 };
   }
-  return { label: 'Errou', className: 'border-rose-500/40 text-rose-300', Icon: XCircle };
+  return { label: 'Errou', className: 'border-destructive text-destructive', Icon: XCircle };
 };
 
 const getScoreColor = (score: number | null | undefined): string => {
-  if (score === null || score === undefined) return 'text-slate-500';
-  if (score >= 1) return 'text-emerald-300';
+  if (score === null || score === undefined) return 'text-muted-foreground';
+  if (score >= 1) return 'text-success';
 
-  return 'text-rose-300';
+  return 'text-destructive';
 };
 
 interface ExamStudentDetailsDialogProps {
@@ -69,48 +69,48 @@ export default function ExamStudentDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] max-h-[85vh] overflow-y-auto border-slate-800 bg-slate-950">
+      <DialogContent className="sm:max-w-[800px] max-h-[85vh] overflow-y-auto border-border bg-background">
         <DialogHeader>
-          <DialogTitle className="text-slate-100">
+          <DialogTitle className="text-foreground">
             {student.name || `Aluno #${student.userId}`}
           </DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-muted-foreground">
             {student.email}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex gap-3 text-sm">
-          <div className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-900/60 px-3 py-1.5">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            <span className="text-slate-300">
+          <div className="flex items-center gap-2 rounded-md border border-border bg-background/60 px-3 py-1.5">
+            <CheckCircle2 className="h-4 w-4 text-success" />
+            <span className="text-foreground">
               {student.approvedAssignments}/{student.totalAssignments} aprovadas
             </span>
-            <span className="text-slate-500">({approvedPercent}%)</span>
+            <span className="text-muted-foreground">({approvedPercent}%)</span>
           </div>
-          <div className="flex items-center gap-2 rounded-md border border-slate-800 bg-slate-900/60 px-3 py-1.5">
-            <BookOpen className="h-4 w-4 text-blue-400" />
-            <span className="text-slate-300">
+          <div className="flex items-center gap-2 rounded-md border border-border bg-background/60 px-3 py-1.5">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <span className="text-foreground">
               Nota: {student.examGrade.toFixed(2)}/{student.maxExamGrade.toFixed(2)}
             </span>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-4 md:p-6">
-          <h2 className="mb-4 text-lg font-semibold text-slate-100">
+        <div className="rounded-2xl border border-border bg-gradient-to-b from-background to-background p-4 md:p-6">
+          <h2 className="mb-4 text-lg font-semibold text-foreground">
             Atividades da prova
           </h2>
 
-          <div className="overflow-x-auto rounded-lg border border-slate-800">
+          <div className="overflow-x-auto rounded-lg border border-border">
             <Table>
               <TableHeader>
-                <TableRow className="bg-slate-900/80 hover:bg-slate-900/80">
-                  <TableHead className="text-slate-300">Atividade</TableHead>
-                  <TableHead className="text-slate-300">Peso</TableHead>
-                  <TableHead className="text-slate-300">Tentativas</TableHead>
-                  <TableHead className="text-slate-300">Última nota</TableHead>
-                  <TableHead className="text-slate-300">Status</TableHead>
-                  <TableHead className="w-[100px] text-right text-slate-300">Detalhes</TableHead>
-                  <TableHead className="w-[120px] text-right text-slate-300">Ações</TableHead>
+                <TableRow className="bg-background/80 hover:bg-background/80">
+                  <TableHead className="text-foreground">Atividade</TableHead>
+                  <TableHead className="text-foreground">Peso</TableHead>
+                  <TableHead className="text-foreground">Tentativas</TableHead>
+                  <TableHead className="text-foreground">Última nota</TableHead>
+                  <TableHead className="text-foreground">Status</TableHead>
+                  <TableHead className="w-[100px] text-right text-foreground">Detalhes</TableHead>
+                  <TableHead className="w-[120px] text-right text-foreground">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -119,14 +119,14 @@ export default function ExamStudentDetailsDialog({
 
                   return (
                     <Fragment key={a.assignmentId}>
-                      <TableRow className="hover:bg-slate-900/60">
-                        <TableCell className="font-medium text-slate-100">
+                      <TableRow className="hover:bg-background/60">
+                        <TableCell className="font-medium text-foreground">
                           {a.title}
                         </TableCell>
-                        <TableCell className="tabular-nums text-slate-300">
+                        <TableCell className="tabular-nums text-foreground">
                           {a.weight.toFixed(2)}
                         </TableCell>
-                        <TableCell className="text-slate-300">
+                        <TableCell className="text-foreground">
                           {a.attemptsCount}
                         </TableCell>
                         <TableCell className={`tabular-nums ${getScoreColor(a.lastAttempt?.score)}`}>
@@ -148,7 +148,7 @@ export default function ExamStudentDetailsDialog({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+                              className="border-border bg-background text-foreground hover:bg-card"
                               disabled={!a.lastAttempt || !onToggleExpand}
                               onClick={() => onToggleExpand?.(a.assignmentId)}
                             >
@@ -162,7 +162,7 @@ export default function ExamStudentDetailsDialog({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-blue-700 bg-blue-900/40 text-blue-200 hover:bg-blue-800/50"
+                                className="border-primary bg-primary/10 text-primary hover:bg-primary/20"
                                 disabled={retryingAssignmentId === a.lastAttempt.id}
                                 onClick={() => onRetry(a.lastAttempt!.id)}
                               >
@@ -179,7 +179,7 @@ export default function ExamStudentDetailsDialog({
                       </TableRow>
 
                       {isExpanded && a.lastAttempt && (
-                        <TableRow className="bg-slate-950/70">
+                        <TableRow className="bg-background/70">
                           <TableCell colSpan={7}>
                             <AdminAttemptExpandedRow attemptId={a.lastAttempt.id} />
                           </TableCell>

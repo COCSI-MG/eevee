@@ -1417,6 +1417,8 @@ describe('ExamService', () => {
           description: 'B desc',
           classId: 5,
           maxAttempts: 2,
+          startDate: null,
+          dueDate: null,
           workerType: WorkerType.NODE_NESTJS,
           lastAttempt: null,
           suspensions: [],
@@ -1428,6 +1430,8 @@ describe('ExamService', () => {
           description: 'A desc',
           classId: 5,
           maxAttempts: 3,
+          startDate: null,
+          dueDate: null,
           workerType: WorkerType.NODE_DEFAULT,
           lastAttempt: null,
           suspensions: [],
@@ -1437,6 +1441,10 @@ describe('ExamService', () => {
       expect(result.assignments[0]).not.toHaveProperty('initSqlScript');
       expect(result.assignments[0]).not.toHaveProperty('boilerplateFilePath');
       expect(result.assignments[0]).not.toHaveProperty('interviewConfig');
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
+        expect.objectContaining({ now: expect.any(Date) }),
+      );
     });
 
     it('skips the enrollment check when the user is an admin', async () => {

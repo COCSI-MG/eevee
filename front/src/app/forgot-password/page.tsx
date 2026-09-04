@@ -44,7 +44,7 @@ export default function ForgotPassword() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
@@ -52,10 +52,10 @@ export default function ForgotPassword() {
               <Code className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="mt-4 text-3xl font-extrabold text-gray-900 dark:text-white">
+          <h1 className="mt-4 text-3xl font-extrabold text-foreground">
             EEVEE Code Lab
           </h1>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-2 text-sm text-muted-foreground">
             Recupere o acesso à sua conta
           </p>
         </div>

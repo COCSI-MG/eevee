@@ -1,4 +1,4 @@
-import { BookOpenCheck, Code, CodeSquare } from "lucide-react";
+import { BookOpenCheck, CalendarClock, Code, CodeSquare } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -21,6 +21,11 @@ import { Route } from "@/app/routes";
 import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import {
+  earliestDate,
+  formatDateTime,
+  isDeadlinePassed,
+} from "@/utils/date";
 
 interface AssignmentsCardProps {
   data: Assignment[];
@@ -80,6 +85,11 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
           : false;
         const canViewAnswerKey =
           Boolean(assignment.answerKeyId) && assignment.answerKeyVisible;
+        const effectiveDueDate = earliestDate(
+          assignment.dueDate,
+          assignment.examAssignment?.exam?.dueDate,
+        );
+        const deadlinePassed = !user?.isAdmin && isDeadlinePassed(effectiveDueDate);
 
         return (
           <Card
@@ -90,22 +100,22 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 "opacity-50": !canAccess,
               },
               {
-                "border border-green-600": isProcessing,
+                "border border-success": isProcessing,
               },
               {
-                "border border-red-600": lastAttemptStatus === "failed",
+                "border border-destructive": lastAttemptStatus === "failed",
               },
               {
-                "border border-yellow-600": lastAttemptStatus === "completed",
+                "border border-warning": lastAttemptStatus === "completed",
               },
             )}
           >
             <CardHeader>
-              <CardTitle className="flex items-center justify-between space-x-2 text-white">
+              <CardTitle className="flex items-center justify-between space-x-2 text-foreground">
                 {assignment.title}
 
                 {assignment.score != null && (
-                  <Badge className="bg-blue-600 text-white">
+                  <Badge className="bg-primary text-primary-foreground">
                     Vale {assignment.score} pts
                   </Badge>
                 )}
@@ -113,35 +123,39 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 {!canAccess && (
                   <Badge
                     variant={"destructive"}
-                    className="bg-red-900 text-red-300"
+                    className="bg-destructive/10 text-destructive"
                   >
                     Tarefa suspensa por quebra de conduta
                   </Badge>
                 )}
 
                 {lastAttemptStatus === "failed" && (
-                  <Badge className="bg-red-900 text-red-300 animate-pulse">
+                  <Badge className="bg-destructive/10 text-destructive animate-pulse">
                     Tentativa com falha
                   </Badge>
                 )}
 
                 {isProcessing && (
-                  <Badge className="bg-green-600 text-white animate-pulse">
+                  <Badge className="bg-success text-success-foreground animate-pulse">
                     Em execução
                   </Badge>
                 )}
 
                 {lastAttemptStatus === "completed" && (
-                  <Badge className="bg-yellow-600 text-white animate-pulse">
+                  <Badge className="bg-warning text-warning-foreground animate-pulse">
                     Resultados disponíveis
                   </Badge>
+                )}
+
+                {deadlinePassed && (
+                  <Badge variant="destructive">Prazo encerrado</Badge>
                 )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col space-y-4">
                 <div className="space-y-2">
-                  <CardDescription className="text-slate-400 line-clamp-2">
+                  <CardDescription className="text-muted-foreground line-clamp-2">
                     {assignment.description}
                   </CardDescription>
 
@@ -149,17 +163,34 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-blue-400 hover:text-blue-300 h-auto p-0 w-fit"
+                      className="text-primary hover:text-primary h-auto p-0 w-fit"
                       onClick={() => setSelectedDescriptionModal(assignment.id)}
                     >
                       Ver mais
                     </Button>
                   )}
+
+                  {(assignment.startDate || effectiveDueDate) && (
+                    <div className="space-y-1 text-sm text-slate-400">
+                      {assignment.startDate && (
+                        <p className="flex items-center gap-2">
+                          <CalendarClock className="h-4 w-4" />
+                          Início: {formatDateTime(assignment.startDate)}
+                        </p>
+                      )}
+                      {effectiveDueDate && (
+                        <p className="flex items-center gap-2">
+                          <CalendarClock className="h-4 w-4" />
+                          Entrega: {formatDateTime(effectiveDueDate)}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col space-y-2 items-center justify-between">
                   <Button
-                    className="w-full bg-violet-700 hover:bg-violet-800 text-white disabled:bg-slate-700 disabled:text-slate-400"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-primary/20 disabled:text-muted-foreground"
                     onClick={() =>
                       push(`/${Route.Assignment}/${assignment.id}/interview`)
                     }
@@ -170,7 +201,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
 
                   {assignment.assignmentAttempts?.length > 0 && (
                     <Button
-                      className="w-full bg-green-700 hover:bg-green-800 text-white"
+                      className="w-full bg-success hover:bg-success/90 text-success-foreground"
                       onClick={() =>
                         push(`/${Route.Assignment}/${assignment.id}/attempts`)
                       }
@@ -183,7 +214,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
 
                   {canViewAnswerKey && (
                     <Button
-                      className="w-full bg-zinc-500 hover:bg-zinc-700 text-white disabled:bg-slate-700 disabled:text-slate-400"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-primary/20 disabled:text-muted-foreground"
                       onClick={() =>
                         push(
                           `/${Route.Assignment}/${assignment.id}/${Route.Workspace}/${Route.AnswerKey}`,
@@ -197,7 +228,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                   )}
 
                   <Button
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:bg-slate-700 disabled:text-slate-400"
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-primary/20 disabled:text-muted-foreground"
                     onClick={() => handleTry(assignment.id)}
                     disabled={!canAccess || isProcessing}
                   >
@@ -223,7 +254,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
               {data.find((a) => a.id === selectedDescriptionModal)?.title}
             </DialogTitle>
           </DialogHeader>
-          <DialogDescription className="text-slate-300 max-h-96 overflow-y-auto whitespace-pre-wrap">
+          <DialogDescription className="text-foreground max-h-96 overflow-y-auto whitespace-pre-wrap">
             {data.find((a) => a.id === selectedDescriptionModal)?.description}
           </DialogDescription>
         </DialogContent>

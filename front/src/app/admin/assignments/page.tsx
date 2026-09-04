@@ -15,11 +15,12 @@ import { useMemo } from "react";
 
 export default function AssignmentsAdminPage() {
   const { page, search, debouncedSearch, setPage, setSearch } =
-    usePaginatedSearch();
+    usePaginatedSearch({ debounceMs: 3000 });
   const { data, isFetching, isError, refetch } = usePaginatedAssignments({
     page,
     search: debouncedSearch,
   });
+  const isSearchLoading = search !== debouncedSearch || isFetching;
 
   const assignments = data?.data ?? [];
   const meta = data?.meta;
@@ -81,22 +82,28 @@ export default function AssignmentsAdminPage() {
         ariaLabel="Filtrar atividades por título, turma ou tipo de worker"
         className="max-w-md"
       />
-      <div className="border rounded-md">
-        <AssignmentsTable
-          assignments={assignments}
-          emptyMessage={assignmentsEmptyMessage}
-        />
-      </div>
+      {isSearchLoading ? (
+        <Loader fullScreen={false} />
+      ) : (
+        <>
+          <div className="border rounded-md">
+            <AssignmentsTable
+              assignments={assignments}
+              emptyMessage={assignmentsEmptyMessage}
+            />
+          </div>
 
-      {meta && (
-        <Pagination
-          page={meta.page}
-          totalPages={meta.totalPages}
-          pageSize={meta.pageSize}
-          total={meta.total}
-          onPageChange={setPage}
-          itemLabel={{ singular: "atividade", plural: "atividades" }}
-        />
+          {meta && (
+            <Pagination
+              page={meta.page}
+              totalPages={meta.totalPages}
+              pageSize={meta.pageSize}
+              total={meta.total}
+              onPageChange={setPage}
+              itemLabel={{ singular: "atividade", plural: "atividades" }}
+            />
+          )}
+        </>
       )}
     </div>
   );

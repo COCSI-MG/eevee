@@ -10,7 +10,7 @@
  *   3. walks the dependency closure collecting every `.d.ts` + `package.json`,
  *   4. writes `front/public/type-packs/<dir>/types.json`.
  *
- * The frontend loads these packs at runtime via `type-pack-loader.ts`, giving
+ * The frontend loads these packs at runtime via `intellisense/type-packs.ts`, giving
  * students real IntelliSense (e.g. TeraORM / TypeORM model interfaces, Nest
  * decorators, Express, React) with zero network access at exam time.
  *

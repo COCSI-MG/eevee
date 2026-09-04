@@ -18,6 +18,7 @@ import ExamStudentsSection from "@/components/exam/exam-students-section";
 import { Button } from "@/components/ui/button";
 import { ExamView } from "@/app/interface/scheduler-api/exam";
 import { QueryParam } from "@/types/pagination";
+import { normalizeString } from "@/utils/string";
 
 function getViewFromSearch(searchParams: URLSearchParams): ExamView {
   const v = searchParams.get(QueryParam.View);
@@ -57,7 +58,7 @@ export default function ExamDetailsPage() {
 
   const filteredAssignments = useMemo(() => {
     const all = examData?.assignments ?? [];
-    const q = debouncedSearch.trim().toLowerCase();
+    const q = normalizeString(debouncedSearch);
     if (!q) return all;
     return all.filter((a) => a.title.toLowerCase().includes(q));
   }, [examData?.assignments, debouncedSearch]);

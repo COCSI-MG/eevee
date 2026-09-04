@@ -4,11 +4,9 @@ import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorMessage } from "formik";
 import { FileText } from "lucide-react";
-import dynamic from "next/dynamic";
 import { Tooltip } from "@/components/ui/tooltip";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";
+import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 export interface AssignmentBoilerplateFormProps {
   values: Partial<Assignment>;
@@ -22,15 +20,15 @@ export const AssignmentBoilerplateForm: React.FC<
   const langConfig = getWorkerLanguageConfig(values.workerType);
 
   return (
-    <Card className="bg-slate-800 border-slate-700 max-h-[600px]">
+    <Card className="bg-card border-border max-h-[600px]">
       <CardHeader>
-        <CardTitle className="text-white flex items-center gap-2">
+        <CardTitle className="text-foreground flex items-center gap-2">
           <FileText className="w-5 h-5" />
           Código Boilerplate <Tooltip message="Código que será fornecido ao aluno no início do trabalho para ser usado como base para o desenvolvimento dos exercícios." />
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <span className="text-sm text-slate-400 mb-2 block">
+        <span className="text-sm text-muted-foreground mb-2 block">
           Forneça o código que será entregue ao aluno no início do trabalho.
           Certifique-se de que o código esteja alinhado com o tipo de worker
           selecionado. Segue um exemplo de código boilerplate para o tipo de
@@ -38,24 +36,18 @@ export const AssignmentBoilerplateForm: React.FC<
           {WorkerExibitionMap[values.workerType as WorkerType]}
           &quot;:
         </span>
-        <Editor
+        <MonacoCodeEditor
+          preset="form-field"
           path={`boilerplate${langConfig.fileExtension}`}
           height={400}
-          defaultLanguage={langConfig.editorLanguage}
-          theme="vs-dark"
-          value={values.boilerplate}
+          workerType={values.workerType}
+          value={values.boilerplate ?? ""}
           onChange={(value) => setFieldValue("boilerplate", value)}
-          options={{
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            wordWrap: "on",
-            automaticLayout: true,
-          }}
         />
         <ErrorMessage
           name="boilerplate"
           component="div"
-          className="text-red-500 text-sm"
+          className="text-destructive text-sm"
         />
       </CardContent>
     </Card>

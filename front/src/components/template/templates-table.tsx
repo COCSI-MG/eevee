@@ -18,7 +18,6 @@ import {
   TableRow,
 } from "../ui/table";
 import { Route } from "@/app/routes";
-import dynamic from "next/dynamic";
 import TableActions from "../table/table-actions";
 import React from "react";
 import { Template } from "@/app/interface/scheduler-api/template";
@@ -26,12 +25,8 @@ import {
   TEMPLATE_TABLE_TEXT,
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
-import { readOnlyMonacoOptions } from "@/lib/monaco-options";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-language";
-
-const Editor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
-});
+import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";
+import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 interface TemplatesTableProps {
   templates: Template[] | undefined;
@@ -99,32 +94,28 @@ export default function TemplatesTable({
                   <Button
                     variant={"outline"}
                     size="sm"
-                    className="text-slate-40 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <Eye className="h-4 w-4" />
                     {TEMPLATE_TABLE_TEXT.viewButton}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-800 border-slate-700 max-w-4xl max-h-[80vh]">
+                <DialogContent className="bg-card border-border max-w-4xl max-h-[80vh]">
                   <DialogHeader>
-                    <DialogTitle className="text-white flex items-center gap-2">
+                    <DialogTitle className="text-foreground flex items-center gap-2">
                       <Code className="w-5 h-5" />
                       {template.title}
                     </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="bg-slate-900 border border-slate-600 rounded-md p-4 max-h-[50vh] overflow-auto min-w-0">
-                      <Editor
+                    <div className="bg-editor-bg border border-border rounded-md p-4 max-h-[50vh] overflow-auto min-w-0">
+                      <MonacoCodeEditor
+                        preset="read-only-preview"
                         path={`template-${template.id}${getWorkerLanguageConfig(template.workerType).fileExtension}`}
-                        defaultLanguage={getWorkerLanguageConfig(template.workerType).editorLanguage}
-                        theme="vs-dark"
+                        workerType={template.workerType}
                         value={template.content}
-                        keepCurrentModel={true}
-                        height={"420px"}
-                        saveViewState={false}
-                        options={{
-                          ...readOnlyMonacoOptions,
-                          hover: { enabled: false },
+                        height="420px"
+                        optionOverrides={{
                           links: false,
                         }}
                       />

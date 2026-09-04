@@ -33,8 +33,8 @@ export function AdminSidebar() {
               className={cn(
                 "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                 isActive
-                  ? "bg-gray-800 text-white"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
               )}
             >
               <IconComponent className="mr-3 h-5 w-5" />
@@ -48,7 +48,7 @@ export function AdminSidebar() {
       <div className="mt-auto pt-4">
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-300 hover:bg-gray-700 hover:text-white"
+          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
           onClick={logout}
         >
           <LogOut className="mr-3 h-4 w-4" />

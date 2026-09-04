@@ -57,7 +57,7 @@ export function AnswerKeyTestDialog({
       }}
     >
       <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-hidden bg-slate-950 text-slate-100"
+        className="max-w-4xl max-h-[90vh] overflow-hidden bg-background text-foreground"
         onEscapeKeyDown={(event) => {
           if (isPending) event.preventDefault();
         }}
@@ -77,15 +77,15 @@ export function AnswerKeyTestDialog({
         </DialogHeader>
 
         {isPending && (
-          <div className="flex items-center gap-3 rounded-md border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300">
+          <div className="flex items-center gap-3 rounded-md border border-border bg-background p-4 text-sm text-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Executando os templates da atividade...
           </div>
         )}
 
         {!isPending && hasError && (
-          <Card className="border-red-700 bg-red-950/40">
-            <CardContent className="space-y-2 p-4 text-sm text-red-200">
+          <Card className="border-destructive bg-destructive/10">
+            <CardContent className="space-y-2 p-4 text-sm text-destructive">
               <p className="flex items-center gap-2 font-semibold">
                 <XCircle className="h-4 w-4" />
                 Falha ao executar o gabarito.
@@ -114,12 +114,12 @@ export function AnswerKeyTestDialog({
                 <CardContent className="flex h-full items-center justify-center gap-2 p-3 text-center text-sm font-medium">
                   {isAcceptable ? (
                     <>
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                      <CheckCircle2 className="h-4 w-4 text-success" />
                       Aceitável
                     </>
                   ) : (
                     <>
-                      <XCircle className="h-4 w-4 text-red-500" />
+                      <XCircle className="h-4 w-4 text-destructive" />
                       Reprovado
                     </>
                   )}
@@ -128,9 +128,9 @@ export function AnswerKeyTestDialog({
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-200">Log completo</p>
-              <ScrollArea className="h-72 rounded-md border border-slate-800 bg-slate-900">
-                <pre className="whitespace-pre-wrap break-words p-4 text-xs leading-5 text-slate-300">
+              <p className="text-sm font-medium text-foreground">Log completo</p>
+              <ScrollArea className="h-72 rounded-md border border-border bg-background">
+                <pre className="whitespace-pre-wrap break-words p-4 text-xs leading-5 text-foreground">
                   {data.completeTrace || "(sem saída)"}
                 </pre>
               </ScrollArea>
@@ -162,7 +162,7 @@ function ResultStat({
   value: number | string;
   tone: "ok" | "bad";
 }) {
-  const color = tone === "ok" ? "text-emerald-500" : "text-red-500";
+  const color = tone === "ok" ? "text-success" : "text-destructive";
 
   return (
     <Card>

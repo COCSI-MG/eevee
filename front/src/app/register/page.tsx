@@ -55,7 +55,7 @@ export default function Register() {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
       <AuthContainer context="register">
         <Card>
           <CardHeader>
@@ -90,7 +90,7 @@ export default function Register() {
                       disabled={isPending}
                     />
                     {errors.name && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-destructive text-sm">
                         {errors.name}
                       </p>
                     )}
@@ -106,7 +106,7 @@ export default function Register() {
                       disabled={isPending}
                     />
                     {errors.email && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-destructive text-sm">
                         {errors.email}
                       </p>
                     )}
@@ -128,7 +128,7 @@ export default function Register() {
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                        className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-muted-foreground"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -139,7 +139,7 @@ export default function Register() {
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-destructive text-sm">
                         {errors.password}
                       </p>
                     )}
@@ -158,7 +158,7 @@ export default function Register() {
                   <div className="flex-1 flex justify-end">
                     <Link
                       href="/login"
-                      className="text-sm text-blue-500 hover:text-blue-700 ml-4"
+                      className="text-sm text-primary hover:text-primary ml-4"
                     >
                       Já tem uma conta?
                     </Link>
