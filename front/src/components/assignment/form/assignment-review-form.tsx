@@ -10,6 +10,7 @@ import {
   Layers,
 } from "lucide-react";
 import { formatDateTime } from "@/utils/date";
+import { ASSIGNMENT_FORM_TEXT } from "./constants";
 
 interface AssignmentFormReviewProps {
   values: Partial<Assignment>;
@@ -29,19 +30,19 @@ const AssigmentReview = ({
     <div>
       <h4 className="text-foreground font-medium mb-3 flex items-center gap-2">
         <Settings className="w-4 h-4" />
-        Configurações
+        {ASSIGNMENT_FORM_TEXT.REVIEW.CONFIG_TITLE}
       </h4>
       <div className="bg-primary/10 p-4 rounded-lg space-y-3">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Título
+              {ASSIGNMENT_FORM_TEXT.REVIEW.ACTIVITY_TITLE}
             </p>
             <p className="text-foreground font-medium">{values.title}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Turma
+              {ASSIGNMENT_FORM_TEXT.REVIEW.CLASS}
             </p>
             <p className="text-foreground font-medium">
               {classes.find((c) => c.id === Number(values.classId))?.name}
@@ -50,20 +51,20 @@ const AssigmentReview = ({
         </div>
         <div>
           <p className="text-xs text-muted-foreground uppercase tracking-wide">
-            Descrição
+            {ASSIGNMENT_FORM_TEXT.REVIEW.DESCRIPTION_LABEL}
           </p>
           <p className="text-foreground">{values.description}</p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Tipo de Worker
+              {ASSIGNMENT_FORM_TEXT.REVIEW.WORKER_TYPE}
             </p>
             <p className="text-foreground">{values.workerType}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Máximo de Tentativas
+              {ASSIGNMENT_FORM_TEXT.REVIEW.MAX_ATTEMPTS}
             </p>
             <p className="text-foreground">{values.maxAttempts}</p>
           </div>
@@ -98,11 +99,13 @@ const TemplateReview = ({
     <div>
       <h4 className="text-foreground font-medium mb-3 flex items-center gap-2">
         <Code className="w-4 h-4" />
-        Templates de teste adicionados ({selectedTemplates ? selectedTemplates.length : 0})
+        {ASSIGNMENT_FORM_TEXT.REVIEW.TEMPLATES_ADDED(selectedTemplates?.length ?? 0)}
       </h4>
 
       {selectedTemplates?.length === 0 && (
-        <p className="text-sm text-muted-foreground">Nenhum template selecionado.</p>
+        <p className="text-sm text-muted-foreground">
+          {ASSIGNMENT_FORM_TEXT.REVIEW.NO_TEMPLATE_SELECTED}
+        </p>
       )}
 
       <div className="space-y-3">
@@ -153,10 +156,10 @@ export default function AssignmentFormReview({
         <CardHeader>
           <CardTitle className="text-foreground flex items-center gap-2">
             <ClipboardCheck className="w-5 h-5" />
-            Revisão Final
+            {ASSIGNMENT_FORM_TEXT.REVIEW.TITLE}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Revise todas as informações antes de criar o assignment
+            {ASSIGNMENT_FORM_TEXT.REVIEW.DESCRIPTION}
           </p>
         </CardHeader>
         <CardContent>
@@ -175,7 +178,7 @@ export default function AssignmentFormReview({
               <div>
                 <h4 className="text-foreground font-medium mb-3 flex items-center gap-2">
                   <Layers className="w-4 h-4" />
-                  Código Boilerplate
+                  {ASSIGNMENT_FORM_TEXT.BOILERPLATE.TITLE}
                 </h4>
                 <div className="bg-background border border-border rounded-lg p-4 max-h-[300px] overflow-auto">
                   <pre className="text-success text-sm font-mono whitespace-pre">
@@ -189,7 +192,7 @@ export default function AssignmentFormReview({
                 <div>
                   <h4 className="text-foreground font-medium mb-3 flex items-center gap-2">
                     <Database className="w-4 h-4" />
-                    Script SQL de Inicialização
+                    {ASSIGNMENT_FORM_TEXT.INIT_SQL.TITLE}
                   </h4>
                   <div className="bg-background border border-border rounded-lg p-4 max-h-[300px] overflow-auto">
                     <pre className="text-primary text-sm font-mono whitespace-pre">

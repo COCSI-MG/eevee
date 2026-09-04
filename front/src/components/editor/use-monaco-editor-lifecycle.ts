@@ -2,10 +2,8 @@ import * as React from "react";
 import type { editor } from "monaco-editor";
 
 import type { WorkerType } from "@/app/interface/scheduler-api/worker";
-import {
-  type EditorActionGuardMode,
-  registerEditorActionGuard,
-} from "@/hooks/user-actions/editor-action-guard";
+import type { EditorActionGuardMode } from "@/constants/editor-action-guard";
+import { registerEditorActionGuard } from "@/hooks/user-actions/editor-action-guard";
 import { registerWorkspaceRuntime } from "@/lib/monaco/workspace/runtime";
 import type { FileNode } from "@/types/shared";
 

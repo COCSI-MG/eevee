@@ -20,6 +20,7 @@ import {
 } from "../_utils/workspace-tree.utils";
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { Button } from "@/components/ui/button";
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -46,10 +47,10 @@ export default function Workspace({
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
   const editorActionGuardMode = user.isAdmin
-    ? "exempt"
+    ? EDITOR_ACTION_GUARD_MODE.EXEMPT
     : assignment.allowCopyPaste
-      ? "internal-only"
-      : "enforced";
+      ? EDITOR_ACTION_GUARD_MODE.INTERNAL_ONLY
+      : EDITOR_ACTION_GUARD_MODE.ENFORCED;
 
   const { activeFile, handleEditorChange, handleFileSelect } =
     useWorkspaceFileEditor({

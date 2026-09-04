@@ -34,6 +34,7 @@ import QueryErrorState from "@/components/shared/query-error-state";
 import { Button } from "@/components/ui/button";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { useAnswerKeyTest } from "@/hooks/use-answer-key-test";
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 import { AnswerKeyTestDialog } from "../_components/answer-key-test-dialog";
 
 function isFileNodeTree(value: unknown): value is FileNode {
@@ -203,7 +204,7 @@ function AnswerKeyEditor({
             <WorkspaceCodeEditor
               file={activeFile}
               onEditorChange={handleEditorChange}
-              actionGuardMode="exempt"
+              actionGuardMode={EDITOR_ACTION_GUARD_MODE.EXEMPT}
               readOnly={!isAdmin}
             />
           </div>

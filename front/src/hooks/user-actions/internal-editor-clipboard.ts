@@ -1,4 +1,9 @@
 import type { editor, Selection } from "monaco-editor";
+import {
+  CLIPBOARD_ACTION,
+  INTERNAL_CLIPBOARD_WRITE_ACTION,
+  type InternalClipboardWriteAction,
+} from "@/constants/clipboard-action";
 
 const INTERNAL_CLIPBOARD_MIME = "application/x-eevee-internal-clipboard";
 
@@ -13,8 +18,6 @@ interface InternalClipboardBuffer {
   text: string;
   metadata: MonacoClipboardMetadata | null;
 }
-
-type InternalClipboardWriteAction = "copy" | "cut";
 
 const clipboardBuffers = new Map<string, InternalClipboardBuffer>();
 
@@ -123,8 +126,8 @@ export function captureInternalEditorClipboard(
     clipboardData.setData(INTERNAL_CLIPBOARD_MIME, scope);
   }
 
-  if (action === "cut") {
-    editorInstance.trigger("keyboard", "cut", {});
+  if (action === INTERNAL_CLIPBOARD_WRITE_ACTION.CUT) {
+    editorInstance.trigger("keyboard", CLIPBOARD_ACTION.CUT, {});
   }
 
   return true;
@@ -146,7 +149,7 @@ export function pasteInternalEditorClipboard(
 
   if (!hasTrustedOrigin) return false;
 
-  editorInstance.trigger("keyboard", "paste", {
+  editorInstance.trigger("keyboard", CLIPBOARD_ACTION.PASTE, {
     text: buffer.text,
     pasteOnNewLine: Boolean(buffer.metadata?.isFromEmptySelection),
     multicursorText: buffer.metadata?.multicursorText ?? null,

@@ -1,7 +1,10 @@
 "use client";
 
 import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
-import { EditorActionGuardMode } from "@/hooks/user-actions/editor-action-guard";
+import {
+  EDITOR_ACTION_GUARD_MODE,
+  type EditorActionGuardMode,
+} from "@/constants/editor-action-guard";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 
 interface WorkspaceCodeEditorProps {
@@ -19,7 +22,7 @@ interface WorkspaceCodeEditorProps {
 export default function WorkspaceCodeEditor({
   file,
   onEditorChange,
-  actionGuardMode = "enforced",
+  actionGuardMode = EDITOR_ACTION_GUARD_MODE.ENFORCED,
   readOnly = false,
 }: WorkspaceCodeEditorProps) {
   const { clipboardScope, fileTreeData, workerType } = useWorkspaceContext();

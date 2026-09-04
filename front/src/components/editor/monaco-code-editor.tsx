@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 import { resolveMonacoLanguage } from "@/lib/monaco/language";
 import {
   EEVEE_MONACO_THEME,
@@ -31,7 +32,7 @@ export function MonacoCodeEditor({
   language,
   workerType,
   workspaceTree,
-  actionGuardMode = "enforced",
+  actionGuardMode = EDITOR_ACTION_GUARD_MODE.ENFORCED,
   actionGuardScope,
   readOnly = false,
   optionOverrides,

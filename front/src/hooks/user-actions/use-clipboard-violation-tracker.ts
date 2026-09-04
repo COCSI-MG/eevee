@@ -1,4 +1,5 @@
 import { useCallback, useRef } from "react";
+import { CLIPBOARD_ACTION } from "@/constants/clipboard-action";
 import { ClipboardAction, RegisterClipboardAttempt } from "./types";
 
 interface UseClipboardViolationTrackerOptions {
@@ -21,7 +22,7 @@ export function useClipboardViolationTracker({
 }: UseClipboardViolationTrackerOptions): RegisterClipboardAttempt {
   const attemptsRef = useRef(0);
   const lastAttemptRef = useRef<LastClipboardAttempt>({
-    action: "copy",
+    action: CLIPBOARD_ACTION.COPY,
     timestamp: 0,
   });
 

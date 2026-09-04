@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { CLIPBOARD_ACTION } from "@/constants/clipboard-action";
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 import { getEditorActionGuard } from "./editor-action-guard";
 import {
   captureInternalEditorClipboard,
@@ -12,7 +14,24 @@ interface UseClipboardGuardOptions {
   onClipboardAttempt: RegisterClipboardAttempt;
 }
 
-const CLIPBOARD_ACTIONS = new Set<ClipboardAction>(["copy", "cut", "paste"]);
+const CLIPBOARD_ACTIONS = Object.values(CLIPBOARD_ACTION);
+const CLIPBOARD_ACTION_SET = new Set<ClipboardAction>(CLIPBOARD_ACTIONS);
+
+type ClipboardActionListener = (event: ClipboardEvent) => void | false;
+
+function registerClipboardActionListeners(listener: ClipboardActionListener) {
+  for (const action of CLIPBOARD_ACTIONS) {
+    window.addEventListener(action, listener, true);
+    document.addEventListener(action, listener, true);
+  }
+
+  return () => {
+    for (const action of CLIPBOARD_ACTIONS) {
+      window.removeEventListener(action, listener, true);
+      document.removeEventListener(action, listener, true);
+    }
+  };
+}
 
 export function useClipboardGuard({
   enabled,
@@ -23,18 +42,24 @@ export function useClipboardGuard({
       return;
     }
 
+    const blockClipboardEvent = (event: ClipboardEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    };
+
     const preventClipboardAction = (event: ClipboardEvent) => {
       const action = event.type as ClipboardAction;
       const focusedEditorGuard = getEditorActionGuard(event.target);
 
-      if (focusedEditorGuard?.mode === "exempt") {
+      if (focusedEditorGuard?.mode === EDITOR_ACTION_GUARD_MODE.EXEMPT) {
         return;
       }
 
-      if (focusedEditorGuard?.mode === "internal-only") {
+      if (focusedEditorGuard?.mode === EDITOR_ACTION_GUARD_MODE.INTERNAL_ONLY) {
         const clipboardScope = focusedEditorGuard.clipboardScope;
 
-        if (action === "copy" || action === "cut") {
+        if (action === CLIPBOARD_ACTION.COPY || action === CLIPBOARD_ACTION.CUT) {
           if (clipboardScope) {
             captureInternalEditorClipboard(
               event,
@@ -43,18 +68,14 @@ export function useClipboardGuard({
               action,
             );
           } else {
-            event.preventDefault();
-            event.stopPropagation();
-            event.stopImmediatePropagation();
+            blockClipboardEvent(event);
             onClipboardAttempt(action);
           }
 
           return false;
         }
 
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
+        blockClipboardEvent(event);
 
         if (
           clipboardScope &&
@@ -67,17 +88,15 @@ export function useClipboardGuard({
 
         if (clipboardScope) clearInternalEditorClipboard(clipboardScope);
 
-        onClipboardAttempt("paste");
+        onClipboardAttempt(CLIPBOARD_ACTION.PASTE);
 
         alert("Ação não permitida. Cole apenas conteúdo copiado dentro desta atividade.");
         return false;
       }
 
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation();
+      blockClipboardEvent(event);
 
-      if (CLIPBOARD_ACTIONS.has(action)) {
+      if (CLIPBOARD_ACTION_SET.has(action)) {
         onClipboardAttempt(action);
       }
 
@@ -85,20 +104,6 @@ export function useClipboardGuard({
       return false;
     };
 
-    window.addEventListener("copy", preventClipboardAction, true);
-    window.addEventListener("cut", preventClipboardAction, true);
-    window.addEventListener("paste", preventClipboardAction, true);
-    document.addEventListener("copy", preventClipboardAction, true);
-    document.addEventListener("cut", preventClipboardAction, true);
-    document.addEventListener("paste", preventClipboardAction, true);
-
-    return () => {
-      window.removeEventListener("copy", preventClipboardAction, true);
-      window.removeEventListener("cut", preventClipboardAction, true);
-      window.removeEventListener("paste", preventClipboardAction, true);
-      document.removeEventListener("copy", preventClipboardAction, true);
-      document.removeEventListener("cut", preventClipboardAction, true);
-      document.removeEventListener("paste", preventClipboardAction, true);
-    };
+    return registerClipboardActionListeners(preventClipboardAction);
   }, [enabled, onClipboardAttempt]);
 }

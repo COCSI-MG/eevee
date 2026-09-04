@@ -1,7 +1,7 @@
 import type { editor } from "monaco-editor";
 
 import type { WorkerType } from "@/app/interface/scheduler-api/worker";
-import type { EditorActionGuardMode } from "@/hooks/user-actions/editor-action-guard";
+import type { EditorActionGuardMode } from "@/constants/editor-action-guard";
 import type { FileNode } from "@/types/shared";
 
 /**

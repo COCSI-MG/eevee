@@ -1,14 +1,5 @@
 import type { editor } from "monaco-editor";
-
-/**
- * Controls how global keyboard and clipboard guards treat a focused editor.
- *
- * - `enforced`: global action guards remain active.
- * - `internal-only`: clipboard actions are limited to the current workspace.
- * - `exempt`: clipboard and non-DevTools editor shortcuts are allowed.
- */
-export type EditorActionGuardMode = "enforced" | "internal-only" | "exempt";
-
+import type { EditorActionGuardMode } from "@/constants/editor-action-guard";
 export interface EditorActionGuardRegistration {
   editorInstance: editor.IStandaloneCodeEditor;
   mode: EditorActionGuardMode;
