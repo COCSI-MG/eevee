@@ -10,6 +10,10 @@ on:
         - '.github/actions/remote-kubectl/**'
         - '.github/workflows/deploy-assignment-runner.yaml'
 
+permissions:
+    contents: read
+    packages: write
+
 env:
     REGISTRY: ghcr.io
     ASSIGNMENT_RUNNER_IMAGE: "${{ vars.ASSIGNMENT_RUNNER_IMAGE || 'cocsi-mg/assignment-runner' }}"
@@ -27,7 +31,7 @@ jobs:
               with:
                 registry: ${{ env.REGISTRY }}
                 username: ${{ github.actor }}
-                password: ${{ secrets.GHCR_TOKEN }}
+                password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Build e Push da Imagem Docker
               uses: docker/build-push-action@v6
