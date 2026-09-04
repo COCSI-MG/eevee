@@ -1,19 +1,18 @@
-name: Deploy Front
+name: Deploy Assignment Runner
 
 on:
   push:
     branches:
       - main
     paths:
-      - "front/**"
-      - "images/node/**"
-      - "images/javascript-default/**"
+      - "assignment-runner/**"
+      - "packages/execution-contracts/**"
       - ".github/actions/remote-kubectl/**"
-      - ".github/workflows/deploy-front.yaml"
+      - ".github/workflows/deploy-assignment-runner.yaml"
 
 env:
   REGISTRY: ghcr.io
-  FRONT_IMAGE: "${{ vars.FRONT_IMAGE || 'cocsi-mg/eevee-front' }}"
+  ASSIGNMENT_RUNNER_IMAGE: "${{ vars.ASSIGNMENT_RUNNER_IMAGE || 'cocsi-mg/eevee-assignment-runner' }}"
 
 jobs:
   build-and-deploy:
@@ -23,7 +22,7 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout do código
+      - name: Checkout do codigo
         uses: actions/checkout@v4
 
       - name: Login no GitHub Container Registry
@@ -37,13 +36,13 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ./front/Dockerfile
+          file: ./assignment-runner/Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:latest
-            ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:latest
+            ${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }}
 
-      - name: Atualiza imagem e reinicia o pod
+      - name: Atualiza imagem do Assignment Runner
         uses: ./.github/actions/remote-kubectl
         with:
           host: "${{ vars.INPUT_HOST }}"
@@ -53,10 +52,10 @@ jobs:
           private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
-            kubectl set image deployment/eevee-front-deployment eevee-front=${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }} -n eevee-cefetrj
-            if ! kubectl rollout status deployment/eevee-front-deployment -n eevee-cefetrj --timeout=5m; then
+            kubectl set image deployment/assignment-runner-deployment assignment-runner=${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }} -n eevee-cefetrj
+            if ! kubectl rollout status deployment/assignment-runner-deployment -n eevee-cefetrj --timeout=5m; then
               kubectl get pods -n eevee-cefetrj -o wide
-              kubectl describe deployment/eevee-front-deployment -n eevee-cefetrj
+              kubectl describe deployment/assignment-runner-deployment -n eevee-cefetrj
               kubectl get events -n eevee-cefetrj --sort-by='.lastTimestamp'
               exit 1
             fi
