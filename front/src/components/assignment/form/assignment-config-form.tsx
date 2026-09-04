@@ -1,7 +1,7 @@
 import { WorkerExibitionMap } from "@/app/admin/assignments/constants";
 import { Class } from "@/app/interface/scheduler-api/class";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import { Button } from "@/components/ui/button";
+import { FormikToggle } from "@/components/shared/formik-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ExpandableDialog,
@@ -10,37 +10,11 @@ import {
 } from "@/components/ui/expandable";
 import { Label } from "@/components/ui/label";
 import { Tooltip } from "@/components/ui/tooltip";
-import { ErrorMessage, Field, useField } from "formik";
+import { ErrorMessage, Field } from "formik";
 
 export interface AssignmentConfigFormProps {
   classes: Class[];
 }
-
-const AnswerKeyVisibilityControl = () => {
-  const [field, , helpers] = useField<boolean>("answerKeyVisible");
-  const isVisible = Boolean(field.value);
-
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="answerKeyVisible" className="block text-sm font-medium">
-          Visibilidade do gabarito{" "}
-          <Tooltip message="Deixe ativado quando desejar que os alunos visualizem o gabarito." />
-        </Label>
-        <Button
-          id="answerKeyVisible"
-          type="button"
-          role="switch"
-          aria-checked={isVisible}
-          onClick={() => void helpers.setValue(!isVisible)}
-          variant="outline"
-        >
-          {isVisible ? "Ativado" : "Desativado"}
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
   classes,
@@ -49,7 +23,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
 
   return (
     <>
-      <Card className="bg-card border-border max-h-[700px]">
+      <Card className="bg-card border-border">
         <CardHeader>
           <CardTitle className="text-foreground">Informacoes da Atividade</CardTitle>
         </CardHeader>
@@ -205,7 +179,19 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             </div>
           </div>
 
-          <AnswerKeyVisibilityControl />
+          <div className="flex gap-16" >
+            <FormikToggle
+              name="answerKeyVisible"
+              label="Visibilidade do gabarito"
+              tooltip="Deixe ativado quando desejar que os alunos visualizem o gabarito."
+            />
+
+            <FormikToggle
+              name="allowCopyPaste"
+              label="Permitir copiar e colar"
+              tooltip="Permite copiar e colar conteúdos somente dentro do ambiente da atividade. Conteúdos externos continuarão bloqueados."
+            />
+          </div>
         </CardContent>
       </Card>
 

@@ -32,6 +32,7 @@ export function MonacoCodeEditor({
   workerType,
   workspaceTree,
   actionGuardMode = "enforced",
+  actionGuardScope,
   readOnly = false,
   optionOverrides,
 }: MonacoCodeEditorProps) {
@@ -53,6 +54,7 @@ export function MonacoCodeEditor({
     workerType,
     workspaceTree,
     actionGuardMode,
+    actionGuardScope,
   });
 
   return (

@@ -1,5 +1,10 @@
 import { useEffect } from "react";
-import { isFocusedEditorExemptFromActionGuards } from "./editor-action-guard";
+import { getEditorActionGuard } from "./editor-action-guard";
+import {
+  captureInternalEditorClipboard,
+  clearInternalEditorClipboard,
+  pasteInternalEditorClipboard,
+} from "./internal-editor-clipboard";
 import { ClipboardAction, RegisterClipboardAttempt } from "./types";
 
 interface UseClipboardGuardOptions {
@@ -19,21 +24,64 @@ export function useClipboardGuard({
     }
 
     const preventClipboardAction = (event: ClipboardEvent) => {
-      if (isFocusedEditorExemptFromActionGuards()) {
+      const action = event.type as ClipboardAction;
+      const focusedEditorGuard = getEditorActionGuard(event.target);
+
+      if (focusedEditorGuard?.mode === "exempt") {
         return;
+      }
+
+      if (focusedEditorGuard?.mode === "internal-only") {
+        const clipboardScope = focusedEditorGuard.clipboardScope;
+
+        if (action === "copy" || action === "cut") {
+          if (clipboardScope) {
+            captureInternalEditorClipboard(
+              event,
+              focusedEditorGuard.editorInstance,
+              clipboardScope,
+              action,
+            );
+          } else {
+            event.preventDefault();
+            event.stopPropagation();
+            event.stopImmediatePropagation();
+            onClipboardAttempt(action);
+          }
+
+          return false;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        if (
+          clipboardScope &&
+          pasteInternalEditorClipboard(
+            event,
+            focusedEditorGuard.editorInstance,
+            clipboardScope,
+          )
+        ) return false;
+
+        if (clipboardScope) clearInternalEditorClipboard(clipboardScope);
+
+        onClipboardAttempt("paste");
+
+        alert("Ação não permitida. Cole apenas conteúdo copiado dentro desta atividade.");
+        return false;
       }
 
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
 
-      if (CLIPBOARD_ACTIONS.has(event.type as ClipboardAction)) {
-        onClipboardAttempt(event.type as ClipboardAction);
+      if (CLIPBOARD_ACTIONS.has(action)) {
+        onClipboardAttempt(action);
       }
 
-      alert(
-        "Ação não permitida. Por favor, não copie ou cole conteúdo enquanto estiver no editor.",
-      );
+      alert("Ação não permitida. Por favor, não copie ou cole conteúdo enquanto estiver no editor.");
       return false;
     };
 

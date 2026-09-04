@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
   IsDateString,
   IsNotEmpty,
@@ -86,6 +87,15 @@ export class CreateAssignmentDto {
   @IsOptional()
   @IsDateString()
   dueDate?: string | null;
+  @ApiProperty({
+    description:
+      'Allows copy and paste of content originating from within the assignment workspace.',
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  allowCopyPaste?: boolean;
 
   @ApiProperty()
   @IsEnum(WorkerType)

@@ -45,6 +45,11 @@ export default function Workspace({
   const [isSplitView, setIsSplitView] = React.useState(false);
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
+  const editorActionGuardMode = user.isAdmin
+    ? "exempt"
+    : assignment.allowCopyPaste
+      ? "internal-only"
+      : "enforced";
 
   const { activeFile, handleEditorChange, handleFileSelect } =
     useWorkspaceFileEditor({
@@ -243,12 +248,14 @@ export default function Workspace({
               <WorkspaceCodeEditor
                 file={activeFile}
                 onEditorChange={handleEditorChange}
+                actionGuardMode={editorActionGuardMode}
               />
             </div>
             <div className="min-w-0 min-h-0 flex flex-col">
               <WorkspaceCodeEditor
                 file={secondaryFile}
                 onEditorChange={handleSecondaryEditorChange}
+                actionGuardMode={editorActionGuardMode}
               />
             </div>
           </div>
@@ -256,6 +263,7 @@ export default function Workspace({
           <WorkspaceCodeEditor
             file={activeFile}
             onEditorChange={handleEditorChange}
+            actionGuardMode={editorActionGuardMode}
           />
         )}
       </div>

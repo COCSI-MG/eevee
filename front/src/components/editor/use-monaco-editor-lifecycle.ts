@@ -23,6 +23,7 @@ interface UseMonacoEditorLifecycleOptions {
   workerType?: WorkerType | string;
   workspaceTree?: FileNode;
   actionGuardMode: EditorActionGuardMode;
+  actionGuardScope?: string;
 }
 
 const BLOCKED_EDITOR_DRAG_EVENTS = [
@@ -47,6 +48,7 @@ export function useMonacoEditorLifecycle({
   workerType,
   workspaceTree,
   actionGuardMode,
+  actionGuardScope,
 }: UseMonacoEditorLifecycleOptions): MonacoEditorMountHandler {
   const editorRef = React.useRef<editor.IStandaloneCodeEditor | null>(null);
   const runtimeRef = React.useRef<WorkspaceRuntime | null>(null);
@@ -76,8 +78,9 @@ export function useMonacoEditorLifecycle({
     actionCleanupRef.current = registerEditorActionGuard(
       editorInstance,
       actionGuardMode,
+      actionGuardScope,
     );
-  }, [actionGuardMode, preset]);
+  }, [actionGuardMode, actionGuardScope, preset]);
 
   React.useEffect(() => {
     const handleResume = () => {
@@ -112,6 +115,7 @@ export function useMonacoEditorLifecycle({
       actionCleanupRef.current = registerEditorActionGuard(
         editorInstance,
         actionGuardMode,
+        actionGuardScope,
       );
 
       const editorDomNode = editorInstance.getDomNode();

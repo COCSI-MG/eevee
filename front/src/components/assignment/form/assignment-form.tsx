@@ -139,6 +139,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     classId: existingAssignment?.classId ?? 0,
     initSqlScript: existingAssignment?.initSqlScript ?? "",
     answerKeyVisible: existingAssignment?.answerKeyVisible ?? false,
+    allowCopyPaste: existingAssignment?.allowCopyPaste ?? false,
   };
 
   const handleSubmit = (values: typeof initialValues) => {

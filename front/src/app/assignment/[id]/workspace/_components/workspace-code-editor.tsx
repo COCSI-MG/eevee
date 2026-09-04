@@ -22,7 +22,7 @@ export default function WorkspaceCodeEditor({
   actionGuardMode = "enforced",
   readOnly = false,
 }: WorkspaceCodeEditorProps) {
-  const { fileTreeData, workerType } = useWorkspaceContext();
+  const { clipboardScope, fileTreeData, workerType } = useWorkspaceContext();
 
   if (file === null || file.name.trim() === "") {
     return (
@@ -49,6 +49,7 @@ export default function WorkspaceCodeEditor({
         <MonacoCodeEditor
           preset="workspace"
           actionGuardMode={actionGuardMode}
+          actionGuardScope={clipboardScope}
           path={file.path}
           workerType={workerType}
           workspaceTree={fileTreeData}

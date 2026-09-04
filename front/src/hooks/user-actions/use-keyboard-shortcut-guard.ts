@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { isFocusedEditorExemptFromActionGuards } from "./editor-action-guard";
+import { getEditorActionGuard } from "./editor-action-guard";
 import { ClipboardAction, RegisterClipboardAttempt } from "./types";
 
 interface UseKeyboardShortcutGuardOptions {
@@ -49,11 +49,16 @@ export function useKeyboardShortcutGuard({
         return;
       }
 
-      if (!isDevToolsAction && isFocusedEditorExemptFromActionGuards()) {
+      const key = event.key.toLowerCase();
+      const focusedEditorGuard = getEditorActionGuard(event.target);
+      const isInternalClipboardShortcut = focusedEditorGuard?.mode === "internal-only" && key in CLIPBOARD_SHORTCUTS;
+
+      if (
+        !isDevToolsAction &&
+        (focusedEditorGuard?.mode === "exempt" || isInternalClipboardShortcut)
+      ) {
         return;
       }
-
-      const key = event.key.toLowerCase();
 
       event.preventDefault();
       event.stopPropagation();
