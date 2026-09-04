@@ -38,7 +38,7 @@ export default function WorkspaceCodeEditor({
         <div className="flex">
           <div className="flex items-center px-4 py-2 bg-editor-bg border-r border-border">
             <span className="text-sm">{file.name}</span>
-            <span className="ml-2 text-xs text-gray-500">
+            <span className="ml-2 text-xs text-muted-foreground">
               ({file.language || "plaintext"})
             </span>
           </div>

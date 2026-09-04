@@ -1,6 +1,28 @@
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { SchedulingFiles } from "@/app/interface/scheduler-api/scheduling";
-import { defaultResponseValidateWorker, FailureTypeWorker, responses } from './constant'
+import {
+  DEFAULT_WORKSPACE_PREFLIGHT_RESPONSE,
+  ESM_MAIN_EXPORT_PATTERNS,
+  FailureTypeWorker,
+  FORMAT_WORKSPACE_DIAGNOSTIC,
+  JAVASCRIPT_ENTRY_FILE_PATHS,
+  MAIN_EXPORT_PATTERNS,
+  MAX_TRANSPILE_ERRORS,
+  NEXT_ENTRY_FILE_PATHS,
+  NODE_ENTRY_FILE_PATHS,
+  PYTHON_ENTRY_FILE_PATHS,
+  PYTHON_MAIN_PATTERN,
+  REACT_COMPONENT_FILE_PATHS,
+  REACT_ENTRY_FILE_PATHS,
+  SOURCE_CODE_EXTENSION_REGEX,
+  SOURCE_DIRECTORY_PREFIX,
+  SUPPORTED_WORKERS,
+  TYPESCRIPT_FILE_EXTENSION,
+  TYPESCRIPT_SOURCE_EXTENSION_REGEX,
+  WORKSPACE_PREFLIGHT_FAILURE_RESPONSES,
+  WORKSPACE_PREFLIGHT_LOG_ERROR,
+  WORKSPACE_PREFLIGHT_RESPONSES,
+} from "./constant";
 
 export interface WorkspacePreflightResult {
   ok: boolean;
@@ -12,9 +34,6 @@ interface RunWorkspacePreflightParams {
   workerType?: string;
   files?: SchedulingFiles;
 }
-
-const SUPPORTED_WORKERS = new Set<WorkerType>(Object.values(WorkerType));
-const SOURCE_CODE_EXTENSION_REGEX = /\.(ts|tsx|js|jsx)$/i;
 
 function normalizeWorkerType(workerType?: string): WorkerType | null {
   if (!workerType) {
@@ -28,33 +47,20 @@ function normalizeWorkerType(workerType?: string): WorkerType | null {
   return workerType as WorkerType;
 }
 
-function hasAnyFile(files: SchedulingFiles, paths: string[]): boolean {
+function hasAnyFile(files: SchedulingFiles, paths: readonly string[]): boolean {
   return paths.some((path) => typeof files[path] === "string");
 }
 
 function hasMainExport(content: string): boolean {
-  const mainExportPatterns = [
-    /export\s+(?:async\s+)?function\s+main\b/,
-    /export\s+(?:const|let|var)\s+main\b/,
-    /export\s*\{[^}]*\bmain\b[^}]*\}/,
-    /module\.exports\s*=\s*\{[^}]*\bmain\b[^}]*\}/,
-  ];
-
-  return mainExportPatterns.some((pattern) => pattern.test(content));
+  return MAIN_EXPORT_PATTERNS.some((pattern) => pattern.test(content));
 }
 
 function hasPythonMain(content: string): boolean {
-  return /^\s*def\s+main\s*\(/m.test(content);
+  return PYTHON_MAIN_PATTERN.test(content);
 }
 
 function hasEsmMainExport(content: string): boolean {
-  const esmMainExportPatterns = [
-    /export\s+(?:async\s+)?function\s+main\b/,
-    /export\s+(?:const|let|var)\s+main\b/,
-    /export\s*\{[^}]*\bmain\b[^}]*\}/,
-  ];
-
-  return esmMainExportPatterns.some((pattern) => pattern.test(content));
+  return ESM_MAIN_EXPORT_PATTERNS.some((pattern) => pattern.test(content));
 }
 
 function formatDiagnostics(
@@ -89,7 +95,7 @@ function formatDiagnostics(
         ? diagnostic.messageText
         : diagnostic.messageText.messageText;
 
-    return `${filePath}:${line}:${column} - ${messageText}`;
+    return FORMAT_WORKSPACE_DIAGNOSTIC(filePath, line, column, messageText);
   });
 }
 
@@ -142,12 +148,12 @@ async function collectTranspileErrors(
       ),
     );
 
-    if (transpileErrors.length >= 10) {
+    if (transpileErrors.length >= MAX_TRANSPILE_ERRORS) {
       break;
     }
   }
 
-  return transpileErrors.slice(0, 10);
+  return transpileErrors.slice(0, MAX_TRANSPILE_ERRORS);
 }
 
 function validateWorkerRequiredFiles(
@@ -158,20 +164,18 @@ function validateWorkerRequiredFiles(
 
   switch (workerType) {
     case WorkerType.JAVASCRIPT_DEFAULT: {
-      const typescriptFile = Object.keys(files).find(
-        (path) => path.startsWith("src/") && /\.(?:ts|tsx)$/i.test(path),
-      );
+      const typescriptFile = Object.keys(files).find((path) => path.startsWith(SOURCE_DIRECTORY_PREFIX) && TYPESCRIPT_SOURCE_EXTENSION_REGEX.test(path));
 
       if (typescriptFile) {
         reasonForFailure = FailureTypeWorker.TYPESCRIPT_NOT_ALLOWED;
       }
 
-      if (!hasAnyFile(files, ["src/app.js"])) {
-        reasonForFailure = FailureTypeWorker.HAS_NO_PRINCIPAL_ARCHIVE
+      if (!hasAnyFile(files, JAVASCRIPT_ENTRY_FILE_PATHS)) {
+        reasonForFailure = FailureTypeWorker.HAS_NO_PRINCIPAL_ARCHIVE;
       }
 
-      if (!hasEsmMainExport(files["src/app.js"] ?? "")) {
-        reasonForFailure = FailureTypeWorker.EXPORTS_NOT_FOUND
+      if (!hasEsmMainExport(files[JAVASCRIPT_ENTRY_FILE_PATHS[0]] ?? "")) {
+        reasonForFailure = FailureTypeWorker.EXPORTS_NOT_FOUND;
       }
 
       break;
@@ -180,13 +184,14 @@ function validateWorkerRequiredFiles(
     case WorkerType.NODE_DEFAULT:
     case WorkerType.NODE_DEFAULT_POSTGRESQL:
     case WorkerType.NODE_GRPCJS: {
-      if (!hasAnyFile(files, ["src/app.ts", "src/app.js"])) {
-        reasonForFailure = FailureTypeWorker.HAS_NO_PRINCIPAL_ARCHIVE
+      if (!hasAnyFile(files, NODE_ENTRY_FILE_PATHS)) {
+        reasonForFailure = FailureTypeWorker.HAS_NO_PRINCIPAL_ARCHIVE;
       }
 
-      const mainContent = files["src/app.ts"] ?? files["src/app.js"] ?? "";
+      const mainContent = files[NODE_ENTRY_FILE_PATHS[0]] ?? files[NODE_ENTRY_FILE_PATHS[1]];
+
       if (!hasMainExport(mainContent)) {
-        reasonForFailure = FailureTypeWorker.EXPORTS_NOT_FOUND
+        reasonForFailure = FailureTypeWorker.EXPORTS_NOT_FOUND;
       }
 
       break;
@@ -194,74 +199,59 @@ function validateWorkerRequiredFiles(
 
     case WorkerType.NODE_NESTJS:
     case WorkerType.NODE_NESTJS_POSTGRESQL: {
-      const hasNestSource = Object.keys(files).some(
-        (path) => path.startsWith("src/") && path.endsWith(".ts"),
-      );
+      const hasNestSource = Object.keys(files).some((path) => path.startsWith(SOURCE_DIRECTORY_PREFIX) && path.endsWith(TYPESCRIPT_FILE_EXTENSION));
 
       if (!hasNestSource) {
-        reasonForFailure = FailureTypeWorker.MIN_STRCTURE_NUXT
+        reasonForFailure = FailureTypeWorker.MIN_STRCTURE_NUXT;
       }
 
       break;
     }
 
     case WorkerType.NODE_NEXTJS_CYPRESS: {
-      if (!hasAnyFile(files, ["src/page.tsx", "src/page.jsx"])) {
-        reasonForFailure = FailureTypeWorker.PRINCIPAL_PAGE_NOT_FOUND
+      if (!hasAnyFile(files, NEXT_ENTRY_FILE_PATHS)) {
+        reasonForFailure = FailureTypeWorker.PRINCIPAL_PAGE_NOT_FOUND;
       }
 
       break;
     }
 
     case WorkerType.NODE_REACTJS_CYPRESS: {
-      if (!hasAnyFile(files, ["src/App.tsx", "src/App.jsx"])) {
-        reasonForFailure = FailureTypeWorker.PRINCIPAL_COMPONENT_NOT_FOUND
+      if (!hasAnyFile(files, REACT_COMPONENT_FILE_PATHS)) {
+        reasonForFailure = FailureTypeWorker.PRINCIPAL_COMPONENT_NOT_FOUND;
       }
 
-      if (!hasAnyFile(files, ["src/main.tsx", "src/main.jsx"])) {
-        reasonForFailure = FailureTypeWorker.ENTRY_POINT_NOT_FOUND
+      if (!hasAnyFile(files, REACT_ENTRY_FILE_PATHS)) {
+        reasonForFailure = FailureTypeWorker.ENTRY_POINT_NOT_FOUND;
       }
 
       break;
     }
 
     case WorkerType.PYTHON_DEFAULT: {
-      if (!hasAnyFile(files, ["src/app.py"])) {
-        return {
-          ok: false,
-          message: "Arquivo principal ausente",
-          details: [
-            "Esperado um arquivo src/app.py para este tipo de worker.",
-          ],
-        };
+      if (!hasAnyFile(files, PYTHON_ENTRY_FILE_PATHS)) {
+        return WORKSPACE_PREFLIGHT_RESPONSES.pythonEntryMissing();
       }
 
-      const mainContent = files["src/app.py"] ?? "";
+      const mainContent = files[PYTHON_ENTRY_FILE_PATHS[0]] ?? "";
       if (!hasPythonMain(mainContent)) {
-        return {
-          ok: false,
-          message: "Função principal não encontrada",
-          details: [
-            "Seu código precisa definir uma função main para que os testes consigam importar o módulo.",
-          ],
-        };
+        return WORKSPACE_PREFLIGHT_RESPONSES.pythonMainMissing();
       }
 
       break;
     }
   }
 
-  if(reasonForFailure !== null) {
-
-    const obj = responses[reasonForFailure]
+  if (reasonForFailure !== null) {
+    const obj = WORKSPACE_PREFLIGHT_FAILURE_RESPONSES[reasonForFailure];
 
     return {
-      ...defaultResponseValidateWorker,
-      ...obj
-    }
+      ...DEFAULT_WORKSPACE_PREFLIGHT_RESPONSE,
+      ...obj,
+    };
   }
 
-  return defaultResponseValidateWorker
+  return DEFAULT_WORKSPACE_PREFLIGHT_RESPONSE;
 }
 
 export async function runWorkspacePreflight({
@@ -269,23 +259,12 @@ export async function runWorkspacePreflight({
   files,
 }: RunWorkspacePreflightParams): Promise<WorkspacePreflightResult> {
   if (!files || Object.keys(files).length === 0) {
-    return {
-      ok: false,
-      message: "Nenhum arquivo para validar",
-      details: [
-        "Salve ou crie arquivos no workspace antes de executar o worker.",
-      ],
-    };
+    return WORKSPACE_PREFLIGHT_RESPONSES.noFiles();
   }
 
   const normalizedWorkerType = normalizeWorkerType(workerType);
   if (!normalizedWorkerType) {
-    return {
-      ok: true,
-      details: [
-        "Worker não reconhecido para validação local. A execução seguirá no servidor.",
-      ],
-    };
+    return WORKSPACE_PREFLIGHT_RESPONSES.unknownWorker();
   }
 
   const requiredFilesValidation = validateWorkerRequiredFiles(
@@ -301,20 +280,11 @@ export async function runWorkspacePreflight({
     const transpileErrors = await collectTranspileErrors(files);
 
     if (transpileErrors.length > 0) {
-      return {
-        ok: false,
-        message: "Erros de sintaxe/compilação detectados",
-        details: transpileErrors,
-      };
+      return WORKSPACE_PREFLIGHT_RESPONSES.transpileErrors(transpileErrors);
     }
   } catch (error) {
-    console.error("Failed to run local preflight", error);
-    return {
-      ok: true,
-      details: [
-        "Não foi possível executar a validação local completa. A execução seguirá no servidor.",
-      ],
-    };
+    console.error(WORKSPACE_PREFLIGHT_LOG_ERROR, error);
+    return WORKSPACE_PREFLIGHT_RESPONSES.unavailable();
   }
 
   return { ok: true };

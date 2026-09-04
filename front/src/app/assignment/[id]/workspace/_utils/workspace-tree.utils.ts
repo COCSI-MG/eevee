@@ -1,8 +1,30 @@
 import { FileNode, SelectedItem } from "@/types/shared";
 
-export type WorkspaceItemType = "file" | "folder";
+import {
+  INVALID_WORKSPACE_ITEM_NAME_PATTERN,
+  WORKSPACE_ITEM_TYPE,
+  WORKSPACE_MOVE_FAILURE_REASON,
+  WORKSPACE_TREE_MESSAGES,
+} from "./constant";
 
-const INVALID_NAME_PATTERN = /[<>:"/\\|?*\x00-\x1F]/;
+export type WorkspaceItemType = (typeof WORKSPACE_ITEM_TYPE)[keyof typeof WORKSPACE_ITEM_TYPE];
+
+export type WorkspaceMoveFailureReason = (typeof WORKSPACE_MOVE_FAILURE_REASON)[keyof typeof WORKSPACE_MOVE_FAILURE_REASON];
+
+export type WorkspaceMoveFailure = {
+  ok: false;
+  reason: WorkspaceMoveFailureReason;
+  message: string;
+};
+
+export type WorkspaceMoveResult =
+  | {
+      ok: true;
+      movedTree: FileNode;
+      oldPath: string;
+      newPath: string;
+    }
+  | WorkspaceMoveFailure;
 
 export function getPathDepth(path: string): number {
   if (!path) return 0;
@@ -105,11 +127,11 @@ export function fileNameExistsInNode(
 
 export function validateWorkspaceItemName(name: string): string | null {
   if (!name || name.trim() === "") {
-    return "Name cannot be empty";
+    return WORKSPACE_TREE_MESSAGES.emptyName;
   }
 
-  if (INVALID_NAME_PATTERN.test(name)) {
-    return "Name contains invalid characters";
+  if (INVALID_WORKSPACE_ITEM_NAME_PATTERN.test(name)) {
+    return WORKSPACE_TREE_MESSAGES.invalidName;
   }
 
   return null;
@@ -119,7 +141,7 @@ export function getWorkspaceCreateTargetPath(
   selectedItem: SelectedItem,
   treeData: FileNode | null,
 ): string {
-  if (selectedItem.type === "folder" && selectedItem.path) {
+  if (selectedItem.type === WORKSPACE_ITEM_TYPE.FOLDER && selectedItem.path) {
     return selectedItem.path;
   }
 
@@ -134,12 +156,12 @@ export function getWorkspaceCreateTargetLabel(
   selectedItem: SelectedItem,
   treeData: FileNode | null,
 ): string {
-  if (selectedItem.type === "folder" && selectedItem.id) {
+  if (selectedItem.type === WORKSPACE_ITEM_TYPE.FOLDER && selectedItem.id) {
     return selectedItem.id;
   }
 
   const targetPath = getWorkspaceCreateTargetPath(selectedItem, treeData);
-  return targetPath || "root";
+  return targetPath || WORKSPACE_TREE_MESSAGES.rootLabel;
 }
 
 export function validateCreateWorkspaceItem(params: {
@@ -158,15 +180,15 @@ export function validateCreateWorkspaceItem(params: {
   }
 
   if (treeData && fileNameExistsInNode(treeData, targetPath, name)) {
-    return "An item with this name already exists in the target location";
+    return WORKSPACE_TREE_MESSAGES.duplicateName;
   }
 
   if (getPathDepth(targetPath) + 1 > maxDepth) {
-    return `Maximum depth of ${maxDepth} levels reached. Cannot create items deeper.`;
+    return WORKSPACE_TREE_MESSAGES.maxCreateDepth(maxDepth);
   }
 
-  if (itemType === "file" && countFiles(treeData) >= maxFiles) {
-    return `Maximum of ${maxFiles} files reached. Delete some files first.`;
+  if (itemType === WORKSPACE_ITEM_TYPE.FILE && countFiles(treeData) >= maxFiles) {
+    return WORKSPACE_TREE_MESSAGES.maxFiles(maxFiles);
   }
 
   return null;
@@ -181,7 +203,7 @@ export function validateRenameWorkspaceItem(params: {
   const targetNode = findNodeByPath(treeData, targetPath);
 
   if (!targetNode) {
-    return "Item not found";
+    return WORKSPACE_TREE_MESSAGES.itemNotFound;
   }
 
   const trimmedName = newName.trim();
@@ -196,7 +218,7 @@ export function validateRenameWorkspaceItem(params: {
     treeData &&
     fileNameExistsInNode(treeData, parentPath, trimmedName)
   ) {
-    return "An item with this name already exists in the target location";
+    return WORKSPACE_TREE_MESSAGES.duplicateName;
   }
 
   return null;
@@ -373,18 +395,82 @@ function insertItemInFolder(
   };
 }
 
+function getSubtreeRelativeDepth(node: FileNode): number {
+  if (!node.children?.length) return 0
+
+  return 1 + Math.max(...node.children.map((child) => getSubtreeRelativeDepth(child)));
+}
+
+function moveFailure(
+  reason: WorkspaceMoveFailureReason,
+  message: string,
+): WorkspaceMoveFailure {
+  return {
+    ok: false,
+    reason,
+    message
+  };
+}
+
+export function validateMoveItemInTree(
+  tree: FileNode,
+  sourcePath: string,
+  targetFolderPath: string,
+  maxDepth: number,
+): WorkspaceMoveFailure | null {
+  const sourceNode = findNodeByPath(tree, sourcePath);
+
+  if (!sourceNode) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.SOURCE_NOT_FOUND, WORKSPACE_TREE_MESSAGES.sourceNotFound);
+  }
+
+  if (sourcePath === tree.path) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.ROOT, WORKSPACE_TREE_MESSAGES.rootMoveForbidden);
+  }
+
+  const targetNode = findNodeByPath(tree, targetFolderPath);
+
+  if (!targetNode || targetNode.isFile) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.INVALID_TARGET, WORKSPACE_TREE_MESSAGES.invalidMoveTarget);
+  }
+
+  if (getParentPath(sourcePath) === targetFolderPath) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.SAME_LOCATION, WORKSPACE_TREE_MESSAGES.sameMoveLocation);
+  }
+
+  if (
+    sourcePath === targetFolderPath ||
+    targetFolderPath.startsWith(`${sourcePath}/`)
+  ) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.DESCENDANT, WORKSPACE_TREE_MESSAGES.descendantMoveForbidden);
+  }
+
+  if (fileNameExistsInNode(tree, targetFolderPath, sourceNode.id)) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.DUPLICATE, WORKSPACE_TREE_MESSAGES.duplicateMove(sourceNode.id));
+  }
+
+  const deepestMovedPath = getPathDepth(targetFolderPath) + 1 + getSubtreeRelativeDepth(sourceNode);
+
+  if (deepestMovedPath > maxDepth) {
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.MAX_DEPTH, WORKSPACE_TREE_MESSAGES.maxMoveDepth(maxDepth));
+  }
+
+  return null;
+}
+
 export function moveItemInTree(
   tree: FileNode,
   sourcePath: string,
   targetFolderPath: string,
-): { movedTree: FileNode; oldPath: string; newPath: string } | null {
-  if (sourcePath === targetFolderPath) {
-    return null;
-  }
-
-  if (targetFolderPath.startsWith(`${sourcePath}/`)) {
-    return null;
-  }
+  maxDepth: number,
+): WorkspaceMoveResult {
+  const validationError = validateMoveItemInTree(
+    tree,
+    sourcePath,
+    targetFolderPath,
+    maxDepth,
+  );
+  if (validationError) return validationError;
 
   const { tree: treeWithoutSource, extracted } = extractNodeFromTree(
     tree,
@@ -392,11 +478,7 @@ export function moveItemInTree(
   );
 
   if (!extracted) {
-    return null;
-  }
-
-  if (fileNameExistsInNode(treeWithoutSource, targetFolderPath, extracted.id)) {
-    return null;
+    return moveFailure(WORKSPACE_MOVE_FAILURE_REASON.SOURCE_NOT_FOUND, WORKSPACE_TREE_MESSAGES.sourceNotFound);
   }
 
   const oldPath = extracted.path;
@@ -411,7 +493,19 @@ export function moveItemInTree(
     movedNode,
   );
 
-  return { movedTree, oldPath, newPath };
+  return { ok: true, movedTree, oldPath, newPath };
+}
+
+export function rebaseMovedPath(
+  currentPath: string,
+  oldPath: string,
+  newPath: string,
+): string {
+  if (currentPath === oldPath) return newPath
+
+  if (currentPath.startsWith(`${oldPath}/`)) return `${newPath}${currentPath.slice(oldPath.length)}`
+
+  return currentPath;
 }
 
 export function renameItemInTree(
