@@ -3,9 +3,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthService } from "../integration/scheduler-api/auth-service";
+import { renewSession } from "../integration/scheduler-api/client";
 import { AuthSession } from "../interface/scheduler-api/auth";
 
 const AUTH_ROUTES = new Set(["/login", "/register"]);
+const RENEWAL_RATIO = 0.8;
+const MIN_RENEWAL_DELAY_MS = 5_000;
 
 const isAuthRoute = (pathname: string) => AUTH_ROUTES.has(pathname);
 const isProtectedRoute = (pathname: string) =>
@@ -52,16 +55,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const status = (error as { response?: { status?: number } }).response?.status;
+
       if (status !== 401) {
         console.error("Error loading auth session:", error);
+        setSession(null);
+        return;
       }
-      setSession(null);
+
+      const renewed = await renewSession();
+
+      if (requestId !== refreshRequestIdRef.current) {
+        return;
+      }
+
+      setSession(renewed);
     }
   }, [setSession]);
 
   useEffect(() => {
     void refreshSession();
   }, [refreshSession]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    // Reagenda sozinho: setSession troca o objeto user e o efeito roda de novo.
+    // Renovação que falha não desloga, o interceptor cuida disso no 401.
+    const timer = setTimeout(
+      async () => {
+        const session = await renewSession();
+
+        if (session) {
+          setSession(session);
+        }
+      },
+      Math.max(user.expiresIn * RENEWAL_RATIO * 1000, MIN_RENEWAL_DELAY_MS),
+    );
+
+    return () => clearTimeout(timer);
+  }, [user, setSession]);
 
   useEffect(() => {
     if (isHydrating) {

@@ -2,6 +2,7 @@ export interface AuthSession {
   userId: number;
   email: string;
   isAdmin: boolean;
+  expiresIn: number;
 }
 
 export type AuthResponse = AuthSession;
