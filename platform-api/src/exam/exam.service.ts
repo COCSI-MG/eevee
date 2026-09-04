@@ -241,11 +241,18 @@ export class ExamService {
       )
       .where('ea.examId = :examId', { examId })
       .orderBy('ea.id', 'ASC')
-      .addOrderBy('assignmentAttempts.createdAt', 'DESC')
-      .getMany();
+      .addOrderBy('assignmentAttempts.createdAt', 'DESC');
 
-    const mappedAssignments: AssignmentSummaryResponseDto[] = examAssignments.map(
-      (ea) => {
+    if (!user.isAdmin) {
+      examAssignments.andWhere(
+        '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
+        { now: new Date() }
+      );
+    }
+
+    const assignmentLinks = await examAssignments.getMany();
+
+    const mappedAssignments: AssignmentSummaryResponseDto[] = assignmentLinks.map((ea) => {
         const a = ea.assignment;
         const attempts = a.assignmentAttempts ?? [];
         const lastAttempt = attempts[0] ?? null;
@@ -258,6 +265,8 @@ export class ExamService {
           description: a.description,
           classId: a.classId,
           maxAttempts: a.maxAttempts,
+          startDate: a.startDate ?? null,
+          dueDate: a.dueDate ?? null,
           workerType: a.workerType,
           score: ea.score,
           lastAttempt: lastAttempt
@@ -278,8 +287,7 @@ export class ExamService {
             createdAt: s.createdAt,
           })),
         };
-      },
-    );
+      });
 
     return { exam, assignments: mappedAssignments };
   }

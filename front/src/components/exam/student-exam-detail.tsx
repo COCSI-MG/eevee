@@ -16,7 +16,7 @@ import {
   Assignment,
   WorkerDefinition,
 } from "@/app/interface/scheduler-api/assignment";
-import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
+import { AssignmentSummary, Exam } from "@/app/interface/scheduler-api/exam";
 import { AssignmentUserSuspension } from "@/app/interface/scheduler-api/assignment-user-suspension";
 import { Class } from "@/app/interface/scheduler-api/class";
 import { User } from "@/app/interface/scheduler-api/user";
@@ -24,6 +24,7 @@ import { User } from "@/app/interface/scheduler-api/user";
 function summaryToAssignment(
   s: AssignmentSummary,
   currentUserId: number | undefined,
+  examWindow: Pick<Exam, "startDate" | "dueDate">,
 ): Assignment {
   return {
     id: s.id,
@@ -31,6 +32,8 @@ function summaryToAssignment(
     title: s.title,
     description: s.description ?? "",
     maxAttempts: s.maxAttempts,
+    startDate: s.startDate,
+    dueDate: s.dueDate,
     workerType: s.workerType,
     assignmentAttempts: s.lastAttempt ? [s.lastAttempt] : [],
     suspensions:
@@ -59,6 +62,12 @@ function summaryToAssignment(
     assignmentParams: [],
     answerKeyVisible: false,
     score: s.score,
+    examAssignment: {
+      exam: {
+        startDate: examWindow.startDate,
+        dueDate: examWindow.dueDate,
+      },
+    },
   };
 }
 
@@ -73,8 +82,11 @@ export default function StudentExamDetail() {
   const assignments = data?.assignments ?? [];
 
   const hydratedAssignments = useMemo<Assignment[]>(
-    () => assignments.map((s) => summaryToAssignment(s, user?.userId)),
-    [assignments, user?.userId],
+    () =>
+      exam
+        ? assignments.map((s) => summaryToAssignment(s, user?.userId, exam))
+        : [],
+    [assignments, exam, user?.userId],
   );
 
   if (isFetching && !data) {

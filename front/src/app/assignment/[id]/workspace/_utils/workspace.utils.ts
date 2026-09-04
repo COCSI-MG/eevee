@@ -5,19 +5,26 @@ import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { FileNode } from "@/types/shared";
 
-const ASSIGNMENT_README_PATH = "src/README.md";
+import {
+  ASSIGNMENT_README_FILE_NAME,
+  ASSIGNMENT_README_PATH,
+  DEFAULT_ASSIGNMENT_DESCRIPTION,
+  DEFAULT_ASSIGNMENT_TITLE,
+  FORMAT_ASSIGNMENT_README_CONTENT,
+  REACT_ASSIGNMENT_APP_PATH,
+} from "./constant";
 
 function buildAssignmentReadmeContent(assignment: Assignment): string {
-  const title = assignment.title?.trim() || "Assignment";
+  const title = assignment.title?.trim() || DEFAULT_ASSIGNMENT_TITLE;
   const description =
-    assignment.description?.trim() || "No description provided.";
+    assignment.description?.trim() || DEFAULT_ASSIGNMENT_DESCRIPTION;
 
-  return `# ${title}\n\n${description}\n`;
+  return FORMAT_ASSIGNMENT_README_CONTENT(title, description);
 }
 
 function createReadmeNode(content: string): FileNode {
   return {
-    id: "README.md",
+    id: ASSIGNMENT_README_FILE_NAME,
     isFile: true,
     isSelectable: true,
     content,
@@ -91,7 +98,7 @@ export function shouldRebuildWorkspaceTree(
     assignment.workerType === WorkerType.NODE_REACTJS_CYPRESS &&
     (!fileTree ||
       !fileTree.children?.length ||
-      !hasPath(fileTree, "src/App.tsx"))
+      !hasPath(fileTree, REACT_ASSIGNMENT_APP_PATH))
   );
 }
 

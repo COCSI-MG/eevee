@@ -2,10 +2,8 @@ import * as React from "react";
 import type { editor } from "monaco-editor";
 
 import type { WorkerType } from "@/app/interface/scheduler-api/worker";
-import {
-  type EditorActionGuardMode,
-  registerEditorActionGuard,
-} from "@/hooks/user-actions/editor-action-guard";
+import type { EditorActionGuardMode } from "@/constants/editor-action-guard";
+import { registerEditorActionGuard } from "@/hooks/user-actions/editor-action-guard";
 import { registerWorkspaceRuntime } from "@/lib/monaco/workspace/runtime";
 import type { FileNode } from "@/types/shared";
 
@@ -23,6 +21,7 @@ interface UseMonacoEditorLifecycleOptions {
   workerType?: WorkerType | string;
   workspaceTree?: FileNode;
   actionGuardMode: EditorActionGuardMode;
+  actionGuardScope?: string;
 }
 
 const BLOCKED_EDITOR_DRAG_EVENTS = [
@@ -47,6 +46,7 @@ export function useMonacoEditorLifecycle({
   workerType,
   workspaceTree,
   actionGuardMode,
+  actionGuardScope,
 }: UseMonacoEditorLifecycleOptions): MonacoEditorMountHandler {
   const editorRef = React.useRef<editor.IStandaloneCodeEditor | null>(null);
   const runtimeRef = React.useRef<WorkspaceRuntime | null>(null);
@@ -76,8 +76,9 @@ export function useMonacoEditorLifecycle({
     actionCleanupRef.current = registerEditorActionGuard(
       editorInstance,
       actionGuardMode,
+      actionGuardScope,
     );
-  }, [actionGuardMode, preset]);
+  }, [actionGuardMode, actionGuardScope, preset]);
 
   React.useEffect(() => {
     const handleResume = () => {
@@ -112,6 +113,7 @@ export function useMonacoEditorLifecycle({
       actionCleanupRef.current = registerEditorActionGuard(
         editorInstance,
         actionGuardMode,
+        actionGuardScope,
       );
 
       const editorDomNode = editorInstance.getDomNode();

@@ -22,6 +22,9 @@ import {
         name: 'file-saver-queue',
       },
       {
+        name: 'session-cleanup-queue',
+      },
+      {
         name: EXECUTION_RESULTS_QUEUE,
       },
       {

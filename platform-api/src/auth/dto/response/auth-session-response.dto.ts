@@ -9,4 +9,7 @@ export class AuthSessionResponseDto {
 
   @ApiProperty()
   isAdmin: boolean;
+
+  @ApiProperty({ description: 'Segundos restantes até o token de acesso vencer' })
+  expiresIn: number;
 }

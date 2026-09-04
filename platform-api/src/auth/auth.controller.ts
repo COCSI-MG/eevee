@@ -3,6 +3,7 @@ import {
   Post,
   Body,
   BadRequestException,
+  ConflictException,
   UnauthorizedException,
   InternalServerErrorException,
   Res,
@@ -16,14 +17,29 @@ import { PasswordResetService } from './password-reset.service';
 import { LoginRequestDto } from './dto/request/login-request.dto';
 import { ResetPasswordRequestDto } from './dto/request/reset-password-request.dto';
 import { ResetPasswordConfirmDto } from './dto/request/reset-password-confirm.dto';
-import { ApiInternalServerErrorResponse, ApiNoContentResponse, ApiOkResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import {
+  ApiConflictResponse,
+  ApiInternalServerErrorResponse,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { LoginResponseDto } from './dto/response/login-response.dto';
 import { RegisterRequestDto } from './dto/request/register-request.dto';
 import { RegisterResponseDto } from './dto/response/register-response.dto';
 import { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { clearAuthCookie, setAuthCookie } from './auth-cookie.util';
+import {
+  clearAuthCookie,
+  clearRefreshCookie,
+  getRefreshTokenFromCookieHeader,
+  setAuthCookie,
+  setRefreshCookie,
+} from './auth-cookie.util';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { JwtPayload } from './jwt.interface';
+import { SessionStatus } from './enums/session-status.enum';
+import { RequestContextService } from 'src/request-context/request-context.service';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 
@@ -33,6 +49,7 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly passwordResetService: PasswordResetService,
     private readonly configService: ConfigService,
+    private readonly requestContextService: RequestContextService,
   ) {}
 
   @Post('login')
@@ -46,7 +63,8 @@ export class AuthController {
     const result = await this.authService.validateUserAndLogin(loginAuthDto);
 
     if (result) {
-      setAuthCookie(response, result.token, this.configService);
+      setAuthCookie(response, result.accessToken, this.configService);
+      setRefreshCookie(response, result.refreshToken, this.configService);
       return result.session;
     }
 
@@ -63,7 +81,8 @@ export class AuthController {
   ) {
     const result = await this.authService.registerUser(registerAuthDto);
     if (result) {
-      setAuthCookie(response, result.token, this.configService);
+      setAuthCookie(response, result.accessToken, this.configService);
+      setRefreshCookie(response, result.refreshToken, this.configService);
       return result.session;
     }
     throw new InternalServerErrorException(
@@ -98,20 +117,63 @@ export class AuthController {
     return { message: 'Senha alterada com sucesso' };
   }
 
+  @Post('refresh')
+  @ApiOkResponse({ type: AuthSessionResponseDto })
+  @ApiUnauthorizedResponse()
+  @ApiConflictResponse({ description: 'Outra requisição já renovou a sessão' })
+  async refresh(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const denySession = () => {
+      clearAuthCookie(response, this.configService);
+      clearRefreshCookie(response, this.configService);
+      return new UnauthorizedException();
+    };
+
+    const refreshToken = getRefreshTokenFromCookieHeader(
+      request.headers?.cookie,
+    );
+
+    if (!refreshToken) {
+      throw denySession();
+    }
+
+    const result = await this.authService.refreshSession(refreshToken);
+
+    if (result.status === SessionStatus.RACED) {
+      throw new ConflictException('Sessão já renovada por outra requisição');
+    }
+
+    if (result.status !== SessionStatus.REFRESHED) {
+      throw denySession();
+    }
+
+    setAuthCookie(response, result.accessToken, this.configService);
+    setRefreshCookie(response, result.refreshToken, this.configService);
+
+    return result.session;
+  }
+
   @Get('me')
   @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @ApiOkResponse({ type: AuthSessionResponseDto })
   @ApiUnauthorizedResponse()
-  getMe(@Req() request: Request & { user: AuthSessionResponseDto }) {
-    return request.user;
+  getMe(@Req() request: Request & { user: JwtPayload }) {
+    return this.authService.buildSession(request.user);
   }
 
   @Post('logout')
   @SkipThrottle()
   @HttpCode(204)
   @ApiNoContentResponse()
-  logout(@Res({ passthrough: true }) response: Response) {
+  async logout(@Res({ passthrough: true }) response: Response) {
+    await this.authService.endSession(
+      this.requestContextService.getUser()?.familyId,
+    );
+
     clearAuthCookie(response, this.configService);
+    clearRefreshCookie(response, this.configService);
   }
 }

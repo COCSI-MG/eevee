@@ -7,6 +7,7 @@ import { FileText } from "lucide-react";
 import { Tooltip } from "@/components/ui/tooltip";
 import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";
 import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
+import { ASSIGNMENT_FORM_TEXT } from "./constants";
 
 export interface AssignmentBoilerplateFormProps {
   values: Partial<Assignment>;
@@ -24,17 +25,15 @@ export const AssignmentBoilerplateForm: React.FC<
       <CardHeader>
         <CardTitle className="text-foreground flex items-center gap-2">
           <FileText className="w-5 h-5" />
-          Código Boilerplate <Tooltip message="Código que será fornecido ao aluno no início do trabalho para ser usado como base para o desenvolvimento dos exercícios." />
+          {ASSIGNMENT_FORM_TEXT.BOILERPLATE.TITLE}{" "}
+          <Tooltip message={ASSIGNMENT_FORM_TEXT.BOILERPLATE.TOOLTIP} />
         </CardTitle>
       </CardHeader>
       <CardContent>
         <span className="text-sm text-muted-foreground mb-2 block">
-          Forneça o código que será entregue ao aluno no início do trabalho.
-          Certifique-se de que o código esteja alinhado com o tipo de worker
-          selecionado. Segue um exemplo de código boilerplate para o tipo de
-          worker &quot;
-          {WorkerExibitionMap[values.workerType as WorkerType]}
-          &quot;:
+          {ASSIGNMENT_FORM_TEXT.BOILERPLATE.DESCRIPTION(
+            WorkerExibitionMap[values.workerType as WorkerType],
+          )}
         </span>
         <MonacoCodeEditor
           preset="form-field"

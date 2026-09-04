@@ -1,5 +1,9 @@
 import {
   AUTH_COOKIE_NAME,
+  DEFAULT_AUTH_REFRESH_TTL_SECONDS,
+  REFRESH_COOKIE_NAME,
+  getRefreshCookieOptions,
+  getRefreshTokenFromCookieHeader,
   DEFAULT_AUTH_SESSION_TTL_SECONDS,
   getAuthSessionTtlSeconds,
   clearAuthCookie,
@@ -141,5 +145,32 @@ describe('auth cookie util', () => {
     );
 
     expect(options.maxAge).toBe(1800 * 1000);
+  });
+  it('scopes the refresh cookie to the refresh route with its own ttl', () => {
+    const options = getRefreshCookieOptions(
+      createConfigService({ ENV: 'production', AUTH_COOKIE_DOMAIN: '.eeveecodelab.online' }),
+    );
+
+    expect(options).toEqual({
+      httpOnly: true,
+      path: '/v1/auth/refresh',
+      sameSite: 'lax',
+      secure: true,
+      domain: '.eeveecodelab.online',
+      maxAge: DEFAULT_AUTH_REFRESH_TTL_SECONDS * 1000,
+    });
+  });
+
+  it('reads the refresh cookie without confusing it with the auth cookie', () => {
+    const header = `${AUTH_COOKIE_NAME}=access; ${REFRESH_COOKIE_NAME}=refresh`;
+
+    expect(getRefreshTokenFromCookieHeader(header)).toBe('refresh');
+    expect(getTokenFromCookieHeader(header)).toBe('access');
+  });
+
+  it('returns null when the refresh cookie is absent', () => {
+    expect(
+      getRefreshTokenFromCookieHeader(`${AUTH_COOKIE_NAME}=access`),
+    ).toBeNull();
   });
 });

@@ -1,4 +1,8 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
@@ -8,13 +12,17 @@ import {
 } from '@nestjs/throttler/dist/throttler.constants';
 import { DEFAULT_AUTH_SESSION_TTL_SECONDS } from './auth-cookie.util';
 import { AuthController } from './auth.controller';
+import { SessionStatus } from './enums/session-status.enum';
 import { AuthService } from './auth.service';
 import { PasswordResetService } from './password-reset.service';
+import { RequestContextService } from 'src/request-context/request-context.service';
 
 describe('AuthController', () => {
   let controller: AuthController;
 
   const authService = {
+    refreshSession: jest.fn(),
+    endSession: jest.fn(),
     validateUserAndLogin: jest.fn(),
     registerUser: jest.fn(),
     buildSession: jest.fn(),
@@ -29,6 +37,10 @@ describe('AuthController', () => {
     get: jest.fn().mockReturnValue('local'),
   };
 
+  const requestContextService = {
+    getUser: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -36,6 +48,10 @@ describe('AuthController', () => {
         { provide: AuthService, useValue: authService },
         { provide: PasswordResetService, useValue: passwordResetService },
         { provide: ConfigService, useValue: configService },
+        {
+          provide: RequestContextService,
+          useValue: requestContextService,
+        },
       ],
     }).compile();
 
@@ -48,7 +64,8 @@ describe('AuthController', () => {
 
   it('sets the auth cookie and returns the session on login', async () => {
     authService.validateUserAndLogin.mockResolvedValue({
-      token: 'signed-token',
+      accessToken: 'signed-token',
+      refreshToken: 'refresh-token',
       session: {
         userId: 12,
         email: 'admin@example.com',
@@ -88,7 +105,8 @@ describe('AuthController', () => {
 
   it('sets the auth cookie and returns the session on register', async () => {
     authService.registerUser.mockResolvedValue({
-      token: 'signed-token',
+      accessToken: 'signed-token',
+      refreshToken: 'refresh-token',
       session: {
         userId: 33,
         email: 'student@example.com',
@@ -127,12 +145,12 @@ describe('AuthController', () => {
     );
   });
 
-  it('clears the auth cookie on logout', () => {
+  it('clears the auth cookie on logout', async () => {
     const response = {
       clearCookie: jest.fn(),
     } as any;
 
-    controller.logout(response);
+    await controller.logout(response);
 
     expect(response.clearCookie).toHaveBeenCalledWith(
       'eevee_auth',
@@ -155,8 +173,20 @@ describe('AuthController', () => {
       },
     } as any;
 
-    expect(controller.getMe(request)).toEqual(request.user);
-    expect(authService.buildSession).not.toHaveBeenCalled();
+    authService.buildSession.mockReturnValue({
+      userId: 12,
+      email: 'admin@example.com',
+      isAdmin: true,
+      expiresIn: 900,
+    });
+
+    expect(controller.getMe(request)).toEqual({
+      userId: 12,
+      email: 'admin@example.com',
+      isAdmin: true,
+      expiresIn: 900,
+    });
+    expect(authService.buildSession).toHaveBeenCalledWith(request.user);
   });
 
   it('forwards the email to the service on forgot-password', async () => {
@@ -281,5 +311,117 @@ describe('AuthController', () => {
         AuthController.prototype.logout,
       ),
     ).toBe(true);
+  });
+  it('revokes the session and clears both cookies on logout', async () => {
+    requestContextService.getUser.mockReturnValue({
+      userId: 12,
+      email: 'admin@example.com',
+      isAdmin: true,
+      familyId: 'family-1',
+    });
+    const response = { clearCookie: jest.fn() } as any;
+
+    await controller.logout(response);
+
+    expect(authService.endSession).toHaveBeenCalledWith('family-1');
+    expect(response.clearCookie).toHaveBeenCalledWith(
+      'eevee_refresh',
+      expect.objectContaining({ path: '/v1/auth/refresh' }),
+    );
+  });
+
+  it('still clears the cookies when the token carries no session', async () => {
+    requestContextService.getUser.mockReturnValue(undefined);
+    const response = { clearCookie: jest.fn() } as any;
+
+    await expect(controller.logout(response)).resolves.toBeUndefined();
+
+    expect(authService.endSession).toHaveBeenCalledWith(undefined);
+    expect(response.clearCookie).toHaveBeenCalledTimes(2);
+  });
+
+  describe('refresh', () => {
+    const buildResponse = () =>
+      ({ cookie: jest.fn(), clearCookie: jest.fn() }) as any;
+
+    it('rejects and clears both cookies when there is no refresh cookie', async () => {
+      const response = buildResponse();
+
+      await expect(
+        controller.refresh({ headers: {} } as any, response),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(response.clearCookie).toHaveBeenCalledWith(
+        'eevee_auth',
+        expect.anything(),
+      );
+      expect(response.clearCookie).toHaveBeenCalledWith(
+        'eevee_refresh',
+        expect.anything(),
+      );
+      expect(authService.refreshSession).not.toHaveBeenCalled();
+    });
+
+    it('rejects and clears both cookies when the session was denied', async () => {
+      authService.refreshSession.mockResolvedValue({ status: SessionStatus.DENIED });
+      const response = buildResponse();
+
+      await expect(
+        controller.refresh(
+          { headers: { cookie: 'eevee_refresh=token' } } as any,
+          response,
+        ),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+
+      expect(response.clearCookie).toHaveBeenCalledTimes(2);
+      expect(response.cookie).not.toHaveBeenCalled();
+    });
+
+    it('answers 409 and keeps the cookies on a race', async () => {
+      authService.refreshSession.mockResolvedValue({ status: SessionStatus.RACED });
+      const response = buildResponse();
+
+      await expect(
+        controller.refresh(
+          { headers: { cookie: 'eevee_refresh=token' } } as any,
+          response,
+        ),
+      ).rejects.toBeInstanceOf(ConflictException);
+
+      expect(response.clearCookie).not.toHaveBeenCalled();
+      expect(response.cookie).not.toHaveBeenCalled();
+    });
+
+    it('writes both cookies and returns the session on success', async () => {
+      authService.refreshSession.mockResolvedValue({
+        status: SessionStatus.REFRESHED,
+        accessToken: 'novo-access',
+        refreshToken: 'novo-refresh',
+        session: { userId: 12, email: 'admin@example.com', isAdmin: true },
+      });
+      const response = buildResponse();
+
+      await expect(
+        controller.refresh(
+          { headers: { cookie: 'eevee_refresh=token' } } as any,
+          response,
+        ),
+      ).resolves.toEqual({
+        userId: 12,
+        email: 'admin@example.com',
+        isAdmin: true,
+      });
+
+      expect(response.cookie).toHaveBeenCalledWith(
+        'eevee_auth',
+        'novo-access',
+        expect.objectContaining({ path: '/' }),
+      );
+      expect(response.cookie).toHaveBeenCalledWith(
+        'eevee_refresh',
+        'novo-refresh',
+        expect.objectContaining({ path: '/v1/auth/refresh' }),
+      );
+    });
   });
 });

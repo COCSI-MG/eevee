@@ -26,6 +26,7 @@ import {
   ExamDialogMode,
   UpdateExamRequest,
 } from "@/app/interface/scheduler-api/exam";
+import { isoToLocalDatetime } from "@/utils/date";
 
 const createExamSchema = Yup.object().shape({
   title: Yup.string()
@@ -38,13 +39,6 @@ const createExamSchema = Yup.object().shape({
   dueDate: Yup.string().optional(),
   startDate: Yup.string().optional(),
 });
-
-function isoToLocalDatetime(iso: string | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 interface ExamFormDialogProps {
   open: boolean;

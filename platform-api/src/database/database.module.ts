@@ -14,7 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         username: configService.get<string>('PG_USERNAME'),
         password: configService.get<string>('PG_PASSWORD'),
         database: configService.get<string>('PG_DATABASE'),
-        synchronize: true,
+        synchronize: configService.get<string>('ENV') === 'local',
         entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       }),
     }),
