@@ -206,7 +206,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
 
             <div>
               <FormikToggle
-                name="projectImportControl"
+                name="allowProjectImport"
                 label={ASSIGNMENT_FORM_TEXT.CONFIG.PROJECT_IMPORT_CONTROL_LABEL}
                 tooltip={ASSIGNMENT_FORM_TEXT.CONFIG.PROJECT_IMPORT_CONTROL_TOOLTIP}
               />

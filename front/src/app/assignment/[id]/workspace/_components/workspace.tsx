@@ -202,26 +202,18 @@ export default function Workspace({
         className="relative flex shrink-0 min-w-[150px] max-w-[400px] flex-col bg-card border-r border-border h-full min-h-0"
         style={{ width: explorerWidth }}
       >
-        <WorkspaceExplorer
-          onFileSelect={handleFileSelect}
-          onTreeChange={handleTreeChange}
-          onOpenInSecondary={handleOpenInSecondary}
-          onItemMoved={handleItemMoved}
-        />
-
         <WorkspaceImportControl
           assignment={assignment}
           user={user}
           isWorkspaceInitialized={isWorkspaceInitialized}
         />
 
-        <div className="min-h-0 flex-1">
-          <WorkspaceExplorer
-            onFileSelect={handleFileSelect}
-            onTreeChange={handleTreeChange}
-            onOpenInSecondary={handleOpenInSecondary}
-          />
-        </div>
+        <WorkspaceExplorer
+          onFileSelect={handleFileSelect}
+          onTreeChange={handleTreeChange}
+          onOpenInSecondary={handleOpenInSecondary}
+          onItemMoved={handleItemMoved}
+        />
 
         <div
           role="separator"
