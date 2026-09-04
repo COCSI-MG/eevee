@@ -1,7 +1,8 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsDateString,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -65,6 +66,26 @@ export class CreateAssignmentDto {
   @ApiProperty()
   @IsNumber()
   maxAttempts: number;
+
+  @ApiPropertyOptional({
+    type: String,
+    format: 'date-time',
+    nullable: true,
+    description: 'When the assignment becomes visible to students.',
+  })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    format: 'date-time',
+    nullable: true,
+    description: 'Last instant when students may submit a graded attempt.',
+  })
+  @IsOptional()
+  @IsDateString()
+  dueDate?: string | null;
 
   @ApiProperty()
   @IsEnum(WorkerType)

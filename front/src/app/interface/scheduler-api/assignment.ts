@@ -4,6 +4,7 @@ import { AssignmentParam } from "./assignment-param";
 import { AssignmentUserSuspension } from "./assignment-user-suspension";
 import { Class } from "./class";
 import { Template } from "./template";
+import type { Exam } from "./exam";
 
 export interface AssignmentTemplateParam {
   templateParamId: number;
@@ -62,6 +63,8 @@ export interface Assignment {
   /** SQL script to initialize the database for PostgreSQL-backed workers. */
   initSqlScript?: string;
   maxAttempts: number;
+  startDate?: string | null;
+  dueDate?: string | null;
   workerType: string;
   workerDefinition: WorkerDefinition;
   assignmentAttempts: AssignmentAttempt[];
@@ -73,6 +76,9 @@ export interface Assignment {
   answerKeyId?: number | null;
   answerKeyVisible: boolean;
   score?: number;
+  examAssignment?: {
+    exam?: Pick<Exam, "startDate" | "dueDate">;
+  };
 }
 
 export interface CreateAssignmentRequest {
@@ -91,6 +97,8 @@ export interface CreateAssignmentRequest {
       }[]
     | null;
   maxAttempts: number;
+  startDate?: string | null;
+  dueDate?: string | null;
   workerType: string;
   workerDefinition: WorkerDefinition;
   answerKeyVisible?: boolean;
@@ -106,6 +114,8 @@ export interface UpdateAssignmentRequest {
   validationScript?: string;
   initSqlScript?: string;
   maxAttempts: number;
+  startDate?: string | null;
+  dueDate?: string | null;
   workerType: string;
   templates: {
     templateId: number;

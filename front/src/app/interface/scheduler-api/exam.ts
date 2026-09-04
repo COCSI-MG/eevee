@@ -23,6 +23,8 @@ export interface AssignmentSummary {
   description?: string;
   classId: number;
   maxAttempts: number;
+  startDate?: string | null;
+  dueDate?: string | null;
   workerType: string;
   lastAttempt: AssignmentAttempt | null;
   suspensions: AssignmentUserSuspensionSummary[];

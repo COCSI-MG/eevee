@@ -55,7 +55,7 @@ axiosClientWithAuth.interceptors.response.use(
     if (error.response.data) {
       const { message } = error.response.data as { message?: string };
       if (message) {
-        return Promise.reject(new Error(message));
+        error.message = message;
       }
     }
 
