@@ -344,6 +344,7 @@ export class AssignmentService {
       maxAttempts: assignmentData.maxAttempts,
       startDate,
       dueDate,
+      allowCopyPaste: assignmentData.allowCopyPaste ?? false,
       workerType: assignmentData.workerType,
       initSqlScript: assignmentData.initSqlScript,
       boilerplateContent: resolvedBoilerplateContent,

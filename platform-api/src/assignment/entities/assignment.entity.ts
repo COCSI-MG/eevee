@@ -82,6 +82,8 @@ export class Assignment {
 
   @Column({ type: 'timestamp', nullable: true })
   dueDate?: Date | null;
+  @Column({ default: false })
+  allowCopyPaste: boolean;
 
   @Column({
     type: 'enum',

@@ -20,6 +20,7 @@ import {
 } from "../_utils/workspace-tree.utils";
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { Button } from "@/components/ui/button";
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -45,6 +46,11 @@ export default function Workspace({
   const [isSplitView, setIsSplitView] = React.useState(false);
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
+  const editorActionGuardMode = user.isAdmin
+    ? EDITOR_ACTION_GUARD_MODE.EXEMPT
+    : assignment.allowCopyPaste
+      ? EDITOR_ACTION_GUARD_MODE.INTERNAL_ONLY
+      : EDITOR_ACTION_GUARD_MODE.ENFORCED;
 
   const { activeFile, handleEditorChange, handleFileSelect } =
     useWorkspaceFileEditor({
@@ -243,12 +249,14 @@ export default function Workspace({
               <WorkspaceCodeEditor
                 file={activeFile}
                 onEditorChange={handleEditorChange}
+                actionGuardMode={editorActionGuardMode}
               />
             </div>
             <div className="min-w-0 min-h-0 flex flex-col">
               <WorkspaceCodeEditor
                 file={secondaryFile}
                 onEditorChange={handleSecondaryEditorChange}
+                actionGuardMode={editorActionGuardMode}
               />
             </div>
           </div>
@@ -256,6 +264,7 @@ export default function Workspace({
           <WorkspaceCodeEditor
             file={activeFile}
             onEditorChange={handleEditorChange}
+            actionGuardMode={editorActionGuardMode}
           />
         )}
       </div>
