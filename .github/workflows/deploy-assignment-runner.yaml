@@ -1,45 +1,45 @@
-name: Deploy Platform API
+name: Deploy Assignment Runner
 
 on:
     push:
         branches:
         - main
         paths:
-        - 'platform-api/**'
+        - 'assignment-runner/**'
         - 'packages/execution-contracts/**'
         - '.github/actions/remote-kubectl/**'
-        - '.github/workflows/deploy-platform-api.yaml'
+        - '.github/workflows/deploy-assignment-runner.yaml'
 
 env:
     REGISTRY: ghcr.io
-    PLATFORM_API_IMAGE: "${{ vars.PLATFORM_API_IMAGE || 'cocsi-mg/platform-api' }}"
+    ASSIGNMENT_RUNNER_IMAGE: "${{ vars.ASSIGNMENT_RUNNER_IMAGE || 'cocsi-mg/assignment-runner' }}"
 
 jobs:
     build-and-deploy:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout do código
+            - name: Checkout do codigo
               uses: actions/checkout@v4
-            
+
             - name: Login no GitHub Container Registry
               uses: docker/login-action@v3
               with:
                 registry: ${{ env.REGISTRY }}
                 username: ${{ github.actor }}
                 password: ${{ secrets.GHCR_TOKEN }}
-            
+
             - name: Build e Push da Imagem Docker
               uses: docker/build-push-action@v6
               with:
                 context: .
-                file: ./platform-api/Dockerfile
+                file: ./assignment-runner/Dockerfile
                 push: true
                 tags: |
-                    ${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:latest
-                    ${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }}
+                    ${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:latest
+                    ${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }}
 
-            - name: Atualiza Platform API e seus workers
+            - name: Atualiza imagem do Assignment Runner
               uses: ./.github/actions/remote-kubectl
               with:
                 host: ${{ vars.DEPLOY_HOST }}
@@ -48,4 +48,5 @@ jobs:
                 private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
                 known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
                 script: |
-                  kubectl set image deployment/platform-api-deployment platform-api=${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }} -n default
+                  kubectl set image deployment/assignment-runner-deployment assignment-runner=${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }} -n default
+                  kubectl rollout status deployment/assignment-runner-deployment -n default --timeout=120s

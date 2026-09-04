@@ -14,48 +14,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v4
+      - name: Deploy infrastructure from the VM
+        uses: ./.github/actions/remote-kubectl
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER }}
+          port: "${{ vars.DEPLOY_SSH_PORT || '22' }}"
+          private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+          script: |
+            REGISTRY=ghcr.io
+            NAMESPACE=default
+            cd "${{ vars.DEPLOY_WORKDIR }}"
+            kubectl -n "$NAMESPACE" create secret generic eevee-secrets \
+              --from-literal=DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
+              --from-literal=JWT_SECRET='${{ secrets.JWT_SECRET }}' \
+              --from-literal=GROQ_API_KEY='${{ secrets.GROQ_API_KEY }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Setup Helm
-        uses: azure/setup-helm@v4
+            kubectl -n "$NAMESPACE" create secret docker-registry ghcr-auth \
+              --docker-server="$REGISTRY" \
+              --docker-username='${{ github.actor }}' \
+              --docker-password='${{ secrets.GHCR_TOKEN }}' \
+              --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Configure kubeconfig
-        env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
-        run: |
-          mkdir -p "$HOME/.kube"
-          echo "${KUBE_CONFIG_DATA}" | base64 --decode > "$HOME/.kube/config"
-          chmod 600 "$HOME/.kube/config"
+            helm dependency build infrastructure/helm/eevee
+            helm upgrade --install eevee infrastructure/helm/eevee \
+              --namespace "$NAMESPACE" \
+              --set platformApi.image.repository="$REGISTRY/${{ vars.PLATFORM_API_IMAGE }}" \
+              --set platformApi.image.tag=latest \
+              --set assignmentRunner.image.repository="$REGISTRY/${{ vars.ASSIGNMENT_RUNNER_IMAGE }}" \
+              --set assignmentRunner.image.tag=latest \
+              --set front.image.repository="$REGISTRY/${{ vars.FRONT_IMAGE }}" \
+              --set front.image.tag=latest \
+              --wait --timeout 10m
 
-      - name: Apply application secrets
-        run: |
-          kubectl -n "$NAMESPACE" create secret generic eevee-secrets \
-            --from-literal=DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
-            --from-literal=JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-            --from-literal=GROQ_API_KEY='${{ secrets.GROQ_API_KEY }}' \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-          kubectl -n "$NAMESPACE" create secret docker-registry ghcr-auth \
-            --docker-server="$REGISTRY" \
-            --docker-username='${{ github.actor }}' \
-            --docker-password='${{ secrets.GHCR_TOKEN }}' \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Deploy EEVEE Helm release
-        run: |
-          helm dependency build infrastructure/helm/eevee
-          helm upgrade --install eevee infrastructure/helm/eevee \
-            --namespace "$NAMESPACE" \
-            --set platformApi.image.repository="$REGISTRY/${{ vars.PLATFORM_API_IMAGE }}" \
-            --set platformApi.image.tag=latest \
-            --set assignmentRunner.image.repository="$REGISTRY/${{ vars.ASSIGNMENT_RUNNER_IMAGE }}" \
-            --set assignmentRunner.image.tag=latest \
-            --set front.image.repository="$REGISTRY/${{ vars.FRONT_IMAGE }}" \
-            --set front.image.tag=latest \
-            --wait --timeout 10m
-
-      - name: Check rollout status
-        run: |
-          kubectl -n "$NAMESPACE" rollout status deployment/platform-api-deployment --timeout=120s
-          kubectl -n "$NAMESPACE" rollout status deployment/assignment-runner-deployment --timeout=120s
+            kubectl -n "$NAMESPACE" rollout status deployment/platform-api-deployment --timeout=120s
+            kubectl -n "$NAMESPACE" rollout status deployment/assignment-runner-deployment --timeout=120s

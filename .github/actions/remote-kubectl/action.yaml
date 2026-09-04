@@ -1,0 +1,59 @@
+name: Remote kubectl
+description: Runs a deployment script on the VM that owns the Kubernetes context.
+
+inputs:
+  host:
+    description: VM hostname or IP address.
+    required: true
+  username:
+    description: SSH username.
+    required: true
+  port:
+    description: SSH port.
+    required: true
+  private-key:
+    description: SSH private key.
+    required: true
+  known-hosts:
+    description: Pinned SSH known_hosts entry for the VM.
+    required: true
+  script:
+    description: Shell script to run on the VM.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        INPUT_HOST: ${{ inputs.host }}
+        INPUT_USERNAME: ${{ inputs.username }}
+        INPUT_PORT: ${{ inputs.port }}
+        INPUT_PRIVATE_KEY: ${{ inputs.private-key }}
+        INPUT_KNOWN_HOSTS: ${{ inputs.known-hosts }}
+        INPUT_SCRIPT: ${{ inputs.script }}
+      run: |
+        set -euo pipefail
+        : "${INPUT_HOST:?Missing deploy host}"
+        : "${INPUT_USERNAME:?Missing deploy username}"
+        : "${INPUT_PORT:?Missing deploy SSH port}"
+        : "${INPUT_PRIVATE_KEY:?Missing deploy SSH private key}"
+        : "${INPUT_KNOWN_HOSTS:?Missing deploy SSH known_hosts entry}"
+
+        key_file="$(mktemp)"
+        known_hosts_file="$(mktemp)"
+        trap 'rm -f "$key_file" "$known_hosts_file"' EXIT
+
+        printf '%s\n' "$INPUT_PRIVATE_KEY" > "$key_file"
+        printf '%s\n' "$INPUT_KNOWN_HOSTS" > "$known_hosts_file"
+        chmod 600 "$key_file"
+
+        ssh \
+          -i "$key_file" \
+          -o BatchMode=yes \
+          -o IdentitiesOnly=yes \
+          -o StrictHostKeyChecking=yes \
+          -o UserKnownHostsFile="$known_hosts_file" \
+          -p "$INPUT_PORT" \
+          "$INPUT_USERNAME@$INPUT_HOST" \
+          'bash -se' <<< "$INPUT_SCRIPT"
