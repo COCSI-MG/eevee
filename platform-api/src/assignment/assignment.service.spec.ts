@@ -225,6 +225,7 @@ describe('AssignmentService', () => {
     assignmentRepository.save.mockResolvedValue({
       id: 99,
       boilerplateContent: 'console.log("hi");',
+      allowCopyPaste: true,
     });
     templateRepository.find.mockResolvedValue([
       { id: 1, workerType: WorkerType.NODE_DEFAULT },
@@ -238,6 +239,7 @@ describe('AssignmentService', () => {
       title: 'Assignment',
       description: 'Desc',
       maxAttempts: 3,
+      allowCopyPaste: true,
       workerType: WorkerType.NODE_DEFAULT,
       validationScript: undefined as any,
       boilerplateContent: 'console.log("hi");',
@@ -263,6 +265,7 @@ describe('AssignmentService', () => {
         title: 'Assignment',
         description: 'Desc',
         maxAttempts: 3,
+        allowCopyPaste: true,
         workerType: WorkerType.NODE_DEFAULT,
         boilerplateContent: 'console.log("hi");',
         createdById: 7,
@@ -283,6 +286,7 @@ describe('AssignmentService', () => {
       boilerplateContent: 'console.log("hi");',
       boilerplate: 'console.log("hi");',
       validationScript: 'console.log("hi");',
+      allowCopyPaste: true,
     });
   });
 

@@ -65,6 +65,7 @@ export interface Assignment {
   maxAttempts: number;
   startDate?: string | null;
   dueDate?: string | null;
+  allowCopyPaste?: boolean;
   workerType: string;
   workerDefinition: WorkerDefinition;
   assignmentAttempts: AssignmentAttempt[];
@@ -99,6 +100,7 @@ export interface CreateAssignmentRequest {
   maxAttempts: number;
   startDate?: string | null;
   dueDate?: string | null;
+  allowCopyPaste?: boolean;
   workerType: string;
   workerDefinition: WorkerDefinition;
   answerKeyVisible?: boolean;
@@ -116,6 +118,7 @@ export interface UpdateAssignmentRequest {
   maxAttempts: number;
   startDate?: string | null;
   dueDate?: string | null;
+  allowCopyPaste?: boolean;
   workerType: string;
   templates: {
     templateId: number;

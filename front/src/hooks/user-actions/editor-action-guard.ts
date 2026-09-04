@@ -1,32 +1,44 @@
 import type { editor } from "monaco-editor";
-
-/**
- * Controls how global keyboard and clipboard guards treat a focused editor.
- *
- * - `enforced`: global action guards remain active.
- * - `exempt`: clipboard and non-DevTools editor shortcuts are allowed.
- */
-export type EditorActionGuardMode = "enforced" | "exempt";
+import type { EditorActionGuardMode } from "@/constants/editor-action-guard";
+export interface EditorActionGuardRegistration {
+  editorInstance: editor.IStandaloneCodeEditor;
+  mode: EditorActionGuardMode;
+  clipboardScope?: string;
+}
 
 const editorActionGuardModes = new Map<
   editor.IStandaloneCodeEditor,
-  EditorActionGuardMode
+  Omit<EditorActionGuardRegistration, "editorInstance">
 >();
 
 export function registerEditorActionGuard(
   editorInstance: editor.IStandaloneCodeEditor,
   mode: EditorActionGuardMode,
+  clipboardScope?: string,
 ) {
-  editorActionGuardModes.set(editorInstance, mode);
+  editorActionGuardModes.set(editorInstance, { mode, clipboardScope });
 
   return () => {
     editorActionGuardModes.delete(editorInstance);
   };
 }
 
-export function isFocusedEditorExemptFromActionGuards(): boolean {
-  for (const [editorInstance, mode] of editorActionGuardModes) {
-    if (mode === "exempt" && editorInstance.hasTextFocus()) return true;
+export function getEditorActionGuard(
+  eventTarget?: EventTarget | null,
+): EditorActionGuardRegistration | null {
+  if (eventTarget instanceof Node) {
+    for (const [editorInstance, registration] of editorActionGuardModes) {
+      if (editorInstance.getDomNode()?.contains(eventTarget)) {
+        return { editorInstance, ...registration };
+      }
+    }
   }
-  return false;
+
+  for (const [editorInstance, registration] of editorActionGuardModes) {
+    if (editorInstance.hasTextFocus()) {
+      return { editorInstance, ...registration };
+    }
+  }
+
+  return null;
 }
