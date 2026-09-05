@@ -7,12 +7,14 @@ describe('AttemptController', () => {
   let controller: AttemptController;
   let attemptService: {
     findAllForAdmin: jest.Mock;
+    findAllForAdminByAssignmentAndUser: jest.Mock;
     findOneForAdmin: jest.Mock;
   };
 
   beforeEach(async () => {
     attemptService = {
       findAllForAdmin: jest.fn(),
+      findAllForAdminByAssignmentAndUser: jest.fn(),
       findOneForAdmin: jest.fn(),
     };
 
@@ -42,6 +44,20 @@ describe('AttemptController', () => {
       meta: {},
     });
     expect(attemptService.findAllForAdmin).toHaveBeenCalledWith(query);
+  });
+
+  it('delegates the assignment and user attempt history to the service', async () => {
+    attemptService.findAllForAdminByAssignmentAndUser.mockResolvedValue([
+      { id: 12 },
+    ]);
+
+    await expect(
+      controller.findAllForAdminByAssignmentAndUser(99, 7),
+    ).resolves.toEqual([{ id: 12 }]);
+
+    expect(
+      attemptService.findAllForAdminByAssignmentAndUser,
+    ).toHaveBeenCalledWith(99, 7);
   });
 
   it('throws NotFoundException when the attempt does not exist', async () => {

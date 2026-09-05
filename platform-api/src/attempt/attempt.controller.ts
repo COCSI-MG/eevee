@@ -21,6 +21,17 @@ export class AttemptController {
     return this.attemptService.findAllForAdmin(query);
   }
 
+  @Get('admin/assignment/:assignmentId/user/:userId')
+  findAllForAdminByAssignmentAndUser(
+    @Param('assignmentId', ParseIntPipe) assignmentId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    return this.attemptService.findAllForAdminByAssignmentAndUser(
+      assignmentId,
+      userId,
+    );
+  }
+
   @Get(':id')
   async findOneForAdmin(@Param('id', ParseIntPipe) id: number) {
     const attempt = await this.attemptService.findOneForAdmin(id);
