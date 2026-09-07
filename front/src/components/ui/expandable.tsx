@@ -47,7 +47,7 @@ function ExpandableTrigger({
       onClick={onClick}
       aria-label={label}
       className={cn(
-        "text-slate-200 hover:bg-slate-700 hover:text-white",
+        "text-foreground hover:bg-primary/20 hover:text-foreground",
         className,
       )}
     >
@@ -76,16 +76,16 @@ function ExpandableDialog({
 }: ExpandableDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-800 border-slate-700 w-screen h-screen max-w-none max-h-none rounded-none p-0 flex flex-col gap-0 sm:rounded-none">
-        <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-slate-700 space-y-0">
-          <DialogTitle className="text-white">{title}</DialogTitle>
+      <DialogContent className="bg-card border-border w-screen h-screen max-w-none max-h-none rounded-none p-0 flex flex-col gap-0 sm:rounded-none">
+        <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border space-y-0">
+          <DialogTitle className="text-foreground">{title}</DialogTitle>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={() => onOpenChange(false)}
             aria-label={minimizeLabel}
-            className="text-slate-200 hover:bg-slate-700 hover:text-white"
+            className="text-foreground hover:bg-primary/20 hover:text-foreground"
           >
             <Minimize2 className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">{minimizeLabel}</span>

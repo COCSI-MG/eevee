@@ -23,14 +23,14 @@ export function AdminMobileHeader() {
   };
 
   return (
-    <div className="flex items-center p-4 border-b md:hidden">
+    <div className="flex items-center border-b border-sidebar-border bg-sidebar p-4 text-sidebar-foreground md:hidden">
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 bg-gray-900">
+        <SheetContent side="left" className="border-sidebar-border bg-sidebar p-0 text-sidebar-foreground">
           <SheetTitle className="sr-only">Menu</SheetTitle>
           {/* Mobile menu content with active state logic */}
           <div className="flex flex-col h-full overflow-y-auto">
@@ -40,10 +40,10 @@ export function AdminMobileHeader() {
                   key={route.href}
                   href={route.href}
                   className={cn(
-                    "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition",
+                    "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer rounded-lg transition",
                     isActiveRoute(route.href)
-                      ? "text-white bg-white/10"
-                      : "text-zinc-400"
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
                   )}
                 >
                   <div className="flex items-center flex-1">
@@ -51,8 +51,8 @@ export function AdminMobileHeader() {
                       className={cn(
                         "h-5 w-5 mr-3",
                         isActiveRoute(route.href)
-                          ? "text-white"
-                          : "text-zinc-400"
+                          ? "text-sidebar-accent-foreground"
+                          : "text-sidebar-foreground"
                       )}
                     />
                     {route.label}
@@ -63,7 +63,7 @@ export function AdminMobileHeader() {
             <div className="p-3">
               <Button
                 variant="outline"
-                className="w-full justify-start text-zinc-400 hover:text-white"
+                className="w-full justify-start border-sidebar-border text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
                 size="sm"
                 onClick={logout}
               >

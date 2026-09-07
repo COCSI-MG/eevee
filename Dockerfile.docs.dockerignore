@@ -1,0 +1,5 @@
+**
+!docs/
+!docs/**
+!mkdocs.yml
+!requirements-docs.txt

@@ -1,0 +1,21 @@
+FROM python:3.13-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /workspace
+
+COPY requirements-docs.txt ./
+RUN pip install --no-cache-dir -r requirements-docs.txt
+
+RUN useradd --create-home --uid 10001 mkdocs
+
+COPY --chown=mkdocs:mkdocs mkdocs.yml ./
+COPY --chown=mkdocs:mkdocs docs ./docs
+
+USER mkdocs
+
+EXPOSE 8000
+
+CMD ["mkdocs", "serve", "--dev-addr=0.0.0.0:8000"]

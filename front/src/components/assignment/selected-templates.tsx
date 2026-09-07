@@ -42,15 +42,15 @@ export default function SelectedTemplates({
 
   return (
     <div className="space-y-4">
-      <h4 className="text-white font-medium text-sm uppercase tracking-wide">
+      <h4 className="text-foreground font-medium text-sm uppercase tracking-wide">
         Templates Selecionados
       </h4>
 
       {!selectedTemplates.length ? (
-        <div className="bg-slate-700/30 border-2 border-dashed border-slate-600 rounded-lg p-8 text-center">
-          <Settings className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-          <p className="text-slate-400 mb-2">Nenhum template selecionado</p>
-          <p className="text-sm text-slate-500">
+        <div className="bg-primary/10 border-2 border-dashed border-border rounded-lg p-8 text-center">
+          <Settings className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground mb-2">Nenhum template selecionado</p>
+          <p className="text-sm text-muted-foreground">
             Clique no botão &quot;+&quot; para adicionar templates
           </p>
         </div>
@@ -59,12 +59,12 @@ export default function SelectedTemplates({
           {selectedTemplates.map((selectedTemplate, index) => (
             <div
               key={index}
-              className="bg-slate-700/30 border border-slate-600 rounded-lg p-4"
+              className="bg-primary/10 border border-border rounded-lg p-4"
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-green-400" />
-                  <h5 className="text-white font-medium">
+                  <Check className="w-4 h-4 text-success" />
+                  <h5 className="text-foreground font-medium">
                     {getTemplateName(selectedTemplate.templateId)}
                   </h5>
                 </div>
@@ -90,13 +90,13 @@ export default function SelectedTemplates({
                       }}
                       className="w-20 h-8 text-sm tabular-nums text-right"
                     />
-                    <span className="text-xs text-slate-400">%</span>
+                    <span className="text-xs text-muted-foreground">%</span>
                   </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     onClick={() =>
                       handleRemoveTemplate(selectedTemplate.templateId)
                     }
@@ -106,7 +106,7 @@ export default function SelectedTemplates({
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-xs text-slate-400 mb-2">
+                <p className="text-xs text-muted-foreground mb-2">
                   {selectedTemplate.params?.length ?? 0} parâmetro(s)
                   configurado(s)
                 </p>
@@ -119,10 +119,10 @@ export default function SelectedTemplates({
 
                   return (
                     <div key={param.templateParamId} className="text-xs">
-                      <span className="text-blue-400 font-medium">
+                      <span className="text-primary font-medium">
                         {paramName}:
                       </span>
-                      <span className="text-slate-300 ml-2 truncate">
+                      <span className="text-foreground ml-2 truncate">
                         {param.value.length > 50
                           ? `${param.value.substring(0, 50)}...`
                           : param.value}
@@ -134,28 +134,28 @@ export default function SelectedTemplates({
             </div>
           ))}
           {total > 0 && (
-            <div className="pt-2 border-t border-slate-600 space-y-1">
+            <div className="pt-2 border-t border-border space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-400">Distribuição de peso</span>
+                <span className="text-xs text-muted-foreground">Distribuição de peso</span>
                 <span className={`text-sm font-medium tabular-nums ${
                   allFilled && sum !== 100
-                    ? "text-red-400"
+                    ? "text-destructive"
                     : filledCount > 0
-                    ? "text-green-400"
-                    : "text-slate-400"
+                    ? "text-success"
+                    : "text-muted-foreground"
                 }`}>
                   Total: {sum.toFixed(2)}% / 100%
                 </span>
               </div>
 
               {showHint && (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-muted-foreground">
                   Os templates sem peso serão distribuídos igualmente entre o percentual restante.
                 </p>
               )}
 
               {weightError && (
-                <p className="text-xs text-red-400">{weightError}</p>
+                <p className="text-xs text-destructive">{weightError}</p>
               )}
             </div>
           )}

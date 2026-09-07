@@ -29,9 +29,10 @@ import {
   DialogTrigger,
 } from "../../../../../components/ui/dialog";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { formatDateTime } from "@/utils/date";
 
 interface WorkspaceHeaderProps {
-  assignment: Pick<Assignment, "title" | "description">;
+  assignment: Pick<Assignment, "title" | "description" | "startDate" | "dueDate">;
   onRunClick: () => void;
   onSubmitClick: () => void;
   onSaveClick: () => void;
@@ -41,6 +42,7 @@ interface WorkspaceHeaderProps {
   isSaving?: boolean;
   isClearing?: boolean;
   canClear?: boolean;
+  isSubmissionClosed?: boolean;
 }
 
 const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
@@ -54,6 +56,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   isSaving = false,
   isClearing = false,
   canClear = true,
+  isSubmissionClosed = false,
 }) => {
   const { back } = useRouter();
   const [isClearDialogOpen, setIsClearDialogOpen] = React.useState(false);
@@ -66,7 +69,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   };
 
   return (
-    <header className="flex items-center justify-between p-3 border-b border-slate-700">
+    <header className="flex items-center justify-between p-3 border-b border-border">
       <div className="flex items-center gap-4">
         <div
           className="flex items-center space-x-2 cursor-pointer"
@@ -79,26 +82,36 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         <Dialog>
           <DialogTrigger asChild>
             <button
-              className="flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600/20 border border-blue-500 hover:border-blue-400 hover:bg-blue-600/30 transition-all duration-200 group font-medium"
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-primary/20 border border-primary hover:border-primary hover:bg-primary/20 transition-all duration-200 group font-medium"
               title="Visualizar a pergunta/descrição completa da tarefa"
             >
-              <Info className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
-              <span className="text-sm text-blue-300 group-hover:text-blue-200 transition-colors">
+              <Info className="h-5 w-5 text-primary group-hover:text-primary transition-colors" />
+              <span className="text-sm text-primary group-hover:text-primary transition-colors">
                 Ver Pergunta
               </span>
             </button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[70vh]">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-semibold text-slate-100">
+              <DialogTitle className="text-2xl font-semibold text-foreground">
                 {assignment?.title}
               </DialogTitle>
             </DialogHeader>
             <div className="mt-6 space-y-4">
-              <div className="p-6 bg-slate-800/50 rounded-lg border border-slate-700 max-h-96 overflow-y-auto">
-                <p className="text-slate-200 leading-relaxed whitespace-pre-wrap text-base space-y-3">
+              <div className="p-6 bg-card/50 rounded-lg border border-border max-h-96 overflow-y-auto">
+                <p className="text-foreground leading-relaxed whitespace-pre-wrap text-base space-y-3">
                   {assignment?.description || "Nenhuma descrição fornecida."}
                 </p>
+                {(assignment.startDate || assignment.dueDate) && (
+                  <div className="mt-4 space-y-1 text-sm text-slate-400">
+                    {assignment.startDate && (
+                      <p>Início: {formatDateTime(assignment.startDate)}</p>
+                    )}
+                    {assignment.dueDate && (
+                      <p>Entrega: {formatDateTime(assignment.dueDate)}</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </DialogContent>
@@ -108,9 +121,6 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
       <div className="flex items-center">
         <Button variant="ghost" size="sm" onClick={() => back()}>
           Voltar
-        </Button>
-        <Button variant="ghost" size="sm">
-          Ajuda
         </Button>
 
         <div className="flex items-center gap-2 ml-4">
@@ -163,7 +173,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 
           <Button
             size={"sm"}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-success hover:bg-success/90 text-success-foreground"
             onClick={onRunClick}
             disabled={isActionDisabled}
           >
@@ -177,16 +187,20 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 
           <Button
             size={"sm"}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
             onClick={onSubmitClick}
-            disabled={isActionDisabled}
+            disabled={isActionDisabled || isSubmissionClosed}
           >
             {isSubmittingCorrection ? (
               <Loader2 className="w-4 h-4 mr-1 animate-spin" />
             ) : (
               <SendHorizonal className="w-4 h-4 mr-1" />
             )}
-            {isSubmittingCorrection ? "Enviando..." : "Enviar para Correção"}
+            {isSubmittingCorrection
+              ? "Enviando..."
+              : isSubmissionClosed
+                ? "Prazo encerrado"
+                : "Enviar para Correção"}
           </Button>
 
           <Button

@@ -44,34 +44,34 @@ export default function ExamStudentsTable({
       <TableBody>
         {students.length === 0 && (
           <TableRow>
-            <TableCell colSpan={6} className="py-10 text-center text-slate-400">
+            <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
               {emptyMessage}
             </TableCell>
           </TableRow>
         )}
 
         {students.map((student) => (
-          <TableRow key={student.userId} className="hover:bg-slate-900/60">
-            <TableCell className="font-medium text-slate-100">
+          <TableRow key={student.userId} className="hover:bg-background/60">
+            <TableCell className="font-medium text-foreground">
               {student.name}
             </TableCell>
-            <TableCell className="text-slate-400">{student.email}</TableCell>
+            <TableCell className="text-muted-foreground">{student.email}</TableCell>
             <TableCell>
               <Badge
                 variant="outline"
                 className={
                   student.approvedAssignments > 0
-                    ? "border-emerald-500 text-emerald-300"
-                    : "border-slate-700 text-slate-400"
+                    ? "border-success text-success"
+                    : "border-border text-muted-foreground"
                 }
               >
                 {student.approvedAssignments}/{student.totalAssignments}
               </Badge>
             </TableCell>
-            <TableCell className="text-slate-300">
+            <TableCell className="text-foreground">
               {student.attemptedAssignments}/{student.totalAssignments}
             </TableCell>
-            <TableCell className="tabular-nums text-slate-200">
+            <TableCell className="tabular-nums text-foreground">
               {formatGrade(student.examGrade, student.maxExamGrade)}
             </TableCell>
             <TableCell>
@@ -79,7 +79,7 @@ export default function ExamStudentsTable({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+                  className="border-border bg-background text-foreground hover:bg-card"
                   onClick={() => onViewDetails(student)}
                 >
                   <Eye className="h-4 w-4 mr-1" />

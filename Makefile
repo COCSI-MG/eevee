@@ -8,7 +8,39 @@ NAMESPACE    ?= eevee-cefetrj
 CHART        ?= infrastructure/helm/eevee
 VALUES       ?= infrastructure/helm/eevee/values.yaml
 
-up: up-minikube up-docker up-platform-api up-front up-assignment-runner
+DOCS_IMAGE ?= eevee-docs:local
+DOCS_PORT  ?= 8000
+
+.DEFAULT_GOAL := help
+
+.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front seed down prepare-workers
+
+help:
+	@echo "EEVEE - comandos de desenvolvimento"
+	@echo ""
+	@echo "  make setup                 Instala dependencias e compila os contratos compartilhados"
+	@echo "  make prepare-workers       Constroi e carrega todas as imagens de execucao no Minikube"
+	@echo "  make up                    Inicia a infraestrutura e mostra os comandos dos servicos"
+	@echo "  make up-platform-api       Inicia a Platform API"
+	@echo "  make up-assignment-runner  Inicia o Assignment Runner"
+	@echo "  make up-front              Inicia o frontend"
+	@echo "  make seed                  Cria os usuarios locais de demonstracao"
+	@echo "  make down                  Encerra a infraestrutura local"
+	@echo "  make up-docs               Serve a documentacao em http://localhost:$(DOCS_PORT)"
+	@echo "  make check-docs            Valida a documentacao em modo estrito"
+
+setup:
+	cd packages/execution-contracts && npm ci && npm run build
+	cd platform-api && npm ci
+	cd assignment-runner && npm ci
+	cd front && npm ci
+
+up: up-infra
+	@echo ""
+	@echo "Infraestrutura pronta. Abra tres terminais e execute:"
+	@echo "  make up-platform-api"
+	@echo "  make up-assignment-runner"
+	@echo "  make up-front"
 
 up-infra: up-minikube up-docker
 
@@ -32,6 +64,13 @@ up-front:
 	@echo Starting front-end service
 	cd front && npm run dev
 
+seed:
+	cd platform-api && npm run seed
+
+prepare-workers:
+	$(MAKE) -C images rebuild-all
+	minikube image load postgres:16
+
 down:
 	@echo Stopping all services
 	minikube stop
@@ -40,11 +79,11 @@ down:
 .PHONY: images build-images push-images build-workers push-workers
 images: build-images push-images
 
- .PHONY: build-packages build-execution-contracts
+.PHONY: build-packages build-execution-contracts
 build-packages: build-execution-contracts
 
 build-execution-contracts:
-	cd packages/execution-contracts && npm install --no-package-lock && npm run build
+	cd packages/execution-contracts && npm ci && npm run build
 
 build-images: \
 	build-platform-api \
@@ -182,3 +221,18 @@ uninstall:
 
 status:
 	helm status $(HELM_RELEASE) -n $(NAMESPACE)
+
+.PHONY: build-docs up-docs check-docs
+build-docs:
+	docker build -f Dockerfile.docs -t $(DOCS_IMAGE) .
+
+up-docs: build-docs
+	docker run --rm --init \
+		--publish $(DOCS_PORT):8000 \
+		--volume "$(CURDIR)/mkdocs.yml:/workspace/mkdocs.yml:ro" \
+		--volume "$(CURDIR)/docs:/workspace/docs:ro" \
+		$(DOCS_IMAGE)
+
+check-docs: build-docs
+	docker run --rm $(DOCS_IMAGE) \
+		mkdocs build --strict --site-dir /tmp/site

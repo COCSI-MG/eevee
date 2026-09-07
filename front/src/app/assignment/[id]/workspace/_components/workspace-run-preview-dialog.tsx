@@ -60,7 +60,7 @@ export function WorkspaceRunPreviewDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
-        className="w-[min(94vw,56rem)] max-w-[56rem] max-h-[90vh] overflow-hidden border-slate-700 bg-slate-950 text-slate-100"
+        className="w-[min(94vw,56rem)] max-w-[56rem] max-h-[90vh] overflow-hidden border-border bg-background text-foreground"
         onEscapeKeyDown={(event) => {
           if (isBusy) {
             event.preventDefault();
@@ -74,7 +74,7 @@ export function WorkspaceRunPreviewDialog({
       >
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-xl">Pré-visualização da execução</DialogTitle>
-          <DialogDescription className="text-slate-400">
+          <DialogDescription className="text-muted-foreground">
             {cancelling
               ? "Cancelando a pré-visualização."
               : cancelled
@@ -91,9 +91,9 @@ export function WorkspaceRunPreviewDialog({
 
         {isBusy && (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 text-sm text-slate-300">
+            <div className="flex items-center gap-3 text-sm text-foreground">
               {cancelled ? (
-                <XCircle className="h-4 w-4 text-slate-300" />
+                <XCircle className="h-4 w-4 text-foreground" />
               ) : (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
@@ -103,7 +103,7 @@ export function WorkspaceRunPreviewDialog({
                   ? "Execução cancelada."
                   : "Executando verificações..."}
             </div>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-muted-foreground">
               {cancelling
                 ? "Aguardando o backend parar o trabalho."
                 : cancelled
@@ -114,7 +114,7 @@ export function WorkspaceRunPreviewDialog({
         )}
 
         {!loading && showError && (
-          <div className="rounded-lg border border-red-900 bg-red-950/40 p-4 text-sm text-red-200">
+          <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
             <div className="mb-2 flex items-center gap-2 font-medium">
               <XCircle className="h-4 w-4" />
               Pré-visualização falhou
@@ -129,48 +129,48 @@ export function WorkspaceRunPreviewDialog({
               <Badge
                 className={
                   result.isAcceptable
-                    ? "bg-green-600 text-white"
-                    : "bg-red-600 text-white"
+                    ? "bg-success text-success-foreground"
+                    : "bg-destructive text-destructive-foreground"
                 }
               >
                 {result.isAcceptable ? "Aceito" : "Reprovado"}
               </Badge>
-              <span className="text-sm text-slate-400">
+              <span className="text-sm text-muted-foreground">
                 Nota {scoreValue.toFixed(0)}
               </span>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
-                <p className="text-xs uppercase tracking-wide text-slate-400">
+              <div className="rounded-lg border border-border bg-background p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   Nota
                 </p>
-                <p className="mt-1 text-lg font-semibold text-slate-100">
+                <p className="mt-1 text-lg font-semibold text-foreground">
                   {result.score}
                 </p>
               </div>
-              <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
-                <p className="text-xs uppercase tracking-wide text-slate-400">
+              <div className="rounded-lg border border-border bg-background p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   Aprovados
                 </p>
-                <p className="mt-1 text-lg font-semibold text-slate-100">
+                <p className="mt-1 text-lg font-semibold text-foreground">
                   {result.passes}
                 </p>
               </div>
-              <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
-                <p className="text-xs uppercase tracking-wide text-slate-400">
+              <div className="rounded-lg border border-border bg-background p-3">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   Reprovados
                 </p>
-                <p className="mt-1 text-lg font-semibold text-slate-100">
+                <p className="mt-1 text-lg font-semibold text-foreground">
                   {result.fails}
                 </p>
               </div>
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-slate-200">Relatório</p>
-              <ScrollArea className="h-72 w-full max-w-full rounded-lg border border-slate-800 bg-slate-900">
-                <pre className="whitespace-pre-wrap break-words p-4 text-xs leading-5 text-slate-300">
+              <p className="text-sm font-medium text-foreground">Relatório</p>
+              <ScrollArea className="h-72 w-full max-w-full rounded-lg border border-border bg-background">
+                <pre className="whitespace-pre-wrap break-words p-4 text-xs leading-5 text-foreground">
                   {result.report || "Nenhum relatório retornado."}
                 </pre>
               </ScrollArea>

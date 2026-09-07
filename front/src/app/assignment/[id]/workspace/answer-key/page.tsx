@@ -34,6 +34,7 @@ import QueryErrorState from "@/components/shared/query-error-state";
 import { Button } from "@/components/ui/button";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { useAnswerKeyTest } from "@/hooks/use-answer-key-test";
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 import { AnswerKeyTestDialog } from "../_components/answer-key-test-dialog";
 
 function isFileNodeTree(value: unknown): value is FileNode {
@@ -114,13 +115,13 @@ function AnswerKeyEditor({
   );
 
   return (
-    <div className="flex h-screen flex-col bg-slate-950 text-slate-100">
-      <header className="flex min-h-16 items-center justify-between gap-4 border-b border-slate-800 px-4 sm:px-6">
+    <div className="flex h-screen flex-col bg-background text-foreground">
+      <header className="flex min-h-16 items-center justify-between gap-4 border-b border-border px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
-            className="shrink-0 text-slate-400 hover:text-white"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
             onClick={() => router.back()}
             aria-label="Voltar ao workspace"
           >
@@ -133,7 +134,7 @@ function AnswerKeyEditor({
                 Gabarito
               </span>
             </div>
-            <h1 className="truncate text-sm font-semibold text-slate-100 sm:text-base">
+            <h1 className="truncate text-sm font-semibold text-foreground sm:text-base">
               {assignment.title}
             </h1>
           </div>
@@ -143,7 +144,7 @@ function AnswerKeyEditor({
           <Button
             variant="ghost"
             size="icon"
-            className="text-slate-400 hover:text-white sm:hidden"
+            className="text-muted-foreground hover:text-foreground sm:hidden"
             onClick={() => setShowExplorer((current) => !current)}
             aria-label="Mostrar arquivos do gabarito"
           >
@@ -153,7 +154,7 @@ function AnswerKeyEditor({
             <Button
               onClick={handleRun}
               disabled={answerKeyTest.isPending || saveMutation.isPending}
-              className="shrink-0 bg-green-600 text-white hover:bg-green-700"
+              className="shrink-0 bg-success text-success-foreground hover:bg-success/90"
             >
               {answerKeyTest.isPending ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -167,7 +168,7 @@ function AnswerKeyEditor({
             <Button
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
-              className="shrink-0 text-slate-950"
+              className="shrink-0 text-primary-foreground"
             >
               <Save className="mr-2 h-4 w-4" />
               {saveMutation.isPending ? "Salvando..." : "Salvar gabarito"}
@@ -178,7 +179,7 @@ function AnswerKeyEditor({
 
       <div className="flex min-h-0 flex-1">
         <aside
-          className={`${showExplorer ? "flex" : "hidden"} relative shrink-0 border-r border-slate-800 bg-slate-900 sm:flex`}
+          className={`${showExplorer ? "flex" : "hidden"} relative shrink-0 border-r border-border bg-background sm:flex`}
           style={{ width: explorerWidth }}
         >
           <WorkspaceExplorer
@@ -190,7 +191,7 @@ function AnswerKeyEditor({
             role="separator"
             aria-label="Redimensionar explorador"
             aria-orientation="vertical"
-            className="absolute right-0 top-0 h-full w-1 cursor-ew-resize bg-transparent hover:bg-amber-400/40"
+            className="absolute right-0 top-0 h-full w-1 cursor-ew-resize bg-transparent hover:bg-primary/40"
             onMouseDown={(event) => startResize("explorer", event)}
           />
         </aside>
@@ -203,7 +204,7 @@ function AnswerKeyEditor({
             <WorkspaceCodeEditor
               file={activeFile}
               onEditorChange={handleEditorChange}
-              actionGuardMode="exempt"
+              actionGuardMode={EDITOR_ACTION_GUARD_MODE.EXEMPT}
               readOnly={!isAdmin}
             />
           </div>

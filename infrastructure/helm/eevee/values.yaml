@@ -84,7 +84,7 @@ redis:
 platformApi:
   enabled: true
   image:
-    repository: ghcr.io/cocsi-mg/platform-api
+    repository: ghcr.io/cocsi-mg/eevee-platform-api
     tag: develop
     pullPolicy: Always
   env: "production"
@@ -102,7 +102,7 @@ platformApi:
 assignmentRunner:
   enabled: true
   image:
-    repository: ghcr.io/cocsi-mg/assignment-runner
+    repository: ghcr.io/cocsi-mg/eevee-assignment-runner
     tag: develop
     pullPolicy: Always
   env: "production"

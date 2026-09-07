@@ -13,7 +13,7 @@ export function AdminAttemptExpandedRow({ attemptId }: AdminAttemptExpandedRowPr
 
   if (isPending) {
     return (
-      <div className="flex items-center gap-2 py-6 text-sm text-slate-400">
+      <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
         Carregando detalhes da tentativa...
       </div>
@@ -25,12 +25,12 @@ export function AdminAttemptExpandedRow({ attemptId }: AdminAttemptExpandedRowPr
       error instanceof Error ? error.message : "Não foi possível carregar os detalhes.";
     return (
       <div className="space-y-3 py-2">
-        <p className="text-sm text-red-300">{message}</p>
+        <p className="text-sm text-destructive">{message}</p>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+          className="border-border bg-background text-foreground hover:bg-card"
           onClick={() => refetch()}
         >
           Tentar novamente
@@ -48,18 +48,18 @@ export function AdminAttemptExpandedRow({ attemptId }: AdminAttemptExpandedRowPr
   return (
     <div className="space-y-4 py-2">
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">Relatório</p>
-        <pre className="max-h-64 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-200 whitespace-pre-wrap">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Relatório</p>
+        <pre className="max-h-64 overflow-auto rounded-md bg-background p-3 text-xs text-foreground whitespace-pre-wrap">
           {data.report || "Sem report para esta tentativa."}
         </pre>
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Arquivos enviados
         </p>
         {fileEntries.length === 0 ? (
-          <div className="rounded-md border border-slate-800 bg-slate-950 p-3 text-xs text-slate-400">
+          <div className="rounded-md border border-border bg-background p-3 text-xs text-muted-foreground">
             Esta tentativa não possui arquivos armazenados.
           </div>
         ) : (
@@ -67,12 +67,12 @@ export function AdminAttemptExpandedRow({ attemptId }: AdminAttemptExpandedRowPr
             {fileEntries.map(([filePath, content]) => (
               <div
                 key={`${attemptId}-${filePath}`}
-                className="rounded-md border border-slate-800 bg-slate-950"
+                className="rounded-md border border-border bg-background"
               >
-                <div className="border-b border-slate-800 px-3 py-2 text-xs font-medium text-slate-300">
+                <div className="border-b border-border px-3 py-2 text-xs font-medium text-foreground">
                   {filePath}
                 </div>
-                <pre className="max-h-56 overflow-auto p-3 text-xs text-slate-200 whitespace-pre-wrap">
+                <pre className="max-h-56 overflow-auto p-3 text-xs text-foreground whitespace-pre-wrap">
                   {content}
                 </pre>
               </div>

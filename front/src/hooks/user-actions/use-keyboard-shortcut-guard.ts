@@ -1,5 +1,7 @@
 import { useEffect } from "react";
-import { isFocusedEditorExemptFromActionGuards } from "./editor-action-guard";
+import { CLIPBOARD_ACTION } from "@/constants/clipboard-action";
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
+import { getEditorActionGuard } from "./editor-action-guard";
 import { ClipboardAction, RegisterClipboardAttempt } from "./types";
 
 interface UseKeyboardShortcutGuardOptions {
@@ -10,9 +12,9 @@ interface UseKeyboardShortcutGuardOptions {
 const BLOCKED_MODIFIER_KEYS = new Set(["a", "c", "s", "u", "v", "x"]);
 const BLOCKED_DEVTOOLS_KEYS = new Set(["c", "i", "j"]);
 const CLIPBOARD_SHORTCUTS: Record<string, ClipboardAction> = {
-  c: "copy",
-  v: "paste",
-  x: "cut",
+  c: CLIPBOARD_ACTION.COPY,
+  v: CLIPBOARD_ACTION.PASTE,
+  x: CLIPBOARD_ACTION.CUT,
 };
 
 function isDevToolsShortcut(event: KeyboardEvent) {
@@ -49,11 +51,16 @@ export function useKeyboardShortcutGuard({
         return;
       }
 
-      if (!isDevToolsAction && isFocusedEditorExemptFromActionGuards()) {
+      const key = event.key.toLowerCase();
+      const focusedEditorGuard = getEditorActionGuard(event.target);
+      const isInternalClipboardShortcut = focusedEditorGuard?.mode === EDITOR_ACTION_GUARD_MODE.INTERNAL_ONLY && key in CLIPBOARD_SHORTCUTS;
+
+      if (
+        !isDevToolsAction &&
+        (focusedEditorGuard?.mode === EDITOR_ACTION_GUARD_MODE.EXEMPT || isInternalClipboardShortcut)
+      ) {
         return;
       }
-
-      const key = event.key.toLowerCase();
 
       event.preventDefault();
       event.stopPropagation();

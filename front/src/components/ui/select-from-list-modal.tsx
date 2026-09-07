@@ -94,8 +94,8 @@ export default function SelectFromListModal<T>({
           />
 
           {errorMessage && (
-            <div className="rounded-lg border border-red-800 bg-red-950/20 p-4">
-              <p className="text-sm text-red-200/80">{errorMessage}</p>
+            <div className="rounded-lg border border-destructive bg-destructive/10 p-4">
+              <p className="text-sm text-destructive">{errorMessage}</p>
             </div>
           )}
 

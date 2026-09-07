@@ -21,11 +21,12 @@ import { useMemo } from "react";
 
 export default function TemplatePage() {
   const { page, search, debouncedSearch, setPage, setSearch } =
-    usePaginatedSearch();
+    usePaginatedSearch({ debounceMs: 3000 });
   const { data, refetch, isFetching, isError } = usePaginatedTemplates({
     page,
     search: debouncedSearch,
   });
+  const isSearchLoading = search !== debouncedSearch || isFetching;
   const templates = data?.data ?? [];
   const meta = data?.meta;
 
@@ -126,23 +127,29 @@ export default function TemplatePage() {
         ariaLabel="Filtrar templates por titulo, descricao ou tipo de worker"
         className="max-w-md"
       />
-      <div className="border rounded-md">
-        <TemplatesTable
-          templates={templates}
-          handleDelete={handleDelete}
-          emptyMessage={templatesEmptyMessage}
-        />
-      </div>
+      {isSearchLoading ? (
+        <Loader fullScreen={false} />
+      ) : (
+        <>
+          <div className="border rounded-md">
+            <TemplatesTable
+              templates={templates}
+              handleDelete={handleDelete}
+              emptyMessage={templatesEmptyMessage}
+            />
+          </div>
 
-      {meta && (
-        <Pagination
-          page={meta.page}
-          totalPages={meta.totalPages}
-          pageSize={meta.pageSize}
-          total={meta.total}
-          onPageChange={setPage}
-          itemLabel={{ singular: "template", plural: "templates" }}
-        />
+          {meta && (
+            <Pagination
+              page={meta.page}
+              totalPages={meta.totalPages}
+              pageSize={meta.pageSize}
+              total={meta.total}
+              onPageChange={setPage}
+              itemLabel={{ singular: "template", plural: "templates" }}
+            />
+          )}
+        </>
       )}
     </div>
   );

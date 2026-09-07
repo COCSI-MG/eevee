@@ -1,56 +1,62 @@
 name: Deploy Front
 
 on:
-    push:
-        branches:
-        - main
-        paths:
-        - 'front/**'
-        - '.github/workflows/deploy-front.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - "front/**"
+      - "images/node/**"
+      - "images/javascript-default/**"
+      - ".github/actions/remote-kubectl/**"
+      - ".github/workflows/deploy-front.yaml"
 
 env:
-    REGISTRY: ghcr.io
-    FRONT_IMAGE: ${{ vars.FRONT_IMAGE }}
-
+  REGISTRY: ghcr.io
+  FRONT_IMAGE: "${{ vars.FRONT_IMAGE || 'cocsi-mg/eevee-front' }}"
 
 jobs:
-    build-and-deploy:
-        runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
-        steps:
-            - name: Checkout do código
-              uses: actions/checkout@v3
-            
-            - name: Login no GitHub Container Registry
-              uses: docker/login-action@v2
-              with:
-                registry: ${{ env.REGISTRY }}
-                username: ${{ github.actor }}
-                password: ${{ secrets.GHCR_TOKEN }}
-            
-            - name: Build e Push da Imagem Docker
-              uses: docker/build-push-action@v3
-              with:
-                context: ./front
-                push: true
-                build-args: |
-                    NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
-                    APP_ENV=${{ vars.APP_ENV }}
-                tags: |
-                    ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:latest
-                    ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }}
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
 
-            - name: Configurar kubectl
-              uses: azure/setup-kubectl@v3
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Atualiza Configuração do Kubernetes
-              env:
-                KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
-              run: |
-                mkdir -p $HOME/.kube
-                echo "${KUBE_CONFIG_DATA}" | base64 --decode > $HOME/.kube/config
-                chmod 600 $HOME/.kube/config
+      - name: Build e Push da Imagem Docker
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./front/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:latest
+            ${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }}
 
-            - name: Atualiza imagem e reinicia o pod 
-              run: |
-                kubectl set image deployment/eevee-front-deployment eevee-front=${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }} -n default
+      - name: Atualiza imagem e reinicia o pod
+        uses: ./.github/actions/remote-kubectl
+        with:
+          host: "${{ vars.INPUT_HOST }}"
+          username: "${{ vars.INPUT_USER }}"
+          port: "${{ vars.INPUT_PORT || '22' }}"
+          private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+          script: |
+            kubectl set image deployment/eevee-front-deployment eevee-front=${{ env.REGISTRY }}/${{ env.FRONT_IMAGE }}:${{ github.sha }} -n eevee-cefetrj
+            if ! kubectl rollout status deployment/eevee-front-deployment -n eevee-cefetrj --timeout=5m; then
+              kubectl get pods -n eevee-cefetrj -o wide
+              kubectl describe deployment/eevee-front-deployment -n eevee-cefetrj
+              kubectl get events -n eevee-cefetrj --sort-by='.lastTimestamp'
+              exit 1
+            fi

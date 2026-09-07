@@ -16,11 +16,17 @@ import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { SecurityViolationReason } from "@/hooks/user-actions/types";
 import { useMutation } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import {
+  WORKSPACE_DRAG_AREA_SELECTOR,
+  WORKSPACE_DRAG_MIME_TYPE,
+} from "../_utils/constant";
+import { clearInternalEditorClipboard } from "@/hooks/user-actions/internal-editor-clipboard";
 
 interface WorkspaceContextType {
   selectedItem: SelectedItem;
   fileTreeData: FileNode;
   workerType?: WorkerType | string;
+  clipboardScope: string;
   selectItem: (item: SelectedItem) => void;
   clearSelection: () => void;
   replaceFileTree: (fileTree: FileNode) => void;
@@ -59,6 +65,8 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const { user } = useAuthContext();
   const userId = user?.userId;
   const assignmentId = Number(params.id);
+  const workspaceInstanceId = React.useId();
+  const clipboardScope = `assignment:${assignmentId}:workspace:${workspaceInstanceId}`;
   const requestedSuspensionReasons = React.useRef(new Set<string>());
   const { data: assignmentData } = useFetchAssignment(assignmentId);
   const isUserSuspended = Boolean(
@@ -122,6 +130,11 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     initializeStashFn();
   }, []);
 
+  useEffect(
+    () => () => clearInternalEditorClipboard(clipboardScope),
+    [clipboardScope],
+  );
+
   const { mutateAsync: suspendUserFromAssignment } = useMutation({
     mutationFn: async (reason: SecurityViolationReason) => {
       if (!Number.isFinite(assignmentId)) {
@@ -153,6 +166,8 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   usePreventUserActions({
     enabled: enableSecurityGuards && shouldPreventUserActions,
+    allowedDragAreaSelector: WORKSPACE_DRAG_AREA_SELECTOR,
+    allowedDragMimeType: WORKSPACE_DRAG_MIME_TYPE,
     clipboardViolationLimit: 10,
     onClipboardViolationLimit: handleClipboardViolationLimit,
     onSecurityViolation: handleSecurityViolation,
@@ -162,6 +177,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     selectedItem,
     fileTreeData: treeData,
     workerType: workerType ?? assignmentData?.workerType,
+    clipboardScope,
     selectItem,
     clearSelection,
     replaceFileTree,

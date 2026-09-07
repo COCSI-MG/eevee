@@ -2,7 +2,12 @@
 
 import dynamic from "next/dynamic";
 
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 import { resolveMonacoLanguage } from "@/lib/monaco/language";
+import {
+  EEVEE_MONACO_THEME,
+  registerEeveeMonacoTheme,
+} from "@/lib/monaco/theme";
 import { workspaceModelPath } from "@/lib/monaco/workspace/models";
 
 import type { MonacoCodeEditorProps } from "./monaco-code-editor.types";
@@ -27,7 +32,8 @@ export function MonacoCodeEditor({
   language,
   workerType,
   workspaceTree,
-  actionGuardMode = "enforced",
+  actionGuardMode = EDITOR_ACTION_GUARD_MODE.ENFORCED,
+  actionGuardScope,
   readOnly = false,
   optionOverrides,
 }: MonacoCodeEditorProps) {
@@ -49,12 +55,13 @@ export function MonacoCodeEditor({
     workerType,
     workspaceTree,
     actionGuardMode,
+    actionGuardScope,
   });
 
   return (
     <Editor
       height={height}
-      theme="vs-dark"
+      theme={EEVEE_MONACO_THEME}
       path={effectivePath}
       value={value}
       language={effectiveLanguage}
@@ -62,6 +69,7 @@ export function MonacoCodeEditor({
       keepCurrentModel={false}
       onChange={(nextValue) => onChange?.(nextValue ?? "")}
       onMount={handleMount}
+      beforeMount={registerEeveeMonacoTheme}
       className={className}
       options={options}
     />

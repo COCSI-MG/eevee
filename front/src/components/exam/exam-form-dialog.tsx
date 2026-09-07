@@ -26,6 +26,7 @@ import {
   ExamDialogMode,
   UpdateExamRequest,
 } from "@/app/interface/scheduler-api/exam";
+import { isoToLocalDatetime } from "@/utils/date";
 
 const createExamSchema = Yup.object().shape({
   title: Yup.string()
@@ -38,13 +39,6 @@ const createExamSchema = Yup.object().shape({
   dueDate: Yup.string().optional(),
   startDate: Yup.string().optional(),
 });
-
-function isoToLocalDatetime(iso: string | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
 
 interface ExamFormDialogProps {
   open: boolean;
@@ -156,7 +150,7 @@ export default function ExamFormDialog({
               placeholder="Ex: Prova final SQL"
             />
             {formik.touched.title && formik.errors.title && (
-              <p className="text-sm text-red-500">{formik.errors.title}</p>
+              <p className="text-sm text-destructive">{formik.errors.title}</p>
             )}
           </div>
 
@@ -172,7 +166,7 @@ export default function ExamFormDialog({
               placeholder="Ex: Capítulos 1 a 5 do livro"
             />
             {formik.touched.description && formik.errors.description && (
-              <p className="text-sm text-red-500">
+              <p className="text-sm text-destructive">
                 {formik.errors.description}
               </p>
             )}
@@ -192,7 +186,7 @@ export default function ExamFormDialog({
               Opcional. Sem esta data a prova não fica visível para os alunos.
             </p>
             {formik.touched.startDate && formik.errors.startDate && (
-              <p className="text-sm text-red-500">{formik.errors.startDate}</p>
+              <p className="text-sm text-destructive">{formik.errors.startDate}</p>
             )}
           </div>
 
@@ -210,7 +204,7 @@ export default function ExamFormDialog({
               Opcional. Prazo final para a prova.
             </p>
             {formik.touched.dueDate && formik.errors.dueDate && (
-              <p className="text-sm text-red-500">{formik.errors.dueDate}</p>
+              <p className="text-sm text-destructive">{formik.errors.dueDate}</p>
             )}
           </div>
 

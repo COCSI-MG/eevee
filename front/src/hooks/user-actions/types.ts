@@ -1,4 +1,6 @@
-export type ClipboardAction = "copy" | "cut" | "paste";
+import type { ClipboardAction } from "@/constants/clipboard-action";
+
+export type { ClipboardAction } from "@/constants/clipboard-action";
 
 export type SecurityViolationReason =
   | "clipboard_attempt_limit"

@@ -48,6 +48,8 @@ export function normalizeMonacoLanguage(language?: string): string | undefined {
 export function languageForPath(path?: string): string | undefined {
   const normalizedPath = normalizeString(path).split(/[?#]/, 1)[0];
 
+  if (!normalizedPath) return undefined;
+
   const extension = normalizedPath.split(".").pop() ?? "";
 
   return EXTENSION_LANGUAGE_MAP[extension] ?? "plaintext";

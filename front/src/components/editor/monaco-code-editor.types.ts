@@ -1,7 +1,7 @@
 import type { editor } from "monaco-editor";
 
 import type { WorkerType } from "@/app/interface/scheduler-api/worker";
-import type { EditorActionGuardMode } from "@/hooks/user-actions/editor-action-guard";
+import type { EditorActionGuardMode } from "@/constants/editor-action-guard";
 import type { FileNode } from "@/types/shared";
 
 /**
@@ -17,6 +17,7 @@ export type MonacoEditorOptionOverrides = Pick<
   | "lineNumbers"
   | "hover"
   | "links"
+  | "semanticHighlighting.enabled"
 >;
 
 interface BaseMonacoCodeEditorProps {
@@ -36,6 +37,7 @@ interface MonacoFormFieldEditorProps extends BaseMonacoCodeEditorProps {
   preset: "form-field";
   workspaceTree?: never;
   actionGuardMode?: never;
+  actionGuardScope?: never;
 }
 
 /**
@@ -47,6 +49,7 @@ interface MonacoTemplateAuthoringEditorProps
   preset: "template-authoring";
   workspaceTree?: never;
   actionGuardMode?: never;
+  actionGuardScope?: never;
 }
 
 /** Compact editor intended for short template parameter values. */
@@ -54,6 +57,7 @@ interface MonacoParameterInputEditorProps extends BaseMonacoCodeEditorProps {
   preset: "parameter-input";
   workspaceTree?: never;
   actionGuardMode?: never;
+  actionGuardScope?: never;
 }
 
 /**
@@ -66,6 +70,7 @@ interface MonacoReadOnlyPreviewEditorProps extends BaseMonacoCodeEditorProps {
   onChange?: never;
   readOnly?: never;
   actionGuardMode?: never;
+  actionGuardScope?: never;
 }
 
 /**
@@ -77,6 +82,7 @@ interface MonacoWorkspaceEditorProps extends BaseMonacoCodeEditorProps {
   path: string;
   workspaceTree: FileNode;
   actionGuardMode?: EditorActionGuardMode;
+  actionGuardScope?: string;
 }
 
 export type MonacoCodeEditorProps =

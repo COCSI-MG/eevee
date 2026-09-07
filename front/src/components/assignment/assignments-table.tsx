@@ -21,6 +21,7 @@ import {
 } from "./activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { formatDateTime } from "@/utils/date";
 
 interface AssignmentsTableProps {
   assignments: Array<Assignment>;
@@ -64,6 +65,8 @@ export default function AssignmentsTable({
           <TableHead className="cursor-pointer">
             <div className="flex items-center">Tipo de Worker</div>
           </TableHead>
+          <TableHead>Data de início</TableHead>
+          <TableHead>Data de entrega</TableHead>
           <TableHead className="w-[100px]">Ações</TableHead>
         </TableRow>
       </TableHeader>
@@ -71,7 +74,7 @@ export default function AssignmentsTable({
         {list.length === 0 && (
           <TableRow>
             <TableCell
-              colSpan={5}
+              colSpan={7}
               className="text-center text-muted-foreground"
             >
               {emptyMessage}
@@ -98,6 +101,8 @@ export default function AssignmentsTable({
                   : description}
               </TableCell>
               <TableCell>{assignment.workerType}</TableCell>
+              <TableCell>{formatDateTime(assignment.startDate)}</TableCell>
+              <TableCell>{formatDateTime(assignment.dueDate)}</TableCell>
               <TableCell>
                 <TableActions
                   href={`${AppRoutes.AdminAssignments}/${assignment.id}`}
