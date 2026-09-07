@@ -1,49 +1,41 @@
-import { UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UserService } from 'src/user/user.service';
 import { JwtStrategy } from './jwt.strategy';
 
 describe('JwtStrategy', () => {
   const configService = {
     get: jest.fn().mockReturnValue('test-secret'),
   };
-  const userService = { findOne: jest.fn() };
-  const strategy = new JwtStrategy(
-    configService as unknown as ConfigService,
-    userService as unknown as UserService,
-  );
+  const strategy = new JwtStrategy(configService as unknown as ConfigService);
 
-  beforeEach(() => jest.clearAllMocks());
-
-  it('rejects a token when its user has been soft deleted', async () => {
-    userService.findOne.mockResolvedValue(null);
-
-    await expect(
+  it('builds the request user from the token claims', () => {
+    expect(
       strategy.validate({
         userId: 13,
-        email: 'deleted@example.com',
-        isAdmin: false,
+        email: 'user@example.com',
+        isAdmin: true,
+        familyId: 'family-1',
+        exp: 1893456000,
       }),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    ).toEqual({
+      userId: 13,
+      email: 'user@example.com',
+      isAdmin: true,
+      familyId: 'family-1',
+      exp: 1893456000,
+    });
   });
 
-  it('uses current active-user data instead of stale token claims', async () => {
-    userService.findOne.mockResolvedValue({
-      id: 13,
-      email: 'current@example.com',
-      isAdmin: true,
-    });
-
-    await expect(
+  it('keeps trusting the claims while the token is valid', () => {
+    expect(
       strategy.validate({
         userId: 13,
-        email: 'old@example.com',
+        email: 'antigo@example.com',
         isAdmin: false,
       }),
-    ).resolves.toEqual({
+    ).toMatchObject({
       userId: 13,
-      email: 'current@example.com',
-      isAdmin: true,
+      email: 'antigo@example.com',
+      isAdmin: false,
     });
   });
 });
