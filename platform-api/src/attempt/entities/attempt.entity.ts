@@ -1,9 +1,20 @@
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  Index,
+} from 'typeorm';
 import { AttemptStatus } from '../enums/attempt-status.enum';
 
 @Entity()
+@Index('IDX_attempt_assignment_created_at_id', [
+  'assignmentId',
+  'createdAt',
+  'id',
+])
 export class Attempt {
   @PrimaryGeneratedColumn()
   id: number;
