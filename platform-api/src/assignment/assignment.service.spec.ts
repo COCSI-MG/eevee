@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
+import { Brackets, DataSource } from 'typeorm';
 import { AssignmentService } from './assignment.service';
 import { Assignment } from './entities/assignment.entity';
 import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
@@ -484,6 +484,37 @@ describe('AssignmentService', () => {
         page: 1,
         pageSize: 10,
         totalPages: 1,
+      });
+    });
+
+    it('filters assignments by class and combines it with search', async () => {
+      const { service, assignmentRepository } = await setup();
+      const qb = makeQueryBuilder();
+      qb.getManyAndCount.mockResolvedValue([[], 0]);
+      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const result = await service.findAllPaginated({
+        classId: 8,
+        search: 'node',
+        page: 2,
+        pageSize: 10
+      });
+
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        'assignment.classId = :classId',
+        { classId: 8 }
+      );
+      expect(qb.andWhere).toHaveBeenCalledWith(expect.any(Brackets));
+      expect(qb.skip).toHaveBeenCalledWith(10);
+      expect(qb.take).toHaveBeenCalledWith(10);
+      expect(result).toEqual({
+        data: [],
+        meta: {
+          total: 0,
+          page: 2,
+          pageSize: 10,
+          totalPages: 1
+        }
       });
     });
   });

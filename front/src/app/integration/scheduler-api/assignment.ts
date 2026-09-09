@@ -11,6 +11,7 @@ interface ListPaginatedAssignmentsParams {
   page?: number;
   pageSize?: number;
   search?: string;
+  classId?: number;
 }
 
 export class AssignmentService {
