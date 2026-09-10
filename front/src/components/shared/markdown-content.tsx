@@ -1,96 +1,51 @@
+import { createElement, type JSX } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import { cn } from "@/lib/utils";
 
+const BLOCK = "mb-3 last:mb-0";
+const HEADING = "font-semibold text-foreground first:mt-0";
+const LIST = `list-outside pl-5 space-y-1 text-foreground ${BLOCK}`;
+const MONO = "font-mono text-xs text-foreground bg-muted";
+
+function styled<T extends keyof JSX.IntrinsicElements>(
+  tag: T,
+  base: string,
+  defaults?: JSX.IntrinsicElements[T],
+) {
+  return function StyledMarkdownElement({
+    className,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    node,
+    ...props
+  }: JSX.IntrinsicElements[T] & { node?: unknown }) {
+    return createElement(tag, {
+      ...defaults,
+      ...props,
+      className: cn(base, className),
+    });
+  };
+}
+
 const components: Components = {
-  h1: ({ className, ...props }) => (
-    <h1
-      className={cn(
-        "text-lg font-semibold text-foreground mt-4 mb-2 first:mt-0",
-        className,
-      )}
-      {...props}
-    />
+  h1: styled("h1", `text-lg mt-4 mb-2 ${HEADING}`),
+  h2: styled("h2", `text-base mt-4 mb-2 ${HEADING}`),
+  h3: styled("h3", `text-sm mt-3 mb-1 ${HEADING}`),
+  p: styled("p", `text-foreground leading-relaxed ${BLOCK}`),
+  ul: styled("ul", `list-disc ${LIST}`),
+  ol: styled("ol", `list-decimal ${LIST}`),
+  li: styled("li", "leading-relaxed"),
+  a: styled("a", "text-primary underline underline-offset-2 hover:opacity-80", {
+    target: "_blank",
+    rel: "noopener noreferrer",
+  }),
+  code: styled("code", `rounded px-1 py-0.5 ${MONO}`),
+  pre: styled("pre", `rounded-md p-3 overflow-x-auto ${MONO} ${BLOCK}`),
+  blockquote: styled(
+    "blockquote",
+    `border-l-2 border-border pl-3 italic text-muted-foreground ${BLOCK}`,
   ),
-  h2: ({ className, ...props }) => (
-    <h2
-      className={cn(
-        "text-base font-semibold text-foreground mt-4 mb-2 first:mt-0",
-        className,
-      )}
-      {...props}
-    />
-  ),
-  h3: ({ className, ...props }) => (
-    <h3
-      className={cn(
-        "text-sm font-semibold text-foreground mt-3 mb-1 first:mt-0",
-        className,
-      )}
-      {...props}
-    />
-  ),
-  p: ({ className, ...props }) => (
-    <p
-      className={cn("text-foreground leading-relaxed mb-3 last:mb-0", className)}
-      {...props}
-    />
-  ),
-  ul: ({ className, ...props }) => (
-    <ul
-      className={cn("list-disc list-outside pl-5 mb-3 space-y-1 text-foreground", className)}
-      {...props}
-    />
-  ),
-  ol: ({ className, ...props }) => (
-    <ol
-      className={cn("list-decimal list-outside pl-5 mb-3 space-y-1 text-foreground", className)}
-      {...props}
-    />
-  ),
-  li: ({ className, ...props }) => (
-    <li className={cn("leading-relaxed", className)} {...props} />
-  ),
-  a: ({ className, ...props }) => (
-    <a
-      className={cn("text-primary underline underline-offset-2 hover:opacity-80", className)}
-      target="_blank"
-      rel="noopener noreferrer"
-      {...props}
-    />
-  ),
-  code: ({ className, ...props }) => (
-    <code
-      className={cn(
-        "rounded bg-muted px-1 py-0.5 font-mono text-xs text-foreground",
-        className,
-      )}
-      {...props}
-    />
-  ),
-  pre: ({ className, ...props }) => (
-    <pre
-      className={cn(
-        "rounded-md bg-muted p-3 mb-3 overflow-x-auto font-mono text-xs text-foreground",
-        className,
-      )}
-      {...props}
-    />
-  ),
-  blockquote: ({ className, ...props }) => (
-    <blockquote
-      className={cn(
-        "border-l-2 border-border pl-3 italic text-muted-foreground mb-3",
-        className,
-      )}
-      {...props}
-    />
-  ),
-  strong: ({ className, ...props }) => (
-    <strong className={cn("font-semibold text-foreground", className)} {...props} />
-  ),
-  hr: ({ className, ...props }) => (
-    <hr className={cn("border-border my-4", className)} {...props} />
-  ),
+  strong: styled("strong", "font-semibold text-foreground"),
+  hr: styled("hr", "border-border my-4"),
 };
 
 interface MarkdownContentProps {
