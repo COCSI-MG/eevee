@@ -23,8 +23,6 @@ export class AdminGuard extends AuthGuard('jwt') implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    console.log('User:', user);
-
     // Check if the user exists and is an admin
     if (!user?.isAdmin) {
       throw new ForbiddenException('Only admins can access this route.');

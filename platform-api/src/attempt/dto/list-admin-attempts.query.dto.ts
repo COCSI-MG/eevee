@@ -3,9 +3,16 @@ import { IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 export class ListAdminAttemptsQueryDto {
   @Type(() => Number)
+  @IsOptional()
   @IsInt()
   @Min(1)
-  assignmentId: number;
+  assignmentId?: number;
+
+  @Type(() => Number)
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  classId?: number;
 
   @IsOptional()
   @IsString()

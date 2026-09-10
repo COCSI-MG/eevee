@@ -63,6 +63,16 @@ DB_* values from the ConfigMap but expose them to the app as PG_*.
     secretKeyRef:
       name: {{ .Values.secrets.name }}
       key: GROQ_API_KEY
+- name: GMAIL_APP_PASSWORD
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secrets.name }}
+      key: GMAIL_APP_PASSWORD
+- name: GMAIL_USER
+  valueFrom:
+    configMapKeyRef:
+      name: eevee-config
+      key: GMAIL_USER
 - name: CORS_ALLOWED_ORIGINS
   valueFrom:
     configMapKeyRef:
@@ -73,6 +83,16 @@ DB_* values from the ConfigMap but expose them to the app as PG_*.
     configMapKeyRef:
       name: eevee-config
       key: AUTH_COOKIE_DOMAIN
+- name: FRONT_URL
+  valueFrom:
+    configMapKeyRef:
+      name: eevee-config
+      key: FRONT_URL
+- name: FRONT_ROUTE_RESET_PASSWORD
+  valueFrom:
+    configMapKeyRef:
+      name: eevee-config
+      key: FRONT_ROUTE_RESET_PASSWORD
 {{- end -}}
 
 {{/*

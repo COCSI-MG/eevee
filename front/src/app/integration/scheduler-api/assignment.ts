@@ -2,8 +2,10 @@ import { axiosClientWithAuth } from "./client";
 import {
   Assignment,
   CreateAssignmentRequest,
+  UpdateAssignmentRequest,
 } from "@/app/interface/scheduler-api/assignment";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
+import { AdminAttemptAssignmentOption } from "@/app/interface/scheduler-api/admin-attempt";
 
 interface ListPaginatedAssignmentsParams {
   page?: number;
@@ -12,6 +14,16 @@ interface ListPaginatedAssignmentsParams {
 }
 
 export class AssignmentService {
+  static async listOptions(
+    classId?: number,
+  ): Promise<AdminAttemptAssignmentOption[]> {
+    const response = await axiosClientWithAuth.get<AdminAttemptAssignmentOption[]>("/assignment/options", {
+      params: classId ? { classId } : undefined,
+    });
+
+    return response.data;
+  }
+
   static async GetMyAssignments() {
     const response = await axiosClientWithAuth.get("/assignment/me");
 
@@ -39,7 +51,7 @@ export class AssignmentService {
     return <Assignment>response.data;
   }
 
-  static async UpdateAssignment(id: number, data: CreateAssignmentRequest) {
+  static async UpdateAssignment(id: number, data: UpdateAssignmentRequest) {
     const response = await axiosClientWithAuth.patch(`/assignment/${id}`, data);
 
     return <Assignment>response.data;

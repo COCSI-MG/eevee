@@ -9,6 +9,8 @@ import { ClipboardAction, SecurityViolationReason } from "./user-actions/types";
 
 interface UsePreventUserActionsOptions {
   enabled?: boolean;
+  allowedDragAreaSelector?: string;
+  allowedDragMimeType?: string;
   clipboardViolationLimit?: number;
   onClipboardViolation?: (action: ClipboardAction, attempts: number) => void;
   onClipboardViolationLimit?: (
@@ -22,6 +24,8 @@ interface UsePreventUserActionsOptions {
 
 export function usePreventUserActions({
   enabled = true,
+  allowedDragAreaSelector,
+  allowedDragMimeType,
   clipboardViolationLimit = 10,
   onClipboardViolation,
   onClipboardViolationLimit,
@@ -54,7 +58,11 @@ export function usePreventUserActions({
     [back, onSecurityViolation],
   );
 
-  useContextMenuGuard({ enabled });
+  useContextMenuGuard({
+    enabled,
+    allowedDragAreaSelector,
+    allowedDragMimeType
+  });
   useClipboardGuard({ enabled, onClipboardAttempt: registerClipboardAttempt });
   useKeyboardShortcutGuard({
     enabled,

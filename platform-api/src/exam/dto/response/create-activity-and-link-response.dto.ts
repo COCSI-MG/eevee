@@ -18,6 +18,12 @@ export class CreateAssignmentAndLinkResponseDto {
   @ApiProperty({ example: 3 })
   maxAttempts: number;
 
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
+  startDate?: Date | null;
+
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
+  dueDate?: Date | null;
+
   @ApiProperty({ enum: WorkerType, example: WorkerType.NODE_DEFAULT })
   workerType: WorkerType;
 

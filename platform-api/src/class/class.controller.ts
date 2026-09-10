@@ -27,7 +27,6 @@ export class ClassController {
   @UseGuards(AdminGuard)
   @ApiOkResponse({ type: ClassResponseDto })
   create(@Body() createClassDto: CreateOrReplaceClassDto) {
-    console.log('createClassDto', createClassDto);
     return this.classService.createOrReplace(createClassDto);
   }
 
@@ -35,6 +34,12 @@ export class ClassController {
   @ApiOkResponse({ type: [ClassResponseDto] })
   findAll() {
     return this.classService.findAll();
+  }
+
+  @Get('options')
+  @UseGuards(AdminGuard)
+  findOptions() {
+    return this.classService.findOptions();
   }
 
   @Get('user/:userId')

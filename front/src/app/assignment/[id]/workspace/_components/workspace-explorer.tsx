@@ -20,6 +20,7 @@ interface WorkspaceExplorerProps {
   onFileSelect: (node: FileNode) => void;
   onTreeChange: (newTree: FileNode) => void | Promise<void>;
   onOpenInSecondary?: (node: FileNode) => void;
+  onItemMoved?: (oldPath: string, newPath: string) => void;
   maxDepth?: number;
   maxFiles?: number;
   readOnly?: boolean;
@@ -29,6 +30,7 @@ export default function WorkspaceExplorer({
   onFileSelect,
   onTreeChange,
   onOpenInSecondary,
+  onItemMoved,
   maxDepth = 5,
   maxFiles = 50,
   readOnly = false,
@@ -62,11 +64,14 @@ export default function WorkspaceExplorer({
     handleRenameRequest,
     handleRename,
     handleDragStart,
+    handleDragEnd,
     handleDragOver,
     handleDragLeave,
     handleDrop,
+    draggedNodePath,
   } = useWorkspaceExplorer({
     onTreeChange,
+    onItemMoved,
     maxDepth,
     maxFiles,
   });
@@ -92,20 +97,38 @@ export default function WorkspaceExplorer({
     [],
   );
 
+  const interactiveProps = readOnly
+    ? {}
+    : {
+        onRenameRequest: handleRenameRequest,
+        onDeleteRequest: handleDeleteRequest,
+        onDragStart: handleDragStart,
+        onDragEnd: handleDragEnd,
+        onDragOver: handleDragOver,
+        onDragLeave: handleDragLeave,
+        onDrop: handleDrop,
+        draggedNodePath,
+      };
+
   React.useEffect(() => {
     const handleClose = () => setBackgroundContextMenu(null);
 
     document.addEventListener("click", handleClose);
     document.addEventListener("keydown", handleClose);
+    document.addEventListener("contextmenu", handleClose, true);
 
     return () => {
       document.removeEventListener("click", handleClose);
       document.removeEventListener("keydown", handleClose);
+      document.removeEventListener("contextmenu", handleClose, true);
     };
   }, []);
 
   return (
-    <div className="w-full bg-card h-full min-h-0 flex flex-col">
+    <div
+      className="w-full bg-card h-full min-h-0 flex flex-col"
+      data-eevee-workspace-drag-area="true"
+    >
       <div className="px-3 py-2 border-b border-border">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -315,12 +338,7 @@ export default function WorkspaceExplorer({
           onOpenInSecondary={onOpenInSecondary}
           selectedItem={selectedItem}
           onSelectItem={selectItem}
-           onRenameRequest={readOnly ? undefined : handleRenameRequest}
-           onDeleteRequest={readOnly ? undefined : handleDeleteRequest}
-           onDragStart={readOnly ? undefined : handleDragStart}
-           onDragOver={readOnly ? undefined : handleDragOver}
-           onDragLeave={readOnly ? undefined : handleDragLeave}
-           onDrop={readOnly ? undefined : handleDrop}
+          {...interactiveProps}
         />
 
         {backgroundContextMenu && !readOnly && (

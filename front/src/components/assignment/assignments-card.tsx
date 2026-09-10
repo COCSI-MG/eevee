@@ -1,4 +1,4 @@
-import { BookOpenCheck, Code, CodeSquare } from "lucide-react";
+import { BookOpenCheck, CalendarClock, Code, CodeSquare } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -22,6 +22,11 @@ import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { MarkdownContent } from "@/components/shared/markdown-content";
+import {
+  earliestDate,
+  formatDateTime,
+  isDeadlinePassed,
+} from "@/utils/date";
 
 interface AssignmentsCardProps {
   data: Assignment[];
@@ -81,6 +86,11 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
           : false;
         const canViewAnswerKey =
           Boolean(assignment.answerKeyId) && assignment.answerKeyVisible;
+        const effectiveDueDate = earliestDate(
+          assignment.dueDate,
+          assignment.examAssignment?.exam?.dueDate,
+        );
+        const deadlinePassed = !user?.isAdmin && isDeadlinePassed(effectiveDueDate);
 
         return (
           <Card
@@ -137,6 +147,10 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     Resultados disponíveis
                   </Badge>
                 )}
+
+                {deadlinePassed && (
+                  <Badge variant="destructive">Prazo encerrado</Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -155,6 +169,23 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     >
                       Ver mais
                     </Button>
+                  )}
+
+                  {(assignment.startDate || effectiveDueDate) && (
+                    <div className="space-y-1 text-sm text-slate-400">
+                      {assignment.startDate && (
+                        <p className="flex items-center gap-2">
+                          <CalendarClock className="h-4 w-4" />
+                          Início: {formatDateTime(assignment.startDate)}
+                        </p>
+                      )}
+                      {effectiveDueDate && (
+                        <p className="flex items-center gap-2">
+                          <CalendarClock className="h-4 w-4" />
+                          Entrega: {formatDateTime(effectiveDueDate)}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 

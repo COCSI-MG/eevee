@@ -29,43 +29,59 @@ import { AssignmentConfigForm } from "./assignment-config-form";
 import { AssignmentBoilerplateForm } from "./assignment-boilerplate-form";
 import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
 import QueryErrorState from "@/components/shared/query-error-state";
+import { isoToLocalDatetime } from "@/utils/date";
+import { ASSIGNMENT_FORM_TEXT } from "./constants";
 
 const validationSchema = Yup.object({
-  title: Yup.string().required("Título é obrigatório"),
-  description: Yup.string().required("Descrição é obrigatória"),
+  title: Yup.string().required(ASSIGNMENT_FORM_TEXT.VALIDATION.TITLE_REQUIRED),
+  description: Yup.string().required(ASSIGNMENT_FORM_TEXT.VALIDATION.DESCRIPTION_REQUIRED),
   maxAttempts: Yup.number()
-    .required("Máximo de tentativas é obrigatório")
-    .min(1, "Deve ser pelo menos 1"),
+    .required(ASSIGNMENT_FORM_TEXT.VALIDATION.MAX_ATTEMPTS_REQUIRED)
+    .min(1, ASSIGNMENT_FORM_TEXT.VALIDATION.MAX_ATTEMPTS_MIN),
   workerType: Yup.string()
     .oneOf(Object.values(WorkerType))
-    .required("Tipo de worker é obrigatório"),
-  boilerplate: Yup.string().required("Boilerplate é obrigatório"),
-  classId: Yup.string().required("Turma é obrigatória"),
+    .required(ASSIGNMENT_FORM_TEXT.VALIDATION.WORKER_TYPE_REQUIRED),
+  boilerplate: Yup.string().required(ASSIGNMENT_FORM_TEXT.VALIDATION.BOILERPLATE_REQUIRED),
+  classId: Yup.string().required(ASSIGNMENT_FORM_TEXT.VALIDATION.CLASS_REQUIRED),
+  startDate: Yup.string().optional(),
+  dueDate: Yup.string()
+    .optional()
+    .test(
+      "due-date-after-start-date",
+      ASSIGNMENT_FORM_TEXT.VALIDATION.DUEDATECANNOTLATERTHANSTARTDATE,
+      function (dueDate) {
+        const startDate = this.parent.startDate as string | undefined;
+
+        if (!startDate || !dueDate) return true;
+
+        return new Date(startDate) <= new Date(dueDate);
+      },
+    )
 });
 
 const STEP_CONFIG: StepDefinition = {
   id: "config",
-  title: "Configuração",
+  title: ASSIGNMENT_FORM_TEXT.STEPS.CONFIG,
   icon: Settings,
 };
 const STEP_TEMPLATES: StepDefinition = {
   id: "templates",
-  title: "Templates",
+  title: ASSIGNMENT_FORM_TEXT.STEPS.TEMPLATES,
   icon: Code,
 };
 const STEP_BOILERPLATE: StepDefinition = {
   id: "boilerplate",
-  title: "Boilerplate",
+  title: ASSIGNMENT_FORM_TEXT.STEPS.BOILERPLATE,
   icon: Layers,
 };
 const STEP_INIT_SQL: StepDefinition = {
   id: "initSql",
-  title: "Script SQL Inicial",
+  title: ASSIGNMENT_FORM_TEXT.STEPS.INIT_SQL,
   icon: Database,
 };
 const STEP_REVIEW: StepDefinition = {
   id: "review",
-  title: "Revisão",
+  title: ASSIGNMENT_FORM_TEXT.STEPS.REVIEW,
   icon: ClipboardCheck,
 };
 
@@ -111,6 +127,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     title: existingAssignment?.title ?? "",
     description: existingAssignment?.description ?? "",
     maxAttempts: existingAssignment?.maxAttempts ?? 1,
+    startDate: isoToLocalDatetime(existingAssignment?.startDate),
+    dueDate: isoToLocalDatetime(existingAssignment?.dueDate),
     workerType: existingAssignment?.workerType ?? WorkerType.NODE_DEFAULT,
     boilerplate:
       existingAssignment?.boilerplateContent ??
@@ -122,9 +140,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     classId: existingAssignment?.classId ?? 0,
     initSqlScript: existingAssignment?.initSqlScript ?? "",
     answerKeyVisible: existingAssignment?.answerKeyVisible ?? false,
+    allowCopyPaste: existingAssignment?.allowCopyPaste ?? false,
   };
-
-  console.log(initialValues);
 
   const handleSubmit = (values: typeof initialValues) => {
     return upsertAssignment({
@@ -132,6 +149,12 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
         ...values,
         boilerplateContent: values.boilerplate,
         classId: Number(values.classId),
+        startDate: values.startDate
+          ? new Date(values.startDate).toISOString()
+          : null,
+        dueDate: values.dueDate
+          ? new Date(values.dueDate).toISOString()
+          : null,
       } as Assignment,
       templates: selectedTemplates,
     });
@@ -142,12 +165,12 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
       <div className="p-6">
         <div className="max-w-2xl mx-auto">
           <QueryErrorState
-            title="Não foi possível carregar o assignment"
-            description="Não conseguimos carregar os dados deste assignment para edição."
+            title={ASSIGNMENT_FORM_TEXT.ERRORS.ASSIGNMENT_LOAD_TITLE}
+            description={ASSIGNMENT_FORM_TEXT.ERRORS.ASSIGNMENT_LOAD_DESCRIPTION}
             onRetry={() => {
               void refetchAssignment();
             }}
-            retryLabel="Tentar novamente"
+            retryLabel={ASSIGNMENT_FORM_TEXT.ERRORS.RETRY}
             isRetrying={isFetchingAssignment}
           />
         </div>
@@ -160,12 +183,12 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
       <div className="p-6">
         <div className="max-w-2xl mx-auto">
           <QueryErrorState
-            title="Não foi possível carregar as turmas"
-            description="As turmas necessárias para criar ou editar o assignment não puderam ser carregadas."
+            title={ASSIGNMENT_FORM_TEXT.ERRORS.CLASSES_LOAD_TITLE}
+            description={ASSIGNMENT_FORM_TEXT.ERRORS.CLASSES_LOAD_DESCRIPTION}
             onRetry={() => {
               void refetchClasses();
             }}
-            retryLabel="Tentar novamente"
+            retryLabel={ASSIGNMENT_FORM_TEXT.ERRORS.RETRY}
             isRetrying={isFetchingClasses}
           />
         </div>
@@ -174,11 +197,11 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   }
 
   if (existingAssignmentId && isFetchingAssignment) {
-    return <div>Carregando...</div>;
+    return <div>{ASSIGNMENT_FORM_TEXT.NAVIGATION.LOADING}</div>;
   }
 
   if (isFetchingClasses && !classes) {
-    return <div>Carregando...</div>;
+    return <div>{ASSIGNMENT_FORM_TEXT.NAVIGATION.LOADING}</div>;
   }
 
   return (
@@ -248,7 +271,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
             return {
               weightError: sumInvalid
-                ? `A soma dos pesos deve ser exatamente 100% (atual: ${sum.toFixed(2)}%).`
+                ? ASSIGNMENT_FORM_TEXT.ERRORS.WEIGHT_SUM(sum)
                 : (upsertError?.message ?? null),
               hasWeightBlock: sumInvalid,
             };
@@ -336,7 +359,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       className="border-border text-foreground hover:bg-primary/20 disabled:opacity-50"
                     >
                       <ChevronLeft className="w-4 h-4 mr-2" />
-                      Anterior
+                      {ASSIGNMENT_FORM_TEXT.NAVIGATION.PREVIOUS}
                     </Button>
 
                     <div className="flex gap-2">
@@ -350,7 +373,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                             setCurrentStep(currentStep + 1);
                           }}
                         >
-                          Continuar
+                          {ASSIGNMENT_FORM_TEXT.NAVIGATION.CONTINUE}
                           <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>
                       ) : (
@@ -361,8 +384,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                         >
                           <Save className="w-4 h-4 mr-2" />
                           {existingAssignmentId
-                            ? "Atualizar Atividade"
-                            : "Criar Atividade"}
+                            ? ASSIGNMENT_FORM_TEXT.NAVIGATION.UPDATE
+                            : ASSIGNMENT_FORM_TEXT.NAVIGATION.CREATE}
                         </Button>
                       )}
                     </div>

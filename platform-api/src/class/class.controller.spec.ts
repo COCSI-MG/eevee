@@ -7,6 +7,7 @@ describe('ClassController', () => {
   let classService: {
     createOrReplace: jest.Mock;
     findAll: jest.Mock;
+    findOptions: jest.Mock;
     findAllByUser: jest.Mock;
     findOne: jest.Mock;
     remove: jest.Mock;
@@ -16,6 +17,7 @@ describe('ClassController', () => {
     classService = {
       createOrReplace: jest.fn(),
       findAll: jest.fn(),
+      findOptions: jest.fn(),
       findAllByUser: jest.fn(),
       findOne: jest.fn(),
       remove: jest.fn(),
@@ -55,5 +57,14 @@ describe('ClassController', () => {
       ...dto,
       id: 9,
     });
+  });
+
+  it('delegates the lightweight options listing', async () => {
+    classService.findOptions.mockResolvedValue([{ id: 1, name: 'Turma 1' }]);
+
+    await expect(controller.findOptions()).resolves.toEqual([
+      { id: 1, name: 'Turma 1' },
+    ]);
+    expect(classService.findOptions).toHaveBeenCalledTimes(1);
   });
 });

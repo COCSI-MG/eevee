@@ -10,6 +10,7 @@ import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import {
     Column,
     Entity,
+    Index,
     JoinColumn,
     ManyToOne,
     OneToMany,
@@ -30,6 +31,7 @@ export interface AssignmentInterviewConfig {
 }
 
 @Entity()
+@Index('IDX_assignment_class_title_id', ['classId', 'title', 'id'])
 export class Assignment {
   @PrimaryGeneratedColumn()
   id: number;
@@ -76,6 +78,14 @@ export class Assignment {
 
   @Column()
   maxAttempts: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  startDate?: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  dueDate?: Date | null;
+  @Column({ default: false })
+  allowCopyPaste: boolean;
 
   @Column({
     type: 'enum',

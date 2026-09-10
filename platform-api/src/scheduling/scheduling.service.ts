@@ -107,6 +107,8 @@ export class SchedulingService {
     );
     if (!assignment) throw new BadRequestException('Assignment not found');
 
+    await this.assignmentService.assertSubmissionOpen(assignment.id);
+
     const isUserAbleToAttempt =
       await this.attemptService.isUserAbleToAttemptAssignment(
         createSchedulingDto.assignmentId,
@@ -168,9 +170,8 @@ export class SchedulingService {
   }
 
   async createPreviewRun(createSchedulingDto: CreateSchedulingDto) {
-    const assignment = await this.assignmentService.findOneForExecution(
-      createSchedulingDto.assignmentId,
-    );
+    const assignment = await this.assignmentService.findOne(createSchedulingDto.assignmentId);
+
     if (!assignment) {
       throw new BadRequestException('Assignment not found');
     }

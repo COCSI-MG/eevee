@@ -12,9 +12,14 @@ import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { FileNode, SelectedItem } from "@/types/shared";
-import { updateFileContent, findNodeByPath } from "../_utils/workspace-tree.utils";
+import {
+  updateFileContent,
+  findNodeByPath,
+  rebaseMovedPath,
+} from "../_utils/workspace-tree.utils";
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { Button } from "@/components/ui/button";
+import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -40,6 +45,11 @@ export default function Workspace({
   const [isSplitView, setIsSplitView] = React.useState(false);
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
+  const editorActionGuardMode = user.isAdmin
+    ? EDITOR_ACTION_GUARD_MODE.EXEMPT
+    : assignment.allowCopyPaste
+      ? EDITOR_ACTION_GUARD_MODE.INTERNAL_ONLY
+      : EDITOR_ACTION_GUARD_MODE.ENFORCED;
 
   const { activeFile, handleEditorChange, handleFileSelect } =
     useWorkspaceFileEditor({
@@ -123,6 +133,26 @@ export default function Workspace({
     setIsSplitView(true);
   }, []);
 
+  const handleItemMoved = React.useCallback(
+    (oldPath: string, newPath: string) => {
+      setSecondarySelectedItem((current) => {
+
+        if (!current) return current
+
+        const updatedPath = rebaseMovedPath(current.path, oldPath, newPath);
+
+        if (updatedPath === current.path) return current
+
+        return {
+          ...current,
+          id: updatedPath.split("/").pop() || current.id,
+          path: updatedPath,
+        };
+      });
+    },
+    [],
+  );
+
   React.useEffect(() => {
     if (!secondarySelectedItem?.path) {
       return;
@@ -175,6 +205,7 @@ export default function Workspace({
           onFileSelect={handleFileSelect}
           onTreeChange={handleTreeChange}
           onOpenInSecondary={handleOpenInSecondary}
+          onItemMoved={handleItemMoved}
         />
 
         <div
@@ -213,12 +244,14 @@ export default function Workspace({
               <WorkspaceCodeEditor
                 file={activeFile}
                 onEditorChange={handleEditorChange}
+                actionGuardMode={editorActionGuardMode}
               />
             </div>
             <div className="min-w-0 min-h-0 flex flex-col">
               <WorkspaceCodeEditor
                 file={secondaryFile}
                 onEditorChange={handleSecondaryEditorChange}
+                actionGuardMode={editorActionGuardMode}
               />
             </div>
           </div>
@@ -226,6 +259,7 @@ export default function Workspace({
           <WorkspaceCodeEditor
             file={activeFile}
             onEditorChange={handleEditorChange}
+            actionGuardMode={editorActionGuardMode}
           />
         )}
       </div>

@@ -14,9 +14,11 @@ interface WorkspaceFileTreeProps {
   onRenameRequest?: (node: FileNode) => void;
   onDeleteRequest?: (node: FileNode) => void;
   onDragStart?: (e: React.DragEvent, node: FileNode) => void;
-  onDragOver?: (e: React.DragEvent, node: FileNode) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent, node: FileNode) => boolean;
   onDragLeave?: (e: React.DragEvent) => void;
-  onDrop?: (e: React.DragEvent, node: FileNode) => void;
+  onDrop?: (e: React.DragEvent, node: FileNode) => boolean;
+  draggedNodePath?: string;
 }
 
 interface TreeNodeProps {
@@ -27,9 +29,11 @@ interface TreeNodeProps {
   level?: number;
   onContextMenu?: (e: React.MouseEvent, node: FileNode) => void;
   onDragStart?: (e: React.DragEvent, node: FileNode) => void;
-  onDragOver?: (e: React.DragEvent, node: FileNode) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent, node: FileNode) => boolean;
   onDragLeave?: (e: React.DragEvent) => void;
-  onDrop?: (e: React.DragEvent, node: FileNode) => void;
+  onDrop?: (e: React.DragEvent, node: FileNode) => boolean;
+  draggedNodePath?: string;
 }
 
 const TreeNode: React.FC<TreeNodeProps> = ({
@@ -40,13 +44,18 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   level = 0,
   onContextMenu,
   onDragStart,
+  onDragEnd,
   onDragOver,
   onDragLeave,
   onDrop,
+  draggedNodePath,
 }) => {
   const [isOpen, setIsOpen] = React.useState(level === 0); // Raiz aberta por padrão
-  const [isDragOver, setIsDragOver] = React.useState(false);
+  const [dropState, setDropState] = React.useState<"valid" | "invalid" | null>(null);
+
   const isSelected = node.path === selectedPath;
+  const isDragging = node.path === draggedNodePath;
+  const isDraggable = level > 0 && Boolean(onDragStart);
 
   const handleClick = () => {
     if (node.isFile) {
@@ -77,23 +86,44 @@ const TreeNode: React.FC<TreeNodeProps> = ({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!node.isFile) {
-      setIsDragOver(true);
-    }
-    onDragOver?.(e, node);
+    const isValid = onDragOver?.(e, node) ?? false;
+    setDropState(isValid ? "valid" : "invalid");
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.stopPropagation();
-    setIsDragOver(false);
+    setDropState(null);
     onDragLeave?.(e);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragOver(false);
-    onDrop?.(e, node);
+    setDropState(null);
+    const didMove = onDrop?.(e, node) ?? false;
+    if (didMove && !node.isFile) {
+      setIsOpen(true);
+    }
+  };
+
+  const interactiveProps = {
+    ...(isDraggable
+      ? {
+          onDragStart: handleDragStart,
+          onDragEnd,
+        }
+      : {}),
+    ...(onDragOver
+      ? {
+          onDragOver: handleDragOver,
+          onDragLeave: handleDragLeave,
+        }
+      : {}),
+    ...(onDrop
+      ? {
+          onDrop: handleDrop,
+        }
+      : {}),
   };
 
   return (
@@ -103,18 +133,19 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           "flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-primary/20 transition-colors",
           isSelected && "bg-primary/20",
           !node.isFile && "font-medium",
-          isDragOver &&
-            !node.isFile &&
-            "bg-primary/10 ring-1 ring-primary/50",
+          isDraggable && "cursor-grab active:cursor-grabbing",
+          isDragging && "opacity-50",
+          dropState === "valid" &&
+            "bg-info/20 ring-1 ring-inset ring-info/50",
+          dropState === "invalid" &&
+            "cursor-not-allowed bg-destructive/20 ring-1 ring-inset ring-destructive/40",
         )}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         onClick={handleClick}
         onContextMenu={handleContextMenu}
-        draggable={level > 0}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        draggable={isDraggable}
+        aria-grabbed={isDragging}
+        {...interactiveProps}
       >
         {!node.isFile && (
           <ChevronRight
@@ -157,9 +188,11 @@ const TreeNode: React.FC<TreeNodeProps> = ({
                 level={level + 1}
                 onContextMenu={onContextMenu}
                 onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
                 onDragOver={onDragOver}
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
+                draggedNodePath={draggedNodePath}
               />
             ))}
         </div>
@@ -178,15 +211,18 @@ export default function WorkspaceFileTree({
   onRenameRequest,
   onDeleteRequest,
   onDragStart,
+  onDragEnd,
   onDragOver,
   onDragLeave,
   onDrop,
+  draggedNodePath,
 }: WorkspaceFileTreeProps) {
   const [contextMenu, setContextMenu] = React.useState<{
     x: number;
     y: number;
     node: FileNode;
   } | null>(null);
+  const [backgroundDropState, setBackgroundDropState] = React.useState<"valid" | "invalid" | null>(null);
   const contextMenuRef = React.useRef<HTMLDivElement | null>(null);
 
   React.useEffect(() => {
@@ -205,10 +241,12 @@ export default function WorkspaceFileTree({
 
     document.addEventListener("keydown", handleEscape);
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("contextmenu", handleClickOutside, true);
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("contextmenu", handleClickOutside, true);
     };
   }, []);
 
@@ -225,6 +263,29 @@ export default function WorkspaceFileTree({
     setContextMenu(null);
   };
 
+  const handleBackgroundDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget || !onDragOver) return
+
+    const isValid = onDragOver(event, treeData!);
+    setBackgroundDropState(isValid ? "valid" : "invalid");
+  };
+
+  const handleBackgroundDragLeave = (
+    event: React.DragEvent<HTMLDivElement>,
+  ) => {
+    if (event.target !== event.currentTarget) return
+
+    setBackgroundDropState(null);
+    onDragLeave?.(event);
+  };
+
+  const handleBackgroundDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget || !onDrop) return
+
+    setBackgroundDropState(null);
+    onDrop(event, treeData!);
+  };
+
   if (!treeData) {
     return (
       <div className="flex items-center justify-center h-32 text-muted-foreground">
@@ -234,7 +295,16 @@ export default function WorkspaceFileTree({
   }
 
   return (
-    <div className="py-2">
+    <div
+      className={cn(
+        "min-h-full py-2 transition-colors",
+        backgroundDropState === "valid" && "bg-info/10",
+        backgroundDropState === "invalid" && "bg-destructive/10",
+      )}
+      onDragOver={onDragOver ? handleBackgroundDragOver : undefined}
+      onDragLeave={onDragOver ? handleBackgroundDragLeave : undefined}
+      onDrop={onDrop ? handleBackgroundDrop : undefined}
+    >
       <TreeNode
         node={treeData}
         onFileSelect={onFileSelect}
@@ -243,9 +313,11 @@ export default function WorkspaceFileTree({
         level={0}
         onContextMenu={handleTreeContextMenu}
         onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
+        draggedNodePath={draggedNodePath}
       />
 
       {contextMenu && (
