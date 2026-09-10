@@ -129,7 +129,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                         "bg-primary text-primary-foreground",
                       )}
                     >
-                      Vale {assignment.score} pts
+                      Peso: {assignment.score} pts
                     </Badge>
                   )}
 
@@ -188,7 +188,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                             : "bg-destructive/10 text-destructive",
                         )}
                       >
-                        {formatScorePercentage(lastAttempt.score)}
+                        Acerto: {formatScorePercentage(lastAttempt.score)}
                       </Badge>
                     )}
 
