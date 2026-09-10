@@ -241,10 +241,12 @@ export default function WorkspaceFileTree({
 
     document.addEventListener("keydown", handleEscape);
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("contextmenu", handleClickOutside, true);
 
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("contextmenu", handleClickOutside, true);
     };
   }, []);
 

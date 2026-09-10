@@ -5,7 +5,8 @@ import {
 import { axiosClientWithAuth } from "./client";
 
 interface GetAdminAttemptsParams {
-  assignmentId: number;
+  assignmentId?: number;
+  classId?: number;
   userSearch?: string;
   page?: number;
   pageSize?: number;

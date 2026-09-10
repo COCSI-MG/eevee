@@ -7,6 +7,7 @@ describe('AssignmentController', () => {
   let assignmentService: {
     create: jest.Mock;
     findAll: jest.Mock;
+    findOptions: jest.Mock;
     findAssignmentsByClass: jest.Mock;
     findAllUserAssignments: jest.Mock;
     findOne: jest.Mock;
@@ -18,6 +19,7 @@ describe('AssignmentController', () => {
     assignmentService = {
       create: jest.fn(),
       findAll: jest.fn(),
+      findOptions: jest.fn(),
       findAssignmentsByClass: jest.fn(),
       findAllUserAssignments: jest.fn(),
       findOne: jest.fn(),
@@ -65,5 +67,16 @@ describe('AssignmentController', () => {
       { id: 1 },
     ]);
     expect(assignmentService.findAssignmentsByClass).toHaveBeenCalledWith(5);
+  });
+
+  it('delegates lightweight options with an optional classId', async () => {
+    assignmentService.findOptions.mockResolvedValue([
+      { id: 1, title: 'Activity', classId: 5 },
+    ]);
+
+    await expect(controller.findOptions({ classId: 5 })).resolves.toEqual([
+      { id: 1, title: 'Activity', classId: 5 },
+    ]);
+    expect(assignmentService.findOptions).toHaveBeenCalledWith(5);
   });
 });

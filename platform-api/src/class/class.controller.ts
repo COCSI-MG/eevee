@@ -36,6 +36,12 @@ export class ClassController {
     return this.classService.findAll();
   }
 
+  @Get('options')
+  @UseGuards(AdminGuard)
+  findOptions() {
+    return this.classService.findOptions();
+  }
+
   @Get('user/:userId')
   @ApiOkResponse({ type: [ClassResponseDto] })
   findAllByUser(@Param('userId') userId: string) {

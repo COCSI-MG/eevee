@@ -1,6 +1,7 @@
 import { Class, UpsertClass } from "@/app/interface/scheduler-api/class";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
+import { AdminAttemptClassOption } from "@/app/interface/scheduler-api/admin-attempt";
 
 interface ListPaginatedClassesParams {
   page?: number;
@@ -9,6 +10,12 @@ interface ListPaginatedClassesParams {
 }
 
 export class ClassesService {
+  static async listOptions(): Promise<AdminAttemptClassOption[]> {
+    const response = await axiosClientWithAuth.get<AdminAttemptClassOption[]>("/class/options");
+
+    return response.data;
+  }
+
   static async listClasses(): Promise<Class[]> {
     return (await axiosClientWithAuth.get("/class")).data;
   }

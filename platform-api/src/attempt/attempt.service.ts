@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateAttemptDto } from './dto/create-applicant-attempt.dto';
 import { Brackets, In, LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -80,6 +85,10 @@ export class AttemptService {
   }
 
   async findAllForAdmin(query: ListAdminAttemptsQueryDto) {
+    if (!query.assignmentId && !query.classId) {
+      throw new BadRequestException('At least one of assignmentId or classId must be provided');
+    }
+
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 10;
     const skip = (page - 1) * pageSize;
@@ -88,10 +97,25 @@ export class AttemptService {
       .createQueryBuilder('attempt')
       .withDeleted()
       .leftJoin('attempt.user', 'user')
-      .leftJoin('attempt.assignment', 'assignment')
-      .where('attempt.assignmentId = :assignmentId', {
-        assignmentId: query.assignmentId,
+      .innerJoin('attempt.assignment', 'assignment');
+
+    if (query.assignmentId) {
+      baseQb.where('attempt.assignmentId = :assignmentId', {
+        assignmentId: query.assignmentId
       });
+    }
+
+    if (query.classId) {
+      if (query.assignmentId) {
+        baseQb.andWhere('assignment.classId = :classId', {
+          classId: query.classId
+        });
+      } else {
+        baseQb.where('assignment.classId = :classId', {
+          classId: query.classId
+        });
+      }
+    }
 
     if (query.userSearch?.trim()) {
       const userSearch = query.userSearch.trim();
@@ -132,6 +156,7 @@ export class AttemptService {
         'assignment.workerType AS assignment_workerType',
       ])
       .orderBy('attempt.createdAt', 'DESC')
+      .addOrderBy('attempt.id', 'DESC')
       .offset(skip)
       .limit(pageSize)
       .getRawMany();
