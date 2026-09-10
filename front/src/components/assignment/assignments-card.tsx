@@ -23,6 +23,10 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { formatScorePercentage } from "@/utils/score";
 import {
+  AttemptStatus,
+  PROCESSING_ATTEMPT_STATUSES,
+} from "@/app/interface/scheduler-api/assignment-attempt";
+import {
   earliestDate,
   formatDateTime,
   isDeadlinePassed,
@@ -32,7 +36,6 @@ interface AssignmentsCardProps {
   data: Assignment[];
 }
 
-const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
 const BADGE_COMPACT_CLASS = "text-[10px] px-2 py-0.5";
 
 export default function AssignmentsCard({ data }: AssignmentsCardProps) {
@@ -105,10 +108,10 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 "border border-success": isProcessing,
               },
               {
-                "border border-destructive": lastAttemptStatus === "failed",
+                "border border-destructive": lastAttemptStatus === AttemptStatus.Failed,
               },
               {
-                "border border-warning": lastAttemptStatus === "completed",
+                "border border-warning": lastAttemptStatus === AttemptStatus.Completed,
               },
             )}
           >
@@ -142,7 +145,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     </Badge>
                   )}
 
-                  {lastAttemptStatus === "failed" && (
+                  {lastAttemptStatus === AttemptStatus.Failed && (
                     <Badge
                       className={cn(
                         BADGE_COMPACT_CLASS,
@@ -164,7 +167,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     </Badge>
                   )}
 
-                  {lastAttemptStatus === "completed" && (
+                  {lastAttemptStatus === AttemptStatus.Completed && (
                     <Badge
                       className={cn(
                         BADGE_COMPACT_CLASS,
@@ -175,7 +178,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     </Badge>
                   )}
 
-                  {lastAttemptStatus === "completed" &&
+                  {lastAttemptStatus === AttemptStatus.Completed &&
                     lastAttempt?.score != null && (
                       <Badge
                         className={cn(
