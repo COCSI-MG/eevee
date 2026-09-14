@@ -36,3 +36,14 @@ export interface AdminAttemptsListResponse {
     totalPages: number;
   };
 }
+
+export interface AdminAttemptClassOption {
+  id: number;
+  name: string;
+}
+
+export interface AdminAttemptAssignmentOption {
+  id: number;
+  title: string;
+  classId: number;
+}

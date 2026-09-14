@@ -16,6 +16,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { instanceToPlain } from 'class-transformer';
 import { ListAssignmentsQueryDto } from './dto/list-assignments.query.dto';
+import { ListAssignmentOptionsQueryDto } from './dto/list-assignment-options.query.dto';
 
 @Controller('assignment')
 @UseGuards(JwtAuthGuard)
@@ -32,6 +33,12 @@ export class AssignmentController {
   @UseGuards(AdminGuard)
   findAll() {
     return this.assignmentService.findAll();
+  }
+
+  @Get('options')
+  @UseGuards(AdminGuard)
+  findOptions(@Query() query: ListAssignmentOptionsQueryDto) {
+    return this.assignmentService.findOptions(query.classId);
   }
 
   @Get('class/:classId')

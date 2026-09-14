@@ -160,6 +160,22 @@ describe('AssignmentService', () => {
     expect(requestContextService.getUser).not.toHaveBeenCalled();
   });
 
+  it('lists lightweight assignment options filtered by class', async () => {
+    const { service, assignmentRepository } = await setup();
+    assignmentRepository.find.mockResolvedValue([
+      { id: 1, title: 'Activity', classId: 5 },
+    ]);
+
+    await expect(service.findOptions(5)).resolves.toEqual([
+      { id: 1, title: 'Activity', classId: 5 },
+    ]);
+    expect(assignmentRepository.find).toHaveBeenCalledWith({
+      select: { id: true, title: true, classId: true },
+      where: { classId: 5 },
+      order: { title: 'ASC', id: 'ASC' },
+    });
+  });
+
   it('uses the global assignment list for the admin me endpoint', async () => {
     const { service, assignmentRepository, requestContextService } =
       await setup();

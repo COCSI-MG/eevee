@@ -6,6 +6,7 @@ import { ClsService } from 'nestjs-cls';
 import { AttemptStatus } from './enums/attempt-status.enum';
 import { CreateAttemptDto } from './dto/create-applicant-attempt.dto';
 import { ListAdminAttemptsQueryDto } from './dto/list-admin-attempts.query.dto';
+import { BadRequestException } from '@nestjs/common';
 
 describe('AttemptService', () => {
   let service: AttemptService;
@@ -24,9 +25,11 @@ describe('AttemptService', () => {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
       leftJoin: jest.fn().mockReturnThis(),
+      innerJoin: jest.fn().mockReturnThis(),
       withDeleted: jest.fn().mockReturnThis(),
       clone: jest.fn(),
       orderBy: jest.fn().mockReturnThis(),
+      addOrderBy: jest.fn().mockReturnThis(),
       offset: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
       getRawMany: jest.fn(),
@@ -236,5 +239,27 @@ describe('AttemptService', () => {
 
     expect(queryBuilder.offset).toHaveBeenCalledWith(2);
     expect(queryBuilder.limit).toHaveBeenCalledWith(2);
+    expect(queryBuilder.addOrderBy).toHaveBeenCalledWith(
+      'attempt.id',
+      'DESC',
+    );
+  });
+
+  it('filters admin attempts by class when no assignment is selected', async () => {
+    const queryBuilder = makeQueryBuilder();
+    queryBuilder.getRawMany.mockResolvedValue([]);
+    queryBuilder.getCount.mockResolvedValue(0);
+    attemptRepository.createQueryBuilder.mockReturnValue(queryBuilder);
+
+    await service.findAllForAdmin({ classId: 8, page: 1, pageSize: 10 });
+
+    expect(queryBuilder.where).toHaveBeenCalledWith(
+      'assignment.classId = :classId',
+      { classId: 8 },
+    );
+    expect(queryBuilder.innerJoin).toHaveBeenCalledWith(
+      'attempt.assignment',
+      'assignment',
+    );
   });
 });

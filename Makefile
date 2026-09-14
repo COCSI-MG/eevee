@@ -1,5 +1,5 @@
 GHCR_NAMESPACE ?= ghcr.io/cocsi-mg
-TAG            ?= develop
+TAG            ?= latest
 # PRIVATE_KEY_PATH ?= ~/.ssh/id_personal
 PRIVATE_KEY_PATH ?= secrets/id_iee_cluster
 
@@ -124,21 +124,21 @@ push-workers: \
 # rebuilt without re-running the whole pipeline.
 .PHONY: build-platform-api push-platform-api
 build-platform-api:
-	docker build -t $(GHCR_NAMESPACE)/platform-api:$(TAG) -f platform-api/Dockerfile .
+	docker build -t $(GHCR_NAMESPACE)/eevee-platform-api:$(TAG) -f platform-api/Dockerfile .
 push-platform-api:
-	docker push $(GHCR_NAMESPACE)/platform-api:$(TAG)
+	docker push $(GHCR_NAMESPACE)/eevee-platform-api:$(TAG)
 
 .PHONY: build-assignment-runner push-assignment-runner
 build-assignment-runner:
-	docker build -t $(GHCR_NAMESPACE)/assignment-runner:$(TAG) -f assignment-runner/Dockerfile .
+	docker build -t $(GHCR_NAMESPACE)/eevee-assignment-runner:$(TAG) -f assignment-runner/Dockerfile .
 push-assignment-runner:
-	docker push $(GHCR_NAMESPACE)/assignment-runner:$(TAG)
+	docker push $(GHCR_NAMESPACE)/eevee-assignment-runner:$(TAG)
 
 .PHONY: build-front push-front
 build-front:
-	docker build -t $(GHCR_NAMESPACE)/front:$(TAG) -f front/Dockerfile .
+	docker build -t $(GHCR_NAMESPACE)/eevee-front:$(TAG) -f front/Dockerfile .
 push-front:
-	docker push $(GHCR_NAMESPACE)/front:$(TAG)
+	docker push $(GHCR_NAMESPACE)/eevee-front:$(TAG)
 
 .PHONY: build-eevee-worker-bootstrap push-eevee-worker-bootstrap
 build-eevee-worker-bootstrap:

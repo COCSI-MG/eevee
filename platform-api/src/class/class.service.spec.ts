@@ -198,6 +198,18 @@ describe('ClassService', () => {
     });
   });
 
+  it('lists only id and name for filter options', async () => {
+    classRepository.find.mockResolvedValue([{ id: 1, name: 'Algorithms' }]);
+
+    await expect(service.findOptions()).resolves.toEqual([
+      { id: 1, name: 'Algorithms' },
+    ]);
+    expect(classRepository.find).toHaveBeenCalledWith({
+      select: { id: true, name: true },
+      order: { name: 'ASC', id: 'ASC' },
+    });
+  });
+
   it('queries classes correctly when access is allowed', async () => {
     requestContextService.getUser.mockReturnValue({
       userId: 7,

@@ -83,6 +83,7 @@ export default function AdminAttemptsTable({
           <TableHeader>
             <TableRow className="bg-background/80 hover:bg-background/80">
               <TableHead className="text-foreground">Usuário</TableHead>
+              <TableHead className="text-foreground">Atividade</TableHead>
               <TableHead className="text-foreground">Status</TableHead>
               <TableHead className="text-foreground">Nota</TableHead>
               <TableHead className="text-foreground">Tentativa</TableHead>
@@ -94,7 +95,7 @@ export default function AdminAttemptsTable({
           <TableBody>
             {attempts.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                   Nenhuma tentativa encontrada para os filtros selecionados.
                 </TableCell>
               </TableRow>
@@ -112,6 +113,7 @@ export default function AdminAttemptsTable({
                         <span className="text-xs text-muted-foreground">ID {attempt.user.id}</span>
                       </div>
                     </TableCell>
+                    <TableCell className="text-foreground">{attempt.assignment.title}</TableCell>
                     <TableCell>{getStatusBadge(attempt.status)}</TableCell>
                     <TableCell className="text-foreground">{formatScore(attempt.score)}</TableCell>
                     <TableCell className="text-foreground">#{attempt.attempt}</TableCell>
@@ -146,7 +148,7 @@ export default function AdminAttemptsTable({
 
                   {isExpanded && (
                     <TableRow className="bg-background/70">
-                      <TableCell colSpan={6}>
+                      <TableCell colSpan={7}>
                         <AdminAttemptExpandedRow attemptId={attempt.id} />
                       </TableCell>
                     </TableRow>
