@@ -30,13 +30,11 @@ import {
 interface WorkspaceImportControlProps {
   assignment: Assignment;
   user: AuthSession;
-  isWorkspaceInitialized: boolean;
 }
 
 export default function WorkspaceImportControl({
   assignment,
-  user,
-  isWorkspaceInitialized,
+  user
 }: WorkspaceImportControlProps) {
 
   const { fileTreeData, replaceFileTree, selectItem, clearSelection } = useWorkspaceContext();
@@ -45,7 +43,7 @@ export default function WorkspaceImportControl({
   const [selectedSourceId, setSelectedSourceId] = React.useState("");
   const [isConfirmOpen, setIsConfirmOpen] = React.useState(false);
 
-  const isVisible = Boolean(assignment.allowProjectImport && !user.isAdmin)
+  const isVisible = Boolean(assignment.allowProjectImport)
 
   const {
     data: sources = [],
@@ -111,8 +109,7 @@ export default function WorkspaceImportControl({
 
   if (!isVisible) return null;
 
-  const controlsDisabled =
-    !isWorkspaceInitialized || isLoadingSources || isImporting;
+  const controlsDisabled = isLoadingSources || isImporting;
 
   return (
     <div className="shrink-0 space-y-2 border-b border-border p-3">
@@ -141,7 +138,7 @@ export default function WorkspaceImportControl({
           <Select
             value={selectedSourceId}
             onValueChange={setSelectedSourceId}
-            disabled={controlsDisabled || sources.length === 0}
+            disabled={controlsDisabled}
           >
             <SelectTrigger
               aria-label={WORKSPACE_IMPORT_TEXT.sourceSelectAriaLabel}

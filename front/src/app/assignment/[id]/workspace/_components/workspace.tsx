@@ -5,7 +5,6 @@ import WorkspaceCodeEditor from "./workspace-code-editor";
 import WorkspaceExplorer from "./workspace-explorer";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
 import { useWorkspaceFileEditor } from "../_hooks/use-workspace-file-editor";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
@@ -176,14 +175,6 @@ export default function Workspace({
     selectItem,
   });
 
-  const { isInitialized: isWorkspaceInitialized } = useWorkspaceInitialization({
-    assignment,
-    userId,
-    setActiveFileContent,
-    replaceFileTree,
-    selectItem,
-  });
-
   React.useEffect(() => {
     onResetWorkspaceReady?.(resetWorkspace);
 
@@ -205,7 +196,6 @@ export default function Workspace({
         <WorkspaceImportControl
           assignment={assignment}
           user={user}
-          isWorkspaceInitialized={isWorkspaceInitialized}
         />
 
         <WorkspaceExplorer

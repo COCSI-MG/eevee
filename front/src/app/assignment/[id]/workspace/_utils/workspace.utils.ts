@@ -244,9 +244,9 @@ export function serializeWorkspaceTree(node: FileNode): FileNode {
     isSelectable: Boolean(node.isSelectable),
     path: node.path,
     isFile: Boolean(node.isFile),
-    ...(node.content !== undefined ? { content: node.content } : {}),
-    ...(node.updatedAt !== undefined ? { updatedAt: node.updatedAt } : {}),
-    ...(node.children !== undefined ? { children: node.children.map(serializeWorkspaceTree) } : {})
+    content: node.content,
+    updatedAt: node.updatedAt,
+    children: node.children?.map(serializeWorkspaceTree),
   }
 }
 
