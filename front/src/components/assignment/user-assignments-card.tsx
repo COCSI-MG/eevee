@@ -6,8 +6,7 @@ import { useAuthContext } from '@/hooks/use-auth-context';
 import AssignmentsCard from './assignments-card';
 import Loader from '../loader';
 import { Assignment } from '@/app/interface/scheduler-api/assignment';
-
-const PROCESSING_ATTEMPT_STATUSES = new Set(['pending', 'enqueded', 'running']);
+import { PROCESSING_ATTEMPT_STATUSES } from '@/app/interface/scheduler-api/assignment-attempt';
 
 const hasAssignmentsProcessingAttempt = (assignments?: Assignment[]) =>
   Boolean(

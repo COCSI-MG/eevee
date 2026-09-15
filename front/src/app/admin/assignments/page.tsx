@@ -11,26 +11,53 @@ import Loader from "@/components/loader";
 import QueryErrorState from "@/components/shared/query-error-state";
 import ListSearch from "@/components/shared/list-search";
 import Pagination from "@/components/shared/pagination";
-import { useMemo } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { useClassOptions } from "@/hooks/use-class-options";
+import { useMemo, useState } from "react";
+
+const ALL_CLASSES_VALUE = "all-classes";
 
 export default function AssignmentsAdminPage() {
+  const [selectedClassId, setSelectedClassId] = useState("");
   const { page, search, debouncedSearch, setPage, setSearch } =
     usePaginatedSearch({ debounceMs: 3000 });
+  const classId = selectedClassId ? Number(selectedClassId) : undefined;
+
+  const {
+    data: classes,
+    isLoading: isClassesLoading,
+    isError: isClassesError
+  } = useClassOptions();
+
   const { data, isFetching, isError, refetch } = usePaginatedAssignments({
     page,
     search: debouncedSearch,
+    classId
   });
-  const isSearchLoading = search !== debouncedSearch || isFetching;
+  const isListLoading = search !== debouncedSearch || isFetching;
 
   const assignments = data?.data ?? [];
   const meta = data?.meta;
 
   const assignmentsEmptyMessage = useMemo(() => {
     if (!meta || meta.total === 0) {
-      return debouncedSearch.trim() ? "Nenhuma atividade corresponde a sua busca." : "Nenhuma atividade encontrada.";
+      return classId || debouncedSearch.trim()
+        ? "Nenhuma atividade corresponde aos filtros."
+        : "Nenhuma atividade encontrada.";
     }
     return "Nenhuma atividade encontrada.";
-  }, [meta, debouncedSearch]);
+  }, [meta, debouncedSearch, classId]);
+
+  const handleClassChange = (value: string) => {
+    setSelectedClassId(value === ALL_CLASSES_VALUE ? "" : value);
+    setPage(1);
+  };
 
   if (isError) {
     return (
@@ -59,7 +86,7 @@ export default function AssignmentsAdminPage() {
     );
   }
 
-  if (isFetching && !data) {
+  if (isClassesLoading || (isFetching && !data)) {
     return <Loader />;
   }
 
@@ -75,14 +102,56 @@ export default function AssignmentsAdminPage() {
           </Button>
         </Link>
       </div>
-      <ListSearch
-        value={search}
-        onChange={setSearch}
-        placeholder="Filtrar por título, turma ou tipo de worker"
-        ariaLabel="Filtrar atividades por título, turma ou tipo de worker"
-        className="max-w-md"
-      />
-      {isSearchLoading ? (
+      <div className="flex flex-col gap-4 md:flex-row md:items-end">
+        <div className="w-full space-y-2 md:max-w-xs">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Filtrar por turma
+          </p>
+          <Select
+            value={selectedClassId || ALL_CLASSES_VALUE}
+            onValueChange={handleClassChange}
+            disabled={isClassesError}
+          >
+            <SelectTrigger
+              className="border-border bg-background text-foreground"
+              aria-label="Filtrar atividades por turma"
+            >
+              <SelectValue placeholder="Todas as turmas" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value={ALL_CLASSES_VALUE}>
+                Todas as turmas
+              </SelectItem>
+              {(classes ?? []).map((classOption) => (
+                <SelectItem
+                  key={classOption.id}
+                  value={String(classOption.id)}
+                >
+                  {classOption.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+
+          </Select>
+        </div>
+
+        <ListSearch
+          value={search}
+          onChange={setSearch}
+          placeholder="Filtrar por título ou tipo de worker"
+          ariaLabel="Filtrar atividades por título ou tipo de worker"
+          className="w-full md:max-w-md"
+        />
+      </div>
+
+      {isClassesError && (
+        <div className="rounded-md border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+          Não foi possível carregar as turmas para o filtro.
+        </div>
+      )}
+
+      {isListLoading ? (
         <Loader fullScreen={false} />
       ) : (
         <>

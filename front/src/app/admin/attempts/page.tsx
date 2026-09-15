@@ -15,11 +15,9 @@ import { AttemptAdminService } from "@/app/integration/scheduler-api/attempt";
 import AdminAttemptsFilters from "@/components/attempts/admin-attempts-filters";
 import AdminAttemptsTable from "@/components/attempts/admin-attempts-table";
 import Loader from "@/components/loader";
-import {
-  useAdminAttemptAssignmentOptions,
-  useAdminAttemptClassOptions,
-} from "@/hooks/use-admin-attempt-filter-options";
+import { useAdminAttemptAssignmentOptions } from "@/hooks/use-admin-attempt-assignment-options";
 import { useAdminAttempts } from "@/hooks/use-admin-attempts";
+import { useClassOptions } from "@/hooks/use-class-options";
 import { useDelayedVisibility } from "@/hooks/use-delayed-visibility";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { toast } from "@/hooks/use-toast";
@@ -58,7 +56,7 @@ function AdminAttemptsPageContent() {
     data: classes,
     isLoading: isClassesLoading,
     isError: isClassesError,
-  } = useAdminAttemptClassOptions();
+  } = useClassOptions();
 
   const {
     data: assignments,

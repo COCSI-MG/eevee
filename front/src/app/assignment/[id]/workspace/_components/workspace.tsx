@@ -3,10 +3,8 @@
 import React from "react";
 import WorkspaceCodeEditor from "./workspace-code-editor";
 import WorkspaceExplorer from "./workspace-explorer";
-import WorkspaceQuestionPanel from "./workspace-question-panel";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
 import { useWorkspaceFileEditor } from "../_hooks/use-workspace-file-editor";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
@@ -21,6 +19,7 @@ import {
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { Button } from "@/components/ui/button";
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
+import WorkspaceImportControl from "./workspace-import-control";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -176,14 +175,6 @@ export default function Workspace({
     selectItem,
   });
 
-  useWorkspaceInitialization({
-    assignment,
-    userId,
-    setActiveFileContent,
-    replaceFileTree,
-    selectItem,
-  });
-
   React.useEffect(() => {
     onResetWorkspaceReady?.(resetWorkspace);
 
@@ -199,9 +190,14 @@ export default function Workspace({
   return (
     <div className="flex flex-1 min-h-0">
       <div
-        className="relative shrink-0 min-w-[150px] max-w-[400px] bg-card border-r border-border h-full min-h-0"
+        className="relative flex shrink-0 min-w-[150px] max-w-[400px] flex-col bg-card border-r border-border h-full min-h-0"
         style={{ width: explorerWidth }}
       >
+        <WorkspaceImportControl
+          assignment={assignment}
+          user={user}
+        />
+
         <WorkspaceExplorer
           onFileSelect={handleFileSelect}
           onTreeChange={handleTreeChange}
@@ -219,10 +215,6 @@ export default function Workspace({
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <WorkspaceQuestionPanel
-          title={assignment.title}
-          description={assignment.description}
-        />
         <div className="flex items-center justify-end gap-2 border-b border-border px-2 py-1">
           {isSplitView && (
               <Button

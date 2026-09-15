@@ -112,6 +112,9 @@ export class Assignment {
   @Column({ default: false })
   answerKeyVisible: boolean;
 
+  @Column({ default: false })
+  allowProjectImport: boolean;
+
   @Column({ type: 'text', nullable: true })
   boilerplateContent?: string;
 

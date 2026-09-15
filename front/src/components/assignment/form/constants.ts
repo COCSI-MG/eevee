@@ -36,6 +36,8 @@ export const ASSIGNMENT_FORM_TEXT = {
     ANSWER_KEY_VISIBLE_TOOLTIP: "Deixe ativado quando desejar que os alunos visualizem o gabarito.",
     ALLOW_COPY_PASTE_LABEL: "Permitir copiar e colar",
     ALLOW_COPY_PASTE_TOOLTIP: "Permite copiar e colar conteúdos somente dentro do ambiente da atividade. Conteúdos externos continuarão bloqueados.",
+    PROJECT_IMPORT_CONTROL_LABEL: "Controle de importação de projetos",
+    PROJECT_IMPORT_CONTROL_TOOLTIP: "Permite que o aluno importe o último projeto enviado para correção em outra atividade compatível desta turma.",
   },
   BOILERPLATE: {
     TITLE: "Código Boilerplate",

@@ -12,6 +12,8 @@ export interface Class {
   assignments?: Assignment[];
 }
 
+export type ClassOption = Pick<Class, "id" | "name">;
+
 export interface UpsertClass {
   id?: number;
   name: string;

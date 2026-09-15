@@ -29,6 +29,7 @@ import {
   DialogTrigger,
 } from "../../../../../components/ui/dialog";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { MarkdownContent } from "@/components/shared/markdown-content";
 import { formatDateTime } from "@/utils/date";
 
 interface WorkspaceHeaderProps {
@@ -99,9 +100,10 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
             </DialogHeader>
             <div className="mt-6 space-y-4">
               <div className="p-6 bg-card/50 rounded-lg border border-border max-h-96 overflow-y-auto">
-                <p className="text-foreground leading-relaxed whitespace-pre-wrap text-base space-y-3">
-                  {assignment?.description || "Nenhuma descrição fornecida."}
-                </p>
+                <MarkdownContent
+                  className="text-base"
+                  content={assignment?.description || "Nenhuma descrição fornecida."}
+                />
                 {(assignment.startDate || assignment.dueDate) && (
                   <div className="mt-4 space-y-1 text-sm text-slate-400">
                     {assignment.startDate && (
