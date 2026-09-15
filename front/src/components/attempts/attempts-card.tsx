@@ -19,6 +19,7 @@ import {
 import { ScrollArea } from "../ui/scroll-area";
 import { useAttemptFeedback } from "@/hooks/use-attempt-feedback";
 import { AssignmentAttempt } from "@/app/interface/scheduler-api/assignment-attempt";
+import { formatScorePercentage } from "@/utils/score";
 
 function AttemptFeedbackDialog({ attempt }: { attempt: AssignmentAttempt }) {
   const { isOpen, handleOpenChange, feedback, isGenerating } =
@@ -107,9 +108,6 @@ export default function AttemptsCard() {
                 className={cn(
                   "overflow-hidden hover:shadow-md transition-shadow",
                   {
-                    "opacity-50": attempt.status !== "running",
-                  },
-                  {
                     "border border-destructive text-foreground":
                       attempt.status === "failed" || !attempt.isAcceptable,
                   },
@@ -154,7 +152,17 @@ export default function AttemptsCard() {
                       </p>
                     )}
                     <p className="text-sm text-foreground">
-                      Resultado: {attempt.score}
+                      Resultado:{" "}
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          attempt.isAcceptable
+                            ? "text-success"
+                            : "text-destructive",
+                        )}
+                      >
+                        {formatScorePercentage(attempt.score)}
+                      </span>
                     </p>
                     <p className="text-sm text-foreground">
                       Passou: {attempt.passes}

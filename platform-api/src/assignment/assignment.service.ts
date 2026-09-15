@@ -472,6 +472,12 @@ export class AssignmentService {
       .leftJoin('assignment.examAssignment', 'examAssignment')
       .orderBy('assignment.id', 'DESC');
 
+    if (query.classId) {
+      qb.andWhere('assignment.classId = :classId', {
+        classId: query.classId
+      });
+    }
+
     const search = query.search?.trim();
     if (search) {
       qb.andWhere(

@@ -2,8 +2,7 @@ import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
 import { useQuery } from '@tanstack/react-query';
 import { Assignment } from '@/app/interface/scheduler-api/assignment';
 import { isAxiosError } from 'axios';
-
-const PROCESSING_ATTEMPT_STATUSES = new Set(['pending', 'enqueded', 'running']);
+import { PROCESSING_ATTEMPT_STATUSES } from '@/app/interface/scheduler-api/assignment-attempt';
 
 const hasProcessingAttempt = (assignment?: Assignment) =>
   Boolean(

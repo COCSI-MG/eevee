@@ -22,6 +22,11 @@ import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { MarkdownContent } from "@/components/shared/markdown-content";
+import { formatScorePercentage } from "@/utils/score";
+import {
+  AttemptStatus,
+  PROCESSING_ATTEMPT_STATUSES,
+} from "@/app/interface/scheduler-api/assignment-attempt";
 import {
   earliestDate,
   formatDateTime,
@@ -32,7 +37,7 @@ interface AssignmentsCardProps {
   data: Assignment[];
 }
 
-const PROCESSING_ATTEMPT_STATUSES = new Set(["pending", "enqueded", "running"]);
+const BADGE_COMPACT_CLASS = "text-[10px] px-2 py-0.5";
 
 export default function AssignmentsCard({ data }: AssignmentsCardProps) {
   const { user } = useAuthContext();
@@ -65,20 +70,20 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     );
   };
 
-  const getLastAttemptStatus = (assignment: Assignment) => {
+  const getLastAttempt = (assignment: Assignment) => {
     if (!assignment.assignmentAttempts?.length) {
       return null;
     }
-    const lastAttempt = [...assignment.assignmentAttempts].sort(
+    return [...assignment.assignmentAttempts].sort(
       (a, b) => b.attempt - a.attempt,
     )[0];
-    return lastAttempt?.status;
   };
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       {data.map((assignment) => {
-        const lastAttemptStatus = getLastAttemptStatus(assignment);
+        const lastAttempt = getLastAttempt(assignment);
+        const lastAttemptStatus = lastAttempt?.status;
         const canAccess = canAccessAssignment(assignment);
 
         const isProcessing = lastAttemptStatus
@@ -104,53 +109,99 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                 "border border-success": isProcessing,
               },
               {
-                "border border-destructive": lastAttemptStatus === "failed",
+                "border border-destructive": lastAttemptStatus === AttemptStatus.Failed,
               },
               {
-                "border border-warning": lastAttemptStatus === "completed",
+                "border border-warning": lastAttemptStatus === AttemptStatus.Completed,
               },
             )}
           >
             <CardHeader>
-              <CardTitle className="flex items-center justify-between space-x-2 text-foreground">
-                {assignment.title}
+              <CardTitle className="flex items-start justify-between gap-2 text-foreground">
+                <span className="min-w-0 flex-1 break-words">
+                  {assignment.title}
+                </span>
 
-                {assignment.score != null && (
-                  <Badge className="bg-primary text-primary-foreground">
-                    Vale {assignment.score} pts
-                  </Badge>
-                )}
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                  {assignment.score != null && (
+                    <Badge
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-primary text-primary-foreground",
+                      )}
+                    >
+                      Vale {assignment.score} pts
+                    </Badge>
+                  )}
 
-                {!canAccess && (
-                  <Badge
-                    variant={"destructive"}
-                    className="bg-destructive/10 text-destructive"
-                  >
-                    Tarefa suspensa por quebra de conduta
-                  </Badge>
-                )}
+                  {!canAccess && (
+                    <Badge
+                      variant={"destructive"}
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-destructive/10 text-destructive",
+                      )}
+                    >
+                      Tarefa suspensa por quebra de conduta
+                    </Badge>
+                  )}
 
-                {lastAttemptStatus === "failed" && (
-                  <Badge className="bg-destructive/10 text-destructive animate-pulse">
-                    Tentativa com falha
-                  </Badge>
-                )}
+                  {lastAttemptStatus === AttemptStatus.Failed && (
+                    <Badge
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-destructive/10 text-destructive animate-pulse",
+                      )}
+                    >
+                      Tentativa com falha
+                    </Badge>
+                  )}
 
-                {isProcessing && (
-                  <Badge className="bg-success text-success-foreground animate-pulse">
-                    Em execução
-                  </Badge>
-                )}
+                  {isProcessing && (
+                    <Badge
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-success text-success-foreground animate-pulse",
+                      )}
+                    >
+                      Em execução
+                    </Badge>
+                  )}
 
-                {lastAttemptStatus === "completed" && (
-                  <Badge className="bg-warning text-warning-foreground animate-pulse">
-                    Resultados disponíveis
-                  </Badge>
-                )}
+                  {lastAttemptStatus === AttemptStatus.Completed && (
+                    <Badge
+                      className={cn(
+                        BADGE_COMPACT_CLASS,
+                        "bg-warning text-warning-foreground animate-pulse",
+                      )}
+                    >
+                      Resultados disponíveis
+                    </Badge>
+                  )}
 
-                {deadlinePassed && (
-                  <Badge variant="destructive">Prazo encerrado</Badge>
-                )}
+                  {lastAttemptStatus === AttemptStatus.Completed &&
+                    lastAttempt?.score != null && (
+                      <Badge
+                        className={cn(
+                          BADGE_COMPACT_CLASS,
+                          lastAttempt.isAcceptable
+                            ? "bg-success text-success-foreground"
+                            : "bg-destructive/10 text-destructive",
+                        )}
+                      >
+                        {formatScorePercentage(lastAttempt.score)}
+                      </Badge>
+                    )}
+
+                  {deadlinePassed && (
+                    <Badge
+                      variant="destructive"
+                      className={BADGE_COMPACT_CLASS}
+                    >
+                      Prazo encerrado
+                    </Badge>
+                  )}
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
