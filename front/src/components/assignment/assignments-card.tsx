@@ -21,6 +21,7 @@ import { Route } from "@/app/routes";
 import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { MarkdownContent } from "@/components/shared/markdown-content";
 import { formatScorePercentage } from "@/utils/score";
 import {
   AttemptStatus,
@@ -305,8 +306,15 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
               {data.find((a) => a.id === selectedDescriptionModal)?.title}
             </DialogTitle>
           </DialogHeader>
-          <DialogDescription className="text-foreground max-h-96 overflow-y-auto whitespace-pre-wrap">
-            {data.find((a) => a.id === selectedDescriptionModal)?.description}
+          <DialogDescription asChild>
+            <div className="text-foreground max-h-96 overflow-y-auto">
+              <MarkdownContent
+                content={
+                  data.find((a) => a.id === selectedDescriptionModal)
+                    ?.description ?? ""
+                }
+              />
+            </div>
           </DialogDescription>
         </DialogContent>
       </Dialog>
