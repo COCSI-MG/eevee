@@ -58,6 +58,19 @@ export class AssignmentController {
     return this.assignmentService.findAllPaginated(query);
   }
 
+  @Get(':id/import-sources')
+  findImportSources(@Param('id') id: string) {
+    return this.assignmentService.findImportSources(+id)
+  }
+
+  @Get(':id/import-sources/:sourceId')
+  findImportSource(
+    @Param('id') id: string,
+    @Param('sourceId') sourceId: string
+  ) {
+    return this.assignmentService.findImportSource(+id, +sourceId)
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.assignmentService.findOne(+id);

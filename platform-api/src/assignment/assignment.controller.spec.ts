@@ -13,6 +13,8 @@ describe('AssignmentController', () => {
     findOne: jest.Mock;
     update: jest.Mock;
     remove: jest.Mock;
+    findImportSources: jest.Mock;
+    findImportSource: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -25,6 +27,8 @@ describe('AssignmentController', () => {
       findOne: jest.fn(),
       update: jest.fn(),
       remove: jest.fn(),
+      findImportSources: jest.fn(),
+      findImportSource: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -69,14 +73,21 @@ describe('AssignmentController', () => {
     expect(assignmentService.findAssignmentsByClass).toHaveBeenCalledWith(5);
   });
 
-  it('delegates lightweight options with an optional classId', async () => {
-    assignmentService.findOptions.mockResolvedValue([
-      { id: 1, title: 'Activity', classId: 5 },
-    ]);
+  it('delegates import source requests with numeric ids', async () => {
+    assignmentService.findImportSource.mockResolvedValue({ id: 2 });
 
-    await expect(controller.findOptions({ classId: 5 })).resolves.toEqual([
-      { id: 1, title: 'Activity', classId: 5 },
+    await expect(controller.findImportSource('5', '2')).resolves.toEqual({
+      id: 2,
+    });
+    expect(assignmentService.findImportSource).toHaveBeenCalledWith(5, 2);
+  });
+
+  it('delegates import source listing with a numeric assignment id', async () => {
+    assignmentService.findImportSources.mockResolvedValue([{ id: 2 }]);
+
+    await expect(controller.findImportSources('5')).resolves.toEqual([
+      { id: 2 },
     ]);
-    expect(assignmentService.findOptions).toHaveBeenCalledWith(5);
+    expect(assignmentService.findImportSources).toHaveBeenCalledWith(5);
   });
 });

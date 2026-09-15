@@ -1,6 +1,8 @@
 import { axiosClientWithAuth } from "./client";
 import {
   Assignment,
+  AssignmentImportProject,
+  AssignmentImportSource,
   CreateAssignmentRequest,
   UpdateAssignmentRequest,
 } from "@/app/interface/scheduler-api/assignment";
@@ -56,6 +58,18 @@ export class AssignmentService {
     const response = await axiosClientWithAuth.patch(`/assignment/${id}`, data);
 
     return <Assignment>response.data;
+  }
+
+  static async GetImportSources(id: number) {
+    const response = await axiosClientWithAuth.get<AssignmentImportSource[]>(`/assignment/${id}/import-sources`)
+
+    return response.data
+  }
+
+  static async GetImportSource(id: number, sourceId: number) {
+    const response = await axiosClientWithAuth.get<AssignmentImportProject>(`/assignment/${id}/import-sources/${sourceId}`)
+
+    return response.data
   }
 
   static async DeleteAssignment(id: number) {

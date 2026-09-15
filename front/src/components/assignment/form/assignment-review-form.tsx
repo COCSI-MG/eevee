@@ -69,6 +69,7 @@ const AssigmentReview = ({
             <p className="text-foreground">{values.maxAttempts}</p>
           </div>
         </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wide">

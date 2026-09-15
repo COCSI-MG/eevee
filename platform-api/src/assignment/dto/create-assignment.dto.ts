@@ -101,6 +101,15 @@ export class CreateAssignmentDto {
   @IsEnum(WorkerType)
   workerType: WorkerType;
 
+  @ApiProperty({
+    required: false,
+    default: false,
+    description: 'Allows students to import their latest submitted project from a compatible assignment into this assignment.'
+  })
+  @IsOptional()
+  @IsBoolean()
+  allowProjectImport?: boolean;
+
   @ApiProperty()
   @IsString()
   @IsOptional()

@@ -7,7 +7,10 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { AssignmentTemplateDto, CreateAssignmentDto } from './dto/create-assignment.dto';
+import {
+  AssignmentTemplateDto,
+  CreateAssignmentDto,
+} from './dto/create-assignment.dto';
 import { UpdateAssignmentDto } from './dto/update-assignment.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
@@ -16,6 +19,8 @@ import {
   DataSource,
   EntityManager,
   In,
+  IsNull,
+  Not,
   Repository,
 } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
@@ -348,6 +353,7 @@ export class AssignmentService {
       workerType: assignmentData.workerType,
       initSqlScript: assignmentData.initSqlScript,
       boilerplateContent: resolvedBoilerplateContent,
+      allowProjectImport: assignmentData.allowProjectImport ?? false,
       createdById: user?.userId,
     });
 
@@ -779,6 +785,89 @@ export class AssignmentService {
       await manager.delete(AssignmentParam, { assignmentId: id });
       return manager.delete(Assignment, { id });
     });
+  }
+
+  async findImportSources(destinationAssignmentId: number) {
+    const destination = await this.findOne(destinationAssignmentId);
+    this.assertProjectImportAllowed(destination);
+
+    const user = this.requestContextService.getUser();
+
+    const rows = await this.assignmentRepository
+      .createQueryBuilder('source')
+      .innerJoin(
+        'source.assignmentAttempts',
+        'attempt',
+        'attempt.userId = :userId AND attempt.receivedWork IS NOT NULL',
+        { userId: user.userId }
+      )
+      .select('source.id', 'id')
+      .addSelect('source.title', 'title')
+      .addSelect('MAX(attempt.createdAt)', 'submittedAt')
+      .where('source.classId = :classId', { classId: destination.classId })
+      .andWhere('source.workerType = :workerType', { workerType: destination.workerType })
+      .andWhere('source.id != :destinationAssignmentId', { destinationAssignmentId })
+      .groupBy('source.id')
+      .addGroupBy('source.title')
+      .orderBy('LOWER(source.title)', 'ASC')
+      .addOrderBy('source.id', 'ASC')
+      .getRawMany<{ id: string; title: string; submittedAt: Date }>()
+
+    return rows.map((row) => ({
+      id: Number(row.id),
+      title: row.title,
+      submittedAt: row.submittedAt
+    }))
+  }
+
+  async findImportSource(
+    destinationAssignmentId: number,
+    sourceAssignmentId: number,
+  ) {
+    const destination = await this.findOne(destinationAssignmentId);
+    this.assertProjectImportAllowed(destination);
+
+    if (sourceAssignmentId === destinationAssignmentId) throw new BadRequestException('The destination assignment cannot be used as an import source.')
+
+    const source = await this.assignmentRepository.findOne({
+      where: { id: sourceAssignmentId },
+      select: {
+        id: true,
+        title: true,
+        classId: true,
+        workerType: true
+      }
+    });
+
+    if (!source) throw new NotFoundException('Import source not found')
+
+    if (
+      source.classId !== destination.classId ||
+      source.workerType !== destination.workerType
+    ) throw new BadRequestException('The selected assignment does not have a compatible workspace.')
+
+    const user = this.requestContextService.getUser();
+    const attempt = await this.attemptRepository.findOne({
+      where: {
+        assignmentId: sourceAssignmentId,
+        userId: user.userId,
+        receivedWork: Not(IsNull())
+      },
+      order: { attempt: 'DESC' }
+    })
+
+    if (!attempt?.receivedWork) throw new NotFoundException('Submitted project not found')
+
+    return {
+      id: source.id,
+      title: source.title,
+      submittedAt: attempt.createdAt,
+      files: attempt.receivedWork
+    }
+  }
+
+  private assertProjectImportAllowed(assignment: Assignment): void {
+    if (!assignment.allowProjectImport) throw new ForbiddenException('Project import is not allowed for this assignment.')
   }
 
   async getAssignmentTemplates(assignment: Assignment) {
