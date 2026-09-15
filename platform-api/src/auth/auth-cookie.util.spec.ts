@@ -146,14 +146,14 @@ describe('auth cookie util', () => {
 
     expect(options.maxAge).toBe(1800 * 1000);
   });
-  it('scopes the refresh cookie to the refresh route with its own ttl', () => {
+  it('keeps the refresh cookie on the site root with its own ttl', () => {
     const options = getRefreshCookieOptions(
       createConfigService({ ENV: 'production', AUTH_COOKIE_DOMAIN: '.eeveecodelab.online' }),
     );
 
     expect(options).toEqual({
       httpOnly: true,
-      path: '/v1/auth/refresh',
+      path: '/',
       sameSite: 'lax',
       secure: true,
       domain: '.eeveecodelab.online',

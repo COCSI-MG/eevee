@@ -20,7 +20,7 @@ imagePullSecret:
 image:
   registry: ghcr.io
   org: cocsi-mg
-  tag: develop
+  tag: latest
   pullPolicy: Always
 
 # -----------------------------------------------------------------------------
@@ -34,7 +34,10 @@ config:
   REDIS_HOST: redis-service
   REDIS_PORT: "6379"
   CORS_ALLOWED_ORIGINS: ""
+  GMAIL_USER: "eevee.cefet@gmail.com"
   AUTH_COOKIE_DOMAIN: ""
+  FRONT_URL: "https://eevee.testbeds.rnp.br"
+  FRONT_ROUTE_RESET_PASSWORD: "/reset-password"
 
 # -----------------------------------------------------------------------------
 # Sensitive values. The Secret is expected to already exist in the namespace —
@@ -49,6 +52,7 @@ secrets:
     DB_PASSWORD: ""
     JWT_SECRET: ""
     GROQ_API_KEY: ""
+    GMAIL_APP_PASSWORD: ""
 
 # -----------------------------------------------------------------------------
 # Postgres
@@ -85,7 +89,7 @@ platformApi:
   enabled: true
   image:
     repository: ghcr.io/cocsi-mg/eevee-platform-api
-    tag: develop
+    tag: latest
     pullPolicy: Always
   env: "production"
   replicas: 1
@@ -103,7 +107,7 @@ assignmentRunner:
   enabled: true
   image:
     repository: ghcr.io/cocsi-mg/eevee-assignment-runner
-    tag: develop
+    tag: latest
     pullPolicy: Always
   env: "production"
   replicas: 1
@@ -145,8 +149,8 @@ workerImages:
 front:
   enabled: true
   image:
-    repository: ghcr.io/cocsi-mg/front
-    tag: develop
+    repository: ghcr.io/cocsi-mg/eevee-front
+    tag: latest
     pullPolicy: Always
   replicas: 1
   containerPort: 3000
