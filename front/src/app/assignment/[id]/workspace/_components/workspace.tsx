@@ -7,6 +7,7 @@ import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { useWorkspaceFileEditor } from "../_hooks/use-workspace-file-editor";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
+import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
@@ -45,6 +46,15 @@ export default function Workspace({
   const [isSplitView, setIsSplitView] = React.useState(false);
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
+
+  useWorkspaceInitialization({
+    assignment,
+    userId,
+    setActiveFileContent,
+    replaceFileTree,
+    selectItem,
+  });
+
   const editorActionGuardMode = user.isAdmin
     ? EDITOR_ACTION_GUARD_MODE.EXEMPT
     : assignment.allowCopyPaste
