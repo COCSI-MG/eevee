@@ -31,6 +31,8 @@ import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { isoToLocalDatetime } from "@/utils/date";
 import { ASSIGNMENT_FORM_TEXT } from "./constants";
+import { AssignmentAlertType } from "@/app/interface/scheduler-api/assignment-alert";
+import { assignmentAlertPolicyValidationSchema } from "./assignment-alert-policy-validation";
 
 const validationSchema = Yup.object({
   title: Yup.string().required(ASSIGNMENT_FORM_TEXT.VALIDATION.TITLE_REQUIRED),
@@ -56,7 +58,8 @@ const validationSchema = Yup.object({
 
         return new Date(startDate) <= new Date(dueDate);
       },
-    )
+    ),
+  alertPolicy: assignmentAlertPolicyValidationSchema.required(),
 });
 
 const STEP_CONFIG: StepDefinition = {
@@ -97,6 +100,17 @@ function buildSteps(workerType: string): StepDefinition[] {
 
   steps.push(STEP_REVIEW);
   return steps;
+}
+
+const alertPolicyDefault = {
+  suspensionAlertLimit: 5,
+  typingCharactersPerSecondLimit: 20,
+  punitiveTypes: [
+    AssignmentAlertType.WindowFocusLoss,
+    AssignmentAlertType.DevTools,
+    AssignmentAlertType.Clipboard,
+    AssignmentAlertType.TypingRate
+  ]
 }
 
 export const AssignmentForm: React.FC<AssignmentFormProps> = ({
@@ -141,7 +155,8 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
     initSqlScript: existingAssignment?.initSqlScript ?? "",
     answerKeyVisible: existingAssignment?.answerKeyVisible ?? false,
     allowCopyPaste: existingAssignment?.allowCopyPaste ?? false,
-    allowProjectImport: existingAssignment?.allowProjectImport ?? false
+    allowProjectImport: existingAssignment?.allowProjectImport ?? false,
+    alertPolicy: existingAssignment?.alertPolicy ?? alertPolicyDefault
   };
 
   const handleSubmit = (values: typeof initialValues) => {

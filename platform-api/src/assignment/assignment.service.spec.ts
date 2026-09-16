@@ -18,6 +18,8 @@ import { RequestContextService } from 'src/request-context/request-context.servi
 import { Template } from 'src/template/entities/template.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
+import { AssignmentAlertType } from 'src/assignment-alert/enums/assignment-alert-type.enum';
 
 describe('AssignmentService', () => {
   let service: AssignmentService;
@@ -44,6 +46,11 @@ describe('AssignmentService', () => {
     const dataSource = { transaction: jest.fn() };
     const requestContextService = {
       getUser: jest.fn(),
+    };
+    const assignmentAlertService = {
+      decorateAssignments: jest.fn(async (assignments) => assignments),
+      replaceRules: jest.fn(),
+      assertCurrentUserNotSuspended: jest.fn()
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -85,6 +92,10 @@ describe('AssignmentService', () => {
           provide: RequestContextService,
           useValue: requestContextService,
         },
+        {
+          provide: AssignmentAlertService,
+          useValue: assignmentAlertService
+        }
       ],
     }).compile();
 
@@ -99,6 +110,7 @@ describe('AssignmentService', () => {
       classService,
       dataSource,
       requestContextService,
+      assignmentAlertService
     };
   };
 
@@ -150,12 +162,7 @@ describe('AssignmentService', () => {
     ]);
 
     expect(assignmentRepository.find).toHaveBeenCalledWith({
-      relations: [
-        'assignmentAttempts',
-        'class',
-        'class.userClasses',
-        'suspensions',
-      ],
+      relations: ['assignmentAttempts', 'class', 'class.userClasses']
     });
     expect(requestContextService.getUser).not.toHaveBeenCalled();
   });
@@ -363,6 +370,7 @@ describe('AssignmentService', () => {
       assignmentParamsRepository,
       templateRepository,
       requestContextService,
+      assignmentAlertService
     } = await setup();
 
     classService.findOne.mockResolvedValue({ id: 12 });
@@ -419,7 +427,20 @@ describe('AssignmentService', () => {
         boilerplateContent: 'console.log("hi");',
         allowProjectImport: true,
         createdById: 7,
+        suspensionAlertLimit: 5,
+        typingCharactersPerSecondLimit: 20,
+        alertPolicyVersion: 1
       }),
+    );
+    expect(assignmentAlertService.replaceRules).toHaveBeenCalledWith(
+      99,
+      [
+        AssignmentAlertType.WINDOW_FOCUS_LOSS,
+        AssignmentAlertType.DEVTOOLS,
+        AssignmentAlertType.CLIPBOARD,
+        AssignmentAlertType.TYPING_RATE
+      ],
+      undefined
     );
     expect(templateRepository.find).toHaveBeenCalledTimes(1);
     expect(assignmentTemplateRepository.save).toHaveBeenCalledWith([
@@ -799,6 +820,40 @@ describe('AssignmentService', () => {
     expect(requestContextService.getUser).not.toHaveBeenCalled();
   });
 
+  it('updates the alert policy and increments its agreement version', async () => {
+    const { service, assignmentRepository, assignmentAlertService } =
+      await setup();
+    assignmentRepository.findOne
+      .mockResolvedValueOnce({
+        id: 55,
+        workerType: WorkerType.NODE_DEFAULT,
+        alertPolicyVersion: 3,
+      })
+      .mockResolvedValueOnce({
+        id: 55,
+        suspensionAlertLimit: 2,
+        typingCharactersPerSecondLimit: 35,
+        alertPolicyVersion: 4,
+      });
+
+    await service.update(55, {
+      alertPolicy: {
+        suspensionAlertLimit: 2,
+        typingCharactersPerSecondLimit: 35,
+        punitiveTypes: [AssignmentAlertType.DEVTOOLS],
+      },
+    } as any);
+
+    expect(assignmentRepository.update).toHaveBeenCalledWith(55, {
+      suspensionAlertLimit: 2,
+      typingCharactersPerSecondLimit: 35,
+      alertPolicyVersion: 4,
+    });
+    expect(assignmentAlertService.replaceRules).toHaveBeenCalledWith(55, [
+      AssignmentAlertType.DEVTOOLS,
+    ]);
+  });
+
   it('allows an admin to delete another admin assignment', async () => {
     const {
       service,
@@ -840,8 +895,14 @@ describe('AssignmentService', () => {
       } = await setup();
 
       classService.findOne.mockResolvedValue({ id: 12 });
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
-      assignmentRepository.save.mockResolvedValue({ id: 10, boilerplateContent: '' });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      assignmentRepository.save.mockResolvedValue({
+        id: 10,
+        boilerplateContent: '',
+      });
       templateRepository.find.mockResolvedValue([
         { id: 1, workerType: WorkerType.NODE_DEFAULT },
         { id: 2, workerType: WorkerType.NODE_DEFAULT },
@@ -883,8 +944,14 @@ describe('AssignmentService', () => {
       } = await setup();
 
       classService.findOne.mockResolvedValue({ id: 12 });
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
-      assignmentRepository.save.mockResolvedValue({ id: 11, boilerplateContent: '' });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      assignmentRepository.save.mockResolvedValue({
+        id: 11,
+        boilerplateContent: '',
+      });
       templateRepository.find.mockResolvedValue([
         { id: 1, workerType: WorkerType.NODE_DEFAULT },
         { id: 2, workerType: WorkerType.NODE_DEFAULT },
@@ -921,8 +988,14 @@ describe('AssignmentService', () => {
       } = await setup();
 
       classService.findOne.mockResolvedValue({ id: 12 });
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
-      assignmentRepository.save.mockResolvedValue({ id: 12, boilerplateContent: '' });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      assignmentRepository.save.mockResolvedValue({
+        id: 12,
+        boilerplateContent: '',
+      });
       templateRepository.find.mockResolvedValue([
         { id: 1, workerType: WorkerType.NODE_DEFAULT },
         { id: 2, workerType: WorkerType.NODE_DEFAULT },
@@ -954,8 +1027,14 @@ describe('AssignmentService', () => {
       } = await setup();
 
       classService.findOne.mockResolvedValue({ id: 12 });
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
-      assignmentRepository.save.mockResolvedValue({ id: 13, boilerplateContent: '' });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
+      assignmentRepository.save.mockResolvedValue({
+        id: 13,
+        boilerplateContent: '',
+      });
       templateRepository.find.mockResolvedValue([
         { id: 1, workerType: WorkerType.NODE_DEFAULT },
       ]);
@@ -983,9 +1062,16 @@ describe('AssignmentService', () => {
         requestContextService,
       } = await setup();
 
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        isAdmin: false,
+      });
       assignmentRepository.findOne
-        .mockResolvedValueOnce({ id: 55, createdById: 7, workerType: WorkerType.NODE_DEFAULT })
+        .mockResolvedValueOnce({
+          id: 55,
+          createdById: 7,
+          workerType: WorkerType.NODE_DEFAULT,
+        })
         .mockResolvedValueOnce({ id: 55 });
       templateRepository.find.mockResolvedValue([
         { id: 1, workerType: WorkerType.NODE_DEFAULT },

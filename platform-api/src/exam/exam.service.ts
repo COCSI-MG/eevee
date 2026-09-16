@@ -38,6 +38,7 @@ import {
 import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamAssignment } from './entities/exam-assignment.entity';
 import { Exam } from './entities/exam.entity';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 @Injectable()
 export class ExamService {
@@ -59,6 +60,7 @@ export class ExamService {
     private readonly requestContextService: RequestContextService,
     private readonly dataSource: DataSource,
     private readonly assignmentService: AssignmentService,
+    private readonly assignmentAlertService: AssignmentAlertService,
   ) {}
 
   async create(createExamDto: CreateExamDto): Promise<Exam> {
@@ -233,12 +235,6 @@ export class ExamService {
         'assignmentAttempts.userId = :userId',
         { userId: user.userId },
       )
-      .leftJoinAndSelect(
-        'assignment.suspensions',
-        'suspensions',
-        'suspensions.userId = :userId',
-        { userId: user.userId },
-      )
       .where('ea.examId = :examId', { examId })
       .orderBy('ea.id', 'ASC')
       .addOrderBy('assignmentAttempts.createdAt', 'DESC');
@@ -252,12 +248,12 @@ export class ExamService {
 
     const assignmentLinks = await examAssignments.getMany();
 
+    await this.assignmentAlertService.decorateAssignments(assignmentLinks.map((link) => link.assignment));
+
     const mappedAssignments: AssignmentSummaryResponseDto[] = assignmentLinks.map((ea) => {
         const a = ea.assignment;
         const attempts = a.assignmentAttempts ?? [];
         const lastAttempt = attempts[0] ?? null;
-
-        const userSuspensions = a.suspensions ?? [];
 
         return {
           id: a.id,
@@ -281,11 +277,11 @@ export class ExamService {
                 createdAt: lastAttempt.createdAt,
               }
             : null,
-          suspensions: userSuspensions.map((s) => ({
-            id: s.id,
-            reason: s.reason ?? null,
-            createdAt: s.createdAt,
-          })),
+          currentUserAlertStatus: a.currentUserAlertStatus ?? {
+            activeCount: 0,
+            limit: a.suspensionAlertLimit,
+            suspended: false,
+          },
         };
       });
 
@@ -342,13 +338,13 @@ export class ExamService {
 
     const studentIds = userClasses.map((uc) => uc.userId);
     const studentMap = new Map(userClasses.map((uc) =>  {
-      return [
-        uc.userId,
-        {
-          name: uc.user?.name,
-          email: uc.user?.email
-        }
-      ]
+        return [
+          uc.userId,
+          {
+            name: uc.user?.name,
+            email: uc.user?.email
+          }
+        ]
     }));
 
     const { entities, raw } = await this.attemptRepository
@@ -381,36 +377,36 @@ export class ExamService {
       let examGrade = 0;
 
       const assignments: ExamStudentAssignmentDto[] = examAssignments.map((ea) => {
-        const key = `${studentId}:${ea.assignmentId}`;
-        const attempt = lastAttemptMap.get(key);
-        const weight = Number(ea.score);
+          const key = `${studentId}:${ea.assignmentId}`;
+          const attempt = lastAttemptMap.get(key);
+          const weight = Number(ea.score);
 
-        if (attempt) {
-          examGrade += weight * attempt.score;
-        }
+          if (attempt) {
+            examGrade += weight * attempt.score;
+          }
 
-        return {
-          assignmentId: ea.assignmentId,
-          title: ea.assignment.title,
-          weight,
-          isAcceptable: attempt?.isAcceptable ?? false,
-          score: attempt?.score ?? 0,
-          passes: attempt?.passes ?? 0,
-          fails: attempt?.fails ?? 0,
-          attemptsCount: attemptCountMap.get(key) ?? 0,
-          lastAttempt: attempt
-            ? {
-                id: attempt.id,
-                status: attempt.status,
-                score: attempt.score,
-                isAcceptable: attempt.isAcceptable,
-                passes: attempt.passes,
-                fails: attempt.fails,
-                createdAt: attempt.createdAt,
-              }
-            : null,
-        };
-      });
+          return {
+            assignmentId: ea.assignmentId,
+            title: ea.assignment.title,
+            weight,
+            isAcceptable: attempt?.isAcceptable ?? false,
+            score: attempt?.score ?? 0,
+            passes: attempt?.passes ?? 0,
+            fails: attempt?.fails ?? 0,
+            attemptsCount: attemptCountMap.get(key) ?? 0,
+            lastAttempt: attempt
+              ? {
+                  id: attempt.id,
+                  status: attempt.status,
+                  score: attempt.score,
+                  isAcceptable: attempt.isAcceptable,
+                  passes: attempt.passes,
+                  fails: attempt.fails,
+                  createdAt: attempt.createdAt,
+                }
+              : null,
+          };
+        });
 
       return {
         userId: studentId,

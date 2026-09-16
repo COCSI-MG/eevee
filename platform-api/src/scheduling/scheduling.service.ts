@@ -32,6 +32,7 @@ import { Repository, In } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { ExecutionRequestService } from 'src/execution/execution-request.service';
 import { EXECUTION_COMMAND_QUEUE, ExecutionCommand } from '@eevee/execution-contracts';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 @Injectable()
 export class SchedulingService {
@@ -49,9 +50,12 @@ export class SchedulingService {
     private readonly schedulingPreviewRunRepository: Repository<SchedulingPreviewRun>,
     @InjectQueue(EXECUTION_COMMAND_QUEUE) private readonly evaluationQueue: Queue,
     @InjectQueue('ai-report-queue') private readonly aiReportQueue: Queue,
+    private readonly assignmentAlertService: AssignmentAlertService,
   ) {}
 
   async createAndWait(createSchedulingDto: CreateSchedulingDto) {
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(createSchedulingDto.assignmentId);
+
     const assignment = await this.assignmentService.findOne(
       createSchedulingDto.assignmentId,
     );
@@ -102,6 +106,7 @@ export class SchedulingService {
       createSchedulingDto,
     });
 
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(createSchedulingDto.assignmentId);
     const assignment = await this.assignmentService.findOne(
       createSchedulingDto.assignmentId,
     );
@@ -170,6 +175,8 @@ export class SchedulingService {
   }
 
   async createPreviewRun(createSchedulingDto: CreateSchedulingDto) {
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(createSchedulingDto.assignmentId);
+
     const assignment = await this.assignmentService.findOne(createSchedulingDto.assignmentId);
 
     if (!assignment) {
@@ -238,12 +245,17 @@ export class SchedulingService {
   async getPreviewRunForCurrentUser(previewRunId: number) {
     const user = this.requestContextService.getUser();
 
-    return this.schedulingPreviewRunRepository.findOne({
+    const previewRun = await this.schedulingPreviewRunRepository.findOne({
       where: {
         id: previewRunId,
         userId: user.userId,
       },
     });
+
+    if (previewRun) {
+      await this.assignmentAlertService.assertCurrentUserNotSuspended(previewRun.assignmentId);
+    }
+    return previewRun;
   }
 
   async cancelPreviewRun(previewRunId: number) {
@@ -312,10 +324,10 @@ export class SchedulingService {
     });
 
     const preparedWorkerData = await this.schedulingWorkerPreparationService.prepare({
-      assignment: originalAttempt.assignment,
-      baseWorkerData: workerData,
-      attemptId: newAttempt.id,
-    });
+        assignment: originalAttempt.assignment,
+        baseWorkerData: workerData,
+        attemptId: newAttempt.id,
+      });
 
     const message: ExecutionCommand = {
       target: {
@@ -344,6 +356,7 @@ export class SchedulingService {
     if (!attempt || attempt.userId !== user.userId) {
       throw new NotFoundException('Attempt not found');
     }
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(attempt.assignmentId);
     if (attempt.status !== AttemptStatus.COMPLETED) {
       throw new BadRequestException('Attempt is not completed');
     }
@@ -358,6 +371,11 @@ export class SchedulingService {
 
   async getAiFeedback(attemptId: number): Promise<string | null> {
     const user = this.requestContextService.getUser();
+    const attempt = await this.attemptService.findOne(attemptId);
+
+    if (!attempt || attempt.userId !== user.userId) throw new NotFoundException('Attempt not found')
+
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(attempt.assignmentId);
     return this.attemptService.findRefinedReport(attemptId, user.userId);
   }
 

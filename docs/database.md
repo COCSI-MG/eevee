@@ -21,8 +21,9 @@ erDiagram
     TEMPLATE ||--o{ ASSIGNMENT_TEMPLATE : associado
     ASSIGNMENT ||--o{ ASSIGNMENT_PARAM : configura
     TEMPLATE_PARAM ||--o{ ASSIGNMENT_PARAM : recebe
-    USER ||--o{ ASSIGNMENT_SUSPENSION : sofre
-    ASSIGNMENT ||--o{ ASSIGNMENT_SUSPENSION : restringe
+    ASSIGNMENT ||--o{ ASSIGNMENT_ALERT_RULE : configura
+    USER ||--o{ ASSIGNMENT_USER_ALERT : recebe
+    ASSIGNMENT ||--o{ ASSIGNMENT_USER_ALERT : registra
     USER ||--o{ PASSWORD_RESET : solicita
     USER ||--o{ INTERVIEW_RESPONSE : responde
     ASSIGNMENT ||--o{ INTERVIEW_RESPONSE : contextualiza
@@ -71,9 +72,9 @@ Armazena número sequencial por usuário e atividade, estado, aceitação, pontu
 
 Registra previews sem consumir tentativas, com estado, nome do Job, pontuação, contagens, relatório, erro e timestamps.
 
-### `AssignmentUserSuspension`
+### `AssignmentAlertRule` e `AssignmentUserAlert`
 
-Registra uma suspensão única por usuário e atividade, com motivo e data.
+`AssignmentAlertRule` define quais tipos de evento geram punição em cada atividade. `AssignmentUserAlert` mantém cada ocorrência com um UUID idempotente, detalhes e exclusão lógica. O bloqueio não é armazenado: ele é calculado comparando a quantidade de alertas ativos do aluno com `Assignment.suspensionAlertLimit`. Cada alerta pode ser arquivado individualmente; a ocorrência permanece na auditoria e o acesso é liberado quando a contagem ativa fica abaixo do limite.
 
 ## Pesquisa e arquivos
 

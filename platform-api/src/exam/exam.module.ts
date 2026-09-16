@@ -12,6 +12,7 @@ import { ExamAssignment } from './entities/exam-assignment.entity';
 import { Exam } from './entities/exam.entity';
 import { ExamController } from './exam.controller';
 import { ExamService } from './exam.service';
+import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ExamService } from './exam.service';
     UserClassModule,
     RequestContextModule,
     AssignmentModule,
+    AssignmentAlertModule
   ],
   controllers: [ExamController],
   providers: [ExamService],
