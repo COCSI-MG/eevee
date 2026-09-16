@@ -41,7 +41,12 @@ const focusBlur = (
 ) => {
   window.addEventListener("blur", handleBlur);
   window.addEventListener("focus", handleFocus);
-}
+
+  return () => {
+    window.removeEventListener("blur", handleBlur);
+    window.removeEventListener("focus", handleFocus);
+  };
+};
 
 export function usePreventUserActions({
   enabled = true,
@@ -98,10 +103,7 @@ export function usePreventUserActions({
       focusLossEpisode.current = false;
     };
 
-    focusBlur(handleBlur, handleFocus)
-    return () => {
-      focusBlur(handleBlur, handleFocus)
-    };
+    return focusBlur(handleBlur, handleFocus)
   }, [enabled, onSecurityViolation]);
 
   useContextMenuGuard({

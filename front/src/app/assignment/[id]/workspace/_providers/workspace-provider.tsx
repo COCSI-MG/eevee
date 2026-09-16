@@ -25,6 +25,10 @@ import {
   WORKSPACE_DRAG_AREA_SELECTOR,
   WORKSPACE_DRAG_MIME_TYPE,
 } from "../_utils/constant";
+import {
+  getItem as getWorkspaceStorageItem,
+  setItem as setWorkspaceStorageItem
+} from "../_utils/workspace-storage.utils";
 import { clearInternalEditorClipboard } from "@/hooks/user-actions/internal-editor-clipboard";
 import {
   AlertDialog,
@@ -97,7 +101,7 @@ function readPendingAlerts(
   userId: number,
 ): RecordAssignmentAlertRequest[] {
   try {
-    return JSON.parse(localStorage.getItem(pendingStorageKey(assignmentId, userId)) ?? "[]") as RecordAssignmentAlertRequest[];
+    return JSON.parse(getWorkspaceStorageItem(pendingStorageKey(assignmentId, userId)) ?? "[]") as RecordAssignmentAlertRequest[];
   } catch {
     return [];
   }
@@ -108,11 +112,9 @@ function writePendingAlerts(
   userId: number,
   alerts: RecordAssignmentAlertRequest[],
 ) {
-  try {
-    localStorage.setItem(pendingStorageKey(assignmentId, userId), JSON.stringify(alerts));
-  } catch (error) {
-    console.warn("Não foi possível persistir a fila de alertas:", error);
-  }
+  setWorkspaceStorageItem(
+    pendingStorageKey(assignmentId, userId), JSON.stringify(alerts)
+  );
 }
 
 export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
@@ -209,12 +211,9 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
     const version = assignmentData.alertPolicy.version ?? 1;
 
-    try {
-      const securityAgreementAcceptedLocal = localStorage.getItem(`agreement-${assignmentId}-user-${currentUserId}-v${version}`) === "true"
-      setSecurityAgreementAccepted(securityAgreementAcceptedLocal);
-    } catch {
-      setSecurityAgreementAccepted(false);
-    }
+    const securityAgreementAcceptedLocal = getWorkspaceStorageItem(`agreement-${assignmentId}-user-${currentUserId}-v${version}`) === "true";
+
+    setSecurityAgreementAccepted(securityAgreementAcceptedLocal);
   }, [
     assignmentData?.alertPolicy,
     assignmentId,
@@ -305,7 +304,14 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
         console.error("Falha ao registrar alerta da atividade:", error);
         setSecurityWarning((current) => current?.eventId === payload.eventId ? { ...current, pending: true } : current);
 
-        const delay = Math.min(30000, 1000 * 2 ** retryAttempt);
+        const INITIAL_RETRY_DELAY_MS = 1_000;
+        const MAX_RETRY_DELAY_MS = 30_000;
+        const RETRY_BACKOFF_MULTIPLIER = 2;
+
+        const delay = Math.min(
+          MAX_RETRY_DELAY_MS,
+          INITIAL_RETRY_DELAY_MS * RETRY_BACKOFF_MULTIPLIER ** retryAttempt
+        );
 
         const timer = window.setTimeout(() => {
           retryTimers.current.delete(timer);
@@ -370,6 +376,22 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     ],
   );
 
+  const getSecurityWarningText = () => {
+    if (securityWarning?.pending) return "O registro está pendente e será reenviado automaticamente com o mesmo identificador."
+
+    const alertStatus = securityWarning?.status;
+
+    if (alertStatus) {
+      if (alertStatus.suspended) return `Este alerta atingiu o limite de ${alertStatus.limit}. A atividade foi bloqueada.`
+
+      return `Alerta registrado: ${alertStatus.activeCount} de ${alertStatus.limit}.`
+    }
+
+    if (securityWarning?.punitive) return "Registrando o alerta..."
+
+    return "A ação foi bloqueada, mas não conta para punição nesta atividade."
+  }
+
   const registerTypedText = React.useCallback(
     (text: string) => {
       if (!shouldPreventUserActions || securityPaused || !text) return;
@@ -381,7 +403,9 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
       typingTimestamps.current = recent;
 
-      const limit = assignmentData?.alertPolicy?.typingCharactersPerSecondLimit ?? 20;
+      const TYPING_CHARACTERS_PER_SECOND_LIMIT = 20
+
+      const limit = assignmentData?.alertPolicy?.typingCharactersPerSecondLimit ?? TYPING_CHARACTERS_PER_SECOND_LIMIT;
 
       if (recent.length > limit) {
         handleSecurityViolation({
@@ -432,17 +456,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     replaceFileTree,
   };
 
-  const statusText = securityWarning?.pending
-    ? "O registro está pendente e será reenviado automaticamente com o mesmo identificador."
-
-    : securityWarning?.status
-      ? securityWarning.status.suspended
-        ? `Este alerta atingiu o limite de ${securityWarning.status.limit}. A atividade foi bloqueada.`
-        : `Alerta registrado: ${securityWarning.status.activeCount} de ${securityWarning.status.limit}.`
-
-      : securityWarning?.punitive
-        ? "Registrando o alerta..."
-        : "A ação foi bloqueada, mas não conta para punição nesta atividade.";
+  const statusText = getSecurityWarningText();
 
   return (
     <WorkspaceContext.Provider value={value}>

@@ -99,7 +99,7 @@ export function AssignmentAlertHistoryDialog({
     }
   };
 
-  const renderHistoryContent = () => {
+  const RenderHistoryContent = () => {
     if (historyQuery.isLoading) {
       return <p className="text-sm text-muted-foreground">Carregando...</p>;
     }
@@ -216,7 +216,7 @@ export function AssignmentAlertHistoryDialog({
               </Button>
             </div>
 
-            {renderHistoryContent()}
+            <RenderHistoryContent />
           </>
         )}
       </DialogContent>
