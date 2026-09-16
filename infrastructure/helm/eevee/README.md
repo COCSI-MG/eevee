@@ -150,4 +150,5 @@ workerImages:
   nodeDefault: ghcr.io/cocsi-mg/worker-node-default-img:latest
   # ...
   nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:latest
+  pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:latest
 ```

@@ -17,6 +17,10 @@ import {
   unique: true,
   where: '"deletedAt" IS NULL',
 })
+@Index('UQ_user_identity_active', ['identityProvider', 'externalSubject'], {
+  unique: true,
+  where: '"deletedAt" IS NULL AND "externalSubject" IS NOT NULL',
+})
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -29,6 +33,13 @@ export class User {
 
   @Column()
   isAdmin: boolean;
+
+  /** Provider subject (Microsoft Entra object id, when linked). */
+  @Column({ nullable: true })
+  externalSubject?: string | null;
+
+  @Column({ nullable: true })
+  identityProvider?: string | null;
 
   @Exclude()
   @Column()

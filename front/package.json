@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "build:type-packs": "node scripts/build-type-packs.mjs"
+    "build:type-packs": "node scripts/build-type-packs.mjs",
+    "build:python-tools": "node scripts/copy-pyodide-assets.mjs",
+    "predev": "npm run build:python-tools",
+    "prebuild": "npm run build:python-tools",
+    "test": "jest",
+    "test:python-runtime": "npm run build:python-tools && node scripts/test-python-runtime.mjs"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -38,6 +43,7 @@
     "lucide-react": "^0.485.0",
     "motion": "^12.23.3",
     "next": "^15.2.6",
+    "pyodide": "314.0.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
@@ -51,11 +57,16 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/jest": "^29.5.14",
     "@types/node": "22.15.17",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"

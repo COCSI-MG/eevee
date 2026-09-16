@@ -4,7 +4,7 @@ import { WorkerType } from '../enum/worker-type.enum';
 import { WORKER_IMAGE_NAMES, WORKER_JOB_PREFIX } from '../worker.constants';
 import { BootstrapInitContainerStrategy } from './bootstrap-init-container.strategy';
 import { WorkerConfig } from './worker-execution-strategy';
-import { parseJestLogResult } from './worker-log-parsers';
+import { parsePytestLogResult } from './worker-log-parsers';
 import {
   asShellCommand,
   buildWriteFileCommand,
@@ -30,10 +30,12 @@ export class PythonDefaultStrategy extends BootstrapInitContainerStrategy {
     testPath: '/app/test',
   };
 
-  processLogResult = parseJestLogResult;
+  processLogResult = parsePytestLogResult;
 
   buildExecutionJobCommand(_createWorkerData: CreateWorkerDto): string[] {
-    return ['python', '-u', '/app/trigger.py'];
+    return _createWorkerData.executionMode === 'adhoc'
+      ? ['python', '-u', '/app/src/app.py']
+      : ['python', '-u', '/app/trigger.py'];
   }
 
   buildWorkerPayload(
@@ -78,7 +80,11 @@ export class PythonDefaultStrategy extends BootstrapInitContainerStrategy {
       );
     });
 
-    commands.push('python -u /app/trigger.py');
+    commands.push(
+      createWorkerData.executionMode === 'adhoc'
+        ? 'python -u /app/src/app.py'
+        : 'python -u /app/trigger.py',
+    );
 
     return asShellCommand(commands);
   }
