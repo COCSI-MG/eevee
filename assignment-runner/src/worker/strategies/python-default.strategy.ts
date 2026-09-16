@@ -33,7 +33,9 @@ export class PythonDefaultStrategy extends BootstrapInitContainerStrategy {
   processLogResult = parsePytestLogResult;
 
   buildExecutionJobCommand(_createWorkerData: CreateWorkerDto): string[] {
-    return ['python', '-u', '/app/trigger.py'];
+    return _createWorkerData.executionMode === 'adhoc'
+      ? ['python', '-u', '/app/src/app.py']
+      : ['python', '-u', '/app/trigger.py'];
   }
 
   buildWorkerPayload(
@@ -78,7 +80,11 @@ export class PythonDefaultStrategy extends BootstrapInitContainerStrategy {
       );
     });
 
-    commands.push('python -u /app/trigger.py');
+    commands.push(
+      createWorkerData.executionMode === 'adhoc'
+        ? 'python -u /app/src/app.py'
+        : 'python -u /app/trigger.py',
+    );
 
     return asShellCommand(commands);
   }

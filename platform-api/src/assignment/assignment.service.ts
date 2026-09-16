@@ -351,6 +351,7 @@ export class AssignmentService {
       dueDate,
       allowCopyPaste: assignmentData.allowCopyPaste ?? false,
       workerType: assignmentData.workerType,
+      executionMode: assignmentData.executionMode,
       initSqlScript: assignmentData.initSqlScript,
       boilerplateContent: resolvedBoilerplateContent,
       allowProjectImport: assignmentData.allowProjectImport ?? false,
