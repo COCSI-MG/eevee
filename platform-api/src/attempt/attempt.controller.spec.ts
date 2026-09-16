@@ -47,17 +47,17 @@ describe('AttemptController', () => {
   });
 
   it('delegates the assignment and user attempt history to the service', async () => {
-    attemptService.findAllForAdminByAssignmentAndUser.mockResolvedValue([
-      { id: 12 },
-    ]);
+    const query = { page: 2, pageSize: 5 };
+    const response = { data: [{ id: 12 }], meta: { page: 2 } };
+    attemptService.findAllForAdminByAssignmentAndUser.mockResolvedValue(response);
 
     await expect(
-      controller.findAllForAdminByAssignmentAndUser(99, 7),
-    ).resolves.toEqual([{ id: 12 }]);
+      controller.findAllForAdminByAssignmentAndUser(99, 7, query),
+    ).resolves.toEqual(response);
 
     expect(
       attemptService.findAllForAdminByAssignmentAndUser,
-    ).toHaveBeenCalledWith(99, 7);
+    ).toHaveBeenCalledWith(99, 7, query);
   });
 
   it('throws NotFoundException when the attempt does not exist', async () => {
