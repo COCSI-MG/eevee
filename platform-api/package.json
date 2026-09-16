@@ -39,6 +39,7 @@
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.0.3",
     "@nestjs/throttler": "^6.5.0",
+    "@azure/msal-node": "^3.8.1",
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.1.28",
     "bcrypt": "^5.1.1",
@@ -91,6 +92,10 @@
       "ts"
     ],
     "rootDir": "src",
+    "roots": [
+      "<rootDir>",
+      "<rootDir>/../scripts"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
