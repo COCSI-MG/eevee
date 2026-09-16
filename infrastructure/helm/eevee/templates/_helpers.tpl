@@ -120,6 +120,8 @@ override the GHCR defaults baked into worker.constants.ts.
   value: {{ .Values.workerImages.nodeDefaultPostgresql | quote }}
 - name: WORKER_IMAGE_NODE_NESTJS_POSTGRESQL
   value: {{ .Values.workerImages.nodeNestjsPostgresql | quote }}
+- name: WORKER_IMAGE_PYTHON_DEFAULT
+  value: {{ .Values.workerImages.pythonDefault | quote }}
 {{- end -}}
 
 {{/*

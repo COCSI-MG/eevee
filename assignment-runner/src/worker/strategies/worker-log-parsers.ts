@@ -46,6 +46,42 @@ export function parseJestLogResult(log: string): WorkerResponse {
   };
 }
 
+/**
+ * Parses the stable summary emitted by the Python worker's trigger.
+ *
+ * Collection and syntax errors can happen before pytest creates any test
+ * cases. In that situation the trigger reports `0 total` together with a
+ * non-zero `Failed:` value, which the Jest-compatible parser cannot express.
+ */
+export function parsePytestLogResult(log: string): WorkerResponse {
+  const logLines = log.split('\n');
+  const testSummaryLine = [...logLines]
+    .reverse()
+    .find((line) => line.includes('Tests:'));
+
+  const failedSummaryLine = [...logLines]
+    .reverse()
+    .find((line) => line.includes('Failed:'));
+
+  const passedCount = Number(
+    testSummaryLine?.match(/(\d+)\s+passed/i)?.[1] ?? 0,
+  );
+
+  const totalCount = Number(
+    testSummaryLine?.match(/(\d+)\s+total/i)?.[1] ?? 0,
+  );
+
+  const explicitFailureCount = Number(
+    failedSummaryLine?.match(/Failed:\s*(\d+)/i)?.[1] ?? 0,
+  );
+
+  return {
+    failures: Math.max(explicitFailureCount, totalCount - passedCount, 0),
+    passes: passedCount,
+    completeTrace: log,
+  };
+}
+
 export function parseCypressLogResult(log: string): WorkerResponse {
   // Cypress typically prints a Mocha-style summary with lines like:
   //   Passing:        2
