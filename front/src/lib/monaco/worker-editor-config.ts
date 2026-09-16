@@ -28,6 +28,8 @@ export type MonacoCompilerPreset =
 export type ImportCompletionPolicy = "script" | "web" | "none";
 
 export interface WorkerEditorConfig extends WorkerLanguageConfig {
+  /** Enable browser-only Python parsing and lint for this worker. */
+  pythonIntellisense?: boolean;
   /** Compiler option preset applied to TypeScript/JavaScript models. */
   compilerPreset: MonacoCompilerPreset | null;
   /** File categories exposed by the workspace import completion provider. */
@@ -99,6 +101,7 @@ const WORKER_EDITOR_CONFIG_REGISTRY: Record<WorkerType, WorkerEditorConfig> = {
     importCompletionPolicy: "script",
   },
   [WorkerType.PYTHON_DEFAULT]: {
+    pythonIntellisense: true,
     editorLanguage: "python",
     fileExtension: ".py",
     defaultFileName: "app",

@@ -15,6 +15,7 @@
 
 # generated monaco type packs (run `npm run build:type-packs`)
 /public/type-packs
+/public/pyodide
 
 # next.js
 /.next/
