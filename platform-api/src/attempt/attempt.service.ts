@@ -13,6 +13,11 @@ import { AttemptStatus } from './enums/attempt-status.enum';
 import { UpdateApplicantAttemptDto } from './dto/update-applicant-attempt.dto';
 import { Cron } from '@nestjs/schedule';
 import { ListAdminAttemptsQueryDto } from './dto/list-admin-attempts.query.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination.query.dto';
+import {
+  buildPaginationMeta,
+  buildPaginationParams
+} from 'src/common/pagination/pagination';
 
 @Injectable()
 export class AttemptService {
@@ -218,11 +223,16 @@ export class AttemptService {
   async findAllForAdminByAssignmentAndUser(
     assignmentId: number,
     userId: number,
+    query: PaginationQueryDto,
   ) {
-    const rows = await this.attemptRepository
+    const { page, pageSize, skip } = buildPaginationParams(query);
+    const baseQb = this.attemptRepository
       .createQueryBuilder('attempt')
       .where('attempt.assignmentId = :assignmentId', { assignmentId })
-      .andWhere('attempt.userId = :userId', { userId })
+      .andWhere('attempt.userId = :userId', { userId });
+
+    const rowsQb = baseQb
+      .clone()
       .select('attempt.id', 'id')
       .addSelect('attempt.attempt', 'attempt')
       .addSelect('attempt.status', 'status')
@@ -235,9 +245,15 @@ export class AttemptService {
       .addSelect('attempt.createdAt', 'createdAt')
       .orderBy('attempt.createdAt', 'DESC')
       .addOrderBy('attempt.id', 'DESC')
-      .getRawMany();
+      .skip(skip)
+      .take(pageSize);
 
-    return rows.map((row) => ({
+    const [rows, total] = await Promise.all([
+      rowsQb.getRawMany(),
+      baseQb.clone().getCount()
+    ]);
+
+    const data = rows.map((row) => ({
       id: Number(row.id),
       attempt: Number(row.attempt),
       status: row.status,
@@ -249,6 +265,8 @@ export class AttemptService {
       receivedWork: row.receivedWork ?? undefined,
       createdAt: row.createdAt,
     }));
+
+    return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
   findOneForAdmin(id: number) {

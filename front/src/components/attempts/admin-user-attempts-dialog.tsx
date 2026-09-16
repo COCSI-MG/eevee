@@ -1,9 +1,11 @@
 "use client";
 
 import { ADMIN_ATTEMPTS_TEXT } from "@/app/admin/attempts/constants";
+import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
 import { AttemptAdminService } from "@/app/integration/scheduler-api/attempt";
 import type { AdminUserAttemptSummary } from "@/app/interface/scheduler-api/admin-attempt";
 import { AdminUserAttemptsTable } from "@/components/attempts/admin-user-attempts-table";
+import Pagination from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,15 +39,29 @@ export default function AdminUserAttemptsDialog({
   const [expandedAttemptId, setExpandedAttemptId] = useState<number | null>(
     null,
   );
+  const [page, setPage] = useState(1);
   const initializedSelectionRef = useRef<string | null>(null);
 
   const {
-    data: attempts,
+    data: attemptsResponse,
     isPending,
     isError,
     error,
     refetch,
-  } = useAdminUserAttempts({ assignmentId, userId, enabled: open });
+  } = useAdminUserAttempts({
+    assignmentId,
+    userId,
+    enabled: open,
+    page,
+    pageSize: ADMIN_LIST_PAGE_SIZE
+  });
+  const attempts = attemptsResponse?.data;
+  const paginationMeta = attemptsResponse?.meta;
+
+  useEffect(() => {
+    setPage(1);
+    setExpandedAttemptId(null);
+  }, [selectionKey]);
 
   useEffect(() => {
     if (!open) {
@@ -64,27 +80,38 @@ export default function AdminUserAttemptsDialog({
     }
   }, [attempts, open, selectionKey]);
 
+  const retry = ADMIN_ATTEMPTS_TEXT.retry;
+
   const retryMutation = useMutation({
     mutationFn: (attemptId: number) =>
       AttemptAdminService.retryAttempt(attemptId),
     onSuccess: async () => {
       toast({
-        title: ADMIN_ATTEMPTS_TEXT.retry.successTitle,
-        description: ADMIN_ATTEMPTS_TEXT.retry.successDescription,
+        title: retry.successTitle,
+        description: retry.successDescription,
       });
 
       const refreshedAttempts = await refetch();
-      setExpandedAttemptId(refreshedAttempts.data?.[0]?.id ?? null);
+      if (page !== 1) {
+        setPage(1);
+        initializedSelectionRef.current = null;
+        setExpandedAttemptId(null);
+      } else {
+        setExpandedAttemptId(refreshedAttempts.data?.data[0]?.id ?? null);
+      }
+      await queryClient.invalidateQueries({
+        queryKey: ["adminUserAttempts", assignmentId, userId]
+      });
       await queryClient.invalidateQueries({ queryKey: ["adminAttempts"] });
     },
     onError: (mutationError: unknown) => {
       const description =
         mutationError instanceof Error
           ? mutationError.message
-          : ADMIN_ATTEMPTS_TEXT.retry.errorFallbackDescription;
+          : retry.errorFallbackDescription;
 
       toast({
-        title: ADMIN_ATTEMPTS_TEXT.retry.errorTitle,
+        title: retry.errorTitle,
         description,
         variant: "destructive",
       });
@@ -109,7 +136,7 @@ export default function AdminUserAttemptsDialog({
             {attemptSummary?.assignment.title
               ? `${attemptSummary.assignment.title} · `
               : ""}
-            {attempts?.length ?? attemptSummary?.attemptsCount ?? 0}{" "}
+            {paginationMeta?.total ?? attemptSummary?.attemptsCount ?? 0}{" "}
             tentativa(s)
           </DialogDescription>
         </DialogHeader>
@@ -146,21 +173,33 @@ export default function AdminUserAttemptsDialog({
           </div>
         )}
 
-        {!isPending && !isError && attempts && attempts.length > 0 && (
-          <AdminUserAttemptsTable
-            attempts={attempts}
-            expandedAttemptId={expandedAttemptId}
-            isRetryPending={retryMutation.isPending}
-            retryingAttemptId={
-              retryMutation.isPending ? retryMutation.variables : null
-            }
-            onToggleAttempt={(attemptId) => {
-              return setExpandedAttemptId((currentAttemptId) =>
-                currentAttemptId === attemptId ? null : attemptId,
-              );
-            }}
-            onRetryAttempt={(attemptId) => retryMutation.mutate(attemptId)}
-          />
+        {!isPending &&
+          !isError &&
+          attemptsResponse &&
+          attemptsResponse.data.length > 0 && (
+            <>
+              <AdminUserAttemptsTable
+                attempts={attemptsResponse.data}
+                expandedAttemptId={expandedAttemptId}
+                isRetryPending={retryMutation.isPending}
+                retryingAttemptId={ retryMutation.isPending ? retryMutation.variables : null }
+                onToggleAttempt={(attemptId) =>  setExpandedAttemptId((currentAttemptId) => currentAttemptId === attemptId ? null : attemptId )}
+                onRetryAttempt={(attemptId) => retryMutation.mutate(attemptId)}
+              />
+              {paginationMeta && (
+                <Pagination
+                  page={paginationMeta.page}
+                  pageSize={paginationMeta.pageSize}
+                  total={paginationMeta.total}
+                  totalPages={paginationMeta.totalPages}
+                  itemLabel={{ singular: "tentativa", plural: "tentativas" }}
+                  onPageChange={(nextPage) => {
+                    setPage(nextPage);
+                    setExpandedAttemptId(null);
+                  }}
+                />
+              )}
+            </>
         )}
       </DialogContent>
     </Dialog>

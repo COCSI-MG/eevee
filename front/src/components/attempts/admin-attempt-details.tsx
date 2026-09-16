@@ -22,7 +22,7 @@ export function AdminAttemptDetails({ attempt }: AdminAttemptDetailsProps) {
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Arquivos enviados
         </p>
-        {fileEntries.length === 0 ? (
+        {!fileEntries.length ? (
           <div className="rounded-md border border-border bg-background p-3 text-xs text-muted-foreground">
             Esta tentativa não possui arquivos armazenados.
           </div>

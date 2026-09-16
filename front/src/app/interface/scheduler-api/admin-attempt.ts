@@ -54,6 +54,16 @@ export interface AdminAttemptsListResponse {
   };
 }
 
+export interface AdminUserAttemptsResponse {
+  data: AdminAttemptDetail[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
 export interface AdminAttemptClassOption {
   id: number;
   name: string;

@@ -39,6 +39,8 @@ describe('AttemptService', () => {
       setParameters: jest.fn().mockReturnThis(),
       offset: jest.fn().mockReturnThis(),
       limit: jest.fn().mockReturnThis(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
       getRawMany: jest.fn(),
       getCount: jest.fn(),
       getRawOne: jest.fn(),
@@ -336,7 +338,7 @@ describe('AttemptService', () => {
     expect(selectedFields).not.toContain('attempt.fails');
   });
 
-  it('returns complete attempts for an assignment and user ordered newest first', async () => {
+  it('returns paginated attempts for an assignment and user ordered newest first', async () => {
     const queryBuilder = makeQueryBuilder();
     queryBuilder.getRawMany.mockResolvedValue([
       {
@@ -352,28 +354,35 @@ describe('AttemptService', () => {
         createdAt: new Date('2026-04-18T10:00:00.000Z'),
       },
     ]);
+    queryBuilder.getCount.mockResolvedValue(12);
     attemptRepository.createQueryBuilder.mockReturnValue(queryBuilder);
 
     await expect(
-      service.findAllForAdminByAssignmentAndUser(99, 7),
-    ).resolves.toEqual([
-      {
-        id: 12,
-        attempt: 2,
-        status: AttemptStatus.COMPLETED,
-        isAcceptable: true,
-        score: 0.9,
-        passes: 9,
-        fails: 1,
-        report: 'One test failed',
-        receivedWork: { 'src/index.ts': 'export const answer = 42;' },
-        createdAt: new Date('2026-04-18T10:00:00.000Z'),
-      },
-    ]);
+      service.findAllForAdminByAssignmentAndUser(99, 7, {
+        page: 2,
+        pageSize: 5
+      })
+    ).resolves.toEqual({
+      data: [
+        {
+          id: 12,
+          attempt: 2,
+          status: AttemptStatus.COMPLETED,
+          isAcceptable: true,
+          score: 0.9,
+          passes: 9,
+          fails: 1,
+          report: 'One test failed',
+          receivedWork: { 'src/index.ts': 'export const answer = 42;' },
+          createdAt: new Date('2026-04-18T10:00:00.000Z')
+        }
+      ],
+      meta: { total: 12, page: 2, pageSize: 5, totalPages: 3 }
+    });
 
     expect(queryBuilder.where).toHaveBeenCalledWith(
       'attempt.assignmentId = :assignmentId',
-      { assignmentId: 99 },
+      { assignmentId: 99 }
     );
     expect(queryBuilder.andWhere).toHaveBeenCalledWith(
       'attempt.userId = :userId',
@@ -384,5 +393,8 @@ describe('AttemptService', () => {
       'receivedWork',
     );
     expect(queryBuilder.addOrderBy).toHaveBeenCalledWith('attempt.id', 'DESC');
+    expect(queryBuilder.skip).toHaveBeenCalledWith(5);
+    expect(queryBuilder.take).toHaveBeenCalledWith(5);
+    expect(queryBuilder.getCount).toHaveBeenCalled();
   });
 });
