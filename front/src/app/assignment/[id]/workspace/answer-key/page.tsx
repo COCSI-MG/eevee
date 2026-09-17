@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { useAnswerKeyTest } from "@/hooks/use-answer-key-test";
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
-import { AnswerKeyTestDialog } from "../_components/answer-key-test-dialog";
+import { AnswerKeyTestDialog } from "../_components/modals/answer-key-test-dialog";
 
 function isFileNodeTree(value: unknown): value is FileNode {
   if (!value || typeof value !== "object") return false;
