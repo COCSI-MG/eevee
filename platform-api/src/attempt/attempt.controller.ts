@@ -5,8 +5,11 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
+import { deflateRawSync } from 'zlib';
 import { AttemptService } from './attempt.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -37,6 +40,19 @@ export class AttemptController {
       assignmentId,
       userId,
       query
+    );
+  }
+
+  @Get('admin/assignment/:assignmentId/user/:userId/attempt/:attemptId')
+  findSubmittedWorkForAdmin(
+    @Param('assignmentId', ParseIntPipe) assignmentId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('attemptId', ParseIntPipe) attemptId: number,
+  ) {
+    return this.attemptService.findSubmittedWorkForAdmin(
+      assignmentId,
+      userId,
+      attemptId,
     );
   }
 
