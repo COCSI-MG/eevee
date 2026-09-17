@@ -6,6 +6,10 @@ on:
       - main
     paths:
       - "assignment-runner/**"
+      - "images/node/postgresql/**"
+      - "images/node/node-default/**"
+      - "images/node/nest.js/**"
+      - ".github/workflows/postgresql-workers.yaml"
       - "packages/execution-contracts/**"
       - ".github/actions/remote-kubectl/**"
       - ".github/workflows/deploy-assignment-runner.yaml"
@@ -15,7 +19,16 @@ env:
   ASSIGNMENT_RUNNER_IMAGE: "${{ vars.ASSIGNMENT_RUNNER_IMAGE || 'cocsi-mg/eevee-assignment-runner' }}"
 
 jobs:
+  postgresql-workers:
+    uses: ./.github/workflows/postgresql-workers.yaml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      publish: true
+
   build-and-deploy:
+    needs: postgresql-workers
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -52,7 +65,41 @@ jobs:
           private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
-            kubectl set image deployment/assignment-runner-deployment assignment-runner=${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }} -n eevee-cefetrj
+            RUNNER_SERVICE_ACCOUNT=$(kubectl get deployment assignment-runner-deployment -n eevee-cefetrj -o jsonpath='{.spec.template.spec.serviceAccountName}')
+            kubectl apply -n eevee-cefetrj -f - <<YAML
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: Role
+            metadata:
+              name: postgresql-worker-lifecycle
+            rules:
+              - apiGroups: [""]
+                resources: ["configmaps"]
+                verbs: ["create", "get", "delete"]
+              - apiGroups: [""]
+                resources: ["pods"]
+                verbs: ["get", "list", "delete"]
+            ---
+            apiVersion: rbac.authorization.k8s.io/v1
+            kind: RoleBinding
+            metadata:
+              name: postgresql-worker-lifecycle
+            roleRef:
+              apiGroup: rbac.authorization.k8s.io
+              kind: Role
+              name: postgresql-worker-lifecycle
+            subjects:
+              - kind: ServiceAccount
+                name: ${RUNNER_SERVICE_ACCOUNT:-default}
+                namespace: eevee-cefetrj
+            YAML
+            kubectl patch deployment assignment-runner-deployment -n eevee-cefetrj --type=strategic -p '
+              {"spec":{"template":{"spec":{"containers":[{"name":"assignment-runner",
+                "image":"${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }}",
+                "env":[
+                  {"name":"WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL","value":"ghcr.io/${{ github.repository_owner }}/worker-node-default-postgresql-img:${{ github.sha }}"},
+                  {"name":"WORKER_IMAGE_NODE_NESTJS_POSTGRESQL","value":"ghcr.io/${{ github.repository_owner }}/worker-nestjs-postgresql-img:${{ github.sha }}"}
+                ]
+              }]}}}}'
             if ! kubectl rollout status deployment/assignment-runner-deployment -n eevee-cefetrj --timeout=5m; then
               kubectl get pods -n eevee-cefetrj -o wide
               kubectl describe deployment/assignment-runner-deployment -n eevee-cefetrj

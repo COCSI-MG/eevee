@@ -267,6 +267,31 @@ export class KubernetesService {
     }
 
     const initContainers = this.buildInitContainers(options);
+    if (options?.seedSql) {
+      const bootstrap = initContainers.find(
+        (container) => container.name === 'eevee-worker-bootstrap',
+      );
+      if (!bootstrap || !options.sharedEmptyDir) {
+        throw new Error('SQL seeding requires the bootstrap shared volume');
+      }
+      volumes.push({
+        name: 'database-seed',
+        configMap: { name: `${jobName}-seed` },
+      });
+      bootstrap.volumeMounts = [
+        ...(bootstrap.volumeMounts || []),
+        { name: 'database-seed', mountPath: '/eevee-seed' },
+      ];
+      // Node copies bytes without ever interpreting the SQL as shell source.
+      bootstrap.command = [
+        'sh',
+        '-c',
+        'npm start && node -e \'require("fs").copyFileSync(process.argv[1], process.argv[2])\' "$1" "$2"',
+        'seed-copy',
+        '/eevee-seed/init.sql',
+        options.seedSql.targetPath,
+      ];
+    }
     const podLabels = options?.podLabels || {};
 
     const jobManifest = {
@@ -277,7 +302,8 @@ export class KubernetesService {
         ...(Object.keys(podLabels).length ? { labels: podLabels } : {}),
       },
       spec: {
-        restartPolicy: 'Never', //
+        activeDeadlineSeconds: options?.activeDeadlineSeconds ?? 210,
+        ttlSecondsAfterFinished: options?.ttlSecondsAfterFinished ?? 900,
         template: {
           ...(Object.keys(podLabels).length
             ? {
@@ -302,6 +328,7 @@ export class KubernetesService {
                 name: jobName,
                 imagePullPolicy: JOB_IMAGE_PULL_POLICY,
                 image: imageName,
+                ...(options?.resources ? { resources: options.resources } : {}),
                 ...(command.length > 0 && { command: command }),
                 ...(options?.mainContainerEnv?.length
                   ? { env: options.mainContainerEnv }
@@ -324,6 +351,25 @@ export class KubernetesService {
           body: jobManifest,
         });
       console.log('Job created:', response);
+      if (options?.seedSql) {
+        try {
+          await this.createConfigMap(
+            `${jobName}-seed`,
+            { 'init.sql': options.seedSql.content },
+            [
+              {
+                apiVersion: 'batch/v1',
+                kind: 'Job',
+                name: jobName,
+                uid: response.body.metadata.uid,
+              },
+            ],
+          );
+        } catch (error) {
+          await this.deleteJobAndPods(jobName);
+          throw error;
+        }
+      }
       return response;
     } catch (err) {
       console.error('Error creating job:', err);
@@ -358,9 +404,10 @@ export class KubernetesService {
         }
 
         jobStatus = response.body.status;
-      } while (!jobStatus.succeeded && !jobStatus.failed && i++ < maxRetries);
+      } while (!jobStatus.succeeded && !jobStatus.failed && ++i < maxRetries);
 
       if (!jobStatus?.succeeded && !jobStatus?.failed) {
+        await this.deleteJobAndPods(jobName);
         throw new Error(
           `Job ${jobName} did not finish within ${maxRetries * iterationWaitTime}ms`,
         );
@@ -396,13 +443,23 @@ export class KubernetesService {
     }
   }
 
-  async createConfigMap(name: string, data: Record<string, string>) {
+  async createConfigMap(
+    name: string,
+    data: Record<string, string>,
+    ownerReferences?: {
+      apiVersion: string;
+      kind: string;
+      name: string;
+      uid: string;
+    }[],
+  ) {
     const manifest = {
       apiVersion: 'v1',
       kind: 'ConfigMap',
       metadata: {
         name: name,
         namespace: DEFAULT_NAMESPACE,
+        ...(ownerReferences ? { ownerReferences } : {}),
       },
       data: data,
     };

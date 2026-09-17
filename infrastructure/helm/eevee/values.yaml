@@ -140,8 +140,8 @@ workerImages:
   nodeGrpcjs: ghcr.io/cocsi-mg/worker-node-grpcjs-img:develop
   nodeNextjsCypress: ghcr.io/cocsi-mg/worker-node-nextjs-cypress-img:develop
   nodeReactjsCypress: ghcr.io/cocsi-mg/worker-react-cypress-img:develop
-  nodeDefaultPostgresql: ghcr.io/cocsi-mg/worker-node-default-img:develop
-  nodeNestjsPostgresql: ghcr.io/cocsi-mg/worker-nestjs-default-img:develop
+  nodeDefaultPostgresql: ghcr.io/cocsi-mg/worker-node-default-postgresql-img:pg-harness-v1@sha256:983284c5084f69ba94b7684ac3cc77025b35ef937ee3619dc00cbe1d00728356
+  nodeNestjsPostgresql: ghcr.io/cocsi-mg/worker-nestjs-postgresql-img:pg-harness-v1@sha256:5dfbd3f67d0c1423ad2d1e2a4cb498d0fed2bbe5c5c0b9eceb194a18a7b00403
 
 # -----------------------------------------------------------------------------
 # Frontend (Next.js)

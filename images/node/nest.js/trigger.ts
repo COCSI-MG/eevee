@@ -45,7 +45,7 @@ function checkupDependencies() {
 
 function applyTests(): Promise<number> {
   return new Promise((resolve) => {
-    const child = spawn('npm run test:e2e', {
+    const child = spawn('npm', ['run', 'test:e2e'], {
       cwd: __dirname,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: SAFE_TEST_ENV,

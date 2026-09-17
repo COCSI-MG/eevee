@@ -44,12 +44,12 @@ export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
   ),
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: getImageFromEnv(
     'WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL',
-    'docker.io/library/worker-node-default-img:latest',
+    'docker.io/library/worker-node-default-postgresql-img:pg-harness-v1',
   ),
   [WorkerType.NODE_NESTJS_POSTGRESQL]: getImageFromEnv(
     'WORKER_IMAGE_NODE_NESTJS_POSTGRESQL',
-    'docker.io/library/worker-nestjs-default-img:latest',
-  ), // Reuse the same image as NODE_NESTJS since it includes Postgres support
+    'docker.io/library/worker-nestjs-postgresql-img:pg-harness-v1',
+  ),
   [WorkerType.NODE_TERAORM]: getImageFromEnv(
     'WORKER_IMAGE_NODE_TERAORM',
     'docker.io/library/worker-node-teraorm-img:latest',

@@ -21,7 +21,10 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["pods"]
-    verbs: ["get", "list", "watch"]
+    verbs: ["get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["create", "get", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -31,7 +34,7 @@ metadata:
     {{- include "eevee.labels" . | nindent 4 }}
 subjects:
   - kind: ServiceAccount
-    name: worker-sa
+    name: {{ .Values.serviceAccount.name }}
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role

@@ -100,6 +100,8 @@ push-images: \
 build-workers: \
 	build-eevee-worker-bootstrap \
 	build-worker-node-default \
+	build-worker-node-default-postgresql \
+	build-worker-nestjs-postgresql \
 	build-worker-node-javascript-default \
 	build-worker-node-teraorm \
 	build-worker-nestjs-default \
@@ -111,6 +113,8 @@ build-workers: \
 push-workers: \
 	push-eevee-worker-bootstrap \
 	push-worker-node-default \
+	push-worker-node-default-postgresql \
+	push-worker-nestjs-postgresql \
 	push-worker-node-javascript-default \
 	push-worker-node-teraorm \
 	push-worker-nestjs-default \
@@ -236,3 +240,14 @@ up-docs: build-docs
 check-docs: build-docs
 	docker run --rm $(DOCS_IMAGE) \
 		mkdocs build --strict --site-dir /tmp/site
+.PHONY: build-worker-node-default-postgresql push-worker-node-default-postgresql
+build-worker-node-default-postgresql:
+	docker build --build-arg WORKER=node-default -f images/node/postgresql/Dockerfile -t $(GHCR_NAMESPACE)/worker-node-default-postgresql-img:$(TAG) .
+push-worker-node-default-postgresql:
+	docker push $(GHCR_NAMESPACE)/worker-node-default-postgresql-img:$(TAG)
+
+.PHONY: build-worker-nestjs-postgresql push-worker-nestjs-postgresql
+build-worker-nestjs-postgresql:
+	docker build --build-arg WORKER=nest.js -f images/node/postgresql/Dockerfile -t $(GHCR_NAMESPACE)/worker-nestjs-postgresql-img:$(TAG) .
+push-worker-nestjs-postgresql:
+	docker push $(GHCR_NAMESPACE)/worker-nestjs-postgresql-img:$(TAG)
