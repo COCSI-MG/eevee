@@ -129,6 +129,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const { user } = useAuthContext();
   const currentUserId = user?.userId ?? 0;
   const assignmentId = Number(params.id);
+  const isViewingAnotherUser = Boolean(params.userId);
   const workspaceInstanceId = React.useId();
   const clipboardScope = `assignment:${assignmentId}:workspace:${workspaceInstanceId}`;
 
@@ -201,10 +202,17 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   }, []);
 
   React.useEffect(() => {
-    initStash().catch((error) => {
-      console.error("Error initializing Filestash:", error);
-    });
-  }, []);
+    if (isViewingAnotherUser) return;
+
+    const initializeStashFn = async () => {
+      try {
+        await initStash();
+      } catch (err) {
+        console.error("Error initializing Filestash:", err);
+      }
+    };
+    initializeStashFn();
+  }, [isViewingAnotherUser]);
 
   React.useEffect(() => {
     if (!assignmentData?.alertPolicy || user?.isAdmin) return;
