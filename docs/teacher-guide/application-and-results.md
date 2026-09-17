@@ -10,10 +10,11 @@ Antes da aplicação, confirme:
 - Pelo menos um template compatível;
 - Limite de tentativas adequado;
 - Dependências e serviços externos, quando usados.
+- Tipos de alerta punitivo, limite global de alertas e limite de caracteres digitados por segundo.
 
 ## Durante a atividade
 
-O workspace mostra um termo de uso, armazena arquivos no navegador e aplica mecanismos de monitoramento no cliente. Tentativas de copiar, colar ou abrir ferramentas de desenvolvimento podem gerar suspensão automática após os limites implementados.
+O workspace mostra um termo de uso com a política da atividade, armazena arquivos no navegador e aplica mecanismos de monitoramento no cliente. Sair da tela, abrir ferramentas de desenvolvimento, copiar/colar conteúdo proibido e exceder a velocidade de digitação só geram registros punitivos quando o tipo correspondente está selecionado. As ações protegidas continuam bloqueadas mesmo quando não são punitivas.
 
 
 <figure markdown="span">
@@ -23,14 +24,14 @@ O workspace mostra um termo de uso, armazena arquivos no navegador e aplica meca
 
 ### Bloqueio
 
-Para acessar os alunos bloqueados, vá até atividades e clique nos 3 pontinhos de ações para entrar em "Usuários Suspensos".
+Para consultar ocorrências, vá até atividades e clique nos 3 pontinhos de ações para entrar em **Alertas e bloqueios**. A suspensão é derivada da quantidade de alertas ativos e do limite atual da atividade; portanto, reduzir ou aumentar o limite recalcula o acesso imediatamente.
 
 <figure markdown="span">
   ![Formulário de editar turma](../images/assingment-actions.png){ .screenshot }
   <figcaption>Usuários bloqueados por tarefa</figcaption>
 </figure>
 
-Em seguida consulte o nome do usuário correspondente na lista e remova o bloqueio dele. É possível validar também o motivo de sua suspensão.
+Consulte o histórico do aluno para ver o tipo, a data, a informação registrada e o estado de cada ocorrência. O modal abre no filtro **Ativos** e permite arquivar cada alerta individualmente, após confirmação. A aba **Arquivados** mostra quais registros foram arquivados e quando; o aluno é liberado assim que a contagem ativa fica abaixo do limite. Desmarcar um tipo de alerta impede novos registros desse tipo, mas não remove alertas ativos já existentes.
 
 <figure markdown="span">
   ![Formulário de editar turma](../images/assingment-users-block-list.png){ .screenshot }

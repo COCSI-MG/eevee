@@ -13,6 +13,6 @@ export enum Route {
   AdminAssignmentCreate = "admin/assignments/create",
   AdminTemplate = "/admin/templates",
   AdminAttempts = "/admin/attempts",
-  AssignmenstUsersSuspensions = "suspensions",
+  AssignmentAlerts = "suspensions",
   Classes = "classes",
 }

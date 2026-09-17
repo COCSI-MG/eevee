@@ -13,6 +13,7 @@ import { RequestContextModule } from 'src/request-context/request-context.module
 import { AiReportModule } from 'src/ai-report/ai-report.module';
 import { ExecutionModule } from 'src/execution/execution.module';
 import { AiReportJobConsumer } from './ai-report-job.processor';
+import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { AiReportJobConsumer } from './ai-report-job.processor';
     TypeOrmModule.forFeature([SchedulingPreviewRun]),
     AiReportModule,
     ExecutionModule,
+    AssignmentAlertModule
   ],
   controllers: [SchedulingController],
   providers: [

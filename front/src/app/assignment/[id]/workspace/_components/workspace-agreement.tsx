@@ -6,25 +6,46 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
+import {
+  AssignmentAlertPolicy,
+  AssignmentAlertType,
+} from "@/app/interface/scheduler-api/assignment-alert";
+
+const ALERT_RULE_LABELS: Record<AssignmentAlertType, string> = {
+  [AssignmentAlertType.WindowFocusLoss]: "Sair da tela da atividade",
+  [AssignmentAlertType.DevTools]: "Abrir as ferramentas do desenvolvedor",
+  [AssignmentAlertType.Clipboard]: "Copiar, recortar ou colar conteúdo proibido",
+  [AssignmentAlertType.TypingRate]: "Exceder o limite de digitação configurado",
+  [AssignmentAlertType.LegacySuspension]: "Suspensão legada",
+};
 
 export default function WorkspaceAgreement({
   title,
   onAccept,
   assignmentId,
+  userId,
+  alertPolicy,
 }: {
   title: string;
   onAccept: () => void;
   assignmentId: number;
+  userId: number;
+  alertPolicy: AssignmentAlertPolicy;
 }) {
   const [checked, setChecked] = useState(false);
   const [hasAgreed, setHasAgreed] = useState<boolean | null>(null);
   const { back } = useRouter();
 
   useEffect(() => {
-    const agreedBefore =
-      localStorage.getItem(`agreement-${assignmentId}`) === "true";
-    setHasAgreed(agreedBefore);
-  }, [assignmentId]);
+    try {
+      const agreedBefore = localStorage.getItem(`agreement-${assignmentId}-user-${userId}-v${alertPolicy.version ?? 1}`) === "true";
+
+      setHasAgreed(agreedBefore);
+    } catch {
+      setHasAgreed(false);
+    }
+
+  }, [alertPolicy.version, assignmentId, userId]);
 
   // Aceitar automaticamente se já concordou antes
   useEffect(() => {
@@ -34,7 +55,12 @@ export default function WorkspaceAgreement({
   }, [hasAgreed, onAccept]);
 
   const handleAccept = () => {
-    localStorage.setItem(`agreement-${assignmentId}`, "true");
+    try {
+      localStorage.setItem(`agreement-${assignmentId}-user-${userId}-v${alertPolicy.version ?? 1}`, "true");
+
+    } catch (error) {
+      console.warn("Não foi possível salvar a aceitação do termo:", error);
+    }
     onAccept();
   };
 
@@ -73,14 +99,29 @@ export default function WorkspaceAgreement({
             <h3 className="text-sm font-semibold text-foreground">
               O que resulta em penalidades?
             </h3>
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>Perder o foco da janela por mais de 5 segundos</li>
-              <li>Abrir o console do navegador</li>
-              <li>Tentar acessar outra aba/janela do navegador</li>
-              <li>Compartilhar seu código com outras pessoas</li>
-            </ul>
+            {alertPolicy.punitiveTypes.length > 0 ? (
+
+              <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                {alertPolicy.punitiveTypes.map((type) => (
+                  <li key={type}>{ALERT_RULE_LABELS[type]}</li>
+                ))}
+              </ul>
+
+            ) : (
+
+              <p className="text-sm text-muted-foreground">
+                Nenhuma ação bloqueada gera alerta punitivo nesta atividade.
+              </p>
+
+            )}
+            <p className="text-sm text-foreground">
+              O acesso será bloqueado ao atingir {alertPolicy.suspensionAlertLimit}{" "}
+              alerta(s) ativo(s). O limite de digitação é{" "}
+              {alertPolicy.typingCharactersPerSecondLimit} caracteres por segundo.
+            </p>
+
             <p className="text-sm text-warning mt-2">
-              ⚠️ Estaremos monitorando sua atividade!
+              ⚠️ As ações protegidas continuam sendo bloqueadas mesmo quando não geram um alerta punitivo.
             </p>
           </div>
         </div>

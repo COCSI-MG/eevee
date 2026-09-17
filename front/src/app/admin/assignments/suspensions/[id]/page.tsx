@@ -1,8 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { AssignmentUserSuspensionService } from "@/app/integration/scheduler-api/assignment-user-suspension";
+import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, BellRing, Eye } from "lucide-react";
+import { AssignmentAlertService } from "@/app/integration/scheduler-api/assignment-alert";
+import type { AssignmentAlertUserSummary } from "@/app/interface/scheduler-api/assignment-alert";
+import { AssignmentAlertHistoryDialog } from "@/app/admin/assignments/suspensions/[id]/_components/assignment-alert-history-dialog";
+import { formatDate } from "@/utils/date";
 import {
   Table,
   TableBody,
@@ -12,141 +17,119 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, UserX, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Page() {
-  const { id } = useParams();
-  const assignmentId = parseInt(id as string);
-  const { toast } = useToast();
+  const { id } = useParams<{ id: string }>();
+  const assignmentId = Number(id);
+  const [search, setSearch] = useState("");
+  const [selectedUser, setSelectedUser] = useState<AssignmentAlertUserSummary | null>(null);
 
-  const {
-    data: suspensions,
-    isLoading: suspensionsLoading,
-    error: suspensionsError,
-    refetch: refetchSuspensions,
-  } = useQuery({
-    queryKey: ["assignment-suspensions", assignmentId],
-    queryFn: () => AssignmentUserSuspensionService.getSuspensionsByAssignmentId(assignmentId),
-    enabled: !!assignmentId,
+  const usersQuery = useQuery({
+    queryKey: ["assignment-alert-users", assignmentId, search],
+    queryFn: () =>
+      AssignmentAlertService.listUsers(assignmentId, {
+        page: 1,
+        pageSize: 100,
+        status: "all",
+        search: search.trim() || undefined,
+      }),
+    enabled: Number.isInteger(assignmentId) && assignmentId > 0
   });
 
-  const removeSuspensionMutation = useMutation({
-    mutationFn: ({ userId, assignmentId }: { userId: number; assignmentId: number }) =>
-      AssignmentUserSuspensionService.removeSuspensionFromAssignment(userId, assignmentId),
-    onSuccess: () => {
-      toast({
-        title: "Sucesso",
-        description: "Suspensão removida com sucesso",
-      });
-      refetchSuspensions();
-    },
-    onError: (error: unknown) => {
-      console.error("Failed to remove suspension:", error);
-      toast({
-        title: "Erro",
-        description: "Falha ao remover suspensão. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleRemoveSuspension = (userId: number) => {
-    removeSuspensionMutation.mutate({ userId, assignmentId });
-  };
-
-  const formatDate = (date: Date | string) => {
-    return new Date(date).toLocaleDateString("pt-BR", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  if (suspensionsLoading) {
+  if (usersQuery.isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="p-6 text-muted-foreground">Carregando alertas...</div>
+    );
+  }
+
+  if (usersQuery.isError) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-border mx-auto"></div>
-          <p className="mt-2 text-sm text-muted-foreground">Carregando suspensões...</p>
+          <AlertCircle className="mx-auto mb-2 h-8 w-8 text-destructive" />
+          <p className="text-sm text-muted-foreground">
+            Falha ao carregar os alertas
+          </p>
         </div>
       </div>
     );
   }
 
-  if (suspensionsError) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <AlertCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Falha ao carregar suspensões</p>
-        </div>
-      </div>
-    );
-  }
+  const users = usersQuery.data?.data ?? [];
 
   return (
     <div className="container mx-auto py-6">
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserX className="h-5 w-5" />
-            Suspensões da Atividade
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Gerenciar suspensões de usuários para a atividade ID: {assignmentId}
-          </p>
+        <CardHeader className="space-y-4">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <BellRing className="h-5 w-5" />
+              Alertas e bloqueios da atividade
+            </CardTitle>
+
+            <p className="text-sm text-muted-foreground">
+              A suspensão é calculada pelos alertas ativos. Abra o histórico
+              para consultar ou arquivar uma ocorrência específica.
+            </p>
+          </div>
+
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar por nome ou e-mail"
+            className="max-w-md"
+          />
         </CardHeader>
+
         <CardContent>
-          {!suspensions || suspensions.length === 0 ? (
-            <div className="text-center py-8">
-              <UserX className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-foreground">Nenhuma suspensão</h3>
-              <p className="text-sm text-muted-foreground">
-                Não há usuários suspensos para esta atividade no momento.
-              </p>
+          {users.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              Nenhum alerta registrado nesta atividade.
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Usuário</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Motivo</TableHead>
-                  <TableHead>Suspenso Em</TableHead>
+                  <TableHead>Aluno</TableHead>
+                  <TableHead>Alertas ativos</TableHead>
+                  <TableHead>Total histórico</TableHead>
+                  <TableHead>Último alerta</TableHead>
+                  <TableHead>Situação</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {suspensions.map((suspension) => (
-                  <TableRow key={suspension.id}>
-                    <TableCell className="font-medium">
-                      {suspension.user?.name || `Usuário ${suspension.userId}`}
-                    </TableCell>
-                    <TableCell>{suspension.user?.email || "Desconhecido"}</TableCell>
+                {users.map((user) => (
+                  <TableRow key={user.userId}>
                     <TableCell>
-                      {suspension.reason ? (
-                        <span className="text-sm">{suspension.reason}</span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground italic">Nenhum motivo fornecido</span>
-                      )}
+                      <span className="block font-medium">{user.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {user.email}
+                      </span>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(suspension.createdAt)}
+                    <TableCell>
+                      {user.activeCount} / {user.limit}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell>{user.totalCount}</TableCell>
+                    <TableCell>{formatDate(user.lastAlertAt)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={user.suspended ? "destructive" : "outline"}
+                      >
+                        {user.suspended ? "Bloqueado" : "Liberado"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="space-x-2 text-right">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleRemoveSuspension(suspension.userId)}
-                        disabled={removeSuspensionMutation.isPending}
-                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setSelectedUser(user)}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Remover
+                        <Eye className="mr-1 h-4 w-4" />
+                        Histórico
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -156,6 +139,12 @@ export default function Page() {
           )}
         </CardContent>
       </Card>
+
+      <AssignmentAlertHistoryDialog
+        assignmentId={assignmentId}
+        onClose={() => setSelectedUser(null)}
+        selectedUser={selectedUser}
+      />
     </div>
   );
 }

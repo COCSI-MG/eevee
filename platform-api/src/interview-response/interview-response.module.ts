@@ -6,11 +6,13 @@ import { RequestContextModule } from 'src/request-context/request-context.module
 import { InterviewResponseController } from './interview-response.controller';
 import { InterviewResponseService } from './interview-response.service';
 import { InterviewResponse } from './entities/interview-response.entity';
+import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([InterviewResponse, Assignment, Attempt]),
     RequestContextModule,
+    AssignmentAlertModule
   ],
   providers: [InterviewResponseService],
   controllers: [InterviewResponseController],

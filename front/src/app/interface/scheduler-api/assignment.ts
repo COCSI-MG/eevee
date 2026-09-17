@@ -1,7 +1,10 @@
 import { FileNode } from "@/types/shared";
 import { AssignmentAttempt } from "./assignment-attempt";
 import { AssignmentParam } from "./assignment-param";
-import { AssignmentUserSuspension } from "./assignment-user-suspension";
+import {
+  AssignmentAlertPolicy,
+  AssignmentAlertStatus
+} from "./assignment-alert";
 import { Class } from "./class";
 import { Template } from "./template";
 import type { Exam } from "./exam";
@@ -72,7 +75,8 @@ export interface Assignment {
   class: Class;
   assignmentTemplates: AssignmentTemplate[];
   assignmentParams: AssignmentParam[];
-  suspensions?: AssignmentUserSuspension[];
+  alertPolicy: AssignmentAlertPolicy;
+  currentUserAlertStatus?: AssignmentAlertStatus;
   interviewConfig?: AssignmentInterviewConfig;
   answerKeyId?: number | null;
   answerKeyVisible: boolean;
@@ -116,6 +120,7 @@ export interface CreateAssignmentRequest {
   workerDefinition: WorkerDefinition;
   answerKeyVisible?: boolean;
   allowProjectImport?: boolean;
+  alertPolicy?: AssignmentAlertPolicy;
 }
 
 export interface UpdateAssignmentRequest {
@@ -142,4 +147,5 @@ export interface UpdateAssignmentRequest {
   }[];
   answerKeyVisible?: boolean;
   allowProjectImport?: boolean;
+  alertPolicy?: AssignmentAlertPolicy;
 }

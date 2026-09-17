@@ -19,6 +19,7 @@ import { isAxiosError } from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { earliestDate, isDeadlinePassed } from "@/utils/date";
+import { useWorkspaceContext } from "./_providers/workspace-provider";
 
 export default function Page() {
   const { id } = useParams<{ id: string }>();
@@ -29,9 +30,7 @@ export default function Page() {
   const isInvalidAssignmentId =
     !Number.isInteger(assignmentId) || assignmentId <= 0;
   const handledUnavailableAssignmentRef = useRef<string | null>(null);
-  // Estado para controlar se o usuário aceitou o acordo
-  const [hasAcceptedAgreement, setHasAcceptedAgreement] =
-    useState<boolean>(false);
+  const { securityAgreementAccepted, acceptSecurityAgreement } = useWorkspaceContext();
   const [resetWorkspaceAction, setResetWorkspaceAction] = useState<
     ((assignment?: Assignment) => Promise<void>) | null
   >(null);
@@ -56,6 +55,7 @@ export default function Page() {
   } = useFetchAssignment(assignmentId);
 
   const isAssignmentNotFound = isAssignmentError && isAxiosError(assignmentError) && (assignmentError.response?.status ?? assignmentError.status) === 404;
+  const isSuspendedResponse = isAssignmentError && isAxiosError(assignmentError) && (assignmentError.response?.status ?? assignmentError.status) === 423;
 
   const isAssignmentUnavailable = isInvalidAssignmentId || isAssignmentNotFound;
 
@@ -147,22 +147,8 @@ export default function Page() {
     userId,
   });
 
-  const isUserSuspended = (assignmentData: {
-    suspensions?: { userId: number }[];
-  }) => {
-    if (!userId) {
-      return false;
-    }
-
-    return Boolean(
-      assignmentData?.suspensions?.some(
-        (suspension) => suspension.userId === userId,
-      ),
-    );
-  };
-
   const handleAcceptAgreement = () => {
-    setHasAcceptedAgreement(true);
+    acceptSecurityAgreement();
   };
 
   // Loading state
@@ -176,6 +162,10 @@ export default function Page() {
 
   if (isAssignmentUnavailable) {
     return <WorkspaceLoading />;
+  }
+
+  if (isSuspendedResponse) {
+    return <WorkspaceSuspension />;
   }
 
   if (isAssignmentError && !assignmentData) {
@@ -193,7 +183,7 @@ export default function Page() {
   }
 
   // Suspension check
-  if (assignmentData && isUserSuspended(assignmentData)) {
+  if (assignmentData?.currentUserAlertStatus?.suspended) {
     return <WorkspaceSuspension />;
   }
 
@@ -206,12 +196,14 @@ export default function Page() {
   );
 
   // Agreement check - APENAS para não-admins que ainda não aceitaram
-  if (user && !user.isAdmin && assignmentData && !hasAcceptedAgreement) {
+  if (user && !user.isAdmin && assignmentData && !securityAgreementAccepted) {
     return (
       <WorkspaceAgreement
         title={assignmentData.title}
         onAccept={handleAcceptAgreement}
         assignmentId={assignmentData.id}
+        userId={userId}
+        alertPolicy={assignmentData.alertPolicy}
       />
     );
   }

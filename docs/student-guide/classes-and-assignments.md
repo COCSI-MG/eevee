@@ -53,7 +53,7 @@ Na página **Tarefas da Turma**, cada cartão apresenta o título, a descrição
 | **Em execução** | A tentativa mais recente ainda está sendo processada. O botão de início fica desabilitado até a conclusão. |
 | **Resultados disponíveis** | A tentativa mais recente foi concluída e pode ser consultada. |
 | **Tentativa com falha** | A execução terminou com erro ou não produziu um resultado válido. |
-| **Tarefa suspensa por quebra de conduta** | O acesso à atividade foi bloqueado. Procure o professor para obter mais informações. |
+| **Tarefa suspensa por quebra de conduta** | O número de alertas ativos atingiu o limite da atividade. Procure o professor para obter mais informações. |
 
 !!! tip "Atualização automática"
     A lista de atividades é atualizada periodicamente. Depois de enviar uma solução, aguarde a mudança do estado antes de tentar abrir o workspace novamente.

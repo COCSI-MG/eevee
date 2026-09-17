@@ -11,6 +11,7 @@ interface WorkspaceCodeEditorProps {
   onEditorChange: (value: string | undefined) => void;
   actionGuardMode?: EditorActionGuardMode;
   readOnly?: boolean;
+  onDidType?: (text: string) => void;
   file: {
     name: string;
     path: string;
@@ -24,6 +25,7 @@ export default function WorkspaceCodeEditor({
   onEditorChange,
   actionGuardMode = EDITOR_ACTION_GUARD_MODE.ENFORCED,
   readOnly = false,
+  onDidType,
 }: WorkspaceCodeEditorProps) {
   const { clipboardScope, fileTreeData, workerType } = useWorkspaceContext();
 
@@ -58,6 +60,7 @@ export default function WorkspaceCodeEditor({
           workspaceTree={fileTreeData}
           value={file.value}
           onChange={onEditorChange}
+          onDidType={onDidType}
           readOnly={readOnly}
         />
       </div>

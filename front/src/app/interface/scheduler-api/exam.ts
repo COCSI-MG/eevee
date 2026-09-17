@@ -1,4 +1,5 @@
 import { AssignmentAttempt } from "./assignment-attempt";
+import { AssignmentAlertStatus } from "./assignment-alert";
 
 export interface Exam {
   id: number;
@@ -11,12 +12,6 @@ export interface Exam {
   updatedAt: string;
 }
 
-export interface AssignmentUserSuspensionSummary {
-  id: number;
-  reason: string | null;
-  createdAt: string;
-}
-
 export interface AssignmentSummary {
   id: number;
   title: string;
@@ -27,7 +22,7 @@ export interface AssignmentSummary {
   dueDate?: string | null;
   workerType: string;
   lastAttempt: AssignmentAttempt | null;
-  suspensions: AssignmentUserSuspensionSummary[];
+  currentUserAlertStatus: AssignmentAlertStatus;
   score: number;
 }
 
