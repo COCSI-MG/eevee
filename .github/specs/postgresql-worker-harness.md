@@ -149,6 +149,6 @@ This leaves Kubernetes as the final safety net if the runner crashes.
 ## Rollout and recovery
 
 Deploy the new runner only after its worker images are published and their
-environment variables reference immutable tags. Existing stuck Jobs are not
+environment variables reference `latest`. Existing stuck Jobs are not
 fixed by deployment; an authorized cluster owner must review and remove those
 separately. Observe Job age, active count, and worker memory after rollout.

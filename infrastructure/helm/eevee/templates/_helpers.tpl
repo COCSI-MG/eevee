@@ -152,29 +152,37 @@ DB_* values from the ConfigMap but expose them to the app as PG_*.
 
 {{/*
 Worker image env vars consumed by Assignment Runner. These
-override the GHCR defaults baked into worker.constants.ts.
+override the local defaults baked into worker.constants.ts.
 */}}
+{{/* Preserve repository and registry port; discard legacy tags and digests. */}}
+{{- define "eevee.latestWorkerImage" -}}
+{{- $repository := regexReplaceAll ":[^/:]+$" (first (splitList "@" .)) "" -}}
+{{- printf "%s:latest" $repository -}}
+{{- end -}}
+
 {{- define "eevee.workerImageEnv" -}}
 - name: WORKER_BOOTSTRAP_IMAGE
-  value: {{ .Values.workerImages.bootstrap | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.bootstrap | quote }}
 - name: WORKER_IMAGE_NODE_DEFAULT
-  value: {{ .Values.workerImages.nodeDefault | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeDefault | quote }}
 - name: WORKER_IMAGE_JAVASCRIPT_DEFAULT
-  value: {{ .Values.workerImages.javascriptDefault | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.javascriptDefault | quote }}
 - name: WORKER_IMAGE_NODE_TERAORM
-  value: {{ .Values.workerImages.nodeTeraorm | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeTeraorm | quote }}
 - name: WORKER_IMAGE_NODE_NESTJS
-  value: {{ .Values.workerImages.nodeNestjs | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeNestjs | quote }}
 - name: WORKER_IMAGE_NODE_GRPCJS
-  value: {{ .Values.workerImages.nodeGrpcjs | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeGrpcjs | quote }}
 - name: WORKER_IMAGE_NODE_NEXTJS_CYPRESS
-  value: {{ .Values.workerImages.nodeNextjsCypress | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeNextjsCypress | quote }}
 - name: WORKER_IMAGE_NODE_REACTJS_CYPRESS
-  value: {{ .Values.workerImages.nodeReactjsCypress | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeReactjsCypress | quote }}
+- name: WORKER_IMAGE_PYTHON_DEFAULT
+  value: {{ include "eevee.latestWorkerImage" (.Values.workerImages.pythonDefault | default "ghcr.io/cocsi-mg/worker-python-default-img:latest") | quote }}
 - name: WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL
-  value: {{ .Values.workerImages.nodeDefaultPostgresql | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeDefaultPostgresql | quote }}
 - name: WORKER_IMAGE_NODE_NESTJS_POSTGRESQL
-  value: {{ .Values.workerImages.nodeNestjsPostgresql | quote }}
+  value: {{ include "eevee.latestWorkerImage" .Values.workerImages.nodeNestjsPostgresql | quote }}
 {{- end -}}
 
 {{/*
@@ -185,7 +193,7 @@ Jobs they spawn at runtime (namespace, nodeSelector, pull secrets, etc.).
 - name: K8S_NAMESPACE
   value: {{ .Release.Namespace | quote }}
 - name: K8S_JOB_IMAGE_PULL_POLICY
-  value: "IfNotPresent"
+  value: "Always"
 {{- if .Values.imagePullSecret.name }}
 - name: K8S_JOB_IMAGE_PULL_SECRETS
   value: {{ .Values.imagePullSecret.name | quote }}

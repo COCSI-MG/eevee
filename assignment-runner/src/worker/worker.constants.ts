@@ -1,7 +1,9 @@
 import { WorkerType } from './enum/worker-type.enum';
 
 function getImageFromEnv(envName: string, fallback: string): string {
-  return process.env[envName] || fallback;
+  // Worker images always follow latest, including legacy environment overrides.
+  const image = (process.env[envName]?.trim() || fallback).split('@')[0];
+  return `${image.replace(/:[^/:]+$/, '')}:latest`;
 }
 
 export const WORKER_JOB_PREFIX: Record<WorkerType, string> = {
@@ -44,11 +46,11 @@ export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
   ),
   [WorkerType.NODE_DEFAULT_POSTGRESQL]: getImageFromEnv(
     'WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL',
-    'docker.io/library/worker-node-default-postgresql-img:pg-harness-v1',
+    'docker.io/library/worker-node-default-postgresql-img:latest',
   ),
   [WorkerType.NODE_NESTJS_POSTGRESQL]: getImageFromEnv(
     'WORKER_IMAGE_NODE_NESTJS_POSTGRESQL',
-    'docker.io/library/worker-nestjs-postgresql-img:pg-harness-v1',
+    'docker.io/library/worker-nestjs-postgresql-img:latest',
   ),
   [WorkerType.NODE_TERAORM]: getImageFromEnv(
     'WORKER_IMAGE_NODE_TERAORM',
