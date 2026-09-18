@@ -1,57 +1,66 @@
-import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
-import { Queue } from 'bullmq';
-import { randomUUID } from 'crypto';
-import { EXECUTION_RESULTS_QUEUE } from '@eevee/execution-contracts';
-import { ExecutionTarget } from '@eevee/execution-contracts';
-import { ExecutionEvent, ExecutionEventName } from './execution-event';
+import { InjectQueue } from "@nestjs/bullmq";
+import { Injectable, Logger } from "@nestjs/common";
+import { Queue } from "bullmq";
+import { randomUUID } from "crypto";
+import { EXECUTION_RESULTS_QUEUE } from "@eevee/execution-contracts";
+import { ExecutionTarget } from "@eevee/execution-contracts";
+import { ExecutionEvent, ExecutionEventName } from "./execution-event";
 
 @Injectable()
 export class ExecutionEventPublisher {
+  private readonly logger = new Logger(ExecutionEventPublisher.name);
+
   constructor(
     @InjectQueue(EXECUTION_RESULTS_QUEUE)
     private readonly executionResultsQueue: Queue,
   ) {}
 
-  async publish(params: Omit<ExecutionEvent, 'eventId' | 'occurredAt'>) {
+  async publish(params: Omit<ExecutionEvent, "eventId" | "occurredAt">) {
     const event: ExecutionEvent = {
       ...params,
       eventId: randomUUID(),
       occurredAt: new Date().toISOString(),
     };
 
-    await this.executionResultsQueue.add(event.name, event, {
-      jobId: event.eventId,
-      removeOnComplete: 1000,
-      removeOnFail: 1000,
-    });
+    try {
+      await this.executionResultsQueue.add(event.name, event, {
+        jobId: event.eventId,
+        removeOnComplete: 1000,
+        removeOnFail: 1000,
+      });
+    } catch (err) {
+      this.logger.error(
+        `Failed to deliver ${event.name} for ${event.target.kind} ${event.target.id}: ${err instanceof Error ? err.message : err}`,
+      );
+      throw err;
+    }
   }
 
   publishStarted(target: ExecutionTarget) {
     return this.publish({
-      name: 'execution.started.v1',
+      name: "execution.started.v1",
       target,
-      status: 'running',
+      status: "running",
     });
   }
 
   publishCompleted(
     target: ExecutionTarget,
-    result: NonNullable<ExecutionEvent['result']>,
+    result: NonNullable<ExecutionEvent["result"]>,
   ) {
     return this.publish({
-      name: 'execution.completed.v1',
+      name: "execution.completed.v1",
       target,
-      status: 'completed',
+      status: "completed",
       result,
     });
   }
 
   publishFailed(target: ExecutionTarget, errorMessage: string) {
     return this.publish({
-      name: 'execution.failed.v1',
+      name: "execution.failed.v1",
       target,
-      status: 'failed',
+      status: "failed",
       errorMessage,
     });
   }
