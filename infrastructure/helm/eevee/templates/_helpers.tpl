@@ -19,6 +19,61 @@ imagePullSecrets:
 {{- end -}}
 
 {{/*
+Entrypoint gateway nginx config. Kept as its own named template (rather than
+inlined in entrypoint-gateway.yaml) so the Deployment's checksum/config
+annotation can include it without recursively including the whole file.
+*/}}
+{{- define "eevee.entrypointNginxConf" -}}
+# Only send "Connection: upgrade" for actual WebSocket upgrade requests;
+# forcing it on every request breaks keep-alive on plain REST polling.
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  ''      close;
+}
+
+server {
+  listen {{ .Values.entrypointGateway.containerPort }};
+  server_name _;
+
+  location /api/v1/ {
+    proxy_pass http://platform-api-service:{{ .Values.platformApi.containerPort }}/v1/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+
+  # Socket.IO's handshake path is fixed at /socket.io/ regardless of
+  # namespace, so it needs its own route straight to platform-api — it does
+  # NOT live under /api/v1/ and must not fall through to the front-end.
+  location /socket.io/ {
+    proxy_pass http://platform-api-service:{{ .Values.platformApi.containerPort }}/socket.io/;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+
+  location / {
+    proxy_pass http://eevee-front-service:80;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+}
+{{- end -}}
+
+{{/*
 Standard application env block used by Platform API workloads and Assignment Runner.
 DB_* values from the ConfigMap but expose them to the app as PG_*.
 */}}
