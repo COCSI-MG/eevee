@@ -13,6 +13,9 @@ env:
 jobs:
   deploy-infra:
     runs-on: ubuntu-latest
+    concurrency:
+      group: eevee-production-deploy
+      cancel-in-progress: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,9 +30,15 @@ jobs:
           private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
+            set -euo pipefail
             REGISTRY=ghcr.io
             NAMESPACE=eevee-cefetrj
             cd "${{ vars.DEPLOY_WORKDIR }}"
+            git fetch origin '${{ github.sha }}'
+            CHART_WORKDIR=$(mktemp -d)
+            trap 'rm -rf "$CHART_WORKDIR"' EXIT
+            git archive '${{ github.sha }}' infrastructure/helm/eevee | tar -x -C "$CHART_WORKDIR"
+            CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
             kubectl -n "$NAMESPACE" create secret generic eevee-secrets \
               --from-literal=DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
               --from-literal=JWT_SECRET='${{ secrets.JWT_SECRET }}' \
@@ -42,15 +51,10 @@ jobs:
               --docker-password='${{ secrets.GHCR_TOKEN }}' \
               --dry-run=client -o yaml | kubectl apply -f -
 
-            helm dependency build infrastructure/helm/eevee
-            helm upgrade --install eevee infrastructure/helm/eevee \
+            helm dependency build "$CHART"
+            helm upgrade --install eevee "$CHART" \
               --namespace "$NAMESPACE" \
-              --set platformApi.image.repository="$REGISTRY/${{ env.PLATFORM_API_IMAGE }}" \
-              --set platformApi.image.tag=latest \
-              --set assignmentRunner.image.repository="$REGISTRY/${{ env.ASSIGNMENT_RUNNER_IMAGE }}" \
-              --set assignmentRunner.image.tag=latest \
-              --set front.image.repository="$REGISTRY/${{ env.FRONT_IMAGE }}" \
-              --set front.image.tag=latest \
+              --reuse-values \
               --wait --timeout 10m
 
             for deployment in platform-api-deployment assignment-runner-deployment eevee-front-deployment; do

@@ -38,7 +38,11 @@ config:
   AUTH_COOKIE_DOMAIN: ""
   FRONT_URL: "https://eevee.testbeds.rnp.br"
   FRONT_ROUTE_RESET_PASSWORD: "/reset-password"
-
+  AUTH_SESSION_TTL_SECONDS: "900"
+  AUTH_REFRESH_TTL_SECONDS: "1209600"
+  AUTH_ROTATION_GRACE_SECONDS: "15"
+  AUTH_SESSION_HISTORY_DAYS: "7"
+  AUTH_SESSION_CLEANUP_CRON: "0 3 * * *"
 # -----------------------------------------------------------------------------
 # Sensitive values. The Secret is expected to already exist in the namespace —
 # Helm only references it by name (see README for creation steps). Set
