@@ -17,6 +17,8 @@ const config: Config = {
           allowJs: true,
           checkJs: false,
           strict: false,
+          emitDecoratorMetadata: true,
+          experimentalDecorators: true,
           noImplicitAny: false,
           moduleDetection: 'force'
         }
