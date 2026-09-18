@@ -26,10 +26,15 @@ jobs:
             image: worker-nestjs-postgresql-img
     steps:
       - uses: actions/checkout@v4
+      - name: Set image reference
+        shell: bash
+        env:
+          IMAGE_NAME: ${{ matrix.image }}
+        run: echo "WORKER_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_ENV"
       - name: Build
-        run: docker build --build-arg WORKER=${{ matrix.worker }} -f images/node/postgresql/Dockerfile -t ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }} .
+        run: docker build --build-arg WORKER=${{ matrix.worker }} -f images/node/postgresql/Dockerfile -t "$WORKER_IMAGE" .
       - name: Lifecycle smoke tests
-        run: python images/node/postgresql/smoke.py ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
+        run: python images/node/postgresql/smoke.py "$WORKER_IMAGE"
       - uses: docker/login-action@v3
         if: inputs.publish
         with:
@@ -38,4 +43,4 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Publish immutable commit tag
         if: inputs.publish
-        run: docker push ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ github.sha }}
+        run: docker push "$WORKER_IMAGE"

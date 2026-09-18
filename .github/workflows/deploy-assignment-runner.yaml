@@ -30,6 +30,10 @@ jobs:
   build-and-deploy:
     needs: postgresql-workers
     runs-on: ubuntu-latest
+    concurrency:
+      group: eevee-production-deploy
+      cancel-in-progress: false
+      queue: max
     permissions:
       contents: read
       packages: write
@@ -37,6 +41,11 @@ jobs:
     steps:
       - name: Checkout do codigo
         uses: actions/checkout@v4
+
+      - name: Set worker registry namespace
+        id: worker-registry
+        shell: bash
+        run: echo "namespace=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Login no GitHub Container Registry
         uses: docker/login-action@v3
@@ -96,8 +105,8 @@ jobs:
               {"spec":{"template":{"spec":{"containers":[{"name":"assignment-runner",
                 "image":"${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }}",
                 "env":[
-                  {"name":"WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL","value":"ghcr.io/${{ github.repository_owner }}/worker-node-default-postgresql-img:${{ github.sha }}"},
-                  {"name":"WORKER_IMAGE_NODE_NESTJS_POSTGRESQL","value":"ghcr.io/${{ github.repository_owner }}/worker-nestjs-postgresql-img:${{ github.sha }}"}
+                  {"name":"WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL","value":"${{ steps.worker-registry.outputs.namespace }}/worker-node-default-postgresql-img:${{ github.sha }}"},
+                  {"name":"WORKER_IMAGE_NODE_NESTJS_POSTGRESQL","value":"${{ steps.worker-registry.outputs.namespace }}/worker-nestjs-postgresql-img:${{ github.sha }}"}
                 ]
               }]}}}}'
             if ! kubectl rollout status deployment/assignment-runner-deployment -n eevee-cefetrj --timeout=5m; then
