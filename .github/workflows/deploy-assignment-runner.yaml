@@ -30,6 +30,9 @@ jobs:
   build-and-deploy:
     needs: postgresql-workers
     runs-on: ubuntu-latest
+    concurrency:
+      group: eevee-production-deploy
+      cancel-in-progress: false
     permissions:
       contents: read
       packages: write
@@ -92,14 +95,20 @@ jobs:
                 name: ${RUNNER_SERVICE_ACCOUNT:-default}
                 namespace: eevee-cefetrj
             YAML
-            kubectl patch deployment assignment-runner-deployment -n eevee-cefetrj --type=strategic -p '
-              {"spec":{"template":{"spec":{"containers":[{"name":"assignment-runner",
-                "image":"${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }}",
-                "env":[
-                  {"name":"WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL","value":"ghcr.io/${{ github.repository_owner }}/worker-node-default-postgresql-img:${{ github.sha }}"},
-                  {"name":"WORKER_IMAGE_NODE_NESTJS_POSTGRESQL","value":"ghcr.io/${{ github.repository_owner }}/worker-nestjs-postgresql-img:${{ github.sha }}"}
-                ]
-              }]}}}}'
+            set -euo pipefail
+            cd "${{ vars.DEPLOY_WORKDIR }}"
+            git fetch origin '${{ github.sha }}'
+            CHART_WORKDIR=$(mktemp -d)
+            trap 'rm -rf "$CHART_WORKDIR"' EXIT
+            git archive '${{ github.sha }}' infrastructure/helm/eevee | tar -x -C "$CHART_WORKDIR"
+            CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
+            helm dependency build "$CHART"
+            helm upgrade eevee "$CHART" --namespace eevee-cefetrj --reuse-values \
+              --set assignmentRunner.image.repository="${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}" \
+              --set-string assignmentRunner.image.tag='${{ github.sha }}' \
+              --set-string workerImages.nodeDefaultPostgresql="ghcr.io/${{ github.repository_owner }}/worker-node-default-postgresql-img:${{ github.sha }}" \
+              --set-string workerImages.nodeNestjsPostgresql="ghcr.io/${{ github.repository_owner }}/worker-nestjs-postgresql-img:${{ github.sha }}" \
+              --wait --timeout 10m
             if ! kubectl rollout status deployment/assignment-runner-deployment -n eevee-cefetrj --timeout=5m; then
               kubectl get pods -n eevee-cefetrj -o wide
               kubectl describe deployment/assignment-runner-deployment -n eevee-cefetrj
