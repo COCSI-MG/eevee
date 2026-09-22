@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { CreateAttemptDto } from './dto/create-applicant-attempt.dto';
-import { Brackets, In, LessThan, Repository } from 'typeorm';
+import { Brackets, In, IsNull, LessThan, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Attempt } from './entities/attempt.entity';
 import { ClsService } from 'nestjs-cls';
@@ -255,6 +255,8 @@ export class AttemptService {
 
     const data = rows.map((row) => ({
       id: Number(row.id),
+      userId,
+      assignmentId,
       attempt: Number(row.attempt),
       status: row.status,
       isAcceptable: Boolean(row.isAcceptable),
@@ -333,6 +335,63 @@ export class AttemptService {
           },
         };
       });
+  }
+
+  async findSubmittedWorkForAdmin(
+    assignmentId: number,
+    userId: number,
+    attemptId: number
+  ) {
+    const attempt = await this.attemptRepository.findOne({
+      where: {
+        id: attemptId,
+        assignmentId,
+        userId,
+        receivedWork: Not(IsNull())
+      },
+      relations: {
+        assignment: true,
+        user: true
+      },
+      select: {
+        id: true,
+        assignmentId: true,
+        userId: true,
+        attempt: true,
+        createdAt: true,
+        receivedWork: true,
+        user: {
+          id: true,
+          name: true,
+          email: true
+        },
+        assignment: {
+          id: true,
+          title: true,
+          description: true,
+          workerType: true
+        }
+      },
+      order: {
+        attempt: "DESC",
+        createdAt: "DESC"
+      }
+    });
+
+    if (!attempt?.receivedWork) {
+      throw new NotFoundException("Submitted project not found");
+    }
+
+    return {
+      attemptId: attempt.id,
+      assignmentId: attempt.assignmentId,
+      userId: attempt.userId,
+      attempt: attempt.attempt,
+      createdAt: attempt.createdAt,
+      user: attempt.user,
+      assignment: attempt.assignment,
+      files: attempt.receivedWork
+    };
   }
 
   findAllByAssignmentAndCurrentUser(assignmentId: number) {
