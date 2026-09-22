@@ -39,9 +39,7 @@ export default function Workspace({
     replaceFileTree,
     selectedItem,
     selectItem,
-    fileTreeData,
-    securityPaused,
-    registerTypedText
+    fileTreeData
   } = useWorkspaceContext();
   const userId = user.userId;
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
