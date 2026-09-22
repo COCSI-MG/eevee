@@ -6,11 +6,28 @@
 
 - **`front/`** (Next.js 15) - Web UI for assignments and code submission
 - **`platform-api/`** (NestJS) - Public API: manages users, assignments, attempts, and realtime updates
-- **`code-evaluator-engine/`** (NestJS) - Internal consumer that evaluates prepared code submissions in Kubernetes
+- **`assignment-runner/`** - Executes worker Kubernetes Jobs and parses results (previously `scheduler-api`/`code-evaluator-engine`)
 - **`images/`** - Containerized execution environments; runtime workers are grouped in `images/node/`
 - **`infrastructure/`** - Docker Compose services (Redis, PostgreSQL, Helm and Minikube config)
 
-**Data flow:** Frontend → Scheduler API → BullMQ (Redis) → Worker pods (via Kubernetes) → logs/results back to API
+**Data flow:** Frontend → `platform-api` → BullMQ (Redis) → `assignment-runner` (Kubernetes Jobs) → logs/results back to API
+
+## Deeper knowledge lives in skills
+
+This file is a short always-on summary. Detailed, on-demand knowledge is
+split into progressive-disclosure skills under `.github/skills/`:
+
+- [`eevee-architecture-overview`](./skills/eevee-architecture-overview/SKILL.md) - service boundaries, local bring-up order
+- [`worker-execution-strategies`](./skills/worker-execution-strategies/SKILL.md) - adding/modifying worker types in `assignment-runner`
+- [`kubernetes-job-orchestration`](./skills/kubernetes-job-orchestration/SKILL.md) - Job/Pod construction, volumes, deadlines/TTL
+- [`platform-api-conventions`](./skills/platform-api-conventions/SKILL.md) - NestJS module/DTO/migration conventions
+
+One-off feature specs (not reusable procedures) live under `.github/specs/`,
+e.g. [`postgresql-worker-harness.md`](./specs/postgresql-worker-harness.md) -
+the legacy-cluster PostgreSQL worker redesign (not yet implemented).
+
+Prefer adding new repo-specific know-how as a skill (bundled with
+references/scripts if needed) instead of growing this file indefinitely.
 
 ## Critical Setup Commands
 

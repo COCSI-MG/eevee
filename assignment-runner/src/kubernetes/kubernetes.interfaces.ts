@@ -42,6 +42,7 @@ export interface KubernetesJobEnvVar {
 }
 
 export interface KubernetesJobOptions {
+  seedSql?: { content: string; targetPath: string };
   configMap?: KubernetesJobConfigMap[];
   initContainers?: KubernetesJobInitContainer[];
   sharedEmptyDir?: KubernetesJobSharedEmptyDir;
@@ -50,4 +51,10 @@ export interface KubernetesJobOptions {
   mainContainerEnv?: KubernetesJobEnvVar[];
   command?: string[];
   backoffLimit?: number;
+  activeDeadlineSeconds?: number;
+  ttlSecondsAfterFinished?: number;
+  resources?: {
+    requests: { cpu: string; memory: string };
+    limits: { cpu: string; memory: string };
+  };
 }

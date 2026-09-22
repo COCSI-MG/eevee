@@ -1,5 +1,6 @@
 import { WorkerResponse } from '../worker.interfaces';
 import { Logger } from '@nestjs/common';
+import { tailLines } from '../../common/log-tail.util';
 
 const TEST_OUTPUT_START_MARKER = 'EEVEE_TEST_OUTPUT_START';
 const TEST_OUTPUT_END_MARKER = 'EEVEE_TEST_OUTPUT_END';
@@ -22,7 +23,7 @@ function extractTestOutput(log: string): string {
 export function parseJestLogResult(log: string): WorkerResponse {
   const logger = new Logger('WorkerLogParser');
   logger.debug('Parsing Jest log result...');
-  logger.debug(`Raw log: ${log}`);
+  logger.debug(`Raw log (tail): ${tailLines(log)}`);
 
   const logLines = log.split('\n');
 

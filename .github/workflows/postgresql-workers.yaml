@@ -1,0 +1,46 @@
+name: PostgreSQL worker images
+
+on:
+  pull_request:
+    paths:
+      - 'images/node/**'
+      - '.github/workflows/postgresql-workers.yaml'
+  workflow_call:
+    inputs:
+      publish:
+        type: boolean
+        default: false
+
+jobs:
+  workers:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - worker: node-default
+            image: worker-node-default-postgresql-img
+          - worker: nest.js
+            image: worker-nestjs-postgresql-img
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set image reference
+        shell: bash
+        env:
+          IMAGE_NAME: ${{ matrix.image }}
+        run: echo "WORKER_IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${IMAGE_NAME}:latest" >> "$GITHUB_ENV"
+      - name: Build
+        run: docker build --build-arg WORKER=${{ matrix.worker }} -f images/node/postgresql/Dockerfile -t "$WORKER_IMAGE" .
+      - name: Lifecycle smoke tests
+        run: python images/node/postgresql/smoke.py "$WORKER_IMAGE"
+      - uses: docker/login-action@v3
+        if: inputs.publish
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish latest worker image
+        if: inputs.publish
+        run: docker push "$WORKER_IMAGE"

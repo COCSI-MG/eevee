@@ -17,6 +17,10 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    concurrency:
+      group: eevee-production-deploy
+      cancel-in-progress: false
+      queue: max
     permissions:
       contents: read
       packages: write
@@ -52,7 +56,18 @@ jobs:
           private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
-            kubectl set image deployment/platform-api-deployment platform-api=${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}:${{ github.sha }} -n eevee-cefetrj
+            set -euo pipefail
+            cd "${{ vars.DEPLOY_WORKDIR }}"
+            git fetch origin '${{ github.sha }}'
+            CHART_WORKDIR=$(mktemp -d)
+            trap 'rm -rf "$CHART_WORKDIR"' EXIT
+            git archive '${{ github.sha }}' infrastructure/helm/eevee | tar -x -C "$CHART_WORKDIR"
+            CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
+            helm dependency build "$CHART"
+            helm upgrade eevee "$CHART" --namespace eevee-cefetrj --reuse-values \
+              --set platformApi.image.repository="${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}" \
+              --set-string platformApi.image.tag='${{ github.sha }}' \
+              --wait --timeout 10m
             if ! kubectl rollout status deployment/platform-api-deployment -n eevee-cefetrj --timeout=5m; then
               kubectl get pods -n eevee-cefetrj -o wide
               kubectl describe deployment/platform-api-deployment -n eevee-cefetrj

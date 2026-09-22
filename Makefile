@@ -100,6 +100,8 @@ push-images: \
 build-workers: \
 	build-eevee-worker-bootstrap \
 	build-worker-node-default \
+	build-worker-node-default-postgresql \
+	build-worker-nestjs-postgresql \
 	build-worker-node-javascript-default \
 	build-worker-node-teraorm \
 	build-worker-nestjs-default \
@@ -111,6 +113,8 @@ build-workers: \
 push-workers: \
 	push-eevee-worker-bootstrap \
 	push-worker-node-default \
+	push-worker-node-default-postgresql \
+	push-worker-nestjs-postgresql \
 	push-worker-node-javascript-default \
 	push-worker-node-teraorm \
 	push-worker-nestjs-default \
@@ -142,57 +146,57 @@ push-front:
 
 .PHONY: build-eevee-worker-bootstrap push-eevee-worker-bootstrap
 build-eevee-worker-bootstrap:
-	docker build -t $(GHCR_NAMESPACE)/eevee-worker-bootstrap:$(TAG) images/worker-bootstrap
+	docker build -t $(GHCR_NAMESPACE)/eevee-worker-bootstrap:latest images/worker-bootstrap
 push-eevee-worker-bootstrap:
-	docker push $(GHCR_NAMESPACE)/eevee-worker-bootstrap:$(TAG)
+	docker push $(GHCR_NAMESPACE)/eevee-worker-bootstrap:latest
 
 .PHONY: build-worker-node-default push-worker-node-default
 build-worker-node-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG) images/node/node-default
+	docker build -t $(GHCR_NAMESPACE)/worker-node-default-img:latest images/node/node-default
 push-worker-node-default:
-	docker push $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-default-img:latest
 
 .PHONY: build-worker-node-javascript-default push-worker-node-javascript-default
 build-worker-node-javascript-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-javascript-default-img:$(TAG) images/javascript-default
+	docker build -t $(GHCR_NAMESPACE)/worker-node-javascript-default-img:latest images/javascript-default
 push-worker-node-javascript-default:
-	docker push $(GHCR_NAMESPACE)/worker-node-javascript-default-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-javascript-default-img:latest
 
 .PHONY: build-worker-node-teraorm push-worker-node-teraorm
 build-worker-node-teraorm:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG) images/node/node-teraorm
+	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:latest images/node/node-teraorm
 push-worker-node-teraorm:
-	docker push $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-teraorm-img:latest
 
 .PHONY: build-worker-nestjs-default push-worker-nestjs-default
 build-worker-nestjs-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-nestjs-default-img:$(TAG) images/node/nest.js
+	docker build -t $(GHCR_NAMESPACE)/worker-nestjs-default-img:latest images/node/nest.js
 push-worker-nestjs-default:
-	docker push $(GHCR_NAMESPACE)/worker-nestjs-default-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-nestjs-default-img:latest
 
 .PHONY: build-worker-node-grpcjs push-worker-node-grpcjs
 build-worker-node-grpcjs:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG) -f images/node/grpc/Dockerfile images
+	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:latest -f images/node/grpc/Dockerfile images
 push-worker-node-grpcjs:
-	docker push $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-grpcjs-img:latest
 
 .PHONY: build-worker-node-nextjs-cypress push-worker-node-nextjs-cypress
 build-worker-node-nextjs-cypress:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:$(TAG) images/node/next.js-cypress
+	docker build -t $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:latest images/node/next.js-cypress
 push-worker-node-nextjs-cypress:
-	docker push $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:latest
 
 .PHONY: build-worker-react-cypress push-worker-react-cypress
 build-worker-react-cypress:
-	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG) images/node/reactjs-cypress
+	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:latest images/node/reactjs-cypress
 push-worker-react-cypress:
-	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:latest
 
 .PHONY: build-worker-python-default push-worker-python-default
 build-worker-python-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG) images/python-default
+	docker build -t $(GHCR_NAMESPACE)/worker-python-default-img:latest images/python-default
 push-worker-python-default:
-	docker push $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-python-default-img:latest
 
 proxy:
 	@echo Starting backup VM reverse-proxy tunnel to single entrypoint NodePort
@@ -236,3 +240,14 @@ up-docs: build-docs
 check-docs: build-docs
 	docker run --rm $(DOCS_IMAGE) \
 		mkdocs build --strict --site-dir /tmp/site
+.PHONY: build-worker-node-default-postgresql push-worker-node-default-postgresql
+build-worker-node-default-postgresql:
+	docker build --build-arg WORKER=node-default -f images/node/postgresql/Dockerfile -t $(GHCR_NAMESPACE)/worker-node-default-postgresql-img:latest .
+push-worker-node-default-postgresql:
+	docker push $(GHCR_NAMESPACE)/worker-node-default-postgresql-img:latest
+
+.PHONY: build-worker-nestjs-postgresql push-worker-nestjs-postgresql
+build-worker-nestjs-postgresql:
+	docker build --build-arg WORKER=nest.js -f images/node/postgresql/Dockerfile -t $(GHCR_NAMESPACE)/worker-nestjs-postgresql-img:latest .
+push-worker-nestjs-postgresql:
+	docker push $(GHCR_NAMESPACE)/worker-nestjs-postgresql-img:latest
