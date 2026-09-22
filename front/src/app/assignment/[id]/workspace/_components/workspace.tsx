@@ -194,12 +194,6 @@ export default function Workspace({
     onResettingChange?.(isResetting);
   }, [isResetting, onResettingChange]);
 
-  const editorCommonProps = {
-    actionGuardMode: editorActionGuardMode,
-    readOnly: securityPaused,
-    onDidType: registerTypedText
-  };
-
   return (
     <WorkspaceShell
       explorer={
