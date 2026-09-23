@@ -21,7 +21,7 @@ import { AssignmentParamsModule } from './assignment-params/assignment-params.mo
 import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import { GithubModule } from './github/github.module';
-import { AssignmentUserSuspensionModule } from './assignment-user-suspension/assignment-user-suspension.module';
+import { AssignmentAlertModule } from './assignment-alert/assignment-alert.module';
 import { DatabaseModule } from './database/database.module';
 import { CookieParserMiddleware } from './auth/auth-cookie.middleware';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -74,7 +74,7 @@ import { InvitationModule } from './invitation/invitation.module';
     AssignmentParamsModule,
     FileSaverModule,
     GithubModule,
-    AssignmentUserSuspensionModule,
+    AssignmentAlertModule,
     InterviewResponseModule,
     MailModule,
     RealtimeModule,

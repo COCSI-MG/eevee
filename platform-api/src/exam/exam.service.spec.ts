@@ -21,6 +21,7 @@ import { ExamAssignment } from './entities/exam-assignment.entity';
 import { Exam } from './entities/exam.entity';
 import { ExamService } from './exam.service';
 import { User } from 'src/user/entities/user.entity';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 describe('ExamService', () => {
   let service: ExamService;
@@ -47,6 +48,18 @@ describe('ExamService', () => {
     const requestContextService = { getUser: jest.fn() };
     const dataSource = { transaction: jest.fn() };
     const assignmentService = { create: jest.fn() };
+    const assignmentAlertService = {
+      decorateAssignments: jest.fn(async (assignments: Assignment[]) => {
+        assignments.forEach((assignment) => {
+          assignment.currentUserAlertStatus ??= {
+            activeCount: 0,
+            limit: assignment.suspensionAlertLimit ?? 5,
+            suspended: false
+          };
+        });
+        return assignments;
+      }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -84,6 +97,10 @@ describe('ExamService', () => {
           useValue: assignmentService,
         },
         {
+          provide: AssignmentAlertService,
+          useValue: assignmentAlertService
+        },
+        {
           provide: getRepositoryToken(User),
           useValue: userRepository,
         },
@@ -98,6 +115,11 @@ describe('ExamService', () => {
       ],
     }).compile();
 
+    const userStudent = requestContextService.getUser.mockReturnValue({
+      userId: 7,
+      isAdmin: false
+    });
+
     return {
       service: module.get<ExamService>(ExamService),
       examRepository,
@@ -105,11 +127,13 @@ describe('ExamService', () => {
       assignmentRepository,
       attemptRepository,
       userClassRepository,
-        classService,
+      classService,
       userClassService,
       requestContextService,
       dataSource,
       assignmentService,
+      assignmentAlertService,
+      userStudent
     };
   };
 
@@ -305,7 +329,10 @@ describe('ExamService', () => {
       } = await setup();
 
       classService.findOne.mockResolvedValue({ id: 1 });
-      userClassService.findOneByKeys.mockResolvedValue({ userId: 7, classId: 1 });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 1
+      });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -385,7 +412,10 @@ describe('ExamService', () => {
       } = await setup();
 
       classService.findOne.mockResolvedValue({ id: 1 });
-      userClassService.findOneByKeys.mockResolvedValue({ userId: 7, classId: 1 });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 1,
+      });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -417,7 +447,10 @@ describe('ExamService', () => {
       } = await setup();
 
       classService.findOne.mockResolvedValue({ id: 1 });
-      userClassService.findOneByKeys.mockResolvedValue({ userId: 7, classId: 1 });
+      userClassService.findOneByKeys.mockResolvedValue({
+        userId: 7,
+        classId: 1,
+      });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
         isAdmin: false,
@@ -1421,7 +1454,11 @@ describe('ExamService', () => {
           dueDate: null,
           workerType: WorkerType.NODE_NESTJS,
           lastAttempt: null,
-          suspensions: [],
+          currentUserAlertStatus: {
+            activeCount: 0,
+            limit: 5,
+            suspended: false,
+          },
           score: 5,
         },
         {
@@ -1434,7 +1471,11 @@ describe('ExamService', () => {
           dueDate: null,
           workerType: WorkerType.NODE_DEFAULT,
           lastAttempt: null,
-          suspensions: [],
+          currentUserAlertStatus: {
+            activeCount: 0,
+            limit: 5,
+            suspended: false,
+          },
           score: 3,
         },
       ]);
@@ -1606,10 +1647,18 @@ describe('ExamService', () => {
         fails: 1,
         createdAt: createdAtLater,
       });
-      expect(result.assignments[0].suspensions).toEqual([]);
+      expect(result.assignments[0].currentUserAlertStatus).toEqual({
+        activeCount: 0,
+        limit: 5,
+        suspended: false,
+      });
       expect(result.assignments[0].score).toBe(3);
       expect(result.assignments[1].lastAttempt).toBeNull();
-      expect(result.assignments[1].suspensions).toEqual([]);
+      expect(result.assignments[1].currentUserAlertStatus).toEqual({
+        activeCount: 0,
+        limit: 5,
+        suspended: false,
+      });
       expect(result.assignments[1].score).toBe(5);
     });
 
@@ -1653,7 +1702,7 @@ describe('ExamService', () => {
       expect(result.assignments[0].lastAttempt).toBeNull();
     });
 
-    it('sets suspensions to an empty array when the user has no suspensions', async () => {
+    it('sets a clear alert status when the user has no active alerts', async () => {
       const {
         service,
         examRepository,
@@ -1690,10 +1739,14 @@ describe('ExamService', () => {
 
       const result = await service.findOneWithAssignments(1);
 
-      expect(result.assignments[0].suspensions).toEqual([]);
+      expect(result.assignments[0].currentUserAlertStatus).toEqual({
+        activeCount: 0,
+        limit: 5,
+        suspended: false,
+      });
     });
 
-    it('populates suspensions when the user has suspensions for an activity', async () => {
+    it('populates the current alert status for an activity', async () => {
       const {
         service,
         examRepository,
@@ -1712,7 +1765,6 @@ describe('ExamService', () => {
         classId: 5,
       });
 
-      const suspensionDate = new Date('2026-08-14T10:00:00Z');
       const assignmentA = {
         id: 10,
         title: 'Activity A',
@@ -1720,9 +1772,11 @@ describe('ExamService', () => {
         maxAttempts: 3,
         workerType: WorkerType.NODE_DEFAULT,
         assignmentAttempts: [],
-        suspensions: [
-          { id: 55, userId: 7, reason: 'Plagiarism', createdAt: suspensionDate },
-        ],
+        currentUserAlertStatus: {
+          activeCount: 5,
+          limit: 5,
+          suspended: true,
+        },
       };
 
       const qb = makeQueryBuilder();
@@ -1733,9 +1787,11 @@ describe('ExamService', () => {
 
       const result = await service.findOneWithAssignments(1);
 
-      expect(result.assignments[0].suspensions).toEqual([
-        { id: 55, reason: 'Plagiarism', createdAt: suspensionDate },
-      ]);
+      expect(result.assignments[0].currentUserAlertStatus).toEqual({
+        activeCount: 5,
+        limit: 5,
+        suspended: true,
+      });
     });
 
     it('issues exactly one query regardless of how many activities the exam has (N+1 guard)', async () => {
@@ -1843,7 +1899,7 @@ describe('ExamService', () => {
       expect(result.assignments[0].lastAttempt).toBeNull();
     });
 
-    it('filters suspensions by the authenticated user only and does not leak another user’s suspension', async () => {
+    it('returns only the authenticated user alert status', async () => {
       const {
         service,
         examRepository,
@@ -1880,7 +1936,11 @@ describe('ExamService', () => {
 
       const result = await service.findOneWithAssignments(1);
 
-      expect(result.assignments[0].suspensions).toEqual([]);
+      expect(result.assignments[0].currentUserAlertStatus).toEqual({
+        activeCount: 0,
+        limit: 5,
+        suspended: false,
+      });
     });
 
     describe('startDate visibility filter', () => {

@@ -11,6 +11,7 @@ import { AssignmentParam } from 'src/assignment-params/entities/assignment-param
 import { Template } from 'src/template/entities/template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { AnswerKey } from 'src/answer-key/entities/answer-key.entity';
+import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
 
 @Module({
   controllers: [AssignmentController],
@@ -23,7 +24,8 @@ import { AnswerKey } from 'src/answer-key/entities/answer-key.entity';
     TypeOrmModule.forFeature([Attempt]),
     TypeOrmModule.forFeature([AnswerKey]),
     RequestContextModule,
-    ClassModule
+    ClassModule,
+    AssignmentAlertModule
   ],
   providers: [AssignmentService],
   exports: [AssignmentService],

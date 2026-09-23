@@ -13,6 +13,11 @@ import { AttemptStatus } from './enums/attempt-status.enum';
 import { UpdateApplicantAttemptDto } from './dto/update-applicant-attempt.dto';
 import { Cron } from '@nestjs/schedule';
 import { ListAdminAttemptsQueryDto } from './dto/list-admin-attempts.query.dto';
+import { PaginationQueryDto } from 'src/common/dto/pagination.query.dto';
+import {
+  buildPaginationMeta,
+  buildPaginationParams
+} from 'src/common/pagination/pagination';
 
 @Injectable()
 export class AttemptService {
@@ -86,7 +91,9 @@ export class AttemptService {
 
   async findAllForAdmin(query: ListAdminAttemptsQueryDto) {
     if (!query.assignmentId && !query.classId) {
-      throw new BadRequestException('At least one of assignmentId or classId must be provided');
+      throw new BadRequestException(
+        'At least one of assignmentId or classId must be provided',
+      );
     }
 
     const page = query.page ?? 1;
@@ -101,18 +108,18 @@ export class AttemptService {
 
     if (query.assignmentId) {
       baseQb.where('attempt.assignmentId = :assignmentId', {
-        assignmentId: query.assignmentId
+        assignmentId: query.assignmentId,
       });
     }
 
     if (query.classId) {
       if (query.assignmentId) {
         baseQb.andWhere('assignment.classId = :classId', {
-          classId: query.classId
+          classId: query.classId,
         });
       } else {
         baseQb.where('assignment.classId = :classId', {
-          classId: query.classId
+          classId: query.classId,
         });
       }
     }
@@ -133,62 +140,70 @@ export class AttemptService {
       );
     }
 
-    const rows = await baseQb
+    const latestAttemptByUserAndAssignmentQb = baseQb
       .clone()
-      .select([
-        'attempt.id AS attempt_id',
-        'attempt.attempt AS attempt_attempt',
-        'attempt.userId AS attempt_userId',
-        'attempt.assignmentId AS attempt_assignmentId',
-        'attempt.status AS attempt_status',
-        'attempt.isAcceptable AS attempt_isAcceptable',
-        'attempt.score AS attempt_score',
-        'attempt.passes AS attempt_passes',
-        'attempt.fails AS attempt_fails',
-        'attempt.createdAt AS attempt_createdAt',
-        'user.id AS user_id',
-        'user.name AS user_name',
-        'user.email AS user_email',
-        'user.isAdmin AS user_isAdmin',
-        'assignment.id AS assignment_id',
-        'assignment.title AS assignment_title',
-        'assignment.description AS assignment_description',
-        'assignment.workerType AS assignment_workerType',
-      ])
-      .orderBy('attempt.createdAt', 'DESC')
-      .addOrderBy('attempt.id', 'DESC')
-      .offset(skip)
-      .limit(pageSize)
-      .getRawMany();
+      .distinctOn(['attempt.userId', 'attempt.assignmentId'])
+      .select('attempt.id', 'attemptId')
+      .addSelect('attempt.attempt', 'attemptNumber')
+      .addSelect('attempt.status', 'attemptStatus')
+      .addSelect('attempt.score', 'attemptScore')
+      .addSelect('attempt.createdAt', 'attemptCreatedAt')
+      .addSelect('user.id', 'userId')
+      .addSelect('user.email', 'userEmail')
+      .addSelect('assignment.id', 'assignmentId')
+      .addSelect('assignment.title', 'assignmentTitle')
+      .addSelect(
+        'COUNT(*) OVER (PARTITION BY attempt.userId, attempt.assignmentId)',
+        'attemptsCount',
+      )
+      .orderBy('attempt.userId', 'ASC')
+      .addOrderBy('attempt.assignmentId', 'ASC')
+      .addOrderBy('attempt.createdAt', 'DESC')
+      .addOrderBy('attempt.id', 'DESC');
 
-    const total = await baseQb.clone().getCount();
+    const rowsQb = this.attemptRepository.manager
+      .createQueryBuilder()
+      .select('latest_attempt.*')
+      .from(
+        `(${latestAttemptByUserAndAssignmentQb.getQuery()})`,
+        'latest_attempt',
+      )
+      .setParameters(latestAttemptByUserAndAssignmentQb.getParameters())
+      .orderBy('latest_attempt."attemptCreatedAt"', 'DESC')
+      .addOrderBy('latest_attempt."attemptId"', 'DESC')
+      .offset(skip)
+      .limit(pageSize);
+
+    const totalQb = baseQb
+      .clone()
+      .select(
+        'COUNT(DISTINCT (attempt.userId, attempt.assignmentId))',
+        'total',
+      );
+
+    const [rows, totalRow] = await Promise.all([
+      rowsQb.getRawMany(),
+      totalQb.getRawOne<{ total: string }>(),
+    ]);
+
+    const total = Number(totalRow?.total ?? 0);
 
     const data = rows.map((row) => ({
-      id: Number(row.attempt_id),
-      attempt: Number(row.attempt_attempt),
-      userId: Number(row.attempt_userid ?? row.attempt_userId),
-      assignmentId: Number(
-        row.attempt_assignmentid ?? row.attempt_assignmentId,
-      ),
-      status: row.attempt_status,
-      isAcceptable: Boolean(
-        row.attempt_isacceptable ?? row.attempt_isAcceptable,
-      ),
-      score: Number(row.attempt_score),
-      passes: Number(row.attempt_passes),
-      fails: Number(row.attempt_fails),
-      createdAt: row.attempt_createdat ?? row.attempt_createdAt,
       user: {
-        id: Number(row.user_id),
-        name: row.user_name,
-        email: row.user_email,
-        isAdmin: Boolean(row.user_isadmin ?? row.user_isAdmin),
+        id: Number(row.userId),
+        email: row.userEmail,
       },
       assignment: {
-        id: Number(row.assignment_id),
-        title: row.assignment_title,
-        description: row.assignment_description,
-        workerType: row.assignment_workertype ?? row.assignment_workerType,
+        id: Number(row.assignmentId),
+        title: row.assignmentTitle,
+      },
+      attemptsCount: Number(row.attemptsCount),
+      lastAttempt: {
+        id: Number(row.attemptId),
+        attempt: Number(row.attemptNumber),
+        status: row.attemptStatus,
+        score: Number(row.attemptScore),
+        createdAt: row.attemptCreatedAt,
       },
     }));
 
@@ -203,6 +218,55 @@ export class AttemptService {
         totalPages,
       },
     };
+  }
+
+  async findAllForAdminByAssignmentAndUser(
+    assignmentId: number,
+    userId: number,
+    query: PaginationQueryDto,
+  ) {
+    const { page, pageSize, skip } = buildPaginationParams(query);
+    const baseQb = this.attemptRepository
+      .createQueryBuilder('attempt')
+      .where('attempt.assignmentId = :assignmentId', { assignmentId })
+      .andWhere('attempt.userId = :userId', { userId });
+
+    const rowsQb = baseQb
+      .clone()
+      .select('attempt.id', 'id')
+      .addSelect('attempt.attempt', 'attempt')
+      .addSelect('attempt.status', 'status')
+      .addSelect('attempt.isAcceptable', 'isAcceptable')
+      .addSelect('attempt.score', 'score')
+      .addSelect('attempt.passes', 'passes')
+      .addSelect('attempt.fails', 'fails')
+      .addSelect('attempt.report', 'report')
+      .addSelect('attempt.receivedWork', 'receivedWork')
+      .addSelect('attempt.createdAt', 'createdAt')
+      .orderBy('attempt.createdAt', 'DESC')
+      .addOrderBy('attempt.id', 'DESC')
+      .skip(skip)
+      .take(pageSize);
+
+    const [rows, total] = await Promise.all([
+      rowsQb.getRawMany(),
+      baseQb.clone().getCount()
+    ]);
+
+    const data = rows.map((row) => ({
+      id: Number(row.id),
+      attempt: Number(row.attempt),
+      status: row.status,
+      isAcceptable: Boolean(row.isAcceptable),
+      score: Number(row.score),
+      passes: Number(row.passes),
+      fails: Number(row.fails),
+      report: row.report,
+      receivedWork: row.receivedWork ?? undefined,
+      createdAt: row.createdAt,
+    }));
+
+    return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
   findOneForAdmin(id: number) {

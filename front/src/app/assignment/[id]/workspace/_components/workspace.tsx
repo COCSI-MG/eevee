@@ -7,6 +7,7 @@ import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { useWorkspaceFileEditor } from "../_hooks/use-workspace-file-editor";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
+import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
@@ -36,8 +37,14 @@ export default function Workspace({
   onResetWorkspaceReady,
   onResettingChange,
 }: WorkspaceProps) {
-  const { replaceFileTree, selectedItem, selectItem, fileTreeData } =
-    useWorkspaceContext();
+  const {
+    replaceFileTree,
+    selectedItem,
+    selectItem,
+    fileTreeData,
+    securityPaused,
+    registerTypedText
+  } = useWorkspaceContext();
   const userId = user.userId;
   const { explorerWidth, startResize } = useWorskpaceResizing();
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
@@ -45,6 +52,15 @@ export default function Workspace({
   const [isSplitView, setIsSplitView] = React.useState(false);
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
+
+  useWorkspaceInitialization({
+    assignment,
+    userId,
+    setActiveFileContent,
+    replaceFileTree,
+    selectItem,
+  });
+
   const editorActionGuardMode = user.isAdmin
     ? EDITOR_ACTION_GUARD_MODE.EXEMPT
     : assignment.allowCopyPaste
@@ -187,6 +203,12 @@ export default function Workspace({
     onResettingChange?.(isResetting);
   }, [isResetting, onResettingChange]);
 
+  const editorCommonProps = {
+    actionGuardMode: editorActionGuardMode,
+    readOnly: securityPaused,
+    onDidType: registerTypedText
+  };
+
   return (
     <div className="flex flex-1 min-h-0">
       <div
@@ -239,24 +261,24 @@ export default function Workspace({
           <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-border">
             <div className="min-w-0 min-h-0 flex flex-col">
               <WorkspaceCodeEditor
+                {...editorCommonProps}
                 file={activeFile}
                 onEditorChange={handleEditorChange}
-                actionGuardMode={editorActionGuardMode}
               />
             </div>
             <div className="min-w-0 min-h-0 flex flex-col">
               <WorkspaceCodeEditor
+                {...editorCommonProps}
                 file={secondaryFile}
                 onEditorChange={handleSecondaryEditorChange}
-                actionGuardMode={editorActionGuardMode}
               />
             </div>
           </div>
         ) : (
           <WorkspaceCodeEditor
+            {...editorCommonProps}
             file={activeFile}
             onEditorChange={handleEditorChange}
-            actionGuardMode={editorActionGuardMode}
           />
         )}
       </div>

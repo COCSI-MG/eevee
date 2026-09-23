@@ -10,6 +10,7 @@ import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { AnswerKey } from './entities/answer-key.entity';
 import { CreateAnswerKeyDto } from './dto/create-answer-key.dto';
 import { UpdateAnswerKeyDto } from './dto/update-answer-key.dto';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 @Injectable()
 export class AnswerKeyService {
@@ -19,6 +20,7 @@ export class AnswerKeyService {
     @InjectRepository(Assignment)
     private readonly assignmentRepository: Repository<Assignment>,
     private readonly dataSource: DataSource,
+    private readonly assignmentAlertService: AssignmentAlertService,
   ) {}
 
   async create(assignmentId: number, dto: CreateAnswerKeyDto) {
@@ -58,6 +60,9 @@ export class AnswerKeyService {
   }
 
   async findOne(assignmentId: number, isAdmin: boolean) {
+    if (!isAdmin) {
+      await this.assignmentAlertService.assertCurrentUserNotSuspended(assignmentId);
+    }
 
     const answerKey = await this.answerKeyRepository.findOne({
       where: { assignmentId },
@@ -87,7 +92,6 @@ export class AnswerKeyService {
     if (!answerKey) throw new NotFoundException('Answer key not found');
 
     return this.dataSource.transaction(async (manager) => {
-
       if (dto.content) {
         answerKey.content = dto.content;
       }

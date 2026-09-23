@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { AnswerKeyService } from './answer-key.service';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 describe('AnswerKeyService', () => {
   const answerKeyRepository = {
@@ -16,6 +17,9 @@ describe('AnswerKeyService', () => {
   const dataSource = {
     transaction: jest.fn(),
   };
+  const assignmentAlertService = {
+    assertCurrentUserNotSuspended: jest.fn(),
+  };
   let service: AnswerKeyService;
 
   beforeEach(() => {
@@ -24,6 +28,7 @@ describe('AnswerKeyService', () => {
       answerKeyRepository as never,
       assignmentRepository as never,
       dataSource as never,
+      assignmentAlertService as unknown as AssignmentAlertService,
     );
   });
 

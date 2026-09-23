@@ -38,6 +38,10 @@ import {
   buildPaginationMeta,
   buildPaginationParams,
 } from 'src/common/pagination/pagination';
+import {
+  AssignmentAlertService,
+  DEFAULT_ASSIGNMENT_ALERT_POLICY
+} from 'src/assignment-alert/assignment-alert.service';
 
 @Injectable()
 export class AssignmentService {
@@ -59,6 +63,7 @@ export class AssignmentService {
     private readonly classservice: ClassService,
     private dataSource: DataSource,
     private readonly requestContextService: RequestContextService,
+    private readonly assignmentAlertService: AssignmentAlertService
   ) {}
 
   private async assertTemplatesCompatibleWithWorkerType(options: {
@@ -293,6 +298,17 @@ export class AssignmentService {
     };
   }
 
+  private async presentAssignments(
+    assignments: Assignment[],
+    manager?: EntityManager
+  ): Promise<Assignment[]> {
+    const withBoilerplate = await Promise.all(
+      assignments.map((assignment) => this.attachBoilerplate(assignment))
+    );
+
+    return this.assignmentAlertService.decorateAssignments(withBoilerplate, manager);
+  }
+
   async create(
     createAssignmentDto: CreateAssignmentDto,
     manager?: EntityManager,
@@ -317,8 +333,11 @@ export class AssignmentService {
       validationScript,
       startDate: startDateValue,
       dueDate: dueDateValue,
+      alertPolicy: requestedAlertPolicy,
       ...assignmentData
     } = createAssignmentDto;
+
+    const alertPolicy = requestedAlertPolicy ?? DEFAULT_ASSIGNMENT_ALERT_POLICY;
 
     const startDate = this.parseOptionalDate(startDateValue) ?? null;
     const dueDate = this.parseOptionalDate(dueDateValue) ?? null;
@@ -350,6 +369,9 @@ export class AssignmentService {
       startDate,
       dueDate,
       allowCopyPaste: assignmentData.allowCopyPaste ?? false,
+      suspensionAlertLimit: alertPolicy.suspensionAlertLimit,
+      typingCharactersPerSecondLimit: alertPolicy.typingCharactersPerSecondLimit,
+      alertPolicyVersion: 1,
       workerType: assignmentData.workerType,
       executionMode: assignmentData.executionMode,
       initSqlScript: assignmentData.initSqlScript,
@@ -385,7 +407,13 @@ export class AssignmentService {
       await assignmentParamRepo.save(assignmentParamsEntities);
     }
 
-    return await this.attachBoilerplate(newAssignment);
+    await this.assignmentAlertService.replaceRules(
+      newAssignment.id,
+      alertPolicy.punitiveTypes,
+      manager
+    );
+
+    return (await this.presentAssignments([newAssignment], manager))[0];
   }
 
   async findAllUserAssignments() {
@@ -411,7 +439,6 @@ export class AssignmentService {
         'assignmentAttempts.userId = :userId',
         { userId: user.userId },
       )
-      .leftJoinAndSelect('assignment.suspensions', 'suspensions');
 
     query
       .leftJoinAndSelect(
@@ -432,22 +459,15 @@ export class AssignmentService {
 
     this.logger.debug(assignments, 'Assignments fetched for user');
 
-    return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
+    return this.presentAssignments(assignments);
   }
 
   findAll() {
     return this.assignmentRepository
       .find({
-        relations: [
-          'assignmentAttempts',
-          'class',
-          'class.userClasses',
-          'suspensions',
-        ],
+        relations: ['assignmentAttempts', 'class', 'class.userClasses']
       })
-      .then((assignments) =>
-        Promise.all(assignments.map((a) => this.attachBoilerplate(a))),
-      );
+      .then((assignments) => this.presentAssignments(assignments));
   }
 
   findOptions(classId?: number) {
@@ -475,7 +495,6 @@ export class AssignmentService {
       .leftJoinAndSelect('assignment.assignmentAttempts', 'assignmentAttempts')
       .leftJoinAndSelect('assignment.class', 'class')
       .leftJoinAndSelect('class.userClasses', 'userClasses')
-      .leftJoinAndSelect('assignment.suspensions', 'suspensions')
       .leftJoin('assignment.examAssignment', 'examAssignment')
       .orderBy('assignment.id', 'DESC');
 
@@ -511,9 +530,7 @@ export class AssignmentService {
       .skip(skip)
       .take(pageSize)
       .getManyAndCount();
-    const data = await Promise.all(
-      rows.map((assignment) => this.attachBoilerplate(assignment)),
-    );
+    const data = await this.presentAssignments(rows);
 
     return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
@@ -544,7 +561,6 @@ export class AssignmentService {
         'assignmentAttempts.userId = :userId',
         { userId: user.userId },
       )
-      .leftJoinAndSelect('assignment.suspensions', 'suspensions')
       .leftJoin('assignment.examAssignment', 'examAssignment')
       .where('assignment.classId = :classId', { classId })
       .andWhere('examAssignment.id IS NULL');
@@ -558,7 +574,7 @@ export class AssignmentService {
 
     const assignments = await query.getMany();
 
-    return Promise.all(assignments.map((a) => this.attachBoilerplate(a)));
+    return this.presentAssignments(assignments);
   }
 
   private createAssignmentDetailsQuery(id: number) {
@@ -572,11 +588,11 @@ export class AssignmentService {
       )
       .leftJoinAndSelect('assignmentTemplates.template', 'template')
       .leftJoinAndSelect('template.templateParams', 'templateParams')
-      .leftJoinAndSelect('assignment.suspensions', 'suspensions')
       .where('assignment.id = :id', { id });
   }
 
   async findOne(id: number) {
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(id);
     const user = this.requestContextService.getUser();
     const now = new Date();
 
@@ -621,7 +637,7 @@ export class AssignmentService {
       throw new NotFoundException('Assignment not found');
     }
 
-    return await this.attachBoilerplate(response);
+    return (await this.presentAssignments([response]))[0];
   }
 
   async findOneForExecution(id: number) {
@@ -674,6 +690,7 @@ export class AssignmentService {
       validationScript,
       startDate: startDateValue,
       dueDate: dueDateValue,
+      alertPolicy,
       ...assignmentDataToUpdate
     } = updateAssignmentDto;
 
@@ -702,6 +719,13 @@ export class AssignmentService {
     if (parsedDueDate !== undefined) {
       dataToUpdate.dueDate = parsedDueDate;
     }
+    if (alertPolicy) {
+      dataToUpdate.suspensionAlertLimit = alertPolicy.suspensionAlertLimit;
+
+      dataToUpdate.typingCharactersPerSecondLimit = alertPolicy.typingCharactersPerSecondLimit;
+
+      dataToUpdate.alertPolicyVersion = (assignment.alertPolicyVersion ?? 1) + 1;
+    }
 
     const resolvedBoilerplateContent = this.resolvePayloadBoilerplateContent({
       boilerplateContent,
@@ -719,6 +743,10 @@ export class AssignmentService {
 
     if (Object.keys(dataToUpdate).length > 0)
       await this.assignmentRepository.update(id, dataToUpdate);
+
+    if (alertPolicy) {
+      await this.assignmentAlertService.replaceRules(id, alertPolicy.punitiveTypes);
+    }
 
     if (
       updateAssignmentDto.templates &&
@@ -761,7 +789,7 @@ export class AssignmentService {
 
     const updated = await this.assignmentRepository.findOne({ where: { id } });
     if (!updated) return updated;
-    return await this.attachBoilerplate(updated);
+    return (await this.presentAssignments([updated]))[0];
   }
 
   async remove(id: number) {

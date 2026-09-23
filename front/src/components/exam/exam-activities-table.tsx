@@ -13,7 +13,7 @@ import TableActions from "../table/table-actions";
 import { Button } from "../ui/button";
 import {
   WorkspaceLinkComponent,
-  ViewUserSuspensionComponent,
+  ViewAssignmentAlertsComponent
 } from "../assignment/activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
 import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
@@ -127,8 +127,8 @@ export default function ExamAssignmentsTable({
                       key={assignment.id}
                       assignmentId={assignment.id.toString()}
                     />,
-                    <ViewUserSuspensionComponent
-                      key={`${assignment.id}-suspensions`}
+                    <ViewAssignmentAlertsComponent
+                      key={`${assignment.id}-alerts`}
                       assignmentId={assignment.id.toString()}
                     />,
                   ]}

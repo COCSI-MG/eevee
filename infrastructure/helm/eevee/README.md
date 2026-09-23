@@ -3,17 +3,17 @@
 Umbrella chart that deploys the whole EEVEE platform onto Kubernetes in a
 single release:
 
-| Component       | Templates                                         |
-| --------------- | ------------------------------------------------- |
-| Postgres        | Deployment + Service + PVC                        |
-| Redis           | Deployment + Service                              |
-| Platform API    | Deployment + Service                              |
-| Assignment Runner | Deployment + RBAC (ServiceAccount/Role)         |
-| Frontend        | Deployment + Service                              |
-| Entrypoint      | Nginx gateway + NodePort Service                  |
-| Ingress (nginx) | Ingress with optional TLS                         |
-| cert-manager    | Namespace-scoped `Issuer` (optional)              |
-| Config / Secret | `eevee-config` ConfigMap + `eevee-secrets` Secret |
+| Component         | Templates                                         |
+| ----------------- | ------------------------------------------------- |
+| Postgres          | Deployment + Service + PVC                        |
+| Redis             | Deployment + Service                              |
+| Platform API      | Deployment + Service                              |
+| Assignment Runner | Deployment + RBAC (ServiceAccount/Role)           |
+| Frontend          | Deployment + Service                              |
+| Entrypoint        | Nginx gateway + NodePort Service                  |
+| Ingress (nginx)   | Ingress with optional TLS                         |
+| cert-manager      | Namespace-scoped `Issuer` (optional)              |
+| Config / Secret   | `eevee-config` ConfigMap + `eevee-secrets` Secret |
 
 This replaces the previous raw manifests under `k8s/` and the Kustomize
 `overlays/prod` overlay.
@@ -33,7 +33,7 @@ CHART=infrastructure/helm/eevee
 ### 1. Create the GHCR image pull secret
 
 The COCSI-MG packages are private; the cluster needs a docker-registry
-secret to pull them. Paste your PAT directly into the terminal — do not
+secret to pull them. Paste your PAT directly into the terminal - do not
 commit it.
 
 ```bash
@@ -132,7 +132,7 @@ If you change the external setup, update:
 
 ## Node pinning
 
-All pods — including worker Jobs spawned by Assignment Runner at runtime —
+All pods - including worker Jobs spawned by Assignment Runner at runtime -
 are pinned to a single node via `nodeSelector.kubernetes.io/hostname`
 (default `whx-rn`). Change `nodeSelector` in values to retarget, or set
 it to `{}` to schedule freely.
@@ -140,7 +140,7 @@ it to `{}` to schedule freely.
 ## Overriding worker images
 
 Assignment Runner reads worker image names from environment variables,
-so new image tags don't require a code change — just bump
+so new image tags don't require a code change - just bump
 `workerImages.*` in values and `helm upgrade`. Defaults point to the
 COCSI-MG GHCR packages:
 

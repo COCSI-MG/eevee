@@ -4,7 +4,7 @@
   "description": "Node worker profile preloaded for TeraORM study assignments",
   "scripts": {
     "start": "ts-node ./trigger.ts",
-    "test": "jest --runInBand --roots . --testMatch '**/*.spec.ts' --testMatch '**/*.test.ts' --json --outputFile=./test-results.json"
+    "test": "jest --runInBand --forceExit --roots . --testMatch '**/*.spec.ts' --testMatch '**/*.test.ts' --json --outputFile=./test-results.json"
   },
   "author": "Joao Vitor Coimbra & Diego Castro",
   "license": "ISC",

@@ -16,6 +16,7 @@ import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
 import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { AssignmentExecutionMode } from '../enums/assignment-execution-mode.enum';
+import { AssignmentAlertPolicyDto } from 'src/assignment-alert/dto/assignment-alert-policy.dto';
 
 export class TemplateParamDto {
   @ApiProperty()
@@ -97,6 +98,12 @@ export class CreateAssignmentDto {
   @IsOptional()
   @IsBoolean()
   allowCopyPaste?: boolean;
+
+  @ApiPropertyOptional({ type: () => AssignmentAlertPolicyDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => AssignmentAlertPolicyDto)
+  alertPolicy?: AssignmentAlertPolicyDto;
 
   @ApiProperty()
   @IsEnum(WorkerType)

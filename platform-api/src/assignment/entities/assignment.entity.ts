@@ -1,6 +1,8 @@
 import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
 import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
-import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
+import { AssignmentAlertRule } from 'src/assignment-alert/entities/assignment-alert-rule.entity';
+import { AssignmentUserAlert } from 'src/assignment-alert/entities/assignment-user-alert.entity';
+import { AssignmentAlertType } from 'src/assignment-alert/enums/assignment-alert-type.enum';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { AnswerKey } from 'src/answer-key/entities/answer-key.entity';
 import { Class } from 'src/class/entities/class.entity';
@@ -29,6 +31,19 @@ export interface AssignmentInterviewQuestion {
 
 export interface AssignmentInterviewConfig {
   questions: AssignmentInterviewQuestion[];
+}
+
+export interface AssignmentAlertPolicy {
+  suspensionAlertLimit: number;
+  typingCharactersPerSecondLimit: number;
+  punitiveTypes: AssignmentAlertType[];
+  version: number;
+}
+
+export interface AssignmentCurrentUserAlertStatus {
+  activeCount: number;
+  limit: number;
+  suspended: boolean;
 }
 
 @Entity()
@@ -91,6 +106,15 @@ export class Assignment {
   @Column({ default: false })
   allowCopyPaste: boolean;
 
+  @Column({ default: 5 })
+  suspensionAlertLimit: number;
+
+  @Column({ default: 20 })
+  typingCharactersPerSecondLimit: number;
+
+  @Column({ default: 1 })
+  alertPolicyVersion: number;
+
   @Column({
     type: 'enum',
     enum: WorkerType,
@@ -125,11 +149,15 @@ export class Assignment {
   @Column({ type: 'jsonb', nullable: true })
   interviewConfig?: AssignmentInterviewConfig;
 
-  @OneToMany(
-    () => AssignmentUserSuspension,
-    (suspension) => suspension.assignment,
-  )
-  suspensions?: AssignmentUserSuspension[];
+  @OneToMany(() => AssignmentAlertRule, (rule) => rule.assignment)
+  alertRules?: AssignmentAlertRule[];
+
+  @OneToMany(() => AssignmentUserAlert, (alert) => alert.assignment)
+  userAlerts?: AssignmentUserAlert[];
+
+  alertPolicy?: AssignmentAlertPolicy;
+
+  currentUserAlertStatus?: AssignmentCurrentUserAlertStatus;
 
   @OneToOne(() => ExamAssignment, (examAssignment) => examAssignment.assignment)
   examAssignment?: ExamAssignment;

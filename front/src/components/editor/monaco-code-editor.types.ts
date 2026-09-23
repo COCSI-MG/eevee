@@ -23,6 +23,7 @@ export type MonacoEditorOptionOverrides = Pick<
 interface BaseMonacoCodeEditorProps {
   value: string;
   onChange?: (value: string) => void;
+  onDidType?: (text: string) => void;
   height?: string | number;
   className?: string;
   path?: string;

@@ -1,31 +1,33 @@
-import { Injectable } from '@nestjs/common';
-import { Client1_13, config } from 'kubernetes-client';
+import { Injectable, Logger } from "@nestjs/common";
+import { Client1_13, config } from "kubernetes-client";
 import {
   DEFAULT_NAMESPACE,
   JOB_IMAGE_PULL_POLICY,
   JOB_IMAGE_PULL_SECRETS,
   JOB_NODE_SELECTOR,
   K8S_JOB_STATUS,
-} from './kubernetes.constants';
+} from "./kubernetes.constants";
 import {
   KubernetesJobOptions,
   KubernetesJobResult,
-} from './kubernetes.interfaces';
+} from "./kubernetes.interfaces";
+import { tailLines } from "../common/log-tail.util";
 
 @Injectable()
 export class KubernetesService {
+  private readonly logger = new Logger(KubernetesService.name);
   private client = new Client1_13({
     config:
       process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_SERVICE_PORT
         ? config.getInCluster()
         : config.fromKubeconfig(),
-    version: '1.13',
+    version: "1.13",
   });
 
   constructor() {}
 
   private appendConfigMapVolumesAndMounts(
-    configMaps: NonNullable<KubernetesJobOptions['configMap']>,
+    configMaps: NonNullable<KubernetesJobOptions["configMap"]>,
     volumes: any[],
     volumeMounts: any[],
   ) {
@@ -45,7 +47,7 @@ export class KubernetesService {
   }
 
   private appendSharedEmptyDirVolumeAndMounts(
-    sharedEmptyDir: NonNullable<KubernetesJobOptions['sharedEmptyDir']>,
+    sharedEmptyDir: NonNullable<KubernetesJobOptions["sharedEmptyDir"]>,
     volumes: any[],
     volumeMounts: any[],
   ) {
@@ -64,7 +66,7 @@ export class KubernetesService {
   }
 
   private appendSecretVolumesAndMounts(
-    secretVolumes: NonNullable<KubernetesJobOptions['secretVolumes']>,
+    secretVolumes: NonNullable<KubernetesJobOptions["secretVolumes"]>,
     volumes: any[],
     volumeMounts: any[],
   ) {
@@ -107,44 +109,48 @@ export class KubernetesService {
 
   async checkIfJobExists(jobName: string): Promise<boolean> {
     try {
-      const response = await this.client.apis.batch.v1
+      await this.client.apis.batch.v1
         .namespaces(DEFAULT_NAMESPACE)
         .jobs(jobName)
         .get();
-      console.log('Job exists:', response);
       return true;
     } catch (err) {
-      console.error('Error checking if job exists:', err);
+      this.logger.debug(
+        `Job ${jobName} does not exist: ${err instanceof Error ? err.message : err}`,
+      );
       return false;
     }
   }
 
   async getJob(jobName: string) {
     try {
-      const response = await this.client.apis.batch.v1
+      // Polled every ~2s while waiting for completion: keep this quiet, do not log the full response.
+      return await this.client.apis.batch.v1
         .namespaces(DEFAULT_NAMESPACE)
         .jobs(jobName)
         .get();
-      console.log('Job:', response);
-      return response;
     } catch (err) {
-      console.error('Error getting job:', err);
+      this.logger.error(
+        `Error getting job ${jobName}: ${err instanceof Error ? err.message : err}`,
+      );
     }
   }
 
   async deleteJob(jobName: string): Promise<void> {
     try {
-      const response = await this.client.apis.batch.v1
+      await this.client.apis.batch.v1
         .namespaces(DEFAULT_NAMESPACE)
         .jobs(jobName)
         .delete({
           qs: {
-            propagationPolicy: 'Foreground',
+            propagationPolicy: "Foreground",
           },
         });
-      console.log('Job deleted:', response);
+      this.logger.debug(`Job ${jobName} deleted`);
     } catch (err) {
-      console.error('Error deleting job:', err);
+      this.logger.error(
+        `Error deleting job ${jobName}: ${err instanceof Error ? err.message : err}`,
+      );
     }
   }
 
@@ -161,7 +167,9 @@ export class KubernetesService {
         ),
       );
     } catch (err) {
-      console.error('Error deleting job pods:', err);
+      this.logger.error(
+        `Error deleting pods for job ${jobName}: ${err instanceof Error ? err.message : err}`,
+      );
     }
   }
 
@@ -187,9 +195,9 @@ export class KubernetesService {
     // This regex matches common ANSI escape codes.
     // It covers sequences like: ESC [ ... m
     // where ESC is \x1B (or \u001b)
-    if (!text) return '';
+    if (!text) return "";
 
-    return text.replace(/\x1b\[.*?m/g, '');
+    return text.replace(/\x1b\[.*?m/g, "");
   }
 
   async getJobLogs(podName: string, containerName?: string): Promise<string> {
@@ -198,7 +206,7 @@ export class KubernetesService {
       .pods(podName)
       .log.get({
         qs: {
-          pretty: 'true',
+          pretty: "true",
           ...(containerName ? { container: containerName } : {}),
         },
       });
@@ -218,9 +226,9 @@ export class KubernetesService {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         const isContainerStillInitializing =
-          message.includes('PodInitializing') ||
-          message.includes('ContainerCreating') ||
-          message.includes('waiting to start');
+          message.includes("PodInitializing") ||
+          message.includes("ContainerCreating") ||
+          message.includes("waiting to start");
 
         if (!isContainerStillInitializing || attempt === maxRetries - 1) {
           throw err;
@@ -267,17 +275,43 @@ export class KubernetesService {
     }
 
     const initContainers = this.buildInitContainers(options);
+    if (options?.seedSql) {
+      const bootstrap = initContainers.find(
+        (container) => container.name === "eevee-worker-bootstrap",
+      );
+      if (!bootstrap || !options.sharedEmptyDir) {
+        throw new Error("SQL seeding requires the bootstrap shared volume");
+      }
+      volumes.push({
+        name: "database-seed",
+        configMap: { name: `${jobName}-seed` },
+      });
+      bootstrap.volumeMounts = [
+        ...(bootstrap.volumeMounts || []),
+        { name: "database-seed", mountPath: "/eevee-seed" },
+      ];
+      // Node copies bytes without ever interpreting the SQL as shell source.
+      bootstrap.command = [
+        "sh",
+        "-c",
+        'npm start && node -e \'require("fs").copyFileSync(process.argv[1], process.argv[2])\' "$1" "$2"',
+        "seed-copy",
+        "/eevee-seed/init.sql",
+        options.seedSql.targetPath,
+      ];
+    }
     const podLabels = options?.podLabels || {};
 
     const jobManifest = {
-      apiVersion: 'batch/v1',
-      kind: 'Job',
+      apiVersion: "batch/v1",
+      kind: "Job",
       metadata: {
         name: jobName,
         ...(Object.keys(podLabels).length ? { labels: podLabels } : {}),
       },
       spec: {
-        restartPolicy: 'Never', //
+        activeDeadlineSeconds: options?.activeDeadlineSeconds ?? 210,
+        ttlSecondsAfterFinished: options?.ttlSecondsAfterFinished ?? 900,
         template: {
           ...(Object.keys(podLabels).length
             ? {
@@ -302,6 +336,7 @@ export class KubernetesService {
                 name: jobName,
                 imagePullPolicy: JOB_IMAGE_PULL_POLICY,
                 image: imageName,
+                ...(options?.resources ? { resources: options.resources } : {}),
                 ...(command.length > 0 && { command: command }),
                 ...(options?.mainContainerEnv?.length
                   ? { env: options.mainContainerEnv }
@@ -310,7 +345,7 @@ export class KubernetesService {
               },
             ],
             volumes: volumes,
-            restartPolicy: 'Never',
+            restartPolicy: "Never",
           },
         },
         backoffLimit: options?.backoffLimit ?? 0,
@@ -323,10 +358,31 @@ export class KubernetesService {
         .jobs.post({
           body: jobManifest,
         });
-      console.log('Job created:', response);
+      this.logger.debug(`Job ${jobName} created`);
+      if (options?.seedSql) {
+        try {
+          await this.createConfigMap(
+            `${jobName}-seed`,
+            { "init.sql": options.seedSql.content },
+            [
+              {
+                apiVersion: "batch/v1",
+                kind: "Job",
+                name: jobName,
+                uid: response.body.metadata.uid,
+              },
+            ],
+          );
+        } catch (error) {
+          await this.deleteJobAndPods(jobName);
+          throw error;
+        }
+      }
       return response;
     } catch (err) {
-      console.error('Error creating job:', err);
+      this.logger.error(
+        `Error creating job ${jobName}: ${err instanceof Error ? err.message : err}`,
+      );
       throw err;
     }
   }
@@ -358,9 +414,10 @@ export class KubernetesService {
         }
 
         jobStatus = response.body.status;
-      } while (!jobStatus.succeeded && !jobStatus.failed && i++ < maxRetries);
+      } while (!jobStatus.succeeded && !jobStatus.failed && ++i < maxRetries);
 
       if (!jobStatus?.succeeded && !jobStatus?.failed) {
+        await this.deleteJobAndPods(jobName);
         throw new Error(
           `Job ${jobName} did not finish within ${maxRetries * iterationWaitTime}ms`,
         );
@@ -381,7 +438,9 @@ export class KubernetesService {
       const podName = pod.metadata.name;
       const jobLogs = await this.getJobLogsWithRetry(podName, jobName);
 
-      console.log('Job status:', status);
+      this.logger.debug(
+        `Job ${jobName} finished with status ${status}. Log tail:\n${tailLines(jobLogs)}`,
+      );
 
       const result = {
         name: jobName,
@@ -391,18 +450,30 @@ export class KubernetesService {
 
       return result;
     } catch (err) {
-      console.error('Error creating job:', err);
+      this.logger.error(
+        `Error running job ${jobName}: ${err instanceof Error ? err.message : err}`,
+      );
       throw err;
     }
   }
 
-  async createConfigMap(name: string, data: Record<string, string>) {
+  async createConfigMap(
+    name: string,
+    data: Record<string, string>,
+    ownerReferences?: {
+      apiVersion: string;
+      kind: string;
+      name: string;
+      uid: string;
+    }[],
+  ) {
     const manifest = {
-      apiVersion: 'v1',
-      kind: 'ConfigMap',
+      apiVersion: "v1",
+      kind: "ConfigMap",
       metadata: {
         name: name,
         namespace: DEFAULT_NAMESPACE,
+        ...(ownerReferences ? { ownerReferences } : {}),
       },
       data: data,
     };
@@ -413,10 +484,12 @@ export class KubernetesService {
         .configmaps.post({
           body: manifest,
         });
-      console.log('ConfigMap created:', response);
+      this.logger.debug(`ConfigMap ${name} created`);
       return response;
     } catch (err) {
-      console.error('Error creating ConfigMap:', err);
+      this.logger.error(
+        `Error creating ConfigMap ${name}: ${err instanceof Error ? err.message : err}`,
+      );
       throw err;
     }
   }
@@ -427,9 +500,11 @@ export class KubernetesService {
         .namespaces(DEFAULT_NAMESPACE)
         .configmaps(name)
         .delete();
-      console.log('ConfigMap deleted:', response);
+      this.logger.debug(`ConfigMap ${name} deleted`);
     } catch (err) {
-      console.error('Error deleting ConfigMap:', err);
+      this.logger.error(
+        `Error deleting ConfigMap ${name}: ${err instanceof Error ? err.message : err}`,
+      );
     }
   }
 }

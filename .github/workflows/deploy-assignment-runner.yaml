@@ -6,6 +6,10 @@ on:
       - main
     paths:
       - "assignment-runner/**"
+      - "images/node/postgresql/**"
+      - "images/node/node-default/**"
+      - "images/node/nest.js/**"
+      - ".github/workflows/postgresql-workers.yaml"
       - "packages/execution-contracts/**"
       - ".github/actions/remote-kubectl/**"
       - ".github/workflows/deploy-assignment-runner.yaml"
@@ -15,8 +19,21 @@ env:
   ASSIGNMENT_RUNNER_IMAGE: "${{ vars.ASSIGNMENT_RUNNER_IMAGE || 'cocsi-mg/eevee-assignment-runner' }}"
 
 jobs:
+  postgresql-workers:
+    uses: ./.github/workflows/postgresql-workers.yaml
+    permissions:
+      contents: read
+      packages: write
+    with:
+      publish: true
+
   build-and-deploy:
+    needs: postgresql-workers
     runs-on: ubuntu-latest
+    concurrency:
+      group: eevee-production-deploy
+      cancel-in-progress: false
+      queue: max
     permissions:
       contents: read
       packages: write
@@ -24,6 +41,11 @@ jobs:
     steps:
       - name: Checkout do codigo
         uses: actions/checkout@v4
+
+      - name: Set worker registry namespace
+        id: worker-registry
+        shell: bash
+        run: echo "namespace=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Login no GitHub Container Registry
         uses: docker/login-action@v3
@@ -52,7 +74,17 @@ jobs:
           private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
-            kubectl set image deployment/assignment-runner-deployment assignment-runner=${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }} -n eevee-cefetrj
+            set -euo pipefail
+            # The deploy identity already has access to the existing Deployment.
+            # RBAC objects are deliberately not managed from this workflow.
+            kubectl patch deployment assignment-runner-deployment -n eevee-cefetrj --type=strategic -p '
+              {"spec":{"template":{"spec":{"containers":[{"name":"assignment-runner",
+                "image":"${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }}",
+                "env":[
+                  {"name":"WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL","value":"${{ steps.worker-registry.outputs.namespace }}/worker-node-default-postgresql-img:latest"},
+                  {"name":"WORKER_IMAGE_NODE_NESTJS_POSTGRESQL","value":"${{ steps.worker-registry.outputs.namespace }}/worker-nestjs-postgresql-img:latest"}
+                ]
+              }]}}}}'
             if ! kubectl rollout status deployment/assignment-runner-deployment -n eevee-cefetrj --timeout=5m; then
               kubectl get pods -n eevee-cefetrj -o wide
               kubectl describe deployment/assignment-runner-deployment -n eevee-cefetrj

@@ -20,12 +20,11 @@ export function getSchedulingSocket(): Socket | null {
     return socket;
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-  if (!baseUrl) {
-    return null;
-  }
-
-  socket = io(`${baseUrl.replace(/\/$/, "")}/realtime`, {
+  // Connect same-origin: the /socket.io/ handshake path is fixed by the
+  // client library regardless of namespace, so it must not be prefixed with
+  // the REST API base path (NEXT_PUBLIC_API_URL) — only the gateway's
+  // /socket.io/ route (proxied straight to platform-api) can serve it.
+  socket = io("/realtime", {
     withCredentials: true,
     transports: ["websocket", "polling"],
     autoConnect: true,

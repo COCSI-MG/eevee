@@ -14,14 +14,7 @@ import {
 import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
 import { PostgresqlContainerStrategy } from './postgresql-container.strategy';
 
-/**
- * Strategy for NODE_NESTJS_POSTGRESQL workers.
- *
- * Extends the base bootstrap strategy by adding:
- * 1. A Postgres sidecar init container (`restartPolicy: Always`, K8s 1.28+)
- * 2. A seed-database init container that waits for Postgres and runs the
- *    professor's `initSqlScript`.
- */
+/** Database worker with an in-container PostgreSQL lifecycle. */
 export class NodeNestJsPostgresqlJestStrategy extends PostgresqlContainerStrategy {
   readonly workerType = WorkerType.NODE_NESTJS_POSTGRESQL;
 
@@ -53,7 +46,7 @@ export class NodeNestJsPostgresqlJestStrategy extends PostgresqlContainerStrateg
 
     commands.push('npm start');
 
-    return asShellCommand(commands);
+    return this.withPostgresql(asShellCommand(commands));
   }
 
   buildWorkerPayload(
@@ -104,6 +97,6 @@ export class NodeNestJsPostgresqlJestStrategy extends PostgresqlContainerStrateg
 
     commands.push('npm start');
 
-    return asShellCommand(commands);
+    return this.withPostgresql(asShellCommand(commands));
   }
 }

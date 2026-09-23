@@ -57,17 +57,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
   };
 
   const canAccessAssignment = (assignment: Assignment) => {
-    if (!userId) {
-      return false;
-    }
-
-    if ((assignment.suspensions?.length ?? 0) === 0) {
-      return true;
-    }
-
-    return !assignment.suspensions?.some(
-      (suspension) => suspension.userId === userId,
-    );
+    return Boolean(userId && !assignment.currentUserAlertStatus?.suspended);
   };
 
   const getLastAttempt = (assignment: Assignment) => {
