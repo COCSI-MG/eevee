@@ -9,12 +9,15 @@
     "lint": "next lint",
     "build:type-packs": "node scripts/build-type-packs.mjs",
     "build:python-tools": "node scripts/copy-pyodide-assets.mjs",
-    "predev": "npm run build:python-tools",
-    "prebuild": "npm run build:python-tools",
+    "build:practice-sql": "node scripts/copy-practice-sql.mjs",
+    "predev": "npm run build:python-tools && npm run build:practice-sql",
+    "prebuild": "npm run build:python-tools && npm run build:practice-sql",
     "test": "jest",
+    "test:practice-sql": "node scripts/test-practice-sql.mjs",
     "test:python-runtime": "npm run build:python-tools && node scripts/test-python-runtime.mjs"
   },
   "dependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",

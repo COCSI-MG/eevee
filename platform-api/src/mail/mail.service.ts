@@ -25,8 +25,10 @@ export class MailService {
     }
 
     try {
-      await this.transporter.sendMail({
-        from: this.configService.get<string>('GMAIL_USER'),
+      const delivery = await this.transporter.sendMail({
+        from:
+          this.configService.get<string>('MAIL_FROM') ||
+          this.configService.get<string>('GMAIL_USER'),
         to,
         subject,
         text,
@@ -36,6 +38,13 @@ export class MailService {
         attachments,
         replyTo,
       });
+
+      if (delivery.rejected?.length || !delivery.accepted?.length) {
+        return {
+          success: false,
+          error: 'O servidor de e-mail não aceitou o destinatário.',
+        };
+      }
 
       this.logger.log('E-mail enviado com sucesso.');
       return { success: true };

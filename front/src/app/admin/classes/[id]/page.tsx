@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -26,6 +27,7 @@ import { SelectedUser } from "@/types/shared";
 import { AxiosError } from "axios";
 import * as Yup from "yup";
 import QueryErrorState from "@/components/shared/query-error-state";
+import { LearningActivityList } from "@/components/learning/activity-list";
 
 const classUpsertSchema = Yup.object().shape({
   id: Yup.number().optional(),
@@ -164,7 +166,7 @@ export default function ClassEditPage() {
 
   const header = (
     <div className="flex items-center">
-      <Button variant="ghost" onClick={() => router.back()} className="mr-4">
+      <Button variant="ghost" onClick={() => router.push("/admin/classes")} className="mr-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Voltar
       </Button>
@@ -275,7 +277,7 @@ export default function ClassEditPage() {
           <Button
             variant="outline"
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push("/admin/classes")}
             className="mr-2"
           >
             Cancelar
@@ -286,6 +288,7 @@ export default function ClassEditPage() {
           </Button>
         </div>
       </form>
+      {!isNewClass && <section className="space-y-4 border-t pt-8"><Link href={`/admin/invitations?classId=${id}`} className="inline-block rounded-lg bg-primary px-4 py-2 text-primary-foreground">Convidar alunos para esta turma</Link><h2 className="text-2xl font-semibold">Práticas e questionários</h2><LearningActivityList classId={Number(id)} admin /></section>}
     </div>
   );
 }

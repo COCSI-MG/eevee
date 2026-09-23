@@ -5,12 +5,14 @@ import { BookOpen, GraduationCap } from "lucide-react";
 import ClassesAssignments from "@/components/assignment/classes-assignments";
 import ClassesExams from "@/components/exam/classes-exams";
 import { Button } from "@/components/ui/button";
+import { LearningActivityList } from "@/components/learning/activity-list";
 
-type View = "assignments" | "exams";
+type View = "assignments" | "exams" | "learning";
 
 const VIEWS: { key: View; label: string; icon: typeof BookOpen }[] = [
   { key: "assignments", label: "Tarefas", icon: BookOpen },
   { key: "exams", label: "Provas", icon: GraduationCap },
+  { key: "learning", label: "Práticas e questionários", icon: BookOpen },
 ];
 
 export default function ClassViewTabs() {
@@ -19,7 +21,7 @@ export default function ClassViewTabs() {
   const searchParams = useSearchParams();
 
   const raw = searchParams.get("view");
-  const current: View = raw === "exams" ? "exams" : "assignments";
+  const current: View = raw === "exams" || raw === "learning" ? raw : "assignments";
 
   const setView = (next: View) => {
     const qs = next === "assignments" ? "" : `?view=${next}`;
@@ -28,7 +30,7 @@ export default function ClassViewTabs() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-border/50 pb-4">
         {VIEWS.map(({ key, label, icon: Icon }) => (
           <Button
             key={key}
@@ -42,7 +44,7 @@ export default function ClassViewTabs() {
         ))}
       </div>
 
-      {current === "assignments" ? (
+      {current === "learning" ? <LearningActivityList classId={Number(id)} /> : current === "assignments" ? (
         <ClassesAssignments />
       ) : (
         <ClassesExams />

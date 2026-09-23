@@ -25,13 +25,13 @@ de ambiente: `SSH_TARGET`, `LOCAL_PORT`, `REMOTE_PORT`, `NAMESPACE`, `SERVICE`):
 Em outro terminal, confira as migrations pendentes sem alterar o banco:
 
 ```powershell
-.\scripts\run-production-migrations.ps1
+npm --prefix platform-api run migration:show
 ```
 
 Depois de revisar a lista, aplique-as explicitamente:
 
 ```powershell
-.\scripts\run-production-migrations.ps1 -Apply
+npm --prefix platform-api run migration:run
 ```
 
 O runner usa o ambiente local de `platform-api/.env`, que deve apontar para

@@ -63,9 +63,9 @@ function ensureWorker() {
   if (worker || failed) return;
   loading = toast({ title: "Preparando ferramentas Python…", duration: Infinity });
   try {
-    // A static module worker, prepared before dev/build, keeps Pyodide's WASM
-    // paths intact in both Turbopack and webpack. No runtime CDN is involved.
-    worker = new Worker("/pyodide/314.0.7/worker.js", { type: "module", name: "eevee-python" });
+    // This worker is prepared in public/ before dev/build. Use the browser
+    // constructor explicitly so Turbopack does not treat it as a bundled entry.
+    worker = new window.Worker("/pyodide/314.0.7/worker.js", { type: "module", name: "eevee-python" });
     const current = worker;
     watchdog = setTimeout(() => fail("Python tools took too long to load"), 45000);
     worker.onerror = (event) => {

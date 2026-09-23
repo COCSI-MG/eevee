@@ -35,10 +35,10 @@ export class User {
   isAdmin: boolean;
 
   /** Provider subject (Microsoft Entra object id, when linked). */
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   externalSubject?: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 64, nullable: true })
   identityProvider?: string | null;
 
   @Exclude()
