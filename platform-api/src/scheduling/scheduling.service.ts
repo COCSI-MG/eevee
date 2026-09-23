@@ -410,11 +410,17 @@ export class SchedulingService {
 
     let workerData: CreateWorkerDto;
     try {
-      workerData = await this.schedulingWorkerPreparationService.prepare({
-        assignment,
-        baseWorkerData,
-        attemptId,
-      });
+      if (assignment.executionMode === 'adhoc') {
+        // Run-only projects have no templates/tests by definition. Preserve
+        // the submitted files and let the worker execute them directly.
+        workerData = { ...baseWorkerData, executionMode: 'adhoc' };
+      } else {
+        workerData = await this.schedulingWorkerPreparationService.prepare({
+          assignment,
+          baseWorkerData,
+          attemptId,
+        });
+      }
     } catch (error) {
       if (
         error instanceof NoTemplatesForAssignmentError ||

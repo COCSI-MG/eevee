@@ -1,6 +1,6 @@
 ---
 name: kubernetes-job-orchestration
-description: 'Understand or modify how Kubernetes Jobs/Pods are constructed and managed for worker execution. Use when touching assignment-runner/src/kubernetes/kubernetes.service.ts, kubernetes.interfaces.ts, kubernetes.constants.ts, Job volumes/mounts, activeDeadlineSeconds, TTL, or Job deletion logic.'
+description: "Understand or modify how Kubernetes Jobs/Pods are constructed and managed for worker execution. Use when touching assignment-runner/src/kubernetes/kubernetes.service.ts, kubernetes.interfaces.ts, kubernetes.constants.ts, Job volumes/mounts, activeDeadlineSeconds, TTL, or Job deletion logic."
 ---
 
 # Kubernetes Job Orchestration (assignment-runner)

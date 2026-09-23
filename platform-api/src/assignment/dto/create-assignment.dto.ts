@@ -15,6 +15,7 @@ import {
 import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
 import { NoSpecialCharacters } from 'src/common/decorators/no-special-characters.decorator';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { AssignmentExecutionMode } from '../enums/assignment-execution-mode.enum';
 import { AssignmentAlertPolicyDto } from 'src/assignment-alert/dto/assignment-alert-policy.dto';
 
 export class TemplateParamDto {
@@ -107,6 +108,11 @@ export class CreateAssignmentDto {
   @ApiProperty()
   @IsEnum(WorkerType)
   workerType: WorkerType;
+
+  @ApiPropertyOptional({ enum: AssignmentExecutionMode, default: AssignmentExecutionMode.GRADED })
+  @IsOptional()
+  @IsEnum(AssignmentExecutionMode)
+  executionMode?: AssignmentExecutionMode;
 
   @ApiProperty({
     required: false,

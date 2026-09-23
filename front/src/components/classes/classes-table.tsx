@@ -1,19 +1,65 @@
 "use client";
 
 import { ClassesService } from "@/app/integration/scheduler-api/classes";
-import { Button } from "@/components/ui/button";
+import { Class } from "@/app/interface/scheduler-api/class";
+import { ExamService } from "@/app/integration/scheduler-api/exam";
+import { LearningActivities } from "@/app/integration/scheduler-api/learning-activity";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, GraduationCap, Loader } from "lucide-react";
+import { ArrowRight, BookOpen, ClipboardList, FlaskConical, GraduationCap, Loader } from "lucide-react";
 import Link from "next/link";
+
+function ClassActivityLinks({ cls }: { cls: Class }) {
+  const { user } = useAuthContext();
+  const learning = useQuery({
+    queryKey: ["learning-activities", cls.id, user?.userId],
+    queryFn: () => LearningActivities.list(cls.id),
+    enabled: !cls.activityCounts,
+  });
+  const exams = useQuery({
+    queryKey: ["paginatedExams", cls.id, "home-count", user?.userId],
+    queryFn: () => ExamService.listByClass({ classId: cls.id, page: 1, pageSize: 1 }),
+    enabled: !cls.activityCounts,
+  });
+  const pendingCount = (failed: boolean) => failed ? "Indisponível" : "Carregando";
+  const rows = [
+    { label: "Tarefas", count: cls.assignments?.length, href: `/classes/${cls.id}`, icon: BookOpen, pending: "Indisponível" },
+    { label: "Provas", count: cls.activityCounts?.exams ?? exams.data?.meta.total, href: `/classes/${cls.id}?view=exams`, icon: GraduationCap, pending: pendingCount(exams.isError) },
+    { label: "Práticas", count: cls.activityCounts?.practices ?? learning.data?.filter(a => a.kind === "practice").length, href: `/classes/${cls.id}?view=learning`, icon: FlaskConical, pending: pendingCount(learning.isError) },
+    { label: "Questionários", count: cls.activityCounts?.quizzes ?? learning.data?.filter(a => a.kind === "quiz").length, href: `/classes/${cls.id}?view=learning`, icon: ClipboardList, pending: pendingCount(learning.isError) },
+  ];
+  return (
+    <div className="grid gap-2">
+      {rows.map(({ label, count, href, icon: Icon, pending }) => (
+        <Link
+          key={label}
+          href={href}
+          aria-label={`${label}: ${count ?? pending} — ${cls.name}`}
+          className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="flex-1 font-medium">{label}</span>
+          <span className="rounded bg-muted text-foreground px-2 py-0.5 tabular-nums" title={count === undefined ? pending : undefined}>
+            {count ?? (pending === "Carregando" ? "…" : "—")}
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+        </Link>
+      ))}
+      {!cls.activityCounts && (learning.isError || exams.isError) && (
+        <button type="button" className="text-sm underline text-foreground" onClick={() => { void learning.refetch(); void exams.refetch(); }}>
+          Tentar carregar os totais novamente
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function ClassesTable() {
   const { user } = useAuthContext();
@@ -61,7 +107,7 @@ export default function ClassesTable() {
       {classes.map((cls) => (
         <Card
           key={cls.id}
-          className="overflow-hidden hover:shadow-md transition-shadow"
+          className="flex flex-col overflow-hidden hover:shadow-md transition-shadow"
         >
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
@@ -72,23 +118,9 @@ export default function ClassesTable() {
               {cls.description}
             </CardDescription>
           </CardHeader>
-          <CardContent className="pb-2">
-            <div className="mt-4 flex items-center text-sm text-muted-foreground">
-              <BookOpen className="h-4 w-4 mr-1" />
-              <span>{cls.assignments?.length || 0} tarefas disponíveis</span>
-            </div>
+          <CardContent className="mt-auto pt-4">
+            <ClassActivityLinks cls={cls} />
           </CardContent>
-          <CardFooter>
-            <Link
-              href={`/classes/${cls.id}`}
-              className="flex-1 mt-4"
-            >
-              <Button variant="default" className="w-full flex items-center">
-                <BookOpen className="h-4 w-4 mr-2" />
-                Atividades
-              </Button>
-            </Link>
-          </CardFooter>
         </Card>
       ))}
     </div>

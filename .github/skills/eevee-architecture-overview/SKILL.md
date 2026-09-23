@@ -1,6 +1,6 @@
 ---
 name: eevee-architecture-overview
-description: 'Orient in the EEVEE codebase: service boundaries, local dev setup, and where to look for a given concern. Use when starting work in this repo, unsure which service (front, platform-api, assignment-runner, images) owns a change, or need the local infra bring-up order (minikube, docker compose, npm run start:dev).'
+description: "Orient in the EEVEE codebase: service boundaries, local dev setup, and where to look for a given concern. Use when starting work in this repo, unsure which service (front, platform-api, assignment-runner, images) owns a change, or need the local infra bring-up order (minikube, docker compose, npm run start:dev)."
 ---
 
 # EEVEE Architecture Overview

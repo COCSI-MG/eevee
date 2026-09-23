@@ -13,7 +13,13 @@ DOCS_PORT  ?= 8000
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front seed down prepare-workers
+.PHONY: test-invitations
+test-invitations:
+	cd platform-api && npm run test:invitations
+
+.PHONY: seed-classroom seed-classroom-preview check-classroom-seed
+
+.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front seed down prepare-workers migration-show migration-run
 
 help:
 	@echo "EEVEE - comandos de desenvolvimento"
@@ -25,6 +31,12 @@ help:
 	@echo "  make up-assignment-runner  Inicia o Assignment Runner"
 	@echo "  make up-front              Inicia o frontend"
 	@echo "  make seed                  Cria os usuarios locais de demonstracao"
+	@echo "  make seed-classroom-preview Mostra as turmas e atividades a criar, sem gravar"
+	@echo "  make seed-classroom         Cria turmas, laboratorios e questionarios em rascunho"
+	@echo "  make test-invitations       Testa convites com rollback e e-mail simulado"
+	@echo "  make check-classroom-seed   Valida os exercicios sem conectar ao banco"
+	@echo "  make migration-show        Lista as migrations usando platform-api/.env"
+	@echo "  make migration-run         Aplica as migrations pendentes usando platform-api/.env"
 	@echo "  make down                  Encerra a infraestrutura local"
 	@echo "  make up-docs               Serve a documentacao em http://localhost:$(DOCS_PORT)"
 	@echo "  make check-docs            Valida a documentacao em modo estrito"
@@ -66,6 +78,21 @@ up-front:
 
 seed:
 	cd platform-api && npm run seed
+
+seed-classroom-preview:
+	cd platform-api && npm run seed:classroom:preview
+
+seed-classroom:
+	cd platform-api && npm run seed:classroom
+
+check-classroom-seed:
+	cd platform-api && npm run seed:classroom:check
+
+migration-show:
+	cd platform-api && npm run migration:show
+
+migration-run:
+	cd platform-api && npm run migration:run
 
 prepare-workers:
 	$(MAKE) -C images rebuild-all

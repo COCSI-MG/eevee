@@ -9,6 +9,7 @@ import { Class } from 'src/class/entities/class.entity';
 import { ExamAssignment } from 'src/exam/entities/exam-assignment.entity';
 import { User } from 'src/user/entities/user.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { AssignmentExecutionMode } from '../enums/assignment-execution-mode.enum';
 import {
     Column,
     Entity,
@@ -93,6 +94,9 @@ export class Assignment {
 
   @Column()
   maxAttempts: number;
+
+  @Column({ type: 'enum', enum: AssignmentExecutionMode, default: AssignmentExecutionMode.GRADED })
+  executionMode: AssignmentExecutionMode;
 
   @Column({ type: 'timestamp', nullable: true })
   startDate?: Date | null;
