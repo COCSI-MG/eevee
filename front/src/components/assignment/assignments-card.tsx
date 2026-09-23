@@ -1,3 +1,4 @@
+import { UserRole } from "@/app/interface/scheduler-api/user";
 import { BookOpenCheck, CalendarClock, Code, CodeSquare } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -85,7 +86,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
           assignment.dueDate,
           assignment.examAssignment?.exam?.dueDate,
         );
-        const deadlinePassed = !user?.isAdmin && isDeadlinePassed(effectiveDueDate);
+        const deadlinePassed = user?.role !== UserRole.ADMIN && isDeadlinePassed(effectiveDueDate);
 
         return (
           <Card

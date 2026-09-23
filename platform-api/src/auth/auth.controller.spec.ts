@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   BadRequestException,
   ConflictException,
@@ -69,7 +70,7 @@ describe('AuthController', () => {
       session: {
         userId: 12,
         email: 'admin@example.com',
-        isAdmin: true,
+        role: UserRole.ADMIN,
       },
     });
     const response = {
@@ -87,7 +88,7 @@ describe('AuthController', () => {
     ).resolves.toEqual({
       userId: 12,
       email: 'admin@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
     });
 
     expect(response.cookie).toHaveBeenCalledWith(
@@ -110,7 +111,7 @@ describe('AuthController', () => {
       session: {
         userId: 33,
         email: 'student@example.com',
-        isAdmin: false,
+        role: UserRole.STUDENT,
       },
     });
     const response = {
@@ -129,7 +130,7 @@ describe('AuthController', () => {
     ).resolves.toEqual({
       userId: 33,
       email: 'student@example.com',
-      isAdmin: false,
+      role: UserRole.STUDENT,
     });
 
     expect(response.cookie).toHaveBeenCalledWith(
@@ -169,21 +170,21 @@ describe('AuthController', () => {
       user: {
         userId: 12,
         email: 'admin@example.com',
-        isAdmin: true,
+        role: UserRole.ADMIN,
       },
     } as any;
 
     authService.buildSession.mockReturnValue({
       userId: 12,
       email: 'admin@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
       expiresIn: 900,
     });
 
     expect(controller.getMe(request)).toEqual({
       userId: 12,
       email: 'admin@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
       expiresIn: 900,
     });
     expect(authService.buildSession).toHaveBeenCalledWith(request.user);
@@ -316,7 +317,7 @@ describe('AuthController', () => {
     requestContextService.getUser.mockReturnValue({
       userId: 12,
       email: 'admin@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
       familyId: 'family-1',
     });
     const response = { clearCookie: jest.fn() } as any;
@@ -397,7 +398,7 @@ describe('AuthController', () => {
         status: SessionStatus.REFRESHED,
         accessToken: 'novo-access',
         refreshToken: 'novo-refresh',
-        session: { userId: 12, email: 'admin@example.com', isAdmin: true },
+        session: { userId: 12, email: 'admin@example.com', role: UserRole.ADMIN }
       });
       const response = buildResponse();
 
@@ -409,7 +410,7 @@ describe('AuthController', () => {
       ).resolves.toEqual({
         userId: 12,
         email: 'admin@example.com',
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
 
       expect(response.cookie).toHaveBeenCalledWith(

@@ -3,6 +3,7 @@ import { AssignmentUserAlert } from 'src/assignment-alert/entities/assignment-us
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
+import { UserRole } from '../user-role';
 import {
   Column,
   DeleteDateColumn,
@@ -31,8 +32,13 @@ export class User {
   @Column()
   name: string;
 
-  @Column()
-  isAdmin: boolean;
+  @Column({
+    type: 'enum',
+    enum: Object.values(UserRole),
+    enumName: 'user_role_enum',
+    default: UserRole.STUDENT
+  })
+  role: UserRole;
 
   /** Provider subject (Microsoft Entra object id, when linked). */
   @Column({ type: 'varchar', length: 255, nullable: true })

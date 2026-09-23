@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   BadRequestException,
   NotFoundException,
@@ -101,7 +102,7 @@ describe('SchedulingService', () => {
     };
 
     requestContextService = {
-      getUser: jest.fn().mockReturnValue({ userId: 42, isAdmin: false }),
+      getUser: jest.fn().mockReturnValue({ userId: 42, role: UserRole.STUDENT })
     };
 
     schedulingPreviewRunRepository = {

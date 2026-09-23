@@ -1,4 +1,5 @@
 "use client";
+import { User, UserRole } from "@/app/interface/scheduler-api/user";
 
 import {
   Table,
@@ -10,7 +11,6 @@ import {
 } from "./ui/table";
 import { Badge } from "./ui/badge";
 import TableActions from "./table/table-actions";
-import { User } from "@/app/interface/scheduler-api/user";
 
 interface UsersTableProps {
   users: User[] | undefined;
@@ -24,6 +24,13 @@ export default function UsersTable({
   emptyMessage = "Nenhum usuário encontrado.",
 }: UsersTableProps) {
   const rows = users ?? [];
+
+  const userRoleLabel: Record<UserRole, string> = {
+    [UserRole.STUDENT]: "Aluno",
+    [UserRole.TEACHER]: "Professor",
+    [UserRole.ADMIN]: "Administrador"
+  }
+
 
   return (
     <Table>
@@ -55,8 +62,8 @@ export default function UsersTable({
               <TableCell className="font-medium">{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
-                <Badge variant={user.isAdmin ? "default" : "outline"}>
-                  {user.isAdmin ? "Administrador" : "Usuário"}
+                <Badge variant={user.role === UserRole.ADMIN ? "default" : "outline"}>
+                  { userRoleLabel[user.role] }
                 </Badge>
               </TableCell>
               <TableCell>

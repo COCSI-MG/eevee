@@ -1,4 +1,5 @@
 "use client";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -51,14 +52,14 @@ function isFileNodeTree(value: unknown): value is FileNode {
 
 interface AnswerKeyEditorProps {
   assignmentId: number;
-  isAdmin: boolean;
+  canManage: boolean;
   assignment: Assignment;
   answerKey?: AnswerKey;
 }
 
 function AnswerKeyEditor({
   assignmentId,
-  isAdmin,
+  canManage,
   assignment,
   answerKey,
 }: AnswerKeyEditorProps) {
@@ -150,7 +151,7 @@ function AnswerKeyEditor({
           >
             <FolderOpen className="h-5 w-5" />
           </Button>
-          {isAdmin && (
+          {canManage && (
             <Button
               onClick={handleRun}
               disabled={answerKeyTest.isPending || saveMutation.isPending}
@@ -164,7 +165,7 @@ function AnswerKeyEditor({
               {answerKeyTest.isPending ? "Executando..." : "Executar"}
             </Button>
           )}
-          {isAdmin && (
+          {canManage && (
             <Button
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending}
@@ -185,7 +186,7 @@ function AnswerKeyEditor({
           <WorkspaceExplorer
             onFileSelect={handleFileSelect}
             onTreeChange={handleTreeChange}
-            readOnly={!isAdmin}
+            readOnly={!canManage}
           />
           <div
             role="separator"
@@ -205,7 +206,7 @@ function AnswerKeyEditor({
               file={activeFile}
               onEditorChange={handleEditorChange}
               actionGuardMode={EDITOR_ACTION_GUARD_MODE.EXEMPT}
-              readOnly={!isAdmin}
+              readOnly={!canManage}
             />
           </div>
         </section>
@@ -226,7 +227,7 @@ export default function AnswerKeyPage() {
   const { id } = useParams();
   const { user } = useAuthContext();
   const assignmentId = Number(id);
-  const isAdmin = Boolean(user?.isAdmin);
+  const canManage = user?.role === UserRole.ADMIN;
   const router = useRouter();
 
   const {
@@ -245,12 +246,12 @@ export default function AnswerKeyPage() {
 
   React.useEffect(() => {
     if (
-      !isAdmin &&
+      !canManage &&
       assignment &&
       (!assignment.answerKeyVisible || answerKeyQuery.isError)
     )
       router.replace("/classes");
-  }, [answerKeyQuery.isError, assignment, isAdmin, router]);
+  }, [answerKeyQuery.isError, assignment, canManage, router]);
 
   if (!user || isLoadingAssignment || (assignment && answerKeyQuery.isLoading))
     return <Loader />;
@@ -269,7 +270,7 @@ export default function AnswerKeyPage() {
     );
   }
 
-  if (!isAdmin && (!assignment.answerKeyVisible || answerKeyQuery.isError)) {
+  if (!canManage && (!assignment.answerKeyVisible || answerKeyQuery.isError)) {
     return null;
   }
 
@@ -287,7 +288,7 @@ export default function AnswerKeyPage() {
     >
       <AnswerKeyEditor
         assignmentId={assignmentId}
-        isAdmin={isAdmin}
+        canManage={canManage}
         assignment={assignment}
         answerKey={answerKeyQuery.data}
       />

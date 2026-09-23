@@ -1,8 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { User } from 'src/user/entities/user.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { UserRole } from 'src/user/user-role';
 
 export class CreateOrUpdateUserDto
   implements
@@ -17,10 +18,10 @@ export class CreateOrUpdateUserDto
       'userAttempts'
     >
 {
-  @ApiProperty()
-  @IsBoolean()
+  @ApiProperty({ enum: Object.values(UserRole) })
+  @IsEnum(UserRole)
   @IsNotEmpty()
-  isAdmin: boolean;
+  role: UserRole;
   
   @ApiProperty()
   @IsString()

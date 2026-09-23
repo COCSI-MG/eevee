@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { CreateUserDto } from './create-user.dto';
@@ -7,7 +8,7 @@ describe('user password validation', () => {
   const validUser = {
     email: 'student@example.com',
     name: 'Student',
-    isAdmin: false,
+    role: UserRole.STUDENT
   };
 
   it('requires a password with at least eight characters when creating', async () => {
@@ -37,7 +38,7 @@ describe('user password validation', () => {
 
   it('accepts an omitted password when updating', async () => {
     const errors = await validate(
-      plainToInstance(UpdateUserDto, { isAdmin: true }),
+      plainToInstance(UpdateUserDto, { role: UserRole.ADMIN })
     );
 
     expect(errors).toEqual([]);

@@ -292,7 +292,7 @@ export class AttemptService {
         'user.id AS user_id',
         'user.name AS user_name',
         'user.email AS user_email',
-        'user.isAdmin AS user_isAdmin',
+        'user.role AS user_role',
         'assignment.id AS assignment_id',
         'assignment.title AS assignment_title',
         'assignment.description AS assignment_description',
@@ -323,7 +323,7 @@ export class AttemptService {
             id: Number(row.user_id),
             name: row.user_name,
             email: row.user_email,
-            isAdmin: Boolean(row.user_isadmin ?? row.user_isAdmin),
+            role: row.user_role
           },
           assignment: {
             id: Number(row.assignment_id),

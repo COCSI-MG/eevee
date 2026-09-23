@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import { ForbiddenException, UnprocessableEntityException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -162,7 +163,7 @@ describe('ClassService', () => {
   it('blocks access to another user without admin rights', async () => {
     requestContextService.getUser.mockReturnValue({
       userId: 2,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
 
     await expect(service.findAllByUser(1)).rejects.toBeInstanceOf(
@@ -173,7 +174,7 @@ describe('ClassService', () => {
   it('returns every class for an admin regardless of enrollment', async () => {
     requestContextService.getUser.mockReturnValue({
       userId: 2,
-      isAdmin: true,
+      role: UserRole.ADMIN
     });
     classRepository.find.mockResolvedValue([
       {
@@ -215,7 +216,7 @@ describe('ClassService', () => {
   it('queries classes correctly when access is allowed', async () => {
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
     classRepository.find.mockResolvedValue([
       {

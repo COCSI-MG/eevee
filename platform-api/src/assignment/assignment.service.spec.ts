@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   BadRequestException,
   ConflictException,
@@ -189,7 +190,7 @@ describe('AssignmentService', () => {
     const assignments = [{ id: 1 }, { id: 2 }] as Assignment[];
     requestContextService.getUser.mockReturnValue({
       userId: 10,
-      isAdmin: true,
+      role: UserRole.ADMIN
     });
     jest.spyOn(service, 'findAll').mockResolvedValue(assignments as any);
 
@@ -229,7 +230,7 @@ describe('AssignmentService', () => {
           }
         ])
       };
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
+      requestContextService.getUser.mockReturnValue({ userId: 7, role: UserRole.STUDENT });
       jest.spyOn(service, 'findOne').mockResolvedValue({ id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true } as any)
 
       assignmentRepository.createQueryBuilder.mockReturnValue(query)
@@ -289,7 +290,7 @@ describe('AssignmentService', () => {
 
       const files = { 'src/app.ts': 'export const value = 1;' }
 
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
+      requestContextService.getUser.mockReturnValue({ userId: 7, role: UserRole.STUDENT });
       jest.spyOn(service, 'findOne').mockResolvedValue({ id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true } as any);
 
       assignmentRepository.findOne.mockResolvedValue({ id: 2, title: 'Origem', classId: 12, workerType: WorkerType.NODE_DEFAULT });
@@ -322,7 +323,7 @@ describe('AssignmentService', () => {
         attemptRepository,
         requestContextService
       } = await setup();
-      requestContextService.getUser.mockReturnValue({userId: 7, isAdmin: false})
+      requestContextService.getUser.mockReturnValue({userId: 7, role: UserRole.STUDENT})
       jest.spyOn(service, 'findOne').mockResolvedValue({id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true} as any)
       assignmentRepository.findOne.mockResolvedValue({id: 2, title: 'Origem', classId: 12, workerType: WorkerType.NODE_DEFAULT })
       attemptRepository.findOne.mockResolvedValue(null);
@@ -342,7 +343,7 @@ describe('AssignmentService', () => {
     classService.findOne.mockResolvedValue(null);
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
 
     await expect(
@@ -376,7 +377,7 @@ describe('AssignmentService', () => {
     classService.findOne.mockResolvedValue({ id: 12 });
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
     assignmentRepository.save.mockResolvedValue({
       id: 99,
@@ -473,7 +474,7 @@ describe('AssignmentService', () => {
     classService.findOne.mockResolvedValue({ id: 12 });
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
     assignmentRepository.save.mockResolvedValue({
       id: 99,
@@ -516,7 +517,7 @@ describe('AssignmentService', () => {
     classService.findOne.mockResolvedValue({ id: 12 });
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
     assignmentRepository.save.mockResolvedValue({
       id: 99,
@@ -559,7 +560,7 @@ describe('AssignmentService', () => {
 
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
     assignmentRepository.findOne.mockResolvedValue({
       id: 55,
@@ -615,7 +616,7 @@ describe('AssignmentService', () => {
       assignmentRepository.createQueryBuilder.mockReturnValue(qb);
       requestContextService.getUser.mockReturnValue({
         userId: 10,
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
       jest
         .spyOn(service as any, 'attachBoilerplate')
@@ -696,7 +697,7 @@ describe('AssignmentService', () => {
 
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT,
       });
       userClassRepository.findOne.mockResolvedValue({ userId: 7, classId: 1 });
       const qb = makeFindQueryBuilder();
@@ -722,7 +723,7 @@ describe('AssignmentService', () => {
 
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassRepository.findOne.mockResolvedValue(null);
 
@@ -743,7 +744,7 @@ describe('AssignmentService', () => {
 
       requestContextService.getUser.mockReturnValue({
         userId: 10,
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
       userClassRepository.findOne.mockResolvedValue({ userId: 10, classId: 1 });
       const qb = makeFindQueryBuilder();
@@ -777,7 +778,7 @@ describe('AssignmentService', () => {
     assignmentRepository.createQueryBuilder.mockReturnValue(query);
     requestContextService.getUser.mockReturnValue({
       userId: 10,
-      isAdmin: true,
+      role: UserRole.ADMIN
     });
 
     await expect(service.findOne(42)).resolves.toEqual(
@@ -897,7 +898,7 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 12 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.save.mockResolvedValue({
         id: 10,
@@ -946,7 +947,7 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 12 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.save.mockResolvedValue({
         id: 11,
@@ -990,7 +991,7 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 12 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.save.mockResolvedValue({
         id: 12,
@@ -1029,7 +1030,7 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 12 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.save.mockResolvedValue({
         id: 13,
@@ -1064,7 +1065,7 @@ describe('AssignmentService', () => {
 
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.findOne
         .mockResolvedValueOnce({
@@ -1119,7 +1120,7 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 1 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
       assignmentRepository.save.mockImplementation(async (value) => ({
         id: 90,
@@ -1219,7 +1220,7 @@ describe('AssignmentService', () => {
       assignmentRepository.createQueryBuilder.mockReturnValue(query);
       requestContextService.getUser.mockReturnValue({
         userId: 10,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
 
       await expect(service.assertSubmissionOpen(42)).rejects.toBeInstanceOf(

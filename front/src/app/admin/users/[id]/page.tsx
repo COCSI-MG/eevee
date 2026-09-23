@@ -7,7 +7,8 @@ import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { UserRole } from "@/app/interface/scheduler-api/user";
+
 import {
   Card,
   CardContent,
@@ -35,7 +36,7 @@ export interface UserFormValues {
   name: string;
   email: string;
   password: string;
-  isAdmin: boolean;
+  role: UserRole;
 }
 
 const buildUsersSchema = (isNewUser: boolean) =>
@@ -56,7 +57,7 @@ const buildUsersSchema = (isNewUser: boolean) =>
           (password) =>
             !password || password.length >= PASSWORD_MIN_LENGTH,
         ),
-    isAdmin: Yup.boolean().required(),
+    role: Yup.mixed<UserFormValues["role"]>().oneOf(Object.values(UserRole)).required(),
   });
 
 export default function UserEditPage() {
@@ -74,7 +75,7 @@ export default function UserEditPage() {
       const userData = {
         name: values.name,
         email: values.email,
-        isAdmin: values.isAdmin,
+        role: values.role,
       };
 
       if (isNewUser) {
@@ -107,7 +108,7 @@ export default function UserEditPage() {
       name: "",
       email: "",
       password: "",
-      isAdmin: false,
+      role: UserRole.STUDENT,
     },
     validationSchema: buildUsersSchema(isNewUser),
     enableReinitialize: true,
@@ -133,7 +134,7 @@ export default function UserEditPage() {
         name: user.name,
         email: user.email,
         password: "",
-        isAdmin: user.isAdmin,
+        role: user.role,
       });
 
       return user;
@@ -235,18 +236,22 @@ export default function UserEditPage() {
                 <p className="text-destructive text-sm">{formik.errors.password}</p>
               )}
             </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="isAdmin"
-                checked={formik.values.isAdmin}
-                onCheckedChange={(checked) =>
-                  formik.setFieldValue("isAdmin", checked)
-                }
-              />
-              <Label htmlFor="isAdmin">Administrador</Label>
+            <div className="space-y-2">
+              <Label htmlFor="role">Papel</Label>
+              <select
+                id="role"
+                name="role"
+                value={formik.values.role}
+                onChange={formik.handleChange}
+                className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm"
+              >
+                <option value={UserRole.STUDENT}>Aluno</option>
+                <option value={UserRole.TEACHER}>Professor</option>
+                <option value={UserRole.ADMIN}>Administrador</option>
+              </select>
             </div>
-            {formik.errors.isAdmin && formik.touched.isAdmin && (
-              <p className="text-destructive text-sm">{formik.errors.isAdmin}</p>
+            {formik.errors.role && formik.touched.role && (
+              <p className="text-destructive text-sm">{formik.errors.role}</p>
             )}
           </CardContent>
           <CardFooter className="flex justify-between">

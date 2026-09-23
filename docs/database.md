@@ -34,7 +34,7 @@ erDiagram
 
 ### `User`
 
-Armazena e-mail, nome, papel administrativo, hash da senha e `deletedAt`. A exclusão é lógica, o índice parcial de e-mail considera apenas usuários ativos, permitindo preservar o histórico sem impedir uma conta futura com o mesmo endereço.
+Armazena e-mail, nome, papel (`aluno`, `professor` ou `admin`), hash da senha e `deletedAt`. A exclusão é lógica, o índice parcial de e-mail considera apenas usuários ativos, permitindo preservar o histórico sem impedir uma conta futura com o mesmo endereço.
 
 ### `PasswordReset`
 

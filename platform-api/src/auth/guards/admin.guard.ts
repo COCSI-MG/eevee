@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   Injectable,
   CanActivate,
@@ -24,7 +25,7 @@ export class AdminGuard extends AuthGuard('jwt') implements CanActivate {
     const user = request.user;
 
     // Check if the user exists and is an admin
-    if (!user?.isAdmin) {
+    if (user?.role !== UserRole.ADMIN) {
       throw new ForbiddenException('Only admins can access this route.');
     }
 

@@ -1,4 +1,5 @@
 'use client';
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 import type React from 'react';
 
@@ -39,7 +40,7 @@ export default function Login() {
     mutationFn: () => LoginService.login(formData.email, formData.password),
     onSuccess: (session) => {
       setSession(session);
-      replace(session.isAdmin ? '/admin' : '/classes');
+      replace(session.role === UserRole.ADMIN ? "/admin" : "/classes");
     },
     onError: () => {
       toast({

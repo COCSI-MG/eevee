@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   BadRequestException,
   ConflictException,
@@ -149,7 +150,7 @@ export class ExamService {
     }
 
     const user = this.requestContextService.getUser();
-    if (!user.isAdmin) {
+    if (user.role !== UserRole.ADMIN) {
       const enrollment = await this.userClassService.findOneByKeys(
         user.userId,
         classId,
@@ -180,7 +181,7 @@ export class ExamService {
           : '1 = 1',
       );
 
-    if (!user.isAdmin) {
+    if (user.role !== UserRole.ADMIN) {
       qb.andWhere(
         'exam.startDate IS NOT NULL AND exam.startDate <= :now',
         { now: new Date() },
@@ -205,7 +206,7 @@ export class ExamService {
     }
 
     const user = this.requestContextService.getUser();
-    if (!user.isAdmin) {
+    if (user.role !== UserRole.ADMIN) {
       if (exam.classId == null) {
         throw new ForbiddenException(
           'You are not allowed to view this exam.',
@@ -239,7 +240,7 @@ export class ExamService {
       .orderBy('ea.id', 'ASC')
       .addOrderBy('assignmentAttempts.createdAt', 'DESC');
 
-    if (!user.isAdmin) {
+    if (user.role !== UserRole.ADMIN) {
       examAssignments.andWhere(
         '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
         { now: new Date() }

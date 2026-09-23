@@ -11,6 +11,7 @@ import { AnswerKey } from './entities/answer-key.entity';
 import { CreateAnswerKeyDto } from './dto/create-answer-key.dto';
 import { UpdateAnswerKeyDto } from './dto/update-answer-key.dto';
 import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
+import { UserRole } from 'src/user/user-role';
 
 @Injectable()
 export class AnswerKeyService {
@@ -59,8 +60,8 @@ export class AnswerKeyService {
     }
   }
 
-  async findOne(assignmentId: number, isAdmin: boolean) {
-    if (!isAdmin) {
+  async findOne(assignmentId: number, role: UserRole) {
+    if (role !== UserRole.ADMIN) {
       await this.assignmentAlertService.assertCurrentUserNotSuspended(assignmentId);
     }
 
@@ -77,7 +78,7 @@ export class AnswerKeyService {
 
     if (!assignment) throw new NotFoundException('Assignment not found');
 
-    if (!isAdmin && !assignment.answerKeyVisible) {
+    if (role !== UserRole.ADMIN && !assignment.answerKeyVisible) {
       throw new ForbiddenException('Answer key is not visible');
     }
 

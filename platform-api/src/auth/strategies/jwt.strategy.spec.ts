@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 
@@ -12,14 +13,14 @@ describe('JwtStrategy', () => {
       strategy.validate({
         userId: 13,
         email: 'user@example.com',
-        isAdmin: true,
+        role: UserRole.ADMIN,
         familyId: 'family-1',
         exp: 1893456000,
       }),
     ).toEqual({
       userId: 13,
       email: 'user@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
       familyId: 'family-1',
       exp: 1893456000,
     });
@@ -30,12 +31,12 @@ describe('JwtStrategy', () => {
       strategy.validate({
         userId: 13,
         email: 'antigo@example.com',
-        isAdmin: false,
+        role: UserRole.STUDENT
       }),
     ).toMatchObject({
       userId: 13,
       email: 'antigo@example.com',
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
   });
 });

@@ -15,8 +15,9 @@ import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { CreateAnswerKeyDto } from './dto/create-answer-key.dto';
 import { UpdateAnswerKeyDto } from './dto/update-answer-key.dto';
 import { AnswerKeyService } from './answer-key.service';
+import { UserRole } from 'src/user/user-role';
 
-type AuthenticatedRequest = Request & { user: { isAdmin: boolean } };
+type AuthenticatedRequest = Request & { user: { role: UserRole } };
 
 @Controller('assignment/:assignmentId/answer-key')
 @UseGuards(JwtAuthGuard)
@@ -37,7 +38,7 @@ export class AnswerKeyController {
     @Param('assignmentId') assignmentId: string,
     @Req() request: AuthenticatedRequest,
   ) {
-    return this.answerKeyService.findOne(+assignmentId, request.user.isAdmin);
+    return this.answerKeyService.findOne(+assignmentId, request.user.role);
   }
 
   @Put()

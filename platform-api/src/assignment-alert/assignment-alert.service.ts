@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   ForbiddenException,
   HttpException,
@@ -103,7 +104,7 @@ export class AssignmentAlertService {
     const user = this.requestContextService.getUser();
     const countsByAssignment = new Map<number, number>();
 
-    if (user?.userId && !user.isAdmin) {
+    if (user?.userId && user.role !== UserRole.ADMIN) {
       const rows = await alertRepository
         .createQueryBuilder('alert')
         .select('alert.assignmentId', 'assignmentId')
@@ -127,7 +128,7 @@ export class AssignmentAlertService {
         version: assignment.alertPolicyVersion,
       };
 
-      if (user?.userId && !user.isAdmin) {
+      if (user?.userId && user.role !== UserRole.ADMIN) {
         const activeCount = countsByAssignment.get(assignment.id) ?? 0;
         assignment.currentUserAlertStatus = {
           activeCount,
@@ -166,7 +167,7 @@ export class AssignmentAlertService {
     const user = this.requestContextService.getUser();
     if (!user?.userId) throw new ForbiddenException('Authentication required');
 
-    if (!user.isAdmin) {
+    if (user.role !== UserRole.ADMIN) {
       const assignment = await this.assignmentRepository.findOne({
         where: { id: assignmentId },
         select: { id: true, classId: true }
@@ -182,7 +183,7 @@ export class AssignmentAlertService {
 
   async assertCurrentUserNotSuspended(assignmentId: number): Promise<void> {
     const user = this.requestContextService.getUser();
-    if (!user?.userId || user.isAdmin) return;
+    if (!user?.userId || user.role === UserRole.ADMIN) return;
 
     const status = await this.getStatus(assignmentId, user.userId);
 
@@ -245,7 +246,7 @@ export class AssignmentAlertService {
     const user = this.requestContextService.getUser();
     if (!user?.userId) throw new ForbiddenException('Authentication required');
 
-    if (user.isAdmin) {
+    if (user.role === UserRole.ADMIN) {
       return {
         recorded: false,
         duplicate: false,
@@ -450,7 +451,7 @@ export class AssignmentAlertService {
     alertId: number
   ): Promise<ArchiveAssignmentAlertResult> {
     const admin = this.requestContextService.getUser();
-    if (!admin?.userId || !admin.isAdmin) throw new ForbiddenException('Administrator access required')
+    if (!admin?.userId || admin.role !== UserRole.ADMIN) throw new ForbiddenException('Administrator access required')
 
     const assignment = await this.assignmentRepository.findOne({
       where: { id: assignmentId },

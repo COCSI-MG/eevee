@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
@@ -45,7 +46,7 @@ describe('UserService', () => {
       email: 'teacher@example.com',
       name: 'Teacher',
       password: 'plain-password',
-      isAdmin: false,
+      role: UserRole.STUDENT
     };
 
     jest.spyOn(HashUtils, 'hashPassword').mockReturnValue('hashed-password');
@@ -55,7 +56,7 @@ describe('UserService', () => {
       id: 10,
       email: dto.email,
       name: dto.name,
-      isAdmin: dto.isAdmin,
+      role: dto.role,
       userClasses: [],
       } as unknown as User);
     userRepository.save.mockResolvedValue({ id: 10 } as User);
@@ -67,7 +68,7 @@ describe('UserService', () => {
       expect.objectContaining({
         email: dto.email,
         name: dto.name,
-        isAdmin: dto.isAdmin,
+        role: dto.role,
         passwordHash: 'hashed-password',
       }),
     );
@@ -81,6 +82,7 @@ describe('UserService', () => {
       id: 10,
       email: dto.email,
       name: dto.name,
+      role: dto.role,
       userClasses: [],
     });
   });
@@ -93,7 +95,7 @@ describe('UserService', () => {
       id: 42,
       email: 'saved@example.com',
       name: 'Saved User',
-      isAdmin: false,
+      role: UserRole.STUDENT,
       userClasses: [],
       } as unknown as User);
     userRepository.save.mockResolvedValue({ id: 42 } as User);
@@ -102,7 +104,7 @@ describe('UserService', () => {
       email: 'saved@example.com',
       name: 'Saved User',
       password: 'secret',
-      isAdmin: false,
+      role: UserRole.STUDENT
     } as any);
 
     expect(userRepository.save).toHaveBeenCalledWith(
@@ -113,15 +115,15 @@ describe('UserService', () => {
     });
   });
 
-  it('updates an admin flag without replacing the current password', async () => {
+  it('updates a role without replacing the current password', async () => {
     const existingUser = {
       id: 7,
       email: 'student@example.com',
       name: 'Student',
-      isAdmin: false,
+      role: UserRole.STUDENT,
       passwordHash: 'current-hash',
     } as User;
-    const updatedUser = { ...existingUser, isAdmin: true };
+    const updatedUser = { ...existingUser, role: UserRole.ADMIN };
 
     userRepository.findOne
       .mockResolvedValueOnce(existingUser)
@@ -129,11 +131,11 @@ describe('UserService', () => {
     userRepository.update.mockResolvedValue({ affected: 1 } as any);
     const hashPassword = jest.spyOn(HashUtils, 'hashPassword');
 
-    const result = await service.update(7, { isAdmin: true });
+    const result = await service.update(7, { role: UserRole.ADMIN });
 
     expect(hashPassword).not.toHaveBeenCalled();
     expect(userRepository.update).toHaveBeenCalledWith(7, {
-      isAdmin: true,
+      role: UserRole.ADMIN
     });
     expect(userRepository.update.mock.calls[0][1]).not.toHaveProperty(
       'passwordHash',
@@ -142,6 +144,7 @@ describe('UserService', () => {
       id: 7,
       email: 'student@example.com',
       name: 'Student',
+      role: UserRole.ADMIN,
       userClasses: undefined,
     });
   });
@@ -149,7 +152,7 @@ describe('UserService', () => {
   it('throws when updating a missing user', async () => {
     userRepository.findOne.mockResolvedValue(null);
 
-    await expect(service.update(99, { isAdmin: true })).rejects.toThrow(
+    await expect(service.update(99, { role: UserRole.ADMIN })).rejects.toThrow(
       'User not found',
     );
     expect(userRepository.update).not.toHaveBeenCalled();
@@ -165,7 +168,7 @@ describe('UserService', () => {
   it('throws when removing an admin user', async () => {
     userRepository.findOne.mockResolvedValue({
       id: 1,
-      isAdmin: true,
+      role: UserRole.ADMIN
     } as unknown as User);
 
     await expect(service.remove(1)).rejects.toThrow('Cannot delete admin user');
@@ -175,7 +178,7 @@ describe('UserService', () => {
   it('deletes a removable user', async () => {
     userRepository.findOne.mockResolvedValue({
       id: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     } as unknown as User);
     userRepository.softDelete.mockResolvedValue({ affected: 1 } as any);
 
@@ -208,7 +211,7 @@ describe('UserService', () => {
             id: 1,
             name: 'Alice',
             email: 'a@x.com',
-            isAdmin: false,
+            role: UserRole.STUDENT,
             userClasses: [],
           },
         ],
@@ -231,7 +234,7 @@ describe('UserService', () => {
             id: 1,
             name: 'Alice',
             email: 'a@x.com',
-            isAdmin: false,
+            role: UserRole.STUDENT,
             userClasses: [],
           },
         ],

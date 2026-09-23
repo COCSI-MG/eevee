@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   BadRequestException,
   ConflictException,
@@ -117,7 +118,7 @@ describe('ExamService', () => {
 
     const userStudent = requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false
+      role: UserRole.STUDENT
     });
 
     return {
@@ -335,7 +336,7 @@ describe('ExamService', () => {
       });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       const qb = makeQueryBuilder();
       qb.getManyAndCount.mockResolvedValue([[{ id: 10 }, { id: 11 }], 2]);
@@ -370,7 +371,7 @@ describe('ExamService', () => {
       userClassService.findOneByKeys.mockResolvedValue(null);
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
 
       await expect(
@@ -418,7 +419,7 @@ describe('ExamService', () => {
       });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       const qb = makeQueryBuilder();
       qb.getManyAndCount.mockResolvedValue([[], 0]);
@@ -453,7 +454,7 @@ describe('ExamService', () => {
       });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       const qb = makeQueryBuilder();
       qb.getManyAndCount.mockResolvedValue([[{ id: 10 }], 1]);
@@ -488,7 +489,7 @@ describe('ExamService', () => {
       });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       const qb = makeQueryBuilder();
       qb.getManyAndCount.mockResolvedValue([[], 0]);
@@ -514,7 +515,7 @@ describe('ExamService', () => {
       classService.findOne.mockResolvedValue({ id: 1 });
       requestContextService.getUser.mockReturnValue({
         userId: 1,
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
 
       const qb = makeQueryBuilder();
@@ -1318,7 +1319,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue(null);
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
 
       await expect(service.findOneWithAssignments(123)).rejects.toBeInstanceOf(
@@ -1355,7 +1356,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue(exam);
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1402,7 +1403,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue(exam);
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1500,7 +1501,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
 
       const qb = makeQueryBuilder();
@@ -1525,7 +1526,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue(null);
 
@@ -1552,7 +1553,7 @@ describe('ExamService', () => {
       });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
 
       await expect(service.findOneWithAssignments(1)).rejects.toBeInstanceOf(
@@ -1576,7 +1577,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue(exam);
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1674,7 +1675,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1714,7 +1715,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1758,7 +1759,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1806,7 +1807,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1871,7 +1872,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1911,7 +1912,7 @@ describe('ExamService', () => {
       examRepository.findOne.mockResolvedValue({ id: 1, classId: 5, startDate: new Date('2025-01-01T00:00:00Z') });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       userClassService.findOneByKeys.mockResolvedValue({
         userId: 7,
@@ -1969,7 +1970,7 @@ describe('ExamService', () => {
         examRepository.findOne.mockResolvedValue(buildExam());
         requestContextService.getUser.mockReturnValue({
           userId: 7,
-          isAdmin: false,
+          role: UserRole.STUDENT
         });
         userClassService.findOneByKeys.mockResolvedValue({
           userId: 7,
@@ -1997,7 +1998,7 @@ describe('ExamService', () => {
         );
         requestContextService.getUser.mockReturnValue({
           userId: 7,
-          isAdmin: false,
+          role: UserRole.STUDENT
         });
         userClassService.findOneByKeys.mockResolvedValue({
           userId: 7,
@@ -2027,7 +2028,7 @@ describe('ExamService', () => {
         );
         requestContextService.getUser.mockReturnValue({
           userId: 7,
-          isAdmin: false,
+          role: UserRole.STUDENT
         });
         userClassService.findOneByKeys.mockResolvedValue({
           userId: 7,
@@ -2054,7 +2055,7 @@ describe('ExamService', () => {
         );
         requestContextService.getUser.mockReturnValue({
           userId: 1,
-          isAdmin: true,
+          role: UserRole.ADMIN
         });
         examAssignmentRepository.createQueryBuilder.mockReturnValue(
           makeQbWithAssignments(),

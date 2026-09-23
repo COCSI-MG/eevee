@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import { ForbiddenException, Injectable, UnprocessableEntityException, UseGuards } from '@nestjs/common';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -162,7 +163,7 @@ export class ClassService {
   async findAllByUser(userId: number) {
     const user = this.requestContextService.getUser();
 
-    if (user.userId !== userId && !user.isAdmin) {
+    if (user.userId !== userId && user.role !== UserRole.ADMIN) {
       throw new ForbiddenException(
         'You are not authorized to access classes of other users.',
       );
@@ -175,7 +176,7 @@ export class ClassService {
         'userClasses.class',
         'assignments',
       ],
-      ...(user.isAdmin
+      ...(user.role === UserRole.ADMIN
         ? {}
         : {
             where: {

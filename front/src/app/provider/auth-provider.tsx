@@ -1,5 +1,7 @@
 "use client";
 
+import { UserRole } from "@/app/interface/scheduler-api/user";
+
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthService } from "../integration/scheduler-api/auth-service";
@@ -103,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (isAuthRoute(pathname) && user) {
-      router.replace(user.isAdmin ? "/admin" : "/classes");
+      router.replace(user.role === UserRole.ADMIN ? "/admin" : "/classes");
       return;
     }
 
@@ -112,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (pathname.startsWith("/admin") && user && !user.isAdmin) {
+    if (pathname.startsWith("/admin") && user && user.role !== UserRole.ADMIN) {
       router.replace("/classes");
     }
   }, [isHydrating, pathname, router, user]);
@@ -134,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isProtectedRoute(pathname) ||
         pathname.startsWith("/admin"))) ||
     (isAuthRoute(pathname) && user) ||
-    (pathname.startsWith("/admin") && user && !user.isAdmin) ||
+    (pathname.startsWith("/admin") && user && user.role !== UserRole.ADMIN) ||
     (!user && (isProtectedRoute(pathname) || pathname.startsWith("/admin")));
 
   if (shouldHideContent) {

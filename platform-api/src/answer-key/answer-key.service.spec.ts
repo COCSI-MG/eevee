@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   ConflictException,
   ForbiddenException,
@@ -58,7 +59,7 @@ describe('AnswerKeyService', () => {
       answerKeyVisible: false,
     });
 
-    await expect(service.findOne(1, false)).rejects.toBeInstanceOf(
+    await expect(service.findOne(1, UserRole.STUDENT)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
   });
@@ -74,7 +75,7 @@ describe('AnswerKeyService', () => {
       answerKeyVisible: false,
     });
 
-    await expect(service.findOne(1, true)).resolves.toBe(answerKey);
+    await expect(service.findOne(1, UserRole.ADMIN)).resolves.toBe(answerKey);
   });
 
   it('clears the assignment link and visibility when removing', async () => {

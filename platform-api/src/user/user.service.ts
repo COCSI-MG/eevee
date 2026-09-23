@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Brackets, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
@@ -111,7 +112,7 @@ export class UserService {
       throw new Error('User not found');
     }
 
-    if (user.isAdmin) {
+    if (user.role === UserRole.ADMIN) {
       throw new Error('Cannot delete admin user');
     }
 

@@ -42,6 +42,7 @@ import {
   AssignmentAlertService,
   DEFAULT_ASSIGNMENT_ALERT_POLICY
 } from 'src/assignment-alert/assignment-alert.service';
+import { UserRole } from 'src/user/user-role';
 
 @Injectable()
 export class AssignmentService {
@@ -419,7 +420,7 @@ export class AssignmentService {
   async findAllUserAssignments() {
     const user = this.requestContextService.getUser();
 
-    if (user.isAdmin) {
+    if (user.role === UserRole.ADMIN) {
       return this.findAll();
     }
 
@@ -538,7 +539,7 @@ export class AssignmentService {
   async findAssignmentsByClass(classId: number) {
     const user = this.requestContextService.getUser()!;
 
-    if (!user.isAdmin) {
+    if (user.role !== UserRole.ADMIN) {
       const isUserInClass = await this.userClassRepository.findOne({
         where: {
           userId: user.userId,
@@ -565,7 +566,7 @@ export class AssignmentService {
       .where('assignment.classId = :classId', { classId })
       .andWhere('examAssignment.id IS NULL');
 
-    if (!user.isAdmin) {
+    if (user.role !== UserRole.ADMIN) {
       query.andWhere(
         '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
         { now: new Date() }
@@ -601,7 +602,7 @@ export class AssignmentService {
       .leftJoinAndSelect('detailsExamAssignment.exam', 'detailsExam')
       .orderBy('assignmentAttempts.createdAt', 'DESC');
 
-    if (user.isAdmin) {
+    if (user.role === UserRole.ADMIN) {
       query
         .leftJoinAndSelect('class.userClasses', 'userClasses')
         .leftJoinAndSelect(
@@ -652,7 +653,7 @@ export class AssignmentService {
 
   async assertSubmissionOpen(assignmentId: number): Promise<void> {
     const user = this.requestContextService.getUser();
-    if (user?.isAdmin) return;
+    if (user?.role === UserRole.ADMIN) return;
 
     const window = await this.assignmentRepository
       .createQueryBuilder('assignment')
