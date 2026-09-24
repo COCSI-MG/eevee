@@ -1,3 +1,5 @@
+export type Role = "admin" | "student";
+
 export interface TestUser {
   name: string;
   email: string;
@@ -12,7 +14,7 @@ export interface CreatedUser extends TestUser {
 declare global {
   namespace Cypress {
     interface Chainable {
-      login(): Chainable<void>;
+      login(role?: Role): Chainable<void>;
       buildUser(isAdmin?: boolean): Chainable<TestUser>;
       createUser(user: TestUser): Chainable<CreatedUser>;
       deleteUser(id: number): Chainable<void>;
