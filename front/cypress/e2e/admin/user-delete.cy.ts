@@ -1,9 +1,10 @@
 import type { CreatedUser } from "../../support/types";
 
 describe("User deletion", () => {
-  let user: CreatedUser;
+  let user: CreatedUser | undefined;
 
   beforeEach(() => {
+    user = undefined;
     cy.login();
     cy.buildUser()
       .then((built) => cy.createUser(built))
@@ -14,14 +15,18 @@ describe("User deletion", () => {
   });
 
   afterEach(() => {
-    cy.deleteUser(user.id);
+    if (user) {
+      cy.deleteUser(user.id);
+      user = undefined;
+    }
   });
 
   it("deletes a user after confirming the dialog", () => {
-    cy.filterUsers(user.email);
+    const { email } = user!;
+    cy.filterUsers(email);
 
     cy.log("Open the row menu and choose delete");
-    cy.userRow(user.email).find("button").click();
+    cy.userRow(email).find("button").click();
     cy.contains('[role="menuitem"]', "Excluir").click();
 
     cy.log("Confirm the deletion dialog");
@@ -32,6 +37,10 @@ describe("User deletion", () => {
 
     cy.log("Check the success toast and that the user left the list");
     cy.contains("Usuário excluído").should("be.visible");
-    cy.contains("td", user.email).should("not.exist");
+    cy.contains("td", email)
+      .should("not.exist")
+      .then(() => {
+        user = undefined;
+      });
   });
 });
