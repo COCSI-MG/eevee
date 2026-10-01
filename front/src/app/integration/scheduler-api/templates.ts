@@ -27,7 +27,7 @@ export class TemplatesService {
     }
 
     static async listTemplates(workerType?: WorkerType, classId?: number) {
-        const response = await axiosClientWithAuth.get("/template", {
+        const response = await axiosClientWithAuth.get<Template[]>("/template", {
             params: { workerType, classId }
         });
 
