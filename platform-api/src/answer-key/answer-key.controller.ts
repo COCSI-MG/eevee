@@ -11,7 +11,8 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 import { CreateAnswerKeyDto } from './dto/create-answer-key.dto';
 import { UpdateAnswerKeyDto } from './dto/update-answer-key.dto';
 import { AnswerKeyService } from './answer-key.service';
@@ -20,12 +21,12 @@ import { UserRole } from 'src/user/user-role';
 type AuthenticatedRequest = Request & { user: { role: UserRole } };
 
 @Controller('assignment/:assignmentId/answer-key')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AnswerKeyController {
   constructor(private readonly answerKeyService: AnswerKeyService) {}
 
   @Post()
-  @UseGuards(AdminGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   create(
     @Param('assignmentId') assignmentId: string,
     @Body() dto: CreateAnswerKeyDto,
@@ -34,6 +35,7 @@ export class AnswerKeyController {
   }
 
   @Get()
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   findOne(
     @Param('assignmentId') assignmentId: string,
     @Req() request: AuthenticatedRequest,
@@ -42,7 +44,7 @@ export class AnswerKeyController {
   }
 
   @Put()
-  @UseGuards(AdminGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   update(
     @Param('assignmentId') assignmentId: string,
     @Body() dto: UpdateAnswerKeyDto,
@@ -51,7 +53,7 @@ export class AnswerKeyController {
   }
 
   @Delete()
-  @UseGuards(AdminGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   remove(@Param('assignmentId') assignmentId: string) {
     return this.answerKeyService.remove(+assignmentId);
   }

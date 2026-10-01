@@ -23,6 +23,7 @@ import { Exam } from './entities/exam.entity';
 import { ExamService } from './exam.service';
 import { User } from 'src/user/entities/user.entity';
 import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
+import { ClassAccessService } from 'src/auth/class-access.service';
 
 describe('ExamService', () => {
   let service: ExamService;
@@ -47,6 +48,10 @@ describe('ExamService', () => {
     const classService = { findOne: jest.fn() };
     const userClassService = { findOneByKeys: jest.fn() };
     const requestContextService = { getUser: jest.fn() };
+    const classAccessService = {
+      assertClassAccess: jest.fn(async (classId: number) => ({ id: classId })),
+      isAdmin: jest.fn(() => requestContextService.getUser()?.role === UserRole.ADMIN)
+    }
     const dataSource = { transaction: jest.fn() };
     const assignmentService = { create: jest.fn() };
     const assignmentAlertService = {
@@ -102,6 +107,10 @@ describe('ExamService', () => {
           useValue: assignmentAlertService
         },
         {
+          provide: ClassAccessService,
+          useValue: classAccessService
+        },
+        {
           provide: getRepositoryToken(User),
           useValue: userRepository,
         },
@@ -129,6 +138,7 @@ describe('ExamService', () => {
       attemptRepository,
       userClassRepository,
       classService,
+      classAccessService,
       userClassService,
       requestContextService,
       dataSource,
@@ -164,9 +174,7 @@ describe('ExamService', () => {
 
   describe('create', () => {
     it('persists the exam with all fields populated', async () => {
-      const { service, examRepository, classService } = await setup();
-
-      classService.findOne.mockResolvedValue({ id: 5 });
+      const { service, examRepository, classAccessService } = await setup();
       const dueDate = new Date('2026-08-15T23:59:00Z');
       const saved = {
         id: 1,
@@ -188,7 +196,7 @@ describe('ExamService', () => {
 
       const result = await service.create(dto);
 
-      expect(classService.findOne).toHaveBeenCalledWith(5);
+      expect(classAccessService.assertClassAccess).toHaveBeenCalledWith(5, true);
       expect(examRepository.save).toHaveBeenCalledWith({
         title: 'Midterm',
         description: 'Covers chapters 1-5',
@@ -198,36 +206,23 @@ describe('ExamService', () => {
       expect(result).toEqual(saved);
     });
 
-    it('persists the exam with only the title when other fields are omitted', async () => {
-      const { service, examRepository, classService } = await setup();
+    it('requires a classId when creating an exam', async () => {
+      const { service, examRepository, classAccessService } = await setup();
 
-      const saved = {
-        id: 2,
-        title: 'Quick quiz',
-        description: undefined,
-        classId: undefined,
-        dueDate: undefined,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      examRepository.save.mockResolvedValue(saved);
+      await expect(service.create({ title: 'Quick quiz' })).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
 
-      const result = await service.create({ title: 'Quick quiz' });
-
-      expect(classService.findOne).not.toHaveBeenCalled();
-      expect(examRepository.save).toHaveBeenCalledWith({
-        title: 'Quick quiz',
-        description: undefined,
-        classId: undefined,
-        dueDate: undefined,
-      });
-      expect(result).toEqual(saved);
+      expect(classAccessService.assertClassAccess).not.toHaveBeenCalled();
+      expect(examRepository.save).not.toHaveBeenCalled();
     });
 
     it('throws NotFoundException when classId references a non-existent class', async () => {
-      const { service, examRepository, classService } = await setup();
+      const { service, examRepository, classAccessService } = await setup();
 
-      classService.findOne.mockResolvedValue(null);
+      classAccessService.assertClassAccess.mockRejectedValueOnce(
+        new NotFoundException(),
+      );
 
       await expect(
         service.create({
@@ -236,12 +231,12 @@ describe('ExamService', () => {
         }),
       ).rejects.toBeInstanceOf(NotFoundException);
 
-      expect(classService.findOne).toHaveBeenCalledWith(999);
+      expect(classAccessService.assertClassAccess).toHaveBeenCalledWith(999, true);
       expect(examRepository.save).not.toHaveBeenCalled();
     });
 
     it('persists the exam with startDate when provided', async () => {
-      const { service, examRepository, classService } = await setup();
+      const { service, examRepository } = await setup();
 
       const startDate = new Date('2026-08-15T12:00:00Z');
       const saved = {
@@ -255,6 +250,7 @@ describe('ExamService', () => {
 
       const result = await service.create({
         title: 'Midterm',
+        classId: 5,
         startDate: '2026-08-15T12:00:00Z',
       });
 
@@ -537,7 +533,7 @@ describe('ExamService', () => {
     it('updates only the fields that were provided', async () => {
       const { service, examRepository } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
       examRepository.findOneOrFail.mockResolvedValue({
         id: 1,
         title: 'New title',
@@ -559,7 +555,7 @@ describe('ExamService', () => {
       const { service, examRepository } = await setup();
 
       const dueDate = new Date('2026-09-01T12:00:00Z');
-      examRepository.findOne.mockResolvedValue({ id: 1 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
       examRepository.findOneOrFail.mockResolvedValue({
         id: 1,
         title: 'Final',
@@ -608,6 +604,7 @@ describe('ExamService', () => {
       const startDate = new Date('2026-08-15T12:00:00Z');
       examRepository.findOne.mockResolvedValue({
         id: 1,
+        classId: 5,
         title: 'Exam',
         startDate: null,
         dueDate: null,
@@ -631,6 +628,7 @@ describe('ExamService', () => {
 
       examRepository.findOne.mockResolvedValue({
         id: 1,
+        classId: 5,
         title: 'Exam',
         startDate: new Date('2026-08-15T12:00:00Z'),
         dueDate: null,
@@ -655,6 +653,7 @@ describe('ExamService', () => {
       const existingStartDate = new Date('2026-08-15T12:00:00Z');
       examRepository.findOne.mockResolvedValue({
         id: 1,
+        classId: 5,
         title: 'Exam',
         startDate: existingStartDate,
         dueDate: null,
@@ -682,6 +681,7 @@ describe('ExamService', () => {
 
       examRepository.findOne.mockResolvedValue({
         id: 1,
+        classId: 5,
         title: 'Exam',
         startDate: null,
         dueDate: null,
@@ -702,6 +702,7 @@ describe('ExamService', () => {
 
       examRepository.findOne.mockResolvedValue({
         id: 1,
+        classId: 5,
         title: 'Exam',
         startDate: null,
         dueDate: new Date('2026-08-15T23:59:00Z'),
@@ -719,6 +720,7 @@ describe('ExamService', () => {
 
       examRepository.findOne.mockResolvedValue({
         id: 1,
+        classId: 5,
         title: 'Exam',
         startDate: new Date('2026-08-16T00:00:00Z'),
         dueDate: null,
@@ -738,6 +740,7 @@ describe('ExamService', () => {
       const startDate = new Date('2026-08-01T12:00:00Z');
       examRepository.findOne.mockResolvedValue({
         id: 1,
+        classId: 5,
         dueDate: null,
         startDate: null,
       });
@@ -769,7 +772,7 @@ describe('ExamService', () => {
     it('deletes the exam and its assignment links in a single transaction', async () => {
       const { service, examRepository, dataSource } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
       const manager = {
         delete: jest
           .fn()
@@ -976,7 +979,7 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
       assignmentRepository.findOne.mockResolvedValue(null);
 
       await expect(service.linkAssignment(1, 2, 3)).rejects.toBeInstanceOf(
@@ -992,7 +995,7 @@ describe('ExamService', () => {
     it('throws BadRequestException when score is 0', async () => {
       const { service, examRepository, examAssignmentRepository } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
 
       await expect(service.linkAssignment(1, 2, 0)).rejects.toBeInstanceOf(
         BadRequestException,
@@ -1003,7 +1006,7 @@ describe('ExamService', () => {
     it('throws BadRequestException when score is negative', async () => {
       const { service, examRepository, examAssignmentRepository } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
 
       await expect(service.linkAssignment(1, 2, -1)).rejects.toBeInstanceOf(
         BadRequestException,
@@ -1019,8 +1022,8 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
-      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2, classId: 5 });
 
       const driverError: any = new Error(
         'duplicate key value violates unique constraint',
@@ -1053,8 +1056,8 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
-      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2, classId: 5 });
       examAssignmentRepository.save.mockResolvedValue({
         id: 99,
         examId: 1,
@@ -1115,7 +1118,7 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
       assignmentRepository.findOne.mockResolvedValue(null);
 
       await expect(service.unlinkAssignment(1, 2)).rejects.toBeInstanceOf(
@@ -1138,8 +1141,8 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
-      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2, classId: 5 });
       examAssignmentRepository.findOne.mockResolvedValue(null);
 
       await expect(service.unlinkAssignment(1, 2)).rejects.toBeInstanceOf(
@@ -1160,8 +1163,8 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
-      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2, classId: 5 });
       examAssignmentRepository.findOne.mockResolvedValue({
         id: 99,
         examId: 1,
@@ -1229,7 +1232,7 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
       assignmentRepository.findOne.mockResolvedValue(null);
 
       await expect(
@@ -1251,8 +1254,8 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
-      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2, classId: 5 });
       examAssignmentRepository.findOne.mockResolvedValue(null);
 
       await expect(
@@ -1273,8 +1276,8 @@ describe('ExamService', () => {
         assignmentRepository,
       } = await setup();
 
-      examRepository.findOne.mockResolvedValue({ id: 1 });
-      assignmentRepository.findOne.mockResolvedValue({ id: 2 });
+      examRepository.findOne.mockResolvedValue({ id: 1, classId: 5 });
+      assignmentRepository.findOne.mockResolvedValue({ id: 2, classId: 5 });
       examAssignmentRepository.findOne.mockResolvedValue({
         id: 99,
         examId: 1,
@@ -1538,7 +1541,7 @@ describe('ExamService', () => {
       expect(examAssignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
     });
 
-    it('throws ForbiddenException when a non-admin user tries to view an exam without a class', async () => {
+    it('hides an exam without a class from non-admin users', async () => {
       const {
         service,
         examRepository,
@@ -1557,7 +1560,7 @@ describe('ExamService', () => {
       });
 
       await expect(service.findOneWithAssignments(1)).rejects.toBeInstanceOf(
-        ForbiddenException,
+        NotFoundException,
       );
 
       expect(userClassService.findOneByKeys).not.toHaveBeenCalled();

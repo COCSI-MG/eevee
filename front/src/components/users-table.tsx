@@ -72,8 +72,10 @@ export default function UsersTable({
                   onDelete={() => handleDelete(user.id)}
                   resourceName="usuário"
                   itemName={`${user.name} (${user.email})`}
-                  deleteTitle="Excluir este usuário?"
-                  deleteDescription={`O usuário ${user.name} perderá o acesso à plataforma. Suas tentativas e demais registros históricos serão preservados.`}
+                  deleteTitle="Desativar esta conta?"
+                  deleteDescription={`A conta de ${user.name} perderá o acesso imediatamente. As sessões serão revogadas e os registros históricos serão preservados.`}
+                  deleteActionLabel="Desativar conta"
+                  deleteMenuLabel="Desativar"
                 />
               </TableCell>
             </TableRow>

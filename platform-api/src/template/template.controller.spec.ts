@@ -41,10 +41,10 @@ describe('TemplateController', () => {
   it('delegates findAll preserving workerType filter', async () => {
     templateService.findAll.mockResolvedValue([{ id: 1 }]);
 
-    await expect(controller.findAll('node_default' as any)).resolves.toEqual([
+    await expect(controller.findAll({ workerType: 'node_default' } as any)).resolves.toEqual([
       { id: 1 },
     ]);
-    expect(templateService.findAll).toHaveBeenCalledWith('node_default');
+    expect(templateService.findAll).toHaveBeenCalledWith('node_default', undefined);
   });
 
   it('delegates update with a numeric id', async () => {

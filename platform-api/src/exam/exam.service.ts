@@ -40,6 +40,7 @@ import { UpdateExamDto } from './dto/update-exam.dto';
 import { ExamAssignment } from './entities/exam-assignment.entity';
 import { Exam } from './entities/exam.entity';
 import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
+import { ClassAccessService } from 'src/auth/class-access.service';
 
 @Injectable()
 export class ExamService {
@@ -62,42 +63,45 @@ export class ExamService {
     private readonly dataSource: DataSource,
     private readonly assignmentService: AssignmentService,
     private readonly assignmentAlertService: AssignmentAlertService,
+    private readonly classAccess: ClassAccessService
   ) {}
 
   async create(createExamDto: CreateExamDto): Promise<Exam> {
-    if (createExamDto.classId !== undefined) {
-      const classExists = await this.classService.findOne(createExamDto.classId);
-      if (!classExists) {
-        throw new NotFoundException(
-          `Class with id ${createExamDto.classId} not found`,
-        );
-      }
+    const { classId, title, description, startDate, dueDate } = createExamDto;
+
+    if (classId === undefined) {
+      throw new BadRequestException('classId is required for a new exam.');
     }
 
-    const startDate = createExamDto.startDate
-      ? new Date(createExamDto.startDate)
-      : undefined;
+    await this.classAccess.assertClassAccess(classId, true);
 
-    const dueDate = createExamDto.dueDate
-      ? new Date(createExamDto.dueDate)
-      : undefined;
+    const parsedStartDate = startDate ? new Date(startDate) : undefined;
+    const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
 
-    if (startDate && dueDate && startDate > dueDate) {
-      throw new BadRequestException('startDate must not be after dueDate');
-    }
+    if (
+      parsedStartDate &&
+      parsedDueDate &&
+      parsedStartDate > parsedDueDate
+    ) throw new BadRequestException('startDate must not be after dueDate')
 
     return this.examRepository.save({
-      title: createExamDto.title,
-      description: createExamDto.description,
-      classId: createExamDto.classId,
-      dueDate,
-      startDate,
+      title,
+      description,
+      classId,
+      startDate: parsedStartDate,
+      dueDate: parsedDueDate,
     });
   }
 
   async update(examId: number, dto: UpdateExamDto): Promise<Exam> {
     const exam = await this.examRepository.findOne({ where: { id: examId } });
     if (!exam) {
+      throw new NotFoundException(`Exam with id ${examId} not found`);
+    }
+
+    if (exam.classId != null) {
+      await this.classAccess.assertClassAccess(exam.classId, true);
+    } else if (!this.classAccess.isAdmin()) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
     }
 
@@ -150,7 +154,10 @@ export class ExamService {
     }
 
     const user = this.requestContextService.getUser();
-    if (user.role !== UserRole.ADMIN) {
+    await this.classAccess.assertClassAccess(classId);
+
+
+    if (user.role === UserRole.STUDENT) {
       const enrollment = await this.userClassService.findOneByKeys(
         user.userId,
         classId,
@@ -181,7 +188,7 @@ export class ExamService {
           : '1 = 1',
       );
 
-    if (user.role !== UserRole.ADMIN) {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.TEACHER) {
       qb.andWhere(
         'exam.startDate IS NOT NULL AND exam.startDate <= :now',
         { now: new Date() },
@@ -206,12 +213,11 @@ export class ExamService {
     }
 
     const user = this.requestContextService.getUser();
-    if (user.role !== UserRole.ADMIN) {
-      if (exam.classId == null) {
-        throw new ForbiddenException(
-          'You are not allowed to view this exam.',
-        );
-      }
+    if (exam.classId == null) throw new NotFoundException(`Exam with id ${examId} not found`);
+
+    await this.classAccess.assertClassAccess(exam.classId);
+
+    if (user.role === UserRole.STUDENT) {
       const enrollment = await this.userClassService.findOneByKeys(
         user.userId,
         exam.classId,
@@ -240,7 +246,7 @@ export class ExamService {
       .orderBy('ea.id', 'ASC')
       .addOrderBy('assignmentAttempts.createdAt', 'DESC');
 
-    if (user.role !== UserRole.ADMIN) {
+    if (user.role === UserRole.STUDENT) {
       examAssignments.andWhere(
         '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
         { now: new Date() }
@@ -305,6 +311,7 @@ export class ExamService {
     if (exam.classId == null) {
       throw new BadRequestException(`Exam with id ${examId} has no class assigned`);
     }
+    await this.classAccess.assertClassAccess(exam.classId, true);
 
     const examAssignments = exam.examAssignments ?? [];
 
@@ -439,12 +446,18 @@ export class ExamService {
       throw new NotFoundException(`Exam with id ${examId} not found`);
     }
 
+    if (exam.classId == null) throw new BadRequestException('Exam has no class assigned.');
+
+    await this.classAccess.assertClassAccess(exam.classId, true);
+
     const assignment = await this.assignmentRepository.findOne({
       where: { id: assignmentId },
     });
     if (!assignment) {
       throw new NotFoundException(`Assignment with id ${assignmentId} not found`);
     }
+
+    if (assignment.classId !== exam.classId) throw new BadRequestException('The assignment and exam must belong to the same class.');
 
     let saved: ExamAssignment;
     try {
@@ -469,6 +482,9 @@ export class ExamService {
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
     }
+    if (exam.classId == null) throw new BadRequestException('Exam has no class assigned.');
+
+    await this.classAccess.assertClassAccess(exam.classId, true);
 
     const assignment = await this.assignmentRepository.findOne({
       where: { id: assignmentId },
@@ -478,6 +494,7 @@ export class ExamService {
         `Assignment with id ${assignmentId} not found`,
       );
     }
+    if (assignment.classId !== exam.classId) throw new BadRequestException('The assignment and exam must belong to the same class.');
 
     const link = await this.examAssignmentRepository.findOne({
       where: { examId, assignmentId },
@@ -504,6 +521,8 @@ export class ExamService {
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
     }
+    if (exam.classId == null) throw new BadRequestException('Exam has no class assigned.');
+    await this.classAccess.assertClassAccess(exam.classId, true);
 
     const assignment = await this.assignmentRepository.findOne({
       where: { id: assignmentId },
@@ -513,6 +532,7 @@ export class ExamService {
         `Assignment with id ${assignmentId} not found`,
       );
     }
+    if (assignment.classId !== exam.classId) throw new BadRequestException('The assignment and exam must belong to the same class.');
 
     const link = await this.examAssignmentRepository.findOne({
       where: { examId, assignmentId },
@@ -536,6 +556,8 @@ export class ExamService {
     if (!exam) {
       throw new NotFoundException(`Exam with id ${id} not found`);
     }
+    if (exam.classId == null) throw new BadRequestException('Exam has no class assigned.');
+    await this.classAccess.assertClassAccess(exam.classId, true);
 
     return this.dataSource.transaction(async (manager) => {
       await manager.delete(ExamAssignment, { examId: id });
@@ -555,6 +577,7 @@ export class ExamService {
     if (!exam) {
       throw new NotFoundException(`Exam with id ${examId} not found`);
     }
+    if (exam.classId != null) await this.classAccess.assertClassAccess(exam.classId, true);
 
     if (createAssignmentDto.classId !== exam.classId) {
       throw new BadRequestException(

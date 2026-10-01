@@ -1,5 +1,5 @@
-import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
-import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
+import { AssignmentParam } from './assignment-param.entity';
+import { AssignmentTemplate } from './assignment-template.entity';
 import { AssignmentAlertRule } from 'src/assignment-alert/entities/assignment-alert-rule.entity';
 import { AssignmentUserAlert } from 'src/assignment-alert/entities/assignment-user-alert.entity';
 import { AssignmentAlertType } from 'src/assignment-alert/enums/assignment-alert-type.enum';

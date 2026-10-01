@@ -1,6 +1,6 @@
 import { UserRole } from 'src/user/user-role';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Brackets, Repository } from 'typeorm';
+import { Brackets, IsNull, Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/request/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,12 +13,15 @@ import {
   buildPaginationParams,
 } from 'src/common/pagination/pagination';
 import { UpdateUserDto } from './dto/request/update-user.dto';
+import { RefreshSession } from 'src/auth/entities/refresh-session.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(RefreshSession)
+    private readonly refreshSessionRepository: Repository<RefreshSession>,
   ) {}
   async createOrReplace(createUserDto: CreateUserDto) {
     const { password, ...userData } = createUserDto;
@@ -63,6 +66,14 @@ export class UserService {
     return this.userRepository.find({
       relations: ['userClasses'],
     });
+  }
+
+  async findTeachers() {
+    return this.userRepository.find({
+      where: { role: UserRole.TEACHER },
+      select: { id: true, name: true, email: true },
+      order: { name: 'ASC', id: 'ASC' }
+    })
   }
 
   async findAllPaginated(query: ListUsersQueryDto): Promise<PaginatedResult<User>> {
@@ -112,10 +123,12 @@ export class UserService {
       throw new Error('User not found');
     }
 
-    if (user.role === UserRole.ADMIN) {
-      throw new Error('Cannot delete admin user');
-    }
+    await this.userRepository.softDelete({ id });
 
-    return this.userRepository.softDelete({ id });
+    await this.refreshSessionRepository.update(
+      { userId: id, revokedAt: IsNull() },
+      { revokedAt: new Date() }
+    )
+    return { deactivated: true }
   }
 }

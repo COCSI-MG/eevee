@@ -1,6 +1,6 @@
-import { Assignment } from 'src/assignment/entities/assignment.entity';
-import { TemplateParam } from 'src/template-params/entities/template-param.entity';
+import { TemplateParam } from 'src/template/entities/template-param.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Assignment } from './assignment.entity';
 
 @Entity()
 export class AssignmentParam {
@@ -16,7 +16,7 @@ export class AssignmentParam {
   @Column()
   templateParamsId: number;
 
-  @ManyToOne(() => Assignment, (assignment) => assignment.assignmentTemplates)
+  @ManyToOne(() => Assignment, (assignment) => assignment.assignmentParams)
   assignment: Assignment;
 
   @ManyToOne(

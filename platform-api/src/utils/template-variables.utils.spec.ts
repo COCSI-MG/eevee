@@ -1,5 +1,5 @@
 import { buildTemplateVariablesModule } from './template-variables.utils';
-import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
+import { TemplateParamType } from 'src/template/enums/template-param-type.enum';
 
 describe('buildTemplateVariablesModule', () => {
   it('generates a module with typed literals', () => {

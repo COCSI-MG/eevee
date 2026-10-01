@@ -335,6 +335,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
                       selectedTemplates={selectedTemplates}
                       setSelectedTemplates={setSelectedTemplates}
                       workerType={values.workerType as WorkerType}
+                      classId={Number(values.classId)}
                       onWeightChange={handleWeightChange}
                       weightError={weightError}
                     />

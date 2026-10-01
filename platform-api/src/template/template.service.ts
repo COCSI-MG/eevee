@@ -9,9 +9,9 @@ import { UpdateTemplateDto } from './dto/update-template.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Template } from './entities/template.entity';
 import { Brackets, In, Repository } from 'typeorm';
-import { TemplateParam } from 'src/template-params/entities/template-param.entity';
-import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
-import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
+import { TemplateParam } from 'src/template/entities/template-param.entity';
+import { AssignmentTemplate } from 'src/assignment/entities/assignment-template.entity';
+import { TemplateParamType } from 'src/template/enums/template-param-type.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { ListTemplatesQueryDto } from './dto/list-templates.query.dto';
 import {
@@ -19,6 +19,8 @@ import {
   buildPaginationMeta,
   buildPaginationParams,
 } from 'src/common/pagination/pagination';
+import { ClassAccessService } from 'src/auth/class-access.service';
+import { UserRole } from 'src/user/user-role';
 
 @Injectable()
 export class TemplateService {
@@ -29,9 +31,12 @@ export class TemplateService {
     private readonly templateParamsRepository: Repository<TemplateParam>,
     @InjectRepository(AssignmentTemplate)
     private readonly assignmentTemplateRepository: Repository<AssignmentTemplate>,
+    private readonly classAccess: ClassAccessService
   ) {}
 
   async create(createTemplateDto: CreateTemplateDto) {
+    await this.classAccess.assertTeacherAssignment(createTemplateDto.classId);
+
     const newTemplate = await this.templateRepository.save({
       title: createTemplateDto.title,
       description: createTemplateDto.description,
@@ -39,6 +44,7 @@ export class TemplateService {
       content: createTemplateDto.content,
       workerType: createTemplateDto.workerType,
       dependencies: createTemplateDto.dependencies ?? [],
+      classId: createTemplateDto.classId
     });
 
     const typedParams = createTemplateDto.typedParams ?? [];
@@ -58,10 +64,23 @@ export class TemplateService {
     return this.findOne(newTemplate.id);
   }
 
-  async findAll(workerType?: WorkerType) {
-    const templates = await this.templateRepository.find({
-      ...(workerType ? { where: { workerType } } : {}),
-    });
+  async findAll(workerType?: WorkerType, classId?: number) {
+    const user = this.classAccess.user();
+
+    const qb = this.templateRepository
+      .createQueryBuilder('template')
+      .leftJoinAndSelect('template.templateParams', 'templateParams');
+
+    if (!this.classAccess.isAdmin()) qb.innerJoin('template.class', 'class', 'class.teacherId = :teacherId', { teacherId: user.userId });
+
+    if (workerType) qb.andWhere('template.workerType = :workerType', { workerType });
+
+    if (classId != null) {
+      await this.classAccess.assertTeacherAssignment(classId);
+      qb.andWhere('template.classId = :classId', { classId });
+    }
+
+    const templates = await qb.getMany();
     return templates;
   }
 
@@ -73,6 +92,12 @@ export class TemplateService {
     const qb = this.templateRepository
       .createQueryBuilder('template')
       .orderBy('template.id', 'DESC');
+
+    const user = this.classAccess.user();
+
+    if (!this.classAccess.isAdmin()) {
+      qb.innerJoin('template.class', 'class', 'class.teacherId = :teacherId', { teacherId: user.userId });
+    }
 
     if (query.workerType) {
       qb.andWhere('template.workerType = :workerType', {
@@ -107,6 +132,8 @@ export class TemplateService {
   }
 
   async findOne(id: number) {
+    await this.classAccess.assertTemplateAccess(id, true);
+
     const template = await this.templateRepository.findOne({
       where: { id },
     });
@@ -120,15 +147,28 @@ export class TemplateService {
 
   async update(id: number, updateTemplateDto: UpdateTemplateDto) {
     const { params, typedParams, ...dataToUpdate } = updateTemplateDto;
-    const template = await this.templateRepository.findOne({ where: { id } });
+    const template = await this.classAccess.assertTemplateAccess(id, true);
 
     if (!template) {
       throw new NotFoundException('Template não encontrado.');
     }
 
-    await this.templateRepository.update(id, {
-      ...dataToUpdate,
-    });
+    const requestedClassId = (dataToUpdate as Partial<Template>).classId;
+
+    delete (dataToUpdate as Partial<Template>).classId;
+
+    if (requestedClassId !== undefined && requestedClassId !== template.classId) {
+
+      if (template.classId != null || !this.classAccess.isAdmin() || requestedClassId == null) {
+        throw new BadRequestException('A template cannot be moved to another class.');
+      }
+
+      await this.classAccess.assertClassAccess(requestedClassId, true);
+      await this.templateRepository.update(id, { classId: requestedClassId });
+      template.classId = requestedClassId;
+    }
+
+    await this.templateRepository.update(id, dataToUpdate);
 
     if (params || typedParams) {
       const existingParams = await this.templateParamsRepository.find({
@@ -203,6 +243,8 @@ export class TemplateService {
   }
 
   async remove(id: number) {
+    await this.classAccess.assertTemplateAccess(id, true);
+
     const isTemplateAssociatedToAssignment =
       await this.assignmentTemplateRepository.findOne({
         where: { templateId: id },

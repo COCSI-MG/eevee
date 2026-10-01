@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  ArrayNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -32,8 +31,14 @@ export class CreateOrReplaceClassDto {
 
   @ApiProperty()
   @ApiPropertyOptional()
-  @ArrayNotEmpty()
   @IsNumber({}, { each: true })
   @Type(() => Number)
+  @IsOptional()
   students: number[];
+
+  @ApiPropertyOptional()
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  teacherId?: number;
 }

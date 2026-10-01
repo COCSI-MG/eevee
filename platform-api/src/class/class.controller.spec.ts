@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { ClassController } from './class.controller';
 import { ClassService } from './class.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { ROLES_KEY } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 
 describe('ClassController', () => {
   let controller: ClassController;
@@ -11,6 +16,7 @@ describe('ClassController', () => {
     findAllByUser: jest.Mock;
     findOne: jest.Mock;
     remove: jest.Mock;
+    restore: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -21,6 +27,7 @@ describe('ClassController', () => {
       findAllByUser: jest.fn(),
       findOne: jest.fn(),
       remove: jest.fn(),
+      restore: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -38,6 +45,31 @@ describe('ClassController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('protects every endpoint with JWT and role guards', () => {
+    expect(Reflect.getMetadata(GUARDS_METADATA, ClassController)).toEqual([
+      JwtAuthGuard,
+      RolesGuard,
+    ]);
+  });
+
+  it('declares the allowed roles for every endpoint', () => {
+    const expectedRoles = {
+      create: [UserRole.ADMIN, UserRole.TEACHER],
+      findAll: [UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT],
+      findOptions: [UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT],
+      findAllByUser: [UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT],
+      findAllPaginated: [UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT],
+      findOne: [UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT],
+      remove: [UserRole.ADMIN, UserRole.TEACHER],
+      restore: [UserRole.ADMIN],
+      update: [UserRole.ADMIN, UserRole.TEACHER]
+    };
+
+    for (const [handlerName, roles] of Object.entries(expectedRoles)) {
+      expect(Reflect.getMetadata(ROLES_KEY, ClassController.prototype[handlerName])).toEqual(roles);
+    }
   });
 
   it('delegates create to createOrReplace', async () => {

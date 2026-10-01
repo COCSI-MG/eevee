@@ -1,4 +1,5 @@
 import { UserRole } from 'src/user/user-role';
+import { ClassAccessService } from 'src/auth/class-access.service';
 import {
   ForbiddenException,
   HttpException,
@@ -9,7 +10,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { RequestContextService } from 'src/request-context/request-context.service';
-import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { EntityManager, In, IsNull, Not, Repository } from 'typeorm';
 import { AssignmentAlertPolicyDto } from './dto/assignment-alert-policy.dto';
 import { CreateAssignmentUserAlertDto } from './dto/create-assignment-user-alert.dto';
@@ -55,9 +55,8 @@ export class AssignmentAlertService {
     private readonly ruleRepository: Repository<AssignmentAlertRule>,
     @InjectRepository(Assignment)
     private readonly assignmentRepository: Repository<Assignment>,
-    @InjectRepository(UserClass)
-    private readonly userClassRepository: Repository<UserClass>,
-    private readonly requestContextService: RequestContextService
+    private readonly requestContextService: RequestContextService,
+    private readonly classAccess: ClassAccessService
   ) {}
 
   async replaceRules(
@@ -201,14 +200,11 @@ export class AssignmentAlertService {
   }
 
   private async assertUserCanAccessAssignment(assignment: Assignment, userId: number): Promise<void> {
-    const enrollment = await this.userClassRepository.findOne({
-      where: { classId: assignment.classId, userId },
-      select: { classId: true, userId: true }
-    });
+    const current = this.requestContextService.getUser();
 
-    if (!enrollment) {
-      throw new ForbiddenException('User is not enrolled in this class.');
-    }
+    if (!current || current.userId !== userId) throw new ForbiddenException('Invalid alert owner.');
+
+    await this.classAccess.assertAssignmentAccess(assignment.id);
   }
 
   private sanitizeDetails(dto: CreateAssignmentUserAlertDto): AssignmentAlertDetails | null {
@@ -246,7 +242,7 @@ export class AssignmentAlertService {
     const user = this.requestContextService.getUser();
     if (!user?.userId) throw new ForbiddenException('Authentication required');
 
-    if (user.role === UserRole.ADMIN) {
+    if (user.role !== UserRole.STUDENT) {
       return {
         recorded: false,
         duplicate: false,
@@ -344,6 +340,8 @@ export class AssignmentAlertService {
 
   async listUsers(assignmentId: number, query: ListAssignmentAlertUsersDto) {
 
+    await this.classAccess.assertAssignmentAccess(assignmentId, true);
+
     const assignment = await this.assignmentRepository.findOne({
       where: { id: assignmentId },
       select: { id: true, suspensionAlertLimit: true }
@@ -419,6 +417,7 @@ export class AssignmentAlertService {
     userId: number,
     query: ListAssignmentAlertUsersDto
   ) {
+    await this.classAccess.assertAssignmentAccess(assignmentId, true);
     const where = {
       assignmentId,
       userId,
@@ -451,7 +450,9 @@ export class AssignmentAlertService {
     alertId: number
   ): Promise<ArchiveAssignmentAlertResult> {
     const admin = this.requestContextService.getUser();
-    if (!admin?.userId || admin.role !== UserRole.ADMIN) throw new ForbiddenException('Administrator access required')
+    if (!admin?.userId) throw new ForbiddenException('Authentication required')
+
+    await this.classAccess.assertAssignmentAccess(assignmentId, true)
 
     const assignment = await this.assignmentRepository.findOne({
       where: { id: assignmentId },

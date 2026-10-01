@@ -7,6 +7,8 @@ import { InterviewResponseController } from './interview-response.controller';
 import { InterviewResponseService } from './interview-response.service';
 import { InterviewResponse } from './entities/interview-response.entity';
 import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -14,7 +16,7 @@ import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.mod
     RequestContextModule,
     AssignmentAlertModule
   ],
-  providers: [InterviewResponseService],
+  providers: [InterviewResponseService, JwtAuthGuard, RolesGuard],
   controllers: [InterviewResponseController],
   exports: [InterviewResponseService],
 })

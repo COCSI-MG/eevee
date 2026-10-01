@@ -6,7 +6,9 @@ import { ClsService } from 'nestjs-cls';
 import { AttemptStatus } from './enums/attempt-status.enum';
 import { CreateAttemptDto } from './dto/create-applicant-attempt.dto';
 import { ListAdminAttemptsQueryDto } from './dto/list-admin-attempts.query.dto';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { ClassAccessService } from 'src/auth/class-access.service';
+import { UserRole } from 'src/user/user-role';
 
 describe('AttemptService', () => {
   let service: AttemptService;
@@ -21,7 +23,11 @@ describe('AttemptService', () => {
   let clsService: {
     get: jest.Mock;
   };
-
+  let classAccessService: {
+    user: jest.Mock
+    assertAssignmentAccess: jest.Mock
+    assertClassAccess: jest.Mock
+  };
   const makeQueryBuilder = () => {
     const qb: Record<string, jest.Mock> = {
       select: jest.fn().mockReturnThis(),
@@ -64,6 +70,11 @@ describe('AttemptService', () => {
     clsService = {
       get: jest.fn(),
     };
+    classAccessService = {
+      user: jest.fn().mockReturnValue({ userId: 1, role: UserRole.ADMIN }),
+      assertAssignmentAccess: jest.fn().mockResolvedValue({ id: 99, classId: 1 }),
+      assertClassAccess: jest.fn().mockResolvedValue({ id: 1 }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -73,6 +84,7 @@ describe('AttemptService', () => {
           useValue: attemptRepository,
         },
         { provide: ClsService, useValue: clsService },
+        { provide: ClassAccessService, useValue: classAccessService },
       ],
     }).compile();
 
@@ -338,63 +350,121 @@ describe('AttemptService', () => {
     expect(selectedFields).not.toContain('attempt.fails');
   });
 
-  it('returns paginated attempts for an assignment and user ordered newest first', async () => {
+  it('retains the teacher filter after applying the assignment and class filters', async () => {
+    classAccessService.user.mockReturnValue({ userId: 4, role: UserRole.TEACHER });
     const queryBuilder = makeQueryBuilder();
-    queryBuilder.getRawMany.mockResolvedValue([
-      {
-        id: '12',
-        attempt: '2',
-        status: AttemptStatus.COMPLETED,
-        isAcceptable: true,
-        score: '0.9',
-        passes: '9',
-        fails: '1',
-        report: 'One test failed',
-        receivedWork: { 'src/index.ts': 'export const answer = 42;' },
-        createdAt: new Date('2026-04-18T10:00:00.000Z'),
-      },
-    ]);
-    queryBuilder.getCount.mockResolvedValue(12);
+    const outerQueryBuilder = makeQueryBuilder();
+    outerQueryBuilder.getRawMany.mockResolvedValue([]);
+    queryBuilder.getRawOne.mockResolvedValue({ total: '0' });
+    attemptRepository.createQueryBuilder.mockReturnValue(queryBuilder);
+    attemptRepository.manager.createQueryBuilder.mockReturnValue(outerQueryBuilder);
+
+    await service.findAllForAdmin({ assignmentId: 99, classId: 1 });
+
+    expect(classAccessService.assertAssignmentAccess).toHaveBeenCalledWith(99, true);
+    expect(classAccessService.assertClassAccess).toHaveBeenCalledWith(1, true);
+    expect(queryBuilder.innerJoin).toHaveBeenCalledWith('assignment.class', 'class');
+    expect(queryBuilder.andWhere).toHaveBeenLastCalledWith(
+      'class.teacherId = :teacherId',
+      { teacherId: 4 }
+    );
+    expect(queryBuilder.where.mock.invocationCallOrder[0]).toBeLessThan(
+      queryBuilder.andWhere.mock.invocationCallOrder[
+        queryBuilder.andWhere.mock.invocationCallOrder.length - 1
+      ]
+    );
+  });
+
+  it.each([UserRole.ADMIN, UserRole.TEACHER])(
+    'returns historical attempts to authorized %s without requiring current enrollment',
+    async (role) => {
+      classAccessService.user.mockReturnValue({ userId: 4, role });
+      const queryBuilder = makeQueryBuilder();
+      queryBuilder.getRawMany.mockResolvedValue([
+        {
+          id: '12',
+          attempt: '2',
+          status: AttemptStatus.COMPLETED,
+          isAcceptable: true,
+          score: '0.9',
+          passes: '9',
+          fails: '1',
+          report: 'One test failed',
+          receivedWork: { 'src/index.ts': 'export const answer = 42;' },
+          createdAt: new Date('2026-04-18T10:00:00.000Z'),
+        },
+      ]);
+      queryBuilder.getCount.mockResolvedValue(12);
+      attemptRepository.createQueryBuilder.mockReturnValue(queryBuilder);
+
+      await expect(
+        service.findAllForAdminByAssignmentAndUser(99, 7, {
+          page: 2,
+          pageSize: 5
+        })
+      ).resolves.toEqual({
+        data: [
+          {
+            id: 12,
+            attempt: 2,
+            status: AttemptStatus.COMPLETED,
+            isAcceptable: true,
+            score: 0.9,
+            passes: 9,
+            fails: 1,
+            report: 'One test failed',
+            receivedWork: { 'src/index.ts': 'export const answer = 42;' },
+            createdAt: new Date('2026-04-18T10:00:00.000Z')
+          }
+        ],
+        meta: { total: 12, page: 2, pageSize: 5, totalPages: 3 }
+      });
+
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'attempt.assignmentId = :assignmentId',
+        { assignmentId: 99 }
+      );
+      expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+        'attempt.userId = :userId',
+        { userId: 7 },
+      );
+      expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+        'attempt.receivedWork',
+        'receivedWork',
+      );
+      expect(queryBuilder.addOrderBy).toHaveBeenCalledWith('attempt.id', 'DESC');
+      expect(queryBuilder.skip).toHaveBeenCalledWith(5);
+      expect(queryBuilder.take).toHaveBeenCalledWith(5);
+      expect(queryBuilder.getCount).toHaveBeenCalled();
+      expect(classAccessService.assertAssignmentAccess).toHaveBeenCalledWith(99, true);
+    },
+  );
+
+  it('rejects a teacher who does not manage the assignment class', async () => {
+    classAccessService.user.mockReturnValue({ userId: 4, role: UserRole.TEACHER });
+    classAccessService.assertAssignmentAccess.mockRejectedValue(new NotFoundException('Class not found'));
+
+    await expect(service.findAllForAdminByAssignmentAndUser(99, 7, { page: 1 })).rejects.toBeInstanceOf(NotFoundException);
+
+    expect(attemptRepository.createQueryBuilder).not.toHaveBeenCalled();
+  });
+
+  it('returns an empty page when the assignment and user have no attempts', async () => {
+    const queryBuilder = makeQueryBuilder();
+    queryBuilder.getRawMany.mockResolvedValue([]);
+    queryBuilder.getCount.mockResolvedValue(0);
     attemptRepository.createQueryBuilder.mockReturnValue(queryBuilder);
 
     await expect(
-      service.findAllForAdminByAssignmentAndUser(99, 7, {
-        page: 2,
-        pageSize: 5
-      })
+      service.findAllForAdminByAssignmentAndUser(99, 7, { page: 1, pageSize: 10 })
     ).resolves.toEqual({
-      data: [
-        {
-          id: 12,
-          attempt: 2,
-          status: AttemptStatus.COMPLETED,
-          isAcceptable: true,
-          score: 0.9,
-          passes: 9,
-          fails: 1,
-          report: 'One test failed',
-          receivedWork: { 'src/index.ts': 'export const answer = 42;' },
-          createdAt: new Date('2026-04-18T10:00:00.000Z')
-        }
-      ],
-      meta: { total: 12, page: 2, pageSize: 5, totalPages: 3 }
+      data: [],
+      meta: {
+        total: 0,
+        page: 1,
+        pageSize: 10,
+        totalPages: 1
+      }
     });
-
-    expect(queryBuilder.where).toHaveBeenCalledWith(
-      'attempt.assignmentId = :assignmentId',
-      { assignmentId: 99 }
-    );
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
-      'attempt.userId = :userId',
-      { userId: 7 },
-    );
-    expect(queryBuilder.addSelect).toHaveBeenCalledWith(
-      'attempt.receivedWork',
-      'receivedWork',
-    );
-    expect(queryBuilder.addOrderBy).toHaveBeenCalledWith('attempt.id', 'DESC');
-    expect(queryBuilder.skip).toHaveBeenCalledWith(5);
-    expect(queryBuilder.take).toHaveBeenCalledWith(5);
-    expect(queryBuilder.getCount).toHaveBeenCalled();
   });
 });

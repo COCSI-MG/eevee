@@ -36,8 +36,8 @@ export default function UsersPage() {
     try {
       await UsersService.deleteUser(id);
       toast({
-        title: "Usuário excluído",
-        description: "O usuário foi excluído com sucesso.",
+        title: "Conta desativada",
+        description: "O acesso foi revogado e o histórico foi preservado.",
         duration: 4000,
       });
       refetch();
@@ -60,7 +60,7 @@ export default function UsersPage() {
       toast({
         title: "Erro",
         description:
-          err instanceof Error ? err.message : "Falha ao excluir usuário.",
+          err instanceof Error ? err.message : "Falha ao desativar conta.",
         variant: "destructive",
         duration: 4000,
       });

@@ -1,9 +1,9 @@
 import { UserRole } from 'src/user/user-role';
 import { HttpException, NotFoundException } from '@nestjs/common';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
-import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { AssignmentAlertService } from './assignment-alert.service';
+import { ClassAccessService } from 'src/auth/class-access.service';
 import { AssignmentAlertRule } from './entities/assignment-alert-rule.entity';
 import { AssignmentUserAlert } from './entities/assignment-user-alert.entity';
 import { AssignmentAlertType } from './enums/assignment-alert-type.enum';
@@ -32,16 +32,16 @@ describe('AssignmentAlertService', () => {
       })
     } as unknown as jest.Mocked<Repository<Assignment>>;
 
-    const userClassRepository = {
-      findOne: jest.fn().mockResolvedValue({ classId: 9, userId: 7 })
-    } as unknown as jest.Mocked<Repository<UserClass>>;
-
     const requestContextService = {
       getUser: jest.fn().mockReturnValue({
         userId: 7,
         role: options?.role ?? UserRole.STUDENT
       })
     };
+
+    const classAccess = {
+      assertAssignmentAccess: jest.fn().mockResolvedValue({ id: 4, classId: 9 })
+    } as unknown as jest.Mocked<ClassAccessService>
 
     const duplicateQueryBuilder = {
       withDeleted: jest.fn().mockReturnThis(),
@@ -80,8 +80,8 @@ describe('AssignmentAlertService', () => {
       alertRepository,
       ruleRepository,
       assignmentRepository,
-      userClassRepository,
-      requestContextService as never
+      requestContextService as never,
+      classAccess
     );
 
     return {

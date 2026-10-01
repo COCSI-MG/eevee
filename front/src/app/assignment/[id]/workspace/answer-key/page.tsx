@@ -227,7 +227,7 @@ export default function AnswerKeyPage() {
   const { id } = useParams();
   const { user } = useAuthContext();
   const assignmentId = Number(id);
-  const canManage = user?.role === UserRole.ADMIN;
+  const canManage = (user?.role === UserRole.ADMIN) || (user?.role === UserRole.TEACHER);
   const router = useRouter();
 
   const {

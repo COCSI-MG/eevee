@@ -12,6 +12,7 @@ import { CreateAnswerKeyDto } from './dto/create-answer-key.dto';
 import { UpdateAnswerKeyDto } from './dto/update-answer-key.dto';
 import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 import { UserRole } from 'src/user/user-role';
+import { ClassAccessService } from 'src/auth/class-access.service';
 
 @Injectable()
 export class AnswerKeyService {
@@ -22,17 +23,16 @@ export class AnswerKeyService {
     private readonly assignmentRepository: Repository<Assignment>,
     private readonly dataSource: DataSource,
     private readonly assignmentAlertService: AssignmentAlertService,
+    private readonly classAccess: ClassAccessService
   ) {}
 
   async create(assignmentId: number, dto: CreateAnswerKeyDto) {
-    const assignment = await this.assignmentRepository.findOne({
-      where: { id: assignmentId },
-    });
+    const assignment = await this.classAccess.assertAssignmentAccess(assignmentId, true);
 
     if (!assignment) throw new NotFoundException('Assignment not found');
 
     const existing = await this.answerKeyRepository.findOne({
-      where: { assignmentId },
+      where: { assignmentId }
     });
 
     if (existing || assignment.answerKeyId) {
@@ -61,7 +61,10 @@ export class AnswerKeyService {
   }
 
   async findOne(assignmentId: number, role: UserRole) {
-    if (role !== UserRole.ADMIN) {
+    await this.classAccess.assertAssignmentAccess(assignmentId);
+    const canManage = role === UserRole.ADMIN || role === UserRole.TEACHER;
+
+    if (!canManage) {
       await this.assignmentAlertService.assertCurrentUserNotSuspended(assignmentId);
     }
 
@@ -78,7 +81,7 @@ export class AnswerKeyService {
 
     if (!assignment) throw new NotFoundException('Assignment not found');
 
-    if (role !== UserRole.ADMIN && !assignment.answerKeyVisible) {
+    if (!canManage && !assignment.answerKeyVisible) {
       throw new ForbiddenException('Answer key is not visible');
     }
 
@@ -86,6 +89,7 @@ export class AnswerKeyService {
   }
 
   async update(assignmentId: number, dto: UpdateAnswerKeyDto) {
+    await this.classAccess.assertAssignmentAccess(assignmentId, true);
     const answerKey = await this.answerKeyRepository.findOne({
       where: { assignmentId },
     });
@@ -108,6 +112,7 @@ export class AnswerKeyService {
   }
 
   async remove(assignmentId: number) {
+    await this.classAccess.assertAssignmentAccess(assignmentId, true);
     return this.dataSource.transaction(async (manager) => {
       const answerKey = await manager.findOne(AnswerKey, {
         where: { assignmentId },

@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
 import { HashUtils } from 'src/utils/hash.utils';
+import { RefreshSession } from 'src/auth/entities/refresh-session.entity';
 
 describe('UserService', () => {
   let service: UserService;
@@ -14,6 +15,7 @@ describe('UserService', () => {
     softDelete: jest.Mock;
     createQueryBuilder: jest.Mock;
   };
+  let refreshSessionRepository: { update: jest.Mock }
 
   beforeEach(async () => {
     userRepository = {
@@ -23,6 +25,7 @@ describe('UserService', () => {
       softDelete: jest.fn(),
       createQueryBuilder: jest.fn(),
     };
+    refreshSessionRepository = { update: jest.fn().mockResolvedValue({ affected: 1 }) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -31,6 +34,10 @@ describe('UserService', () => {
           provide: getRepositoryToken(User),
           useValue: userRepository,
         },
+        {
+          provide: getRepositoryToken(RefreshSession),
+          useValue: refreshSessionRepository
+        }
       ],
     }).compile();
 
@@ -165,14 +172,19 @@ describe('UserService', () => {
     expect(userRepository.softDelete).not.toHaveBeenCalled();
   });
 
-  it('throws when removing an admin user', async () => {
+  it('deactivates an admin and revokes every active session for that user', async () => {
     userRepository.findOne.mockResolvedValue({
       id: 1,
       role: UserRole.ADMIN
     } as unknown as User);
+    userRepository.softDelete.mockResolvedValue({ affected: 1 } as any);
 
-    await expect(service.remove(1)).rejects.toThrow('Cannot delete admin user');
-    expect(userRepository.softDelete).not.toHaveBeenCalled();
+    await expect(service.remove(1)).resolves.toEqual({ deactivated: true });
+    expect(userRepository.softDelete).toHaveBeenCalledWith({ id: 1 });
+    expect(refreshSessionRepository.update).toHaveBeenCalledWith(
+      { userId: 1, revokedAt: expect.anything() },
+      { revokedAt: expect.any(Date) }
+    );
   });
 
   it('deletes a removable user', async () => {
@@ -185,6 +197,7 @@ describe('UserService', () => {
     await service.remove(7);
 
     expect(userRepository.softDelete).toHaveBeenCalledWith({ id: 7 });
+    expect(refreshSessionRepository.update).toHaveBeenCalled();
   });
 
   const makeQueryBuilder = () => {

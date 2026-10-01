@@ -26,11 +26,12 @@ export class TemplatesService {
         return <Template>response.data;
     }
 
-    static async listTemplates(workerType?: WorkerType) {
+    static async listTemplates(workerType?: WorkerType, classId?: number) {
         const response = await axiosClientWithAuth.get("/template", {
-            params: workerType ? { workerType } : undefined,
+            params: { workerType, classId }
         });
-        return <Template[]>response.data;
+
+        return response.data;
     }
 
     static async deleteTemplate(id: number) {

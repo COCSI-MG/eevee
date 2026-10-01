@@ -7,6 +7,8 @@ import { Class } from './entities/class.entity';
 import { UserClassService } from 'src/user-class/user-class.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
+import { User } from 'src/user/entities/user.entity';
+import { ClassAccessService } from 'src/auth/class-access.service';
 
 describe('ClassService', () => {
   let service: ClassService;
@@ -16,10 +18,13 @@ describe('ClassService', () => {
     findOne: jest.Mock;
     update: jest.Mock;
     find: jest.Mock;
-    delete: jest.Mock;
+    softDelete: jest.Mock;
+    restore: jest.Mock;
     createQueryBuilder: jest.Mock;
     query: jest.Mock;
   };
+  let userRepository: { findOne: jest.Mock; find: jest.Mock };
+  let classAccessService: { assertClassAccess: jest.Mock };
   let userClassService: {
     createMany: jest.Mock;
     deleteByClassId: jest.Mock;
@@ -35,16 +40,35 @@ describe('ClassService', () => {
       findOne: jest.fn(),
       update: jest.fn(),
       find: jest.fn(),
-      delete: jest.fn(),
+      softDelete: jest.fn(),
+      restore: jest.fn(),
       createQueryBuilder: jest.fn(),
       query: jest.fn().mockResolvedValue([]),
+    };
+    userRepository = {
+      findOne: jest.fn(),
+      find: jest.fn().mockImplementation(async ({ where }: any) => {
+        const ids: number[] = where.id?._value ?? [];
+
+        return ids.map((id) => ({
+          id,
+          role: UserRole.STUDENT
+        }))
+      }),
     };
     userClassService = {
       createMany: jest.fn(),
       deleteByClassId: jest.fn(),
     };
     requestContextService = {
-      getUser: jest.fn(),
+      getUser: jest.fn().mockReturnValue({ userId: 1, role: UserRole.ADMIN }),
+    };
+    classAccessService = {
+      assertClassAccess: jest.fn(async (id: number) => {
+        const cls = await classRepository.findOne({ where: { id } });
+        if (!cls) throw new UnprocessableEntityException('Class not found.');
+        return cls;
+      }),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -53,6 +77,14 @@ describe('ClassService', () => {
         {
           provide: getRepositoryToken(Class),
           useValue: classRepository,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: userRepository
+        },
+        {
+          provide: ClassAccessService,
+          useValue: classAccessService,
         },
         {
           provide: UserClassService,
@@ -69,11 +101,10 @@ describe('ClassService', () => {
   });
 
   it('creates a new class and students when provided', async () => {
-    classRepository.create.mockReturnValue({
+    classRepository.create.mockImplementation((data: Partial<Class>) => ({
       id: 10,
-      name: 'Algorithms',
-      description: 'Intro class',
-    });
+      ...data,
+    } as Class));
     classRepository.save.mockResolvedValue({
       id: 10,
       name: 'Algorithms',
@@ -90,17 +121,21 @@ describe('ClassService', () => {
       id: 10,
       name: 'Algorithms',
       description: 'Intro class',
+      teacherId: null,
+      deletedAt: null,
       users: [],
     });
 
     expect(classRepository.create).toHaveBeenCalledWith({
       name: 'Algorithms',
       description: 'Intro class',
+      teacherId: null
     });
     expect(classRepository.save).toHaveBeenCalledWith({
       id: 10,
       name: 'Algorithms',
       description: 'Intro class',
+      teacherId: null
     });
     expect(userClassService.createMany).toHaveBeenCalledWith([
       { userId: 1, classId: 10 },
@@ -128,12 +163,13 @@ describe('ClassService', () => {
       id: 5,
       name: 'New name',
       description: 'New description',
+      teacherId: null,
+      deletedAt: null,
       users: [],
     });
 
-    expect(classRepository.findOne).toHaveBeenCalledWith({
-      where: { id: 5 },
-    });
+    expect(classRepository.findOne).toHaveBeenCalledWith({ where: { id: 5 } });
+
     expect(classRepository.update).toHaveBeenCalledWith(5, {
       name: 'New name',
       description: 'New description',
@@ -160,6 +196,31 @@ describe('ClassService', () => {
     expect(userClassService.deleteByClassId).not.toHaveBeenCalled();
   });
 
+  it('archives a class only after checking manager access', async () => {
+    classRepository.findOne.mockResolvedValue({
+      id: 21,
+      teacherId: 8
+    });
+
+    classRepository.softDelete.mockResolvedValue({ affected: 1 });
+
+    await expect(service.remove(21)).resolves.toEqual({ affected: 1 });
+
+    expect(classAccessService.assertClassAccess).toHaveBeenCalledWith(21, true);
+
+    expect(classRepository.softDelete).toHaveBeenCalledWith({ id: 21 });
+  });
+
+  it('restores an archived class after controller authorization', async () => {
+    const archivedClass = { id: 21, teacherId: 8, deletedAt: new Date() };
+    classRepository.findOne.mockResolvedValue(archivedClass);
+    classRepository.restore.mockResolvedValue({ affected: 1 });
+
+    await expect(service.restore(21)).resolves.toEqual(archivedClass);
+
+    expect(classRepository.restore).toHaveBeenCalledWith({ id: 21 });
+  });
+
   it('blocks access to another user without admin rights', async () => {
     requestContextService.getUser.mockReturnValue({
       userId: 2,
@@ -169,6 +230,10 @@ describe('ClassService', () => {
     await expect(service.findAllByUser(1)).rejects.toBeInstanceOf(
       ForbiddenException,
     );
+
+    expect(classRepository.find).not.toHaveBeenCalled();
+    expect(classRepository.createQueryBuilder).not.toHaveBeenCalled();
+    expect(classRepository.query).not.toHaveBeenCalled();
   });
 
   it('returns every class for an admin regardless of enrollment', async () => {
@@ -189,7 +254,25 @@ describe('ClassService', () => {
       },
     ]);
 
-    await expect(service.findAllByUser(999)).resolves.toHaveLength(2);
+    classRepository.query.mockResolvedValue([
+      { id: 8, exams: 3, practices: 2, quizzes: 1 },
+      { id: 7, exams: 1, practices: 0, quizzes: 4 },
+    ]);
+
+    await expect(service.findAllByUser(999)).resolves.toEqual([
+      {
+        id: 7,
+        name: 'Algorithms',
+        description: 'Intro class',
+        activityCounts: { exams: 1, practices: 0, quizzes: 4 },
+      },
+      {
+        id: 8,
+        name: 'Databases',
+        description: 'Advanced class',
+        activityCounts: { exams: 3, practices: 2, quizzes: 1 },
+      },
+    ]);
 
     expect(classRepository.find).toHaveBeenCalledWith({
       relations: [
@@ -199,6 +282,57 @@ describe('ClassService', () => {
         'assignments',
       ],
     });
+
+    expect(classRepository.query).toHaveBeenCalledWith(
+      expect.any(String),
+      [[7, 8], true, expect.any(Date), true],
+    );
+  });
+
+  it('returns owned classes and unrestricted exam counts for a teacher', async () => {
+    requestContextService.getUser.mockReturnValue({
+      userId: 8,
+      role: UserRole.TEACHER,
+    });
+    classRepository.find.mockResolvedValue([{ id: 21, teacherId: 8 }]);
+    classRepository.query.mockResolvedValue([
+      { id: 21, exams: 5, practices: 2, quizzes: 1 },
+    ]);
+
+    await expect(service.findAllByUser(8)).resolves.toEqual([
+      {
+        id: 21,
+        teacherId: 8,
+        activityCounts: { exams: 5, practices: 2, quizzes: 1 },
+      },
+    ]);
+
+    expect(classRepository.find).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { teacherId: 8 } }),
+    );
+    expect(classRepository.query).toHaveBeenCalledWith(
+      expect.stringContaining('$4::boolean OR (e."startDate"'),
+      [[21], false, expect.any(Date), true],
+    );
+    expect(classRepository.query.mock.calls[0][0]).toContain(
+      '$2::boolean OR (a.published',
+    );
+  });
+
+  it('returns zero activity counts when a class has no summary', async () => {
+    classRepository.find.mockResolvedValue([{ id: 21 }]);
+
+    await expect(service.findAllByUser(1)).resolves.toEqual([
+      { id: 21, activityCounts: { exams: 0, practices: 0, quizzes: 0 } },
+    ]);
+  });
+
+  it('skips activity counts when no classes are found', async () => {
+    classRepository.find.mockResolvedValue([]);
+
+    await expect(service.findAllByUser(1)).resolves.toEqual([]);
+
+    expect(classRepository.query).not.toHaveBeenCalled();
   });
 
   it('lists only id and name for filter options', async () => {
@@ -218,38 +352,55 @@ describe('ClassService', () => {
       userId: 7,
       role: UserRole.STUDENT
     });
-    classRepository.find.mockResolvedValue([
+    const classesForStudent = [
       {
         id: 7,
         name: 'Algorithms',
         description: 'Intro class',
       },
+    ];
+
+    const qb = {
+      innerJoin: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getMany: jest.fn().mockResolvedValue(classesForStudent),
+    };
+    classRepository.createQueryBuilder.mockReturnValue(qb);
+    classRepository.query.mockResolvedValue([
+      { id: 7, exams: 2, practices: 1, quizzes: 0 },
     ]);
-    classRepository.query.mockResolvedValue([{ id: 7, exams: 2, practices: 1, quizzes: 3 }]);
 
     await expect(service.findAllByUser(7)).resolves.toEqual([
       {
-        id: 7,
-        name: 'Algorithms',
-        description: 'Intro class',
-        activityCounts: { exams: 2, practices: 1, quizzes: 3 },
+        ...classesForStudent[0],
+        activityCounts: { exams: 2, practices: 1, quizzes: 0 },
       },
     ]);
-    expect(classRepository.query).toHaveBeenCalledWith(expect.any(String), [[7], false, expect.any(Date)]);
 
-    expect(classRepository.find).toHaveBeenCalledWith({
-      relations: [
-        'userClasses',
-        'userClasses.user',
-        'userClasses.class',
-        'assignments',
-      ],
-      where: {
-        userClasses: {
-          user: { id: 7 },
-        },
-      },
-    });
+    expect(classRepository.find).not.toHaveBeenCalled();
+    expect(classRepository.query).toHaveBeenCalledWith(
+      expect.any(String),
+      [[7], false, expect.any(Date), false],
+    );
+
+    expect(qb.innerJoin).toHaveBeenCalledWith(
+      'class.userClasses',
+      'userClass',
+      'userClass.userId = :userId',
+      { userId: 7 }
+    );
+
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      expect.stringContaining('exam.startDate IS NOT NULL'),
+      expect.objectContaining({ now: expect.any(Date) })
+    );
+
+    expect(qb.leftJoinAndSelect).not.toHaveBeenCalledWith(
+      'class.userClasses',
+      expect.anything()
+    );
   });
 
   describe('findAllPaginated', () => {
