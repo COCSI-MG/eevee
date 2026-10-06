@@ -48,7 +48,9 @@ export function SqlLab({
     setBusy(true);
     setMessage("Preparando seu banco de prática…");
     setResults([]);
-    const next = new Worker("/practice-sql/worker.mjs", { type: "module" });
+    // This worker is prebuilt in public; use the browser constructor so
+    // Turbopack does not try to bundle it as a source entry point.
+    const next = new window.Worker("/practice-sql/worker.mjs", { type: "module" });
     worker.current = next;
     next.onmessage = ({ data }) => {
       if (worker.current !== next) return;
