@@ -30,7 +30,7 @@ const useFetchAssignment = (id: number) => {
 
       return ![404, 423].includes(status ?? 0) && failureCount < 3;
     },
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     refetchInterval: (query) =>
       hasProcessingAttempt(query.state.data) ? 5000 : false,
   })

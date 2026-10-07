@@ -67,6 +67,10 @@ export class RealtimeGateway
   constructor(private readonly jwtService: JwtService) {}
 
   handleConnection(client: Socket) {
+    client.data.connectedAt = Date.now();
+    client.once('disconnecting', (reason) => {
+      client.data.disconnectReason = reason;
+    });
     const token = getTokenFromCookieHeader(client.handshake.headers.cookie);
 
     if (!token) {
@@ -77,6 +81,7 @@ export class RealtimeGateway
 
     try {
       const payload = this.jwtService.verify<JwtPayload>(token);
+      client.data.userId = payload.userId;
       void client.join(userRoom(payload.userId));
       this.scheduleExpiryDisconnect(client, payload.exp);
       this.logger.debug(
@@ -89,6 +94,13 @@ export class RealtimeGateway
   }
 
   handleDisconnect(client: Socket) {
+    this.logger.log({
+      message: 'Realtime client disconnected',
+      socketId: client.id,
+      userId: client.data.userId,
+      reason: client.data.disconnectReason,
+      durationMs: Date.now() - client.data.connectedAt,
+    });
     const timer = this.expiryTimers.get(client.id);
 
     if (timer) {

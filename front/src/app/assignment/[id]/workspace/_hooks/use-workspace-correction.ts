@@ -44,6 +44,11 @@ export function useWorkspaceCorrection({
       }
     },
     Boolean(assignment?.id),
+    () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["assignment", assignment?.id],
+      });
+    },
   );
 
   const correctionStorageKey = React.useMemo(() => {
