@@ -7,6 +7,7 @@ on:
     paths:
       - "platform-api/**"
       - "packages/execution-contracts/**"
+      - "scripts/deploy-release.sh"
       - ".github/actions/remote-kubectl/**"
       - ".github/workflows/deploy-platform-api.yaml"
 
@@ -28,6 +29,9 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+
+      - name: Check deployment value precedence
+        run: bash scripts/test-deploy-release.sh
 
       - name: Login no GitHub Container Registry
         uses: docker/login-action@v3
@@ -61,13 +65,11 @@ jobs:
             git fetch origin '${{ github.sha }}'
             CHART_WORKDIR=$(mktemp -d)
             trap 'rm -rf "$CHART_WORKDIR"' EXIT
-            git archive '${{ github.sha }}' infrastructure/helm/eevee | tar -x -C "$CHART_WORKDIR"
-            CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
-            helm dependency build "$CHART"
-            helm upgrade eevee "$CHART" --namespace eevee-cefetrj --reuse-values \
-              --set platformApi.image.repository="${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}" \
-              --set-string platformApi.image.tag='${{ github.sha }}' \
-              --wait --timeout 10m
+            git archive '${{ github.sha }}' infrastructure/helm/eevee scripts/deploy-release.sh | tar -x -C "$CHART_WORKDIR"
+            export CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
+            bash "$CHART_WORKDIR/scripts/deploy-release.sh" \
+              --set-string platformApi.image.repository="${{ env.REGISTRY }}/${{ env.PLATFORM_API_IMAGE }}" \
+              --set-string platformApi.image.tag='${{ github.sha }}'
             if ! kubectl rollout status deployment/platform-api-deployment -n eevee-cefetrj --timeout=5m; then
               kubectl get pods -n eevee-cefetrj -o wide
               kubectl describe deployment/platform-api-deployment -n eevee-cefetrj

@@ -20,6 +20,28 @@ This replaces the previous raw manifests under `k8s/` and the Kustomize
 
 ## Operator workflow (shared cluster, namespace-scoped)
 
+### CI configuration and image ownership
+
+All four deployment workflows use `scripts/deploy-release.sh`. Each upgrade
+resets Helm values and explicitly loads this chart's committed `values.yaml`.
+Memory limits, Node options, and other configuration therefore come from Git;
+old release values cannot silently override a configuration change. Move any
+intentional production overrides into the committed values before deploying.
+
+The script reads the three live application Deployments and preserves their
+image repositories and tags, including images previously changed with kubectl.
+The service workflow then overrides its own image with the newly built commit
+SHA. Infrastructure-only changes preserve all three application images. Missing
+Deployments use chart defaults on first install; failed Kubernetes reads abort.
+Digest image references currently fail explicitly because the chart expects tags.
+
+Chart changes trigger the infrastructure workflow automatically. All deployment
+jobs share the production concurrency group. Secrets remain provisioned
+out-of-band and are not recreated or rotated by an infrastructure deployment.
+
+Run `bash scripts/test-deploy-release.sh` to check image preservation, override
+precedence, first installs, and failure handling without accessing a cluster.
+
 Secrets and the GHCR pull secret are **created out-of-band**. Helm only
 references them by name and never manages their lifecycle (this avoids
 Helm fighting an externally-edited Secret on `helm upgrade`).
