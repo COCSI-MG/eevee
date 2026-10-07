@@ -98,11 +98,13 @@ platformApi:
   env: "production"
   replicas: 1
   containerPort: 3000
+  # Keep heap ~75% of the memory limit to leave room for native/off-heap memory.
+  nodeOptions: "--max-old-space-size=768"
   resources:
     requests:
-      memory: 128Mi
+      memory: 256Mi
     limits:
-      memory: 384Mi
+      memory: 1Gi
 
 # -----------------------------------------------------------------------------
 # Assignment Runner (BullMQ consumer)

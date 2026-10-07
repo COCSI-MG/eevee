@@ -20,6 +20,41 @@ This replaces the previous raw manifests under `k8s/` and the Kustomize
 
 ## Operator workflow (shared cluster, namespace-scoped)
 
+### CI configuration and image ownership
+
+Before any deployment workflow builds or publishes application/worker images,
+`validate-deployment.yaml` runs all three applications' unit tests and compilation,
+checks the Helm chart and deployment script, and validates the jumpbox checkout,
+required secrets, resource permissions, and a server-connected Helm dry run.
+PostgreSQL worker publication also depends on this gate and its existing lifecycle
+smoke tests. These checks do not guarantee application behavior under production
+load or replace database migration planning.
+
+Set **repository variable** `DEPLOY_WORKDIR=/home/eevee-cefetrj/eevee` (not an
+Actions secret). The workflow fails with an explicit message if it is missing.
+Rerunning an old Actions run uses its original commit; start a new run on updated
+`main` to execute newly merged workflow fixes.
+
+All four deployment workflows use `scripts/deploy-release.sh`. Each upgrade
+resets Helm values and explicitly loads this chart's committed `values.yaml`.
+Memory limits, Node options, and other configuration therefore come from Git;
+old release values cannot silently override a configuration change. Move any
+intentional production overrides into the committed values before deploying.
+
+The script reads the three live application Deployments and preserves their
+image repositories and tags, including images previously changed with kubectl.
+The service workflow then overrides its own image with the newly built commit
+SHA. Infrastructure-only changes preserve all three application images. Missing
+Deployments use chart defaults on first install; failed Kubernetes reads abort.
+Digest image references currently fail explicitly because the chart expects tags.
+
+Chart changes trigger the infrastructure workflow automatically. All deployment
+jobs share the production concurrency group. Secrets remain provisioned
+out-of-band and are not recreated or rotated by an infrastructure deployment.
+
+Run `bash scripts/test-deploy-release.sh` to check image preservation, override
+precedence, first installs, and failure handling without accessing a cluster.
+
 Secrets and the GHCR pull secret are **created out-of-band**. Helm only
 references them by name and never manages their lifecycle (this avoids
 Helm fighting an externally-edited Secret on `helm upgrade`).

@@ -1,6 +1,14 @@
 name: Deploy Infrastructure
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "infrastructure/helm/eevee/**"
+      - "scripts/deploy-release.sh"
+      - "scripts/test-deploy-release.sh"
+      - ".github/workflows/validate-deployment.yaml"
+      - ".github/workflows/deploy-infra.yaml"
   workflow_dispatch:
 
 env:
@@ -11,7 +19,12 @@ env:
   FRONT_IMAGE: "${{ vars.FRONT_IMAGE || 'cocsi-mg/eevee-front' }}"
 
 jobs:
+  validate:
+    uses: ./.github/workflows/validate-deployment.yaml
+    secrets: inherit
+
   deploy-infra:
+    needs: validate
     runs-on: ubuntu-latest
     concurrency:
       group: eevee-production-deploy
@@ -20,6 +33,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check deployment value precedence
+        run: bash scripts/test-deploy-release.sh
 
       - name: Deploy infrastructure from the VM
         uses: ./.github/actions/remote-kubectl
@@ -34,29 +50,17 @@ jobs:
             set -euo pipefail
             REGISTRY=ghcr.io
             NAMESPACE=eevee-cefetrj
-            cd "${{ vars.DEPLOY_WORKDIR }}"
+            DEPLOY_WORKDIR='${{ vars.DEPLOY_WORKDIR }}'
+            : "${DEPLOY_WORKDIR:?Set the repository variable DEPLOY_WORKDIR (not a secret)}"
+            cd "$DEPLOY_WORKDIR"
+            git rev-parse --show-toplevel
             git fetch origin '${{ github.sha }}'
             CHART_WORKDIR=$(mktemp -d)
             trap 'rm -rf "$CHART_WORKDIR"' EXIT
-            git archive '${{ github.sha }}' infrastructure/helm/eevee | tar -x -C "$CHART_WORKDIR"
-            CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
-            kubectl -n "$NAMESPACE" create secret generic eevee-secrets \
-              --from-literal=DB_PASSWORD='${{ secrets.DB_PASSWORD }}' \
-              --from-literal=JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-              --from-literal=GROQ_API_KEY='${{ secrets.GROQ_API_KEY }}' \
-              --dry-run=client -o yaml | kubectl apply -f -
-
-            kubectl -n "$NAMESPACE" create secret docker-registry ghcr-auth \
-              --docker-server="$REGISTRY" \
-              --docker-username='${{ github.actor }}' \
-              --docker-password='${{ secrets.GHCR_TOKEN }}' \
-              --dry-run=client -o yaml | kubectl apply -f -
-
-            helm dependency build "$CHART"
-            helm upgrade --install eevee "$CHART" \
-              --namespace "$NAMESPACE" \
-              --reset-then-reuse-values \
-              --wait --timeout 10m
+            git archive '${{ github.sha }}' infrastructure/helm/eevee scripts/deploy-release.sh | tar -x -C "$CHART_WORKDIR"
+            export CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
+            # Secrets are provisioned out-of-band; configuration deploys do not rotate them.
+            bash "$CHART_WORKDIR/scripts/deploy-release.sh"
 
             for deployment in platform-api-deployment assignment-runner-deployment eevee-front-deployment; do
               if ! kubectl -n "$NAMESPACE" rollout status "deployment/$deployment" --timeout=5m; then

@@ -11,6 +11,9 @@ on:
       - "images/node/nest.js/**"
       - ".github/workflows/postgresql-workers.yaml"
       - "packages/execution-contracts/**"
+      - "scripts/deploy-release.sh"
+      - "scripts/test-deploy-release.sh"
+      - ".github/workflows/validate-deployment.yaml"
       - ".github/actions/remote-kubectl/**"
       - ".github/workflows/deploy-assignment-runner.yaml"
 
@@ -19,7 +22,12 @@ env:
   ASSIGNMENT_RUNNER_IMAGE: "${{ vars.ASSIGNMENT_RUNNER_IMAGE || 'cocsi-mg/eevee-assignment-runner' }}"
 
 jobs:
+  validate:
+    uses: ./.github/workflows/validate-deployment.yaml
+    secrets: inherit
+
   postgresql-workers:
+    needs: validate
     uses: ./.github/workflows/postgresql-workers.yaml
     permissions:
       contents: read
@@ -28,7 +36,7 @@ jobs:
       publish: true
 
   build-and-deploy:
-    needs: postgresql-workers
+    needs: [validate, postgresql-workers]
     runs-on: ubuntu-latest
     concurrency:
       group: eevee-production-deploy
@@ -41,6 +49,9 @@ jobs:
     steps:
       - name: Checkout do codigo
         uses: actions/checkout@v4
+
+      - name: Check deployment value precedence
+        run: bash scripts/test-deploy-release.sh
 
       - name: Set worker registry namespace
         id: worker-registry
@@ -55,7 +66,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build e Push da Imagem Docker
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./assignment-runner/Dockerfile
@@ -75,16 +86,20 @@ jobs:
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
             set -euo pipefail
-            # The deploy identity already has access to the existing Deployment.
-            # RBAC objects are deliberately not managed from this workflow.
-            kubectl patch deployment assignment-runner-deployment -n eevee-cefetrj --type=strategic -p '
-              {"spec":{"template":{"spec":{"containers":[{"name":"assignment-runner",
-                "image":"${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }}",
-                "env":[
-                  {"name":"WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL","value":"${{ steps.worker-registry.outputs.namespace }}/worker-node-default-postgresql-img:latest"},
-                  {"name":"WORKER_IMAGE_NODE_NESTJS_POSTGRESQL","value":"${{ steps.worker-registry.outputs.namespace }}/worker-nestjs-postgresql-img:latest"}
-                ]
-              }]}}}}'
+            DEPLOY_WORKDIR='${{ vars.DEPLOY_WORKDIR }}'
+            : "${DEPLOY_WORKDIR:?Set the repository variable DEPLOY_WORKDIR (not a secret)}"
+            cd "$DEPLOY_WORKDIR"
+            git rev-parse --show-toplevel
+            git fetch origin '${{ github.sha }}'
+            CHART_WORKDIR=$(mktemp -d)
+            trap 'rm -rf "$CHART_WORKDIR"' EXIT
+            git archive '${{ github.sha }}' infrastructure/helm/eevee scripts/deploy-release.sh | tar -x -C "$CHART_WORKDIR"
+            export CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
+            bash "$CHART_WORKDIR/scripts/deploy-release.sh" \
+              --set-string assignmentRunner.image.repository="${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}" \
+              --set-string assignmentRunner.image.tag='${{ github.sha }}' \
+              --set-string workerImages.nodeDefaultPostgresql="${{ steps.worker-registry.outputs.namespace }}/worker-node-default-postgresql-img:latest" \
+              --set-string workerImages.nodeNestjsPostgresql="${{ steps.worker-registry.outputs.namespace }}/worker-nestjs-postgresql-img:latest"
             if ! kubectl rollout status deployment/assignment-runner-deployment -n eevee-cefetrj --timeout=5m; then
               kubectl get pods -n eevee-cefetrj -o wide
               kubectl describe deployment/assignment-runner-deployment -n eevee-cefetrj

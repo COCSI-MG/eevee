@@ -19,7 +19,7 @@ test-invitations:
 
 .PHONY: seed-classroom seed-classroom-preview check-classroom-seed
 
-.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front seed down prepare-workers migration-show migration-run
+.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front seed down prepare-workers migration-show migration-run deploy
 
 help:
 	@echo "EEVEE - comandos de desenvolvimento"
@@ -40,6 +40,7 @@ help:
 	@echo "  make down                  Encerra a infraestrutura local"
 	@echo "  make up-docs               Serve a documentacao em http://localhost:$(DOCS_PORT)"
 	@echo "  make check-docs            Valida a documentacao em modo estrito"
+	@echo "  make deploy                Helm install/upgrade e depois reinicia os deployments (rollout)"
 
 setup:
 	cd packages/execution-contracts && npm ci && npm run build
@@ -103,7 +104,7 @@ down:
 	minikube stop
 	cd infrastructure && docker compose down
 
-.PHONY: images build-images push-images build-workers push-workers
+.PHONY: images build-images push-images build-workers push-workers rollout-restart rollout-restart-all
 images: build-images push-images
 
 .PHONY: build-packages build-execution-contracts
@@ -149,6 +150,19 @@ push-workers: \
 	push-worker-node-nextjs-cypress \
 	push-worker-react-cypress \
 	push-worker-python-default
+
+rollout-restart:
+	@test -n "$(DEPLOYMENT)" || { echo "Usage: make rollout-restart DEPLOYMENT=<deployment-name>"; exit 1; }
+	kubectl -n $(NAMESPACE) rollout restart deployment/$(DEPLOYMENT)
+	kubectl -n $(NAMESPACE) rollout status deployment/$(DEPLOYMENT) --timeout=5m
+
+rollout:
+	@set -e; \
+	for deployment in platform-api-deployment assignment-runner-deployment eevee-front-deployment eevee-entrypoint-gateway; do \
+		echo "Restarting $$deployment"; \
+		kubectl -n $(NAMESPACE) rollout restart deployment/$$deployment; \
+		kubectl -n $(NAMESPACE) rollout status deployment/$$deployment --timeout=5m; \
+	done
 
 # Per-image targets ----------------------------------------------------------
 # Each app/worker has a `build-*` and `push-*` target so a single image can be
@@ -246,6 +260,8 @@ install:
 		--set platformApi.image.pullPolicy=Always \
 		--set assignmentRunner.image.pullPolicy=Always \
 		$(if $(wildcard $(VALUES)),-f $(VALUES))
+
+deploy: install rollout
 
 uninstall:
 	helm uninstall $(HELM_RELEASE) -n $(NAMESPACE)
