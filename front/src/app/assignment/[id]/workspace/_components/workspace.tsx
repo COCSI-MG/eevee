@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import WorkspaceCodeEditor from "./workspace-code-editor";
 import WorkspaceExplorer from "./workspace-explorer";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
@@ -10,7 +9,6 @@ import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
 import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
-import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { FileNode, SelectedItem } from "@/types/shared";
 import {
   updateFileContent,
@@ -18,9 +16,9 @@ import {
   rebaseMovedPath,
 } from "../_utils/workspace-tree.utils";
 import { useSaveFileTree } from "@/hooks/use-filestash";
-import { Button } from "@/components/ui/button";
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 import WorkspaceImportControl from "./workspace-import-control";
+import WorkspaceShell from "./workspace-shell";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -41,15 +39,11 @@ export default function Workspace({
     replaceFileTree,
     selectedItem,
     selectItem,
-    fileTreeData,
-    securityPaused,
-    registerTypedText
+    fileTreeData
   } = useWorkspaceContext();
   const userId = user.userId;
-  const { explorerWidth, startResize } = useWorskpaceResizing();
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
   const [, setActiveFileContent] = React.useState("");
-  const [isSplitView, setIsSplitView] = React.useState(false);
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
 
@@ -146,19 +140,14 @@ export default function Workspace({
       type: "file",
       path: node.path,
     });
-    setIsSplitView(true);
   }, []);
 
   const handleItemMoved = React.useCallback(
     (oldPath: string, newPath: string) => {
       setSecondarySelectedItem((current) => {
-
-        if (!current) return current
-
+        if (!current) return current;
         const updatedPath = rebaseMovedPath(current.path, oldPath, newPath);
-
-        if (updatedPath === current.path) return current
-
+        if (updatedPath === current.path) return current;
         return {
           ...current,
           id: updatedPath.split("/").pop() || current.id,
@@ -179,7 +168,6 @@ export default function Workspace({
     );
     if (!exists) {
       setSecondarySelectedItem(null);
-      setIsSplitView(false);
     }
   }, [fileTreeData, secondarySelectedItem]);
 
@@ -203,85 +191,28 @@ export default function Workspace({
     onResettingChange?.(isResetting);
   }, [isResetting, onResettingChange]);
 
-  const editorCommonProps = {
-    actionGuardMode: editorActionGuardMode,
-    readOnly: securityPaused,
-    onDidType: registerTypedText
-  };
-
   return (
-    <div className="flex flex-1 min-h-0">
-      <div
-        className="relative flex shrink-0 min-w-[150px] max-w-[400px] flex-col bg-card border-r border-border h-full min-h-0"
-        style={{ width: explorerWidth }}
-      >
-        <WorkspaceImportControl
-          assignment={assignment}
-          user={user}
-        />
-
-        <WorkspaceExplorer
-          onFileSelect={handleFileSelect}
-          onTreeChange={handleTreeChange}
-          onOpenInSecondary={handleOpenInSecondary}
-          onItemMoved={handleItemMoved}
-        />
-
-        <div
-          role="separator"
-          aria-label="Redimensionar explorador"
-          aria-orientation="vertical"
-          className="absolute right-0 top-0 h-full w-1 cursor-ew-resize bg-transparent transition-colors hover:bg-primary/40"
-          onMouseDown={(event) => startResize("explorer", event)}
-        />
-      </div>
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-end gap-2 border-b border-border px-2 py-1">
-          {isSplitView && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSecondarySelectedItem(null)}
-                disabled={!secondarySelectedItem}
-              >
-                Fechar página 2
-              </Button>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSplitView((current) => !current)}
-          >
-            {isSplitView ? "Página única" : "Duas páginas"}
-          </Button>
-        </div>
-
-        {isSplitView ? (
-          <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-border">
-            <div className="min-w-0 min-h-0 flex flex-col">
-              <WorkspaceCodeEditor
-                {...editorCommonProps}
-                file={activeFile}
-                onEditorChange={handleEditorChange}
-              />
-            </div>
-            <div className="min-w-0 min-h-0 flex flex-col">
-              <WorkspaceCodeEditor
-                {...editorCommonProps}
-                file={secondaryFile}
-                onEditorChange={handleSecondaryEditorChange}
-              />
-            </div>
-          </div>
-        ) : (
-          <WorkspaceCodeEditor
-            {...editorCommonProps}
-            file={activeFile}
-            onEditorChange={handleEditorChange}
+    <WorkspaceShell
+      explorer={
+        <>
+          <WorkspaceImportControl
+            assignment={assignment}
+            user={user}
           />
-        )}
-      </div>
-    </div>
+
+          <WorkspaceExplorer
+            onFileSelect={handleFileSelect}
+            onTreeChange={handleTreeChange}
+            onOpenInSecondary={handleOpenInSecondary}
+            onItemMoved={handleItemMoved}
+          />
+        </>
+      }
+      activeFile={activeFile}
+      secondaryFile={secondaryFile}
+      onEditorChange={handleEditorChange}
+      onSecondaryEditorChange={handleSecondaryEditorChange}
+      editorActionGuardMode={editorActionGuardMode}
+    />
   );
 }

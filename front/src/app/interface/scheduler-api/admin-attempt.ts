@@ -1,5 +1,7 @@
 export interface AdminAttemptDetail {
   id: number;
+  userId: number;
+  assignmentId: number;
   attempt: number;
   isAcceptable: boolean;
   score: number;
@@ -43,6 +45,23 @@ export interface AdminUserAttemptSummary {
     "id" | "attempt" | "status" | "score" | "createdAt"
   >;
 }
+export interface AdminSubmittedWork {
+  attemptId: number;
+  assignmentId: number;
+  userId: number;
+  attempt: number;
+  createdAt: string;
+  user: { id: number; name: string; email: string };
+  assignment: {
+    id: number;
+    title: string;
+    description: string;
+    workerType: string
+  };
+  files: Record<string, string>;
+}
+
+export type AdminAttemptListItem = Omit<AdminAttempt, "report" | "receivedWork">;
 
 export interface AdminAttemptsListResponse {
   data: AdminUserAttemptSummary[];

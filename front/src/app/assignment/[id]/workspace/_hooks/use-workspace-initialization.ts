@@ -19,6 +19,7 @@ interface UseWorkspaceInitializationParams {
   setActiveFileContent: React.Dispatch<React.SetStateAction<string>>;
   replaceFileTree: (fileTree: FileNode) => void;
   selectItem: (item: SelectedItem) => void;
+  enabled?: boolean;
 }
 
 export function useWorkspaceInitialization({
@@ -27,6 +28,7 @@ export function useWorkspaceInitialization({
   setActiveFileContent,
   replaceFileTree,
   selectItem,
+  enabled = true
 }: UseWorkspaceInitializationParams) {
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
   const [isInitialized, setIsInitialized] = React.useState(false);
@@ -62,7 +64,7 @@ export function useWorkspaceInitialization({
   const initializedWorkspaceKeyRef = React.useRef<string | null>(null);
 
   const initializeWorkspace = React.useCallback(async () => {
-    if (!initializationKey) {
+    if (!enabled || !initializationKey) {
       return;
     }
 
@@ -133,6 +135,7 @@ export function useWorkspaceInitialization({
 
     setIsInitialized(true);
   }, [
+    enabled,
     initializationKey,
     replaceFileTree,
     saveFileTreeAsync,

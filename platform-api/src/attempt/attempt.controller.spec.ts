@@ -9,6 +9,7 @@ describe('AttemptController', () => {
     findAllForAdmin: jest.Mock;
     findAllForAdminByAssignmentAndUser: jest.Mock;
     findOneForAdmin: jest.Mock;
+    findSubmittedWorkForAdmin: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -16,6 +17,7 @@ describe('AttemptController', () => {
       findAllForAdmin: jest.fn(),
       findAllForAdminByAssignmentAndUser: jest.fn(),
       findOneForAdmin: jest.fn(),
+      findSubmittedWorkForAdmin: jest.fn()
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -66,5 +68,13 @@ describe('AttemptController', () => {
     await expect(controller.findOneForAdmin(404)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('delegates submitted work lookup to the service', async () => {
+    const work = { attemptId: 4, assignmentId: 8, userId: 12, files: { 'main.ts': 'code' } };
+    attemptService.findSubmittedWorkForAdmin.mockResolvedValue(work);
+
+    await expect(controller.findSubmittedWorkForAdmin(8, 12, 4)).resolves.toEqual(work);
+    expect(attemptService.findSubmittedWorkForAdmin).toHaveBeenCalledWith(8, 12, 4);
   });
 });

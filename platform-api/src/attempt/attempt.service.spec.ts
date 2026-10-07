@@ -13,6 +13,7 @@ describe('AttemptService', () => {
   let attemptRepository: {
     save: jest.Mock;
     find: jest.Mock;
+    findOne: jest.Mock;
     createQueryBuilder: jest.Mock;
     manager: {
       createQueryBuilder: jest.Mock;
@@ -56,6 +57,7 @@ describe('AttemptService', () => {
     attemptRepository = {
       save: jest.fn(),
       find: jest.fn(),
+      findOne: jest.fn(),
       createQueryBuilder: jest.fn(),
       manager: {
         createQueryBuilder: jest.fn(),
@@ -366,6 +368,8 @@ describe('AttemptService', () => {
       data: [
         {
           id: 12,
+          userId: 7,
+          assignmentId: 99,
           attempt: 2,
           status: AttemptStatus.COMPLETED,
           isAcceptable: true,
@@ -396,5 +400,46 @@ describe('AttemptService', () => {
     expect(queryBuilder.skip).toHaveBeenCalledWith(5);
     expect(queryBuilder.take).toHaveBeenCalledWith(5);
     expect(queryBuilder.getCount).toHaveBeenCalled();
+  });
+
+  it('returns submitted work for the requested attempt only', async () => {
+    const submittedAttempt = {
+      id: 12,
+      assignmentId: 99,
+      userId: 7,
+      attempt: 2,
+      createdAt: new Date('2026-04-18T10:00:00.000Z'),
+      receivedWork: { 'src/index.ts': 'export const answer = 42;' },
+      user: { id: 7, name: 'Alice', email: 'alice@example.com' },
+      assignment: {
+        id: 99,
+        title: 'Assignment title',
+        description: 'Description',
+        workerType: 'node',
+      },
+    };
+    attemptRepository.findOne.mockResolvedValue(submittedAttempt);
+
+    await expect(service.findSubmittedWorkForAdmin(99, 7, 12)).resolves.toEqual({
+      attemptId: 12,
+      assignmentId: 99,
+      userId: 7,
+      attempt: 2,
+      createdAt: submittedAttempt.createdAt,
+      user: submittedAttempt.user,
+      assignment: submittedAttempt.assignment,
+      files: submittedAttempt.receivedWork,
+    });
+
+    expect(attemptRepository.findOne).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          id: 12,
+          assignmentId: 99,
+          userId: 7,
+          receivedWork: expect.anything(),
+        },
+      }),
+    );
   });
 });
