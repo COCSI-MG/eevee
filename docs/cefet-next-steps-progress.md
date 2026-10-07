@@ -1,63 +1,64 @@
-# CEFET integration progress
+# Progresso da integração CEFET
 
-The ordered handoff plan is in `.github/prompts/cefet-enrollment-content-and-adhoc.prompt.md`.
+O plano de transição ordenado está em `.github/prompts/cefet-enrollment-content-and-adhoc.prompt.md`.
 
-## Completed
+## Concluído
 
-- Added `platform-api/scripts/cefet-roster.ts`, an idempotent parser that preserves the roster display spelling and deduplicates names within each course.
-- Added `platform-api/scripts/cefet-roster.spec.ts` covering accents, case-insensitive duplicates, and cross-course reuse.
-- Added `User.externalSubject` and `User.identityProvider` with migration `1787279000000-UserExternalIdentity`. These fields are ready for a Microsoft Entra object ID; no token or credential is stored.
-- Inventoried the supplied class source: three PDFs under `cefet-rj-classes` (Arquitetura de Computadores, Banco de Dados II, and the technical-course architecture list).
-- Added `platform-api/scripts/seed-cefet-microsoft.ts`: an operator-driven MSAL device-code flow, tenant-scoped Graph pagination, exact normalized display-name matching, missing/ambiguous refusal, dry-run output, and transactional idempotent enrollment. Tokens are held in memory and never logged.
-- Added `platform-api/src/assignment/enums/assignment-execution-mode.enum.ts`, `Assignment.executionMode`, DTO support, and migration `1787280000000-AssignmentExecutionMode`. Existing assignments default to `graded`; `adhoc` is explicit and currently only schema/API metadata until the runner vertical slice is implemented.
-- Added `cefet-rj-classes/catalog.json` with the three discovered PDFs and an explicit `needs-extraction` status so source material is not silently converted into guessed assignments.
-- Added `ExecutionWorkerPayload.executionMode`, runner `CreateWorkerDto.executionMode`, and Python worker branching so `adhoc` runs execute `/app/src/app.py` directly instead of invoking pytest. Scheduling skips test/template preparation for explicit adhoc assignments and preserves submitted files.
-- Existing EEVEE auth is local/JWT. No Microsoft/Entra provider or Graph client is present.
-- Existing Python content seed is `platform-api/scripts/seed-python-examples.ts` and should be reused as the importer pattern.
+- Adicionado `platform-api/scripts/cefet-roster.ts`, um parser idempotente que preserva a grafia exibida na lista e remove duplicatas de nomes dentro de cada turma.
+- Adicionado `platform-api/scripts/cefet-roster.spec.ts` cobrindo acentos, duplicatas sem distinção de maiúsculas/minúsculas e reuso entre turmas.
+- Adicionados `User.externalSubject` e `User.identityProvider` com a migration `1787279000000-UserExternalIdentity`. Esses campos já estão prontos para um object ID do Microsoft Entra; nenhum token ou credencial é armazenado.
+- Inventariado o material de turma fornecido: três PDFs em `cefet-rj-classes` (Arquitetura de Computadores, Banco de Dados II e a lista técnica de arquitetura).
+- Adicionado `platform-api/scripts/seed-cefet-microsoft.ts`: um fluxo MSAL por device code conduzido pelo operador, paginação do Graph com escopo de tenant, correspondência exata de nome exibido normalizado, recusa em caso de ausência/ambiguidade, saída em modo dry-run e matrícula idempotente e transacional. Os tokens ficam apenas em memória e nunca são registrados em log.
+- Adicionados `platform-api/src/assignment/enums/assignment-execution-mode.enum.ts`, `Assignment.executionMode`, suporte no DTO e a migration `1787280000000-AssignmentExecutionMode`. As tarefas existentes usam `graded` por padrão; `adhoc` é explícito e hoje é apenas metadado de schema/API até que a fatia vertical do runner seja implementada.
+- Adicionado `cefet-rj-classes/catalog.json` com os três PDFs encontrados e um status explícito `needs-extraction`, para que o material-fonte não seja convertido silenciosamente em tarefas supostas.
+- Adicionados `ExecutionWorkerPayload.executionMode`, `CreateWorkerDto.executionMode` no runner e ramificação do worker Python para que execuções `adhoc` rodem `/app/src/app.py` diretamente em vez de invocar o pytest. O agendamento pula a preparação de teste/template para tarefas `adhoc` explícitas e preserva os arquivos enviados.
+- A autenticação atual do EEVEE é local/JWT. Não existe provedor Microsoft/Entra nem cliente Graph.
+- O seed de conteúdo Python existente é `platform-api/scripts/seed-python-examples.ts` e deve ser reutilizado como padrão para o importador.
 
-## Blocker for Microsoft lookup
+## Bloqueio para a busca no Microsoft
 
-A tenant-scoped Graph lookup needs an approved tenant/client configuration and delegated or application Graph permission. The local browser account can be used by an operator-run device-code or interactive login flow, but credentials/consent must not be automated or committed. Next agent should first confirm the approved auth path, then add a Graph adapter with pagination, retry/backoff, ambiguity reporting, dry-run, and transactional enrollment.
+Uma busca no Graph com escopo de tenant precisa de uma configuração de tenant/client aprovada e de permissão delegada ou de aplicação no Graph. A conta do navegador local pode ser usada por um fluxo de login por device code ou interativo conduzido pelo operador, mas credenciais/consentimento não podem ser automatizados nem versionados. O próximo agente deve primeiro confirmar o caminho de autenticação aprovado e então adicionar um adaptador do Graph com paginação, retry/backoff, relatório de ambiguidade, dry-run e matrícula transacional.
 
-The script requires `@azure/msal-node` (declared in `platform-api/package.json`; install it and refresh the lockfile when package execution is available), `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and the existing PostgreSQL environment. Run with `--dry-run` first. The app still needs a Microsoft login callback before the placeholder external-auth password can be used for interactive EEVEE login.
+O script requer `@azure/msal-node` (declarado em `platform-api/package.json`; instale e atualize o lockfile quando a execução de pacotes estiver disponível), `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID` e o ambiente PostgreSQL já existente. Execute primeiro com `--dry-run`. A aplicação ainda precisa de um callback de login Microsoft antes que a senha placeholder de autenticação externa possa ser usada para entrar no EEVEE de forma interativa.
 
-## Remaining sequence
+## Sequência restante
 
-1. Install `@azure/msal-node`, run the Microsoft script with `--dry-run`, then add the Microsoft login callback and approved Graph permissions.
-2. Extract and review the three PDFs, then implement a source-traceable importer for exercises with deterministic tests only where contracts permit.
-3. Complete API/UI behavior for `adhoc`: expose run-only status/output, prevent attempt scoring/persistence from treating it as graded, add cancellation/output limits, and verify authorization/cleanup. The runner command path is now present for Python.
+1. Instalar `@azure/msal-node`, rodar o script Microsoft com `--dry-run`, depois adicionar o callback de login Microsoft e as permissões Graph aprovadas.
+2. Extrair e revisar os três PDFs, depois implementar um importador rastreável à fonte para os exercícios, com testes determinísticos apenas onde o contrato permitir.
+3. Completar o comportamento de API/UI do `adhoc`: expor status/saída somente-execução, impedir que a persistência/pontuação de tentativas trate isso como corrigido, adicionar cancelamento/limites de saída e verificar autorização/limpeza. O caminho de comando do runner já existe para Python.
 
-## Verification
+## Verificação
 
-The frontend Pyodide IntelliSense implementation and real runtime regression tests passed before the current usage limit. Final platform type/test commands still need to be run when command execution credits are available.
+A implementação de IntelliSense do Pyodide no frontend e os testes reais de regressão de runtime passaram antes do limite de uso atual da sessão. Os comandos finais de type-check/teste da plataforma ainda precisam ser executados quando houver créditos de execução de comando disponíveis.
 
-## Session 2 update (2026-09-16)
+## Atualização da sessão 2 (2026-09-16)
 
-Picked back up from the above. What changed:
+Retomando o trabalho anterior. O que mudou:
 
-- Installed `@azure/msal-node` in `platform-api` (lockfile refreshed). `npm run build` is clean on both `platform-api` and `assignment-runner`.
-- `platform-api/scripts/cefet-roster.spec.ts` was never actually exercised by `npm test` (Jest's `rootDir` is `src`, so `scripts/*.spec.ts` was silently skipped). Added `scripts` to Jest `roots` in `platform-api/package.json` so it's part of the standard test run now. Full suite: 45 suites / 343 tests passing.
-- Ran the real (non-mocked) frontend Pyodide smoke test (`front/scripts/test-python-runtime.mjs`) end-to-end: syntax check, lint, Unicode, large files, "no execution" guarantee, and lint-failure isolation all still pass. Front Jest suite (5 suites / 17 tests, including the Pyodide marker/client/runtime tests) is green. The Python intellisense work from the parallel `python-worker-intellisense` prompt is done and verified — nothing further needed there for now.
-- Fixed a real bug in `seed-cefet-microsoft.ts`: the enrolled placeholder `passwordHash` was the literal string `'external-auth-no-password'`, not a bcrypt hash. `HashUtils.comparePassword` (`bcrypt.compareSync`) is not guaranteed to safely reject a non-bcrypt string on every version/platform — it can throw instead of returning `false`. Replaced it with a real bcrypt hash of a random, immediately-discarded UUID, so a local-login attempt against one of these accounts always safely fails instead of risking a 500 or relying on library-specific error handling.
-- Reviewed `execution-request.service.ts`: it shows as "modified" in git status but has zero functional diff (CRLF/LF only) — not part of this feature, nothing to do there.
+- Instalado `@azure/msal-node` em `platform-api` (lockfile atualizado). `npm run build` está limpo tanto em `platform-api` quanto em `assignment-runner`.
+- `platform-api/scripts/cefet-roster.spec.ts` nunca era de fato executado pelo `npm test` (o `rootDir` do Jest é `src`, então `scripts/*.spec.ts` era silenciosamente ignorado). Adicionado `scripts` a `roots` do Jest em `platform-api/package.json`, agora faz parte da execução padrão de testes. Suíte completa: 45 suítes / 343 testes passando.
+- Executado de ponta a ponta o smoke test real (sem mocks) do Pyodide no frontend (`front/scripts/test-python-runtime.mjs`): checagem de sintaxe, lint, Unicode, arquivos grandes, garantia de "nenhuma execução" e isolamento de falha de lint, tudo passando. A suíte Jest do front (5 suítes / 17 testes, incluindo os testes de marcador/cliente/runtime do Pyodide) está verde. O trabalho de intellisense Python do prompt paralelo `python-worker-intellisense` está concluído e verificado — nada mais a fazer ali por enquanto.
+- Corrigido um bug real em `seed-cefet-microsoft.ts`: o `passwordHash` placeholder das matrículas era a string literal `'external-auth-no-password'`, e não um hash bcrypt. `HashUtils.comparePassword` (`bcrypt.compareSync`) não garante rejeitar com segurança uma string que não seja bcrypt em toda versão/plataforma — pode lançar exceção em vez de retornar `false`. Substituído por um hash bcrypt real de um UUID aleatório e descartado imediatamente, de modo que uma tentativa de login local contra uma dessas contas sempre falha com segurança, em vez de arriscar um erro 500 ou depender de comportamento específico da biblioteca.
+- Revisado `execution-request.service.ts`: aparece como "modified" no git status, mas sem nenhuma diferença funcional (apenas CRLF/LF) — não faz parte desta funcionalidade, nada a fazer ali.
 
-### Confirmed gap: `adhoc` execution mode is schema/runner-wired but not scoring-safe yet
+### Lacuna confirmada: o modo de execução `adhoc` está conectado no schema/runner, mas ainda não é seguro para pontuação
 
-Traced the full path: `CreateAssignmentDto.executionMode` → `Assignment.executionMode` → `SchedulingService.prepareAndRunWorker` (skips template/test prep, forwards `executionMode: 'adhoc'` to the runner) → `PythonDefaultStrategy.buildExecutionJobCommand` (runs `/app/src/app.py` directly instead of `trigger.py`+pytest). That part works and compiles.
+Rastreado o caminho completo: `CreateAssignmentDto.executionMode` → `Assignment.executionMode` → `SchedulingService.prepareAndRunWorker` (pula a preparação de template/teste, repassa `executionMode: 'adhoc'` ao runner) → `PythonDefaultStrategy.buildExecutionJobCommand` (roda `/app/src/app.py` diretamente em vez de `trigger.py` + pytest). Essa parte funciona e compila.
 
-What's still missing, confirmed by reading `execution-result.consumer.ts` and `Attempt` entity: attempt scoring has no concept of "run-only". `Attempt.score`/`passes`/`fails` are non-nullable columns, and the result consumer always runs the strategy's `processLogResult` (pytest-style parser) and writes a pass/fail score — for an `adhoc` run there's no pytest summary line to parse, so today it would silently record a misleading `0 passed / 0 total` "failed" attempt instead of "here's your program's raw output, no grade."
+O que ainda falta, confirmado ao ler `execution-result.consumer.ts` e a entidade `Attempt`: a pontuação de tentativas não tem o conceito de "somente execução". As colunas `Attempt.score`/`passes`/`fails` não são anuláveis, e o consumidor de resultado sempre roda o `processLogResult` da estratégia (parser no estilo pytest) e grava uma pontuação de aprovado/reprovado — para uma execução `adhoc` não há linha de resumo do pytest para analisar, então hoje isso silenciosamente registraria uma tentativa enganosa de "0 passed / 0 total" como "reprovada", em vez de "aqui está a saída bruta do seu programa, sem nota."
 
-This is unreachable by students today: assignment creation is `AdminGuard`-protected and there is still **no frontend UI** anywhere that sets `executionMode: adhoc` (front has zero diff for this feature). So the gap is real but currently dormant, not an active bug in production.
+Isso é inalcançável pelos estudantes hoje: a criação de tarefas é protegida por `AdminGuard` e ainda não existe **nenhuma UI no frontend** em lugar algum que defina `executionMode: adhoc` (o front não tem nenhuma alteração para essa funcionalidade). Então a lacuna é real, mas está dormente no momento, não é um bug ativo em produção.
 
-Recommended design for whoever picks this up (not implemented yet, matches the original prompt's instruction to document rather than rush an unsafe execution path):
+Design recomendado para quem assumir isso (ainda não implementado, de acordo com a instrução do prompt original de documentar em vez de apressar um caminho de execução inseguro):
 
-- Add an explicit `Attempt.executionMode` (or a new `AttemptStatus.RAN`/similar) so a run-only attempt is structurally distinct from a graded one, with `score`/`passes`/`fails` either nullable or a documented sentinel — needs a migration.
-- Branch `execution-result.consumer.ts` on the assignment's `executionMode`: for `adhoc`, persist raw stdout/stderr/exit code and skip `processLogResult` entirely instead of feeding worker output through the pytest/Jest-style parser.
-- Add the actual product surface: assignment editor toggle for `graded`/`adhoc`, a distinct "Run" (not "Submit for grading") action and result panel in the student workspace, output truncation, and a cancellation path — none of this exists in `front/` yet.
-- Re-verify authorization and cleanup end to end once the above lands.
+- Adicionar um `Attempt.executionMode` explícito (ou um novo `AttemptStatus.RAN`/equivalente) para que uma tentativa somente-execução seja estruturalmente distinta de uma corrigida, com `score`/`passes`/`fails` anuláveis ou com um sentinela documentado — precisa de uma migration.
+- Ramificar `execution-result.consumer.ts` conforme o `executionMode` da tarefa: para `adhoc`, persistir stdout/stderr/exit code brutos e pular `processLogResult` completamente, em vez de passar a saída do worker pelo parser no estilo pytest/Jest.
+- Adicionar a superfície de produto de fato: alternância `graded`/`adhoc` no editor de tarefas, uma ação distinta de "Executar" (não "Enviar para correção") e painel de resultado no workspace do estudante, truncamento de saída e um caminho de cancelamento — nada disso existe em `front/` ainda.
+- Reverificar autorização e limpeza de ponta a ponta quando o item acima for implementado.
 
-### Still blocked / needs your input
+### Ainda bloqueado / precisa da sua decisão
 
-- The Microsoft Graph `--dry-run` was **not** executed — it needs real `MICROSOFT_TENANT_ID` and `MICROSOFT_CLIENT_ID` for the CEFET tenant app registration, which aren't available in this environment and shouldn't be guessed or fabricated. Provide them (e.g. via `platform-api/.env`, never committed) and confirm the approved Graph permission (`User.ReadBasic.All`, delegated) before the next agent runs `ts-node scripts/seed-cefet-microsoft.ts <roster> --dry-run`.
-- Phase 2 (PDF import) is still just an inventory (`cefet-rj-classes/catalog.json`, all three sources marked `needs-extraction`). No text has been extracted or reviewed yet.
-- Phase 3 needs an explicit go-ahead on the schema change above (new migration + entity change) before implementation, since it touches graded-attempt persistence.
+- O `--dry-run` do Microsoft Graph **não** foi executado — precisa de `MICROSOFT_TENANT_ID` e `MICROSOFT_CLIENT_ID` reais para o registro de aplicação do tenant do CEFET, que não estão disponíveis neste ambiente e não devem ser adivinhados ou inventados. Forneça-os (por exemplo via `platform-api/.env`, nunca versionado) e confirme a permissão Graph aprovada (`User.ReadBasic.All`, delegada) antes que o próximo agente rode `ts-node scripts/seed-cefet-microsoft.ts <roster> --dry-run`.
+- A Fase 2 (importação de PDF) ainda é apenas um inventário (`cefet-rj-classes/catalog.json`, as três fontes marcadas como `needs-extraction`). Nenhum texto foi extraído ou revisado ainda.
+- A Fase 3 precisa de um aval explícito sobre a mudança de schema acima (nova migration + alteração de entidade) antes da implementação, já que isso afeta a persistência de tentativas corrigidas.
+

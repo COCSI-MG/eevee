@@ -18,7 +18,7 @@ Do not ask for clarification unless blocked after inspecting the existing auth, 
 
 ## Source context
 
-- The pasted student roster is at `C:/Users/João Vitor Coimbra/.codex/attachments/f9889e37-9aa9-408a-abf8-d5f7e4b41d27/pasted-text.txt`. It contains course headings followed by institutional display names, with duplicates across courses and accents/typos that must not be silently “corrected”.
+- The student roster is course headings followed by institutional display names, with duplicates across courses and accents/typos that must not be silently “corrected”. Parse it with `platform-api/scripts/cefet-roster.ts`, which takes the roster file path as an argument — supply your own local copy; never hardcode a path from a specific machine.
 - CEFET exercise source is in `eevee/cefet-rj-classes/`, currently including PDFs for Arquitetura de Computadores and Banco de Dados II and a technical-course architecture list. Inspect all files before choosing extraction or manual transcription.
 - Existing Python seed prior art is `eevee/platform-api/scripts/seed-python-examples.ts`; it is idempotent, transactional, validates schema, and links assignments/templates.
 - Existing auth is in `eevee/platform-api/src/auth` and currently uses local/JWT flows. Inspect whether Microsoft/Entra login exists in another package or branch before adding dependencies.
