@@ -6,6 +6,7 @@ import {
   LearningActivities,
   learningError,
 } from "@/app/integration/scheduler-api/learning-activity";
+import { LearningActivityKind } from "@/app/interface/scheduler-api/learning-activity";
 import { PracticeSpace } from "@/components/learning/practice-space";
 import { QuizSpace } from "@/components/learning/quiz-space";
 export default function LearningPage() {
@@ -24,14 +25,14 @@ export default function LearningPage() {
       <Link href={`/classes/${id}?view=learning`}>← Voltar à turma</Link>
       <header className="space-y-3">
         <p className="text-sm text-muted-foreground">
-          {activity.kind === "practice"
+          {activity.kind === LearningActivityKind.PRACTICE
             ? "Prática guiada e experimentação livre"
             : "Questionário"}
         </p>
         <h1 className="text-3xl font-bold">{activity.title}</h1>
         <p className="whitespace-pre-wrap">{activity.description}</p>
       </header>
-      {activity.kind === "practice" && activity.practice ? (
+      {activity.kind === LearningActivityKind.PRACTICE && activity.practice ? (
         <PracticeSpace config={activity.practice} />
       ) : (
         <QuizSpace activity={activity} />

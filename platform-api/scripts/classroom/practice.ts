@@ -1,7 +1,6 @@
-import type {
-  PracticeConfigDto,
-  PracticeTaskDto,
-} from '../../src/learning-activity/learning-activity.dto';
+import type { PracticeConfigDto } from '../../src/learning-activity/dto/practice-config.dto';
+import type { PracticeTaskDto } from '../../src/learning-activity/dto/practice-task.dto';
+import { PracticeLab } from '../../src/learning-activity/enums/practice-lab.enum';
 
 // These reference solutions are used only by seed validation, never sent to students.
 export const sqlReferences: Record<string, string> = {};
@@ -70,7 +69,7 @@ const people = [
   { id: 3, nome: 'Carla', departamento: 'TI', salario: 6000, tempo_servico: 5 },
 ];
 export const sqlPractice: PracticeConfigDto = {
-  lab: 'sql',
+  lab: PracticeLab.SQL,
   setupSql,
   tasks: [
     task(
@@ -439,7 +438,7 @@ const numbers: [number, string, number, number][] = [
   [30, 'Encontre o valor decimal comum a 2B₁₆ e 101011₂.', 10, 43],
 ];
 export const architecturePractice: PracticeConfigDto = {
-  lab: 'architecture',
+  lab: PracticeLab.ARCHITECTURE,
   setupSql: '',
   tasks: [
     {

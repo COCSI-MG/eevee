@@ -10,11 +10,11 @@ import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Class } from 'src/class/entities/class.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { RequestContextService } from 'src/request-context/request-context.service';
-import {
-  LearningActivity,
-  LearningQuizAttempt,
-} from './learning-activity.entity';
-import { LearningActivityDto, SubmitQuizDto } from './learning-activity.dto';
+import { LearningActivity } from './entities/learning-activity.entity';
+import { LearningQuizAttempt } from './entities/learning-quiz-attempt.entity';
+import { LearningActivityKind } from './enums/learning-activity-kind.enum';
+import { LearningActivityDto } from './dto/learning-activity.dto';
+import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import {
   canonicalJson,
   gradeQuiz,
@@ -118,7 +118,7 @@ export class LearningActivityService {
           'A turma e o tipo não podem ser alterados.',
         );
       if (
-        current.kind === 'quiz' &&
+        current.kind === LearningActivityKind.QUIZ &&
         current.feedbackReleased &&
         !dto.feedbackReleased
       )
@@ -126,7 +126,7 @@ export class LearningActivityService {
           'O resultado já foi liberado. Crie outro questionário para novos envios.',
         );
       if (
-        current.kind === 'quiz' &&
+        current.kind === LearningActivityKind.QUIZ &&
         (await manager.exists(LearningQuizAttempt, {
           where: { activityId: id },
         })) &&
@@ -153,7 +153,7 @@ export class LearningActivityService {
         throw new BadRequestException(
           'Use uma conta de estudante para enviar respostas.',
         );
-      if (activity.kind !== 'quiz' || !activity.questions)
+      if (activity.kind !== LearningActivityKind.QUIZ || !activity.questions)
         throw new BadRequestException('Esta atividade é de prática.');
       if (activity.dueDate && activity.dueDate < new Date())
         throw new ForbiddenException('Prazo encerrado.');
@@ -188,17 +188,15 @@ export class LearningActivityService {
   async attempts(id: number) {
     const activity = await this.load(id);
     const user = this.context.getUser();
-    const records = await this.db
-      .getRepository(LearningQuizAttempt)
-      .find({
-        where: {
-          activityId: id,
-          ...(user.isAdmin ? {} : { userId: user.userId }),
-        },
-        relations: user.isAdmin ? ['user'] : [],
-        order: { id: 'DESC' },
-        take: 1000,
-      });
+    const records = await this.db.getRepository(LearningQuizAttempt).find({
+      where: {
+        activityId: id,
+        ...(user.isAdmin ? {} : { userId: user.userId }),
+      },
+      relations: user.isAdmin ? ['user'] : [],
+      order: { id: 'DESC' },
+      take: 1000,
+    });
     const reveal = user.isAdmin || activity.feedbackReleased;
     return records.map((a) => ({
       id: a.id,

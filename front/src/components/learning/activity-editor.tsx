@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   LearningActivity,
+  LearningActivityKind,
   PracticeTask,
   QuizQuestion,
 } from "@/app/interface/scheduler-api/learning-activity";
@@ -61,7 +62,7 @@ export function ActivityEditor({
         query.data || {
           id: 0,
           classId,
-          kind: "practice",
+          kind: LearningActivityKind.PRACTICE,
           title: "",
           description: "",
           published: false,
@@ -163,13 +164,17 @@ function Editor({ initial }: { initial: LearningActivity }) {
               disabled={!!value.id}
               onChange={(e) =>
                 patch(
-                  e.target.value === "practice"
+                  e.target.value === LearningActivityKind.PRACTICE
                     ? {
-                        kind: "practice",
+                        kind: LearningActivityKind.PRACTICE,
                         practice: sqlPractice(),
                         questions: null,
                       }
-                    : { kind: "quiz", practice: null, questions: [question()] },
+                    : {
+                        kind: LearningActivityKind.QUIZ,
+                        practice: null,
+                        questions: [question()],
+                      },
                 )
               }
             >
@@ -234,7 +239,7 @@ function Editor({ initial }: { initial: LearningActivity }) {
             />
             Publicar para os estudantes
           </label>
-          {value.kind === "quiz" && (
+          {value.kind === LearningActivityKind.QUIZ && (
             <>
               <label>
                 Tentativas
@@ -268,7 +273,7 @@ function Editor({ initial }: { initial: LearningActivity }) {
 
         {saveActions}
 
-        {value.kind === "practice" && value.practice && (
+        {value.kind === LearningActivityKind.PRACTICE && value.practice && (
           <section className="space-y-4">
             <label>
               Laboratório
@@ -476,7 +481,7 @@ function Editor({ initial }: { initial: LearningActivity }) {
             </Button>
           </section>
         )}
-        {value.kind === "quiz" && (
+        {value.kind === LearningActivityKind.QUIZ && (
           <section className="space-y-4">
             {value.questions?.map((q, index) => (
               <fieldset key={q.id} className="space-y-4 rounded-xl border p-5">
@@ -613,7 +618,7 @@ function Editor({ initial }: { initial: LearningActivity }) {
           />
         </section>
       )}
-      {!!value.id && value.kind === "quiz" && (
+      {!!value.id && value.kind === LearningActivityKind.QUIZ && (
         <QuizSpace activity={value} admin />
       )}
       {saveActions}

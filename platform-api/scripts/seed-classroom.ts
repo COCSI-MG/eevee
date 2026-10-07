@@ -2,7 +2,7 @@ import { plainToInstance } from 'class-transformer';
 import { validateSync } from 'class-validator';
 import type { QueryRunner } from 'typeorm';
 import { AppDataSource } from '../data-source';
-import { LearningActivityDto } from '../src/learning-activity/learning-activity.dto';
+import { LearningActivityDto } from '../src/learning-activity/dto/learning-activity.dto';
 import { validateActivity } from '../src/learning-activity/learning-activity.policy';
 import { activitiesFor, classroomCatalog } from './classroom/catalog';
 

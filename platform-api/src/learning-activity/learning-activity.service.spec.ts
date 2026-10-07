@@ -1,8 +1,5 @@
 import { LearningActivityService } from './learning-activity.service';
-import {
-  LearningActivity,
-  LearningQuizAttempt,
-} from './learning-activity.entity';
+import { LearningQuizAttempt } from './entities/learning-quiz-attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
 
 describe('Learning activity access and submission lifecycle', () => {

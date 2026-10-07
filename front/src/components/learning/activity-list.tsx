@@ -5,6 +5,7 @@ import {
   LearningActivities,
   learningError,
 } from "@/app/integration/scheduler-api/learning-activity";
+import { LearningActivityKind } from "@/app/interface/scheduler-api/learning-activity";
 export function LearningActivityList({
   classId,
   admin = false,
@@ -48,7 +49,7 @@ export function LearningActivityList({
             className="space-y-3 rounded-xl border bg-card p-5"
           >
             <p className="text-sm text-muted-foreground">
-              {a.kind === "practice"
+              {a.kind === LearningActivityKind.PRACTICE
                 ? "Laboratório · sem nota"
                 : "Questionário"}
               {admin && ` · ${a.published ? "Publicado" : "Rascunho"}`}
@@ -72,7 +73,7 @@ export function LearningActivityList({
             >
               {admin
                 ? "Editar e acompanhar"
-                : a.kind === "practice"
+                : a.kind === LearningActivityKind.PRACTICE
                   ? "Abrir prática"
                   : "Responder questionário"}
             </Link>

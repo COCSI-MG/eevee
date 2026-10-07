@@ -4,6 +4,7 @@ import { ClassesService } from "@/app/integration/scheduler-api/classes";
 import { Class } from "@/app/interface/scheduler-api/class";
 import { ExamService } from "@/app/integration/scheduler-api/exam";
 import { LearningActivities } from "@/app/integration/scheduler-api/learning-activity";
+import { LearningActivityKind } from "@/app/interface/scheduler-api/learning-activity";
 import {
   Card,
   CardContent,
@@ -13,7 +14,14 @@ import {
 } from "@/components/ui/card";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BookOpen, ClipboardList, FlaskConical, GraduationCap, Loader } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  ClipboardList,
+  FlaskConical,
+  GraduationCap,
+  Loader,
+} from "lucide-react";
 import Link from "next/link";
 
 function ClassActivityLinks({ cls }: { cls: Class }) {
@@ -25,15 +33,47 @@ function ClassActivityLinks({ cls }: { cls: Class }) {
   });
   const exams = useQuery({
     queryKey: ["paginatedExams", cls.id, "home-count", user?.userId],
-    queryFn: () => ExamService.listByClass({ classId: cls.id, page: 1, pageSize: 1 }),
+    queryFn: () =>
+      ExamService.listByClass({ classId: cls.id, page: 1, pageSize: 1 }),
     enabled: !cls.activityCounts,
   });
-  const pendingCount = (failed: boolean) => failed ? "Indisponível" : "Carregando";
+  const pendingCount = (failed: boolean) =>
+    failed ? "Indisponível" : "Carregando";
   const rows = [
-    { label: "Tarefas", count: cls.assignments?.length, href: `/classes/${cls.id}`, icon: BookOpen, pending: "Indisponível" },
-    { label: "Provas", count: cls.activityCounts?.exams ?? exams.data?.meta.total, href: `/classes/${cls.id}?view=exams`, icon: GraduationCap, pending: pendingCount(exams.isError) },
-    { label: "Práticas", count: cls.activityCounts?.practices ?? learning.data?.filter(a => a.kind === "practice").length, href: `/classes/${cls.id}?view=learning`, icon: FlaskConical, pending: pendingCount(learning.isError) },
-    { label: "Questionários", count: cls.activityCounts?.quizzes ?? learning.data?.filter(a => a.kind === "quiz").length, href: `/classes/${cls.id}?view=learning`, icon: ClipboardList, pending: pendingCount(learning.isError) },
+    {
+      label: "Tarefas",
+      count: cls.assignments?.length,
+      href: `/classes/${cls.id}`,
+      icon: BookOpen,
+      pending: "Indisponível",
+    },
+    {
+      label: "Provas",
+      count: cls.activityCounts?.exams ?? exams.data?.meta.total,
+      href: `/classes/${cls.id}?view=exams`,
+      icon: GraduationCap,
+      pending: pendingCount(exams.isError),
+    },
+    {
+      label: "Práticas",
+      count:
+        cls.activityCounts?.practices ??
+        learning.data?.filter((a) => a.kind === LearningActivityKind.PRACTICE)
+          .length,
+      href: `/classes/${cls.id}?view=learning`,
+      icon: FlaskConical,
+      pending: pendingCount(learning.isError),
+    },
+    {
+      label: "Questionários",
+      count:
+        cls.activityCounts?.quizzes ??
+        learning.data?.filter((a) => a.kind === LearningActivityKind.QUIZ)
+          .length,
+      href: `/classes/${cls.id}?view=learning`,
+      icon: ClipboardList,
+      pending: pendingCount(learning.isError),
+    },
   ];
   return (
     <div className="grid gap-2">
@@ -46,14 +86,24 @@ function ClassActivityLinks({ cls }: { cls: Class }) {
         >
           <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="flex-1 font-medium">{label}</span>
-          <span className="rounded bg-muted text-foreground px-2 py-0.5 tabular-nums" title={count === undefined ? pending : undefined}>
+          <span
+            className="rounded bg-muted text-foreground px-2 py-0.5 tabular-nums"
+            title={count === undefined ? pending : undefined}
+          >
             {count ?? (pending === "Carregando" ? "…" : "—")}
           </span>
           <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
         </Link>
       ))}
       {!cls.activityCounts && (learning.isError || exams.isError) && (
-        <button type="button" className="text-sm underline text-foreground" onClick={() => { void learning.refetch(); void exams.refetch(); }}>
+        <button
+          type="button"
+          className="text-sm underline text-foreground"
+          onClick={() => {
+            void learning.refetch();
+            void exams.refetch();
+          }}
+        >
           Tentar carregar os totais novamente
         </button>
       )}

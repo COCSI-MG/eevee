@@ -1,4 +1,4 @@
-import type { QuizQuestionDto } from '../../src/learning-activity/learning-activity.dto';
+import type { QuizQuestionDto } from '../../src/learning-activity/dto/quiz-question.dto';
 // Source mapping and reviewed adaptations: README.md.
 export const quizzes: Record<'architecture' | 'sql', QuizQuestionDto[]> = {
   architecture: [

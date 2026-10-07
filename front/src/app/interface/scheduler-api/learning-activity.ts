@@ -1,3 +1,7 @@
+export enum LearningActivityKind {
+  PRACTICE = "practice",
+  QUIZ = "quiz",
+}
 export interface PracticeTask {
   id: string;
   prompt: string;
@@ -23,7 +27,7 @@ export interface QuizQuestion {
 export interface LearningActivity {
   id: number;
   classId: number;
-  kind: "practice" | "quiz";
+  kind: LearningActivityKind;
   title: string;
   description: string;
   published: boolean;

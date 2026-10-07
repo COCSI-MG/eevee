@@ -7,12 +7,20 @@ import ClassesExams from "@/components/exam/classes-exams";
 import { Button } from "@/components/ui/button";
 import { LearningActivityList } from "@/components/learning/activity-list";
 
-type View = "assignments" | "exams" | "learning";
+export enum ClassView {
+  ASSIGNMENTS = "assignments",
+  EXAMS = "exams",
+  LEARNING = "learning",
+}
 
-const VIEWS: { key: View; label: string; icon: typeof BookOpen }[] = [
-  { key: "assignments", label: "Tarefas", icon: BookOpen },
-  { key: "exams", label: "Provas", icon: GraduationCap },
-  { key: "learning", label: "Práticas e questionários", icon: BookOpen },
+const VIEWS: { key: ClassView; label: string; icon: typeof BookOpen }[] = [
+  { key: ClassView.ASSIGNMENTS, label: "Tarefas", icon: BookOpen },
+  { key: ClassView.EXAMS, label: "Provas", icon: GraduationCap },
+  {
+    key: ClassView.LEARNING,
+    label: "Práticas e questionários",
+    icon: BookOpen,
+  },
 ];
 
 export default function ClassViewTabs() {
@@ -21,10 +29,13 @@ export default function ClassViewTabs() {
   const searchParams = useSearchParams();
 
   const raw = searchParams.get("view");
-  const current: View = raw === "exams" || raw === "learning" ? raw : "assignments";
+  const current: ClassView =
+    raw === ClassView.EXAMS || raw === ClassView.LEARNING
+      ? raw
+      : ClassView.ASSIGNMENTS;
 
-  const setView = (next: View) => {
-    const qs = next === "assignments" ? "" : `?view=${next}`;
+  const setView = (next: ClassView) => {
+    const qs = next === ClassView.ASSIGNMENTS ? "" : `?view=${next}`;
     router.replace(`/classes/${id}${qs}`, { scroll: false });
   };
 
@@ -44,7 +55,9 @@ export default function ClassViewTabs() {
         ))}
       </div>
 
-      {current === "learning" ? <LearningActivityList classId={Number(id)} /> : current === "assignments" ? (
+      {current === ClassView.LEARNING ? (
+        <LearningActivityList classId={Number(id)} />
+      ) : current === ClassView.ASSIGNMENTS ? (
         <ClassesAssignments />
       ) : (
         <ClassesExams />

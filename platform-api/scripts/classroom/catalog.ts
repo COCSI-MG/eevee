@@ -1,4 +1,5 @@
-import type { LearningActivityDto } from '../../src/learning-activity/learning-activity.dto';
+import { LearningActivityKind } from '../../src/learning-activity/enums/learning-activity-kind.enum';
+import type { LearningActivityDto } from '../../src/learning-activity/dto/learning-activity.dto';
 import { architecturePractice, sqlPractice } from './practice';
 import { quizzes } from './quizzes';
 
@@ -40,7 +41,7 @@ export function activitiesFor(
   return [
     {
       ...common,
-      kind: 'practice',
+      kind: LearningActivityKind.PRACTICE,
       title: `${label} — Laboratório guiado`,
       description:
         topic === 'sql'
@@ -51,7 +52,7 @@ export function activitiesFor(
     },
     {
       ...common,
-      kind: 'quiz',
+      kind: LearningActivityKind.QUIZ,
       title: `${label} — Questionário (30 questões)`,
       description:
         'Responda às 30 questões após explorar o laboratório. Você tem até três envios. A pontuação e as explicações serão exibidas quando o professor liberar o feedback. Esta é uma adaptação revisada da lista fornecida para a turma.',

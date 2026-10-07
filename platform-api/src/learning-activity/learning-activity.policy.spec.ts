@@ -1,11 +1,10 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import {
-  LearningActivityDto,
-  QuizQuestionDto,
-  SubmitQuizDto,
-} from './learning-activity.dto';
+import { LearningActivityKind } from './enums/learning-activity-kind.enum';
+import { LearningActivityDto } from './dto/learning-activity.dto';
+import { QuizQuestionDto } from './dto/quiz-question.dto';
+import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import {
   canonicalJson,
   gradeQuiz,
@@ -36,7 +35,7 @@ const questions: QuizQuestionDto[] = [
 ];
 const dto = (): LearningActivityDto => ({
   classId: 1,
-  kind: 'quiz',
+  kind: LearningActivityKind.QUIZ,
   title: 'DML',
   description: '',
   published: true,
