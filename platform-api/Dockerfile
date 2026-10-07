@@ -29,8 +29,10 @@ RUN npm ci --omit=dev
 COPY --from=builder --chown=eevee:nodejs /usr/app/packages/execution-contracts/dist ../packages/execution-contracts/dist
 COPY --from=builder --chown=eevee:nodejs /usr/app/platform-api/dist ./dist
 
+RUN mkdir -p uploads && chown eevee:nodejs uploads
+
 USER eevee
 
-ENTRYPOINT [ "npm", "run" ]
+ENTRYPOINT [ "node" ]
 
-CMD [ "start:prod" ]
+CMD [ "dist/src/main" ]
