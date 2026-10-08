@@ -58,7 +58,7 @@ export class ScopeClassesAndTemplates1789100000000 implements MigrationInterface
     `);
     await queryRunner.query(`
       DO $$
-      DECLARE t record; c record; p record; new_template_id integer;
+      DECLARE t record; c record; p record; new_template_id integer; new_param_id integer;
       BEGIN
         FOR t IN
           SELECT
@@ -96,6 +96,15 @@ export class ScopeClassesAndTemplates1789100000000 implements MigrationInterface
                 "classId" = c."classId"
               WHERE
                 "id" = t."templateId";
+
+              INSERT INTO
+                "template_param_class_map" ("sourceParamId", "classId", "scopedParamId")
+              SELECT
+                "id", c."classId", "id"
+              FROM
+                "template_param"
+              WHERE
+                "templateId" = t."templateId";
             ELSE
               INSERT INTO
                 "template" ("title", "description", "filePath", "content", "workerType", "dependencies", "classId")
@@ -110,7 +119,7 @@ export class ScopeClassesAndTemplates1789100000000 implements MigrationInterface
 
               FOR p IN
                 SELECT
-                  "id", "name"
+                  "id", "name", "type"
                 FROM
                   "template_param"
                 WHERE
@@ -118,8 +127,14 @@ export class ScopeClassesAndTemplates1789100000000 implements MigrationInterface
                 ORDER BY
                   "id"
               LOOP
-                INSERT INTO "template_param" ("name", "templateId")
-                VALUES (p."name", new_template_id);
+                INSERT INTO "template_param" ("name", "type", "templateId")
+                VALUES (p."name", p."type", new_template_id)
+                RETURNING "id" INTO new_param_id;
+
+                INSERT INTO
+                  "template_param_class_map" ("sourceParamId", "classId", "scopedParamId")
+                VALUES
+                  (p."id", c."classId", new_param_id);
               END LOOP;
             END IF;
 
@@ -127,20 +142,6 @@ export class ScopeClassesAndTemplates1789100000000 implements MigrationInterface
               "template_class_map" ("sourceTemplateId", "classId", "scopedTemplateId")
             VALUES
               (t."templateId", c."classId", new_template_id);
-
-            INSERT INTO
-              "template_param_class_map" ("sourceParamId", "classId", "scopedParamId")
-            SELECT
-              original."id", c."classId", scoped."id"
-            FROM
-              "template_param" original
-            INNER JOIN
-              "template_param" scoped
-            ON
-              scoped."templateId" = new_template_id AND scoped."name" = original."name"
-            WHERE
-              original."templateId" = t."templateId"
-            ON CONFLICT DO NOTHING;
           END LOOP;
         END LOOP;
       END $$

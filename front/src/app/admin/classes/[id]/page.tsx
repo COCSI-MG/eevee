@@ -128,7 +128,12 @@ export default function ClassEditPage() {
         return;
       }
 
-      upsertClasses(values);
+      const classData = { ...values };
+      if (!isAdmin) {
+        delete classData.teacherId;
+      }
+
+      upsertClasses(classData);
     },
   });
 

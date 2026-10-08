@@ -16,7 +16,7 @@ export class DatabaseSeeder {
 
     await this.dataSource.query(
       `INSERT INTO "user" ("email", "passwordHash", "role", "name")
-       VALUES ($1, $2, $3, $4), ($5, $6, $7, $8) ($9, $10, $11, $12)
+       VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)
        ON CONFLICT ("email") DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash"`,
       [
         'admin@example.com',
