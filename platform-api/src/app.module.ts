@@ -35,6 +35,9 @@ import { TemplateTestModule } from './template-test/template-test.module';
 import { AnswerKeyModule } from './answer-key/answer-key.module';
 import { ExamModule } from './exam/exam.module';
 import { ExecutionPlatformEventsModule } from './execution/execution-platform-events.module';
+import { LearningActivityModule } from './learning-activity/learning-activity.module';
+import { InvitationModule } from './invitation/invitation.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -79,6 +82,8 @@ import { ExecutionPlatformEventsModule } from './execution/execution-platform-ev
     AnswerKeyModule,
     ExamModule,
     ExecutionPlatformEventsModule,
+    LearningActivityModule,
+    InvitationModule,
   ],
   controllers: [AppController],
   providers: [

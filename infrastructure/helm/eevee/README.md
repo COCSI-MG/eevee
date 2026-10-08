@@ -22,6 +22,19 @@ This replaces the previous raw manifests under `k8s/` and the Kustomize
 
 ### CI configuration and image ownership
 
+Before any deployment workflow builds or publishes application/worker images,
+`validate-deployment.yaml` runs all three applications' unit tests and compilation,
+checks the Helm chart and deployment script, and validates the jumpbox checkout,
+required secrets, resource permissions, and a server-connected Helm dry run.
+PostgreSQL worker publication also depends on this gate and its existing lifecycle
+smoke tests. These checks do not guarantee application behavior under production
+load or replace database migration planning.
+
+Set **repository variable** `DEPLOY_WORKDIR=/home/eevee-cefetrj/eevee` (not an
+Actions secret). The workflow fails with an explicit message if it is missing.
+Rerunning an old Actions run uses its original commit; start a new run on updated
+`main` to execute newly merged workflow fixes.
+
 All four deployment workflows use `scripts/deploy-release.sh`. Each upgrade
 resets Helm values and explicitly loads this chart's committed `values.yaml`.
 Memory limits, Node options, and other configuration therefore come from Git;
@@ -172,4 +185,5 @@ workerImages:
   nodeDefault: ghcr.io/cocsi-mg/worker-node-default-img:latest
   # ...
   nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:latest
+  pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:latest
 ```

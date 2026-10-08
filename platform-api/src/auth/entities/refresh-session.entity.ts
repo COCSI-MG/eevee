@@ -4,10 +4,15 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 
 @Entity('refresh_sessions')
+@Index('idx_refresh_sessions_token_hash', ['tokenHash'], { unique: true })
+@Index('idx_refresh_sessions_family_id', ['familyId'])
+@Index('idx_refresh_sessions_user_id', ['userId'])
+@Index('idx_refresh_sessions_expires_at', ['expiresAt'])
 export class RefreshSession {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -15,8 +20,11 @@ export class RefreshSession {
   @Column({ name: 'user_id' })
   userId: number;
 
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({
+    name: 'user_id',
+    foreignKeyConstraintName: 'refresh_sessions_user_id_fkey',
+  })
   user: User;
 
   @Column({ name: 'family_id', type: 'uuid' })

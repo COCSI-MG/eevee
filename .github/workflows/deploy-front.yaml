@@ -9,6 +9,8 @@ on:
       - "images/node/**"
       - "images/javascript-default/**"
       - "scripts/deploy-release.sh"
+      - "scripts/test-deploy-release.sh"
+      - ".github/workflows/validate-deployment.yaml"
       - ".github/actions/remote-kubectl/**"
       - ".github/workflows/deploy-front.yaml"
 
@@ -17,7 +19,12 @@ env:
   FRONT_IMAGE: "${{ vars.FRONT_IMAGE || 'cocsi-mg/eevee-front' }}"
 
 jobs:
+  validate:
+    uses: ./.github/workflows/validate-deployment.yaml
+    secrets: inherit
+
   build-and-deploy:
+    needs: validate
     runs-on: ubuntu-latest
     concurrency:
       group: eevee-production-deploy
@@ -42,7 +49,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build e Push da Imagem Docker
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./front/Dockerfile
@@ -62,7 +69,10 @@ jobs:
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
             set -euo pipefail
-            cd "${{ vars.DEPLOY_WORKDIR }}"
+            DEPLOY_WORKDIR='${{ vars.DEPLOY_WORKDIR }}'
+            : "${DEPLOY_WORKDIR:?Set the repository variable DEPLOY_WORKDIR (not a secret)}"
+            cd "$DEPLOY_WORKDIR"
+            git rev-parse --show-toplevel
             git fetch origin '${{ github.sha }}'
             CHART_WORKDIR=$(mktemp -d)
             trap 'rm -rf "$CHART_WORKDIR"' EXIT

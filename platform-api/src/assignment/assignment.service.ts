@@ -373,6 +373,7 @@ export class AssignmentService {
       typingCharactersPerSecondLimit: alertPolicy.typingCharactersPerSecondLimit,
       alertPolicyVersion: 1,
       workerType: assignmentData.workerType,
+      executionMode: assignmentData.executionMode,
       initSqlScript: assignmentData.initSqlScript,
       boilerplateContent: resolvedBoilerplateContent,
       allowProjectImport: assignmentData.allowProjectImport ?? false,

@@ -17,6 +17,7 @@ describe('ClassService', () => {
     find: jest.Mock;
     delete: jest.Mock;
     createQueryBuilder: jest.Mock;
+    query: jest.Mock;
   };
   let userClassService: {
     createMany: jest.Mock;
@@ -35,6 +36,7 @@ describe('ClassService', () => {
       find: jest.fn(),
       delete: jest.fn(),
       createQueryBuilder: jest.fn(),
+      query: jest.fn().mockResolvedValue([]),
     };
     userClassService = {
       createMany: jest.fn(),
@@ -222,14 +224,17 @@ describe('ClassService', () => {
         description: 'Intro class',
       },
     ]);
+    classRepository.query.mockResolvedValue([{ id: 7, exams: 2, practices: 1, quizzes: 3 }]);
 
     await expect(service.findAllByUser(7)).resolves.toEqual([
       {
         id: 7,
         name: 'Algorithms',
         description: 'Intro class',
+        activityCounts: { exams: 2, practices: 1, quizzes: 3 },
       },
     ]);
+    expect(classRepository.query).toHaveBeenCalledWith(expect.any(String), [[7], false, expect.any(Date)]);
 
     expect(classRepository.find).toHaveBeenCalledWith({
       relations: [

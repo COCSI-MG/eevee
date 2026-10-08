@@ -81,6 +81,11 @@ export function useWorkspacePreview({
       }
     },
     previewRunId !== null,
+    () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["preview-run", previewRunId],
+      });
+    },
   );
 
   React.useEffect(() => {

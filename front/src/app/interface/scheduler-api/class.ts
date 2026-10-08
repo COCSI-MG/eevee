@@ -10,6 +10,7 @@ export interface Class {
     userId: number;
   }[];
   assignments?: Assignment[];
+  activityCounts?: { exams: number; practices: number; quizzes: number };
 }
 
 export type ClassOption = Pick<Class, "id" | "name">;

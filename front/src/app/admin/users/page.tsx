@@ -99,6 +99,7 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
+      <Link href="/admin/invitations" className="inline-block rounded-lg bg-primary px-4 py-2 text-primary-foreground">Convidar alunos por e-mail</Link>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
         <Link href="/admin/users/new">

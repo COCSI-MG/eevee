@@ -168,7 +168,7 @@ export class ClassService {
       );
     }
 
-    return await this.classRepository.find({
+    const classes = await this.classRepository.find({
       relations: [
         'userClasses',
         'userClasses.user',
@@ -185,6 +185,24 @@ export class ClassService {
             },
           }),
     });
+    if (!classes.length) return [];
+    const counts: { id: number; exams: number; practices: number; quizzes: number }[] =
+      await this.classRepository.query(
+        `SELECT c.id,
+          (SELECT count(*)::int FROM exam e WHERE e."classId"=c.id
+            AND ($2::boolean OR (e."startDate" IS NOT NULL AND e."startDate" <= $3))) AS exams,
+          (SELECT count(*)::int FROM learning_activity a WHERE a."classId"=c.id AND a.kind='practice'
+            AND ($2::boolean OR (a.published AND (a."startDate" IS NULL OR a."startDate" <= $3)))) AS practices,
+          (SELECT count(*)::int FROM learning_activity a WHERE a."classId"=c.id AND a.kind='quiz'
+            AND ($2::boolean OR (a.published AND (a."startDate" IS NULL OR a."startDate" <= $3)))) AS quizzes
+         FROM "class" c WHERE c.id = ANY($1::int[])`,
+        [classes.map((group) => group.id), !!user.isAdmin, new Date()],
+      );
+    const byClass = new Map(counts.map(({ id, ...summary }) => [id, summary]));
+    return classes.map((group) => ({
+      ...group,
+      activityCounts: byClass.get(group.id) ?? { exams: 0, practices: 0, quizzes: 0 },
+    }));
   }
 
   findOne(id: number) {

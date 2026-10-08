@@ -82,8 +82,10 @@ nav:
   - Guia do professor:
       - Visão geral: teacher-guide/overview.md
       - Turmas e matrículas: teacher-guide/classes-and-users.md
+      - Convites por e-mail: teacher-guide/invitations.md
       - Templates e testes: teacher-guide/templates-and-tests.md
       - Atividades: teacher-guide/assignments.md
+      - Práticas e questionários: teacher-guide/practice-and-quizzes.md
       - Gabaritos: teacher-guide/answer-keys.md
       - Provas e notas: teacher-guide/exams.md
       - Aplicar atividades e acompanhar resultados: teacher-guide/application-and-results.md

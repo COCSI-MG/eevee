@@ -6,7 +6,7 @@ export default function ClassPage() {
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-foreground mb-2">Suas turmas</h1>
         <p className="text-muted-foreground text-lg">
-          Selecione uma turma para ver as tarefas e acompanhar o progresso e resultado da tarefa.
+          Acesse as tarefas, provas, práticas e questionários de cada turma.
         </p>
       </div>
 
