@@ -1,3 +1,4 @@
+import { UserRole } from '../src/user/user-role';
 import * as dotenv from 'dotenv';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -59,7 +60,7 @@ async function enroll(query: QueryRunner, match: { course: string; user: GraphUs
   // Never-usable password: a real bcrypt hash of a random, immediately-discarded secret.
   // Avoids relying on how bcrypt.compareSync handles a non-hash literal.
   const placeholderPasswordHash = HashUtils.hashPassword(randomUUID());
-  const userRows = await query.query(`INSERT INTO "user" ("email", "name", "isAdmin", "passwordHash", "externalSubject", "identityProvider") VALUES ($1, $2, false, $3, $4, 'microsoft') ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name", "externalSubject" = EXCLUDED."externalSubject", "identityProvider" = EXCLUDED."identityProvider" RETURNING "id"`, [email, match.user.displayName ?? email, placeholderPasswordHash, match.user.id]);
+  const userRows = await query.query(`INSERT INTO "user" ("email", "name", "role", "passwordHash", "externalSubject", "identityProvider") VALUES ($1, $2, $5, $3, $4, 'microsoft') ON CONFLICT ("email") DO UPDATE SET "name" = EXCLUDED."name", "externalSubject" = EXCLUDED."externalSubject", "identityProvider" = EXCLUDED."identityProvider" RETURNING "id"`, [email, match.user.displayName ?? email, placeholderPasswordHash, match.user.id, UserRole.STUDENT]);
   await query.query(`INSERT INTO "user_class" ("userId", "classId") VALUES ($1, $2) ON CONFLICT ("userId", "classId") DO NOTHING`, [userRows[0].id, classRows[0].id]);
 }
 

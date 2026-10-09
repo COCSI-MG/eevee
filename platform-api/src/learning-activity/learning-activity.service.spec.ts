@@ -1,6 +1,13 @@
 import { LearningActivityService } from './learning-activity.service';
 import { LearningQuizAttempt } from './entities/learning-quiz-attempt.entity';
 import { Class } from 'src/class/entities/class.entity';
+import { UserClass } from 'src/user-class/entities/user-class.entity';
+import { UserRole } from 'src/user/user-role';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 
 describe('Learning activity access and submission lifecycle', () => {
   const questions = [
@@ -16,10 +23,12 @@ describe('Learning activity access and submission lifecycle', () => {
     },
   ];
   let activity: any;
-  let user: any;
+  let user: { userId: number; role: UserRole };
   let manager: any;
   let service: LearningActivityService;
   let query: any;
+  let activities: any;
+  let findAttempts: jest.Mock;
   beforeEach(() => {
     activity = {
       id: 1,
@@ -35,14 +44,25 @@ describe('Learning activity access and submission lifecycle', () => {
       questions,
       practice: null,
     };
-    user = { userId: 7, isAdmin: false };
+    user = { userId: 7, role: UserRole.STUDENT };
     query = {
       addSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       setLock: jest.fn().mockReturnThis(),
       getOne: jest.fn(async () => activity),
     };
+    findAttempts = jest.fn(async () => [
+      {
+        id: 1,
+        userId: 7,
+        attempt: 1,
+        answers: [{ questionId: 'q', choiceId: 'a' }],
+        score: 1,
+        user: { name: 'Student' },
+      },
+    ]);
     manager = {
+      findOne: jest.fn(async () => ({ id: 4, teacherId: 7 })),
       exists: jest.fn(async (entity) => entity !== LearningQuizAttempt),
       count: jest.fn(async () => 0),
       create: jest.fn((_, value) => value),
@@ -53,15 +73,7 @@ describe('Learning activity access and submission lifecycle', () => {
       })),
       getRepository: jest.fn(() => ({
         createQueryBuilder: () => query,
-        find: async () => [
-          {
-            id: 1,
-            userId: 7,
-            attempt: 1,
-            answers: [{ questionId: 'q', choiceId: 'a' }],
-            score: 1,
-          },
-        ],
+        find: findAttempts,
       })),
     };
     const db: any = {
@@ -69,14 +81,17 @@ describe('Learning activity access and submission lifecycle', () => {
       transaction: (fn) => fn(manager),
       getRepository: manager.getRepository,
     };
-    service = new LearningActivityService(
-      { find: async () => [activity] } as any,
-      db,
-      { getUser: () => user } as any,
-    );
+    activities = {
+      find: jest.fn(async () => [activity]),
+      create: jest.fn((value) => value),
+      save: jest.fn(async (value) => value),
+    };
+    service = new LearningActivityService(activities, db, {
+      getUser: () => user,
+    } as any);
   });
   it('denies non-members even when they know the activity ID', async () => {
-    manager.exists.mockImplementation(async (entity) => entity === Class);
+    manager.exists.mockResolvedValue(false);
     await expect(service.get(1)).rejects.toThrow();
     await expect(
       service.submit(1, { answers: [{ questionId: 'q', choiceId: 'a' }] }),
@@ -137,7 +152,7 @@ describe('Learning activity access and submission lifecycle', () => {
     await expect(service.update(1, activity)).rejects.toThrow();
   });
   it('preserves assessed questions and cannot reopen a revealed answer key', async () => {
-    user.isAdmin = true;
+    user.role = UserRole.ADMIN;
     manager.exists.mockResolvedValue(true);
     await expect(
       service.update(1, {

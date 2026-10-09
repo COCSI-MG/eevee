@@ -13,6 +13,7 @@ import { MailService } from 'src/mail/mail.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { Class } from 'src/class/entities/class.entity';
 import { User } from 'src/user/entities/user.entity';
+import { UserRole } from 'src/user/user-role';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { HashUtils } from 'src/utils/hash.utils';
 import { PlatformInvitation } from './invitation.entity';
@@ -35,7 +36,7 @@ export class InvitationService {
   ) {}
   private admin() {
     const user = this.context.getUser();
-    if (!user?.isAdmin) throw new ForbiddenException();
+    if (user?.role !== UserRole.ADMIN) throw new ForbiddenException();
     return user;
   }
   private baseUrl() {
@@ -290,7 +291,7 @@ export class InvitationService {
             email: row.email,
             name: row.name,
             passwordHash: HashUtils.hashPassword(dto.password),
-            isAdmin: false,
+            role: UserRole.STUDENT,
           }),
         );
       }

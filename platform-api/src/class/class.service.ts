@@ -309,7 +309,7 @@ export class ClassService {
       await this.classRepository.query(
         `SELECT c.id,
           (SELECT count(*)::int FROM exam e WHERE e."classId"=c.id
-            AND ($4::boolean OR (e."startDate" IS NOT NULL AND e."startDate" <= $3))) AS exams,
+            AND ($2::boolean OR (e."startDate" IS NOT NULL AND e."startDate" <= $3))) AS exams,
           (SELECT count(*)::int FROM learning_activity a WHERE a."classId"=c.id AND a.kind='practice'
             AND ($2::boolean OR (a.published AND (a."startDate" IS NULL OR a."startDate" <= $3)))) AS practices,
           (SELECT count(*)::int FROM learning_activity a WHERE a."classId"=c.id AND a.kind='quiz'
@@ -317,9 +317,8 @@ export class ClassService {
          FROM "class" c WHERE c.id = ANY($1::int[])`,
         [
           classes.map((group) => group.id),
-          user.role === UserRole.ADMIN,
-          new Date(),
           user.role === UserRole.ADMIN || user.role === UserRole.TEACHER,
+          new Date(),
         ],
       );
     const byClass = new Map(counts.map(({ id, ...summary }) => [id, summary]));

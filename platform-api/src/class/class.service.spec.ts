@@ -285,7 +285,7 @@ describe('ClassService', () => {
 
     expect(classRepository.query).toHaveBeenCalledWith(
       expect.any(String),
-      [[7, 8], true, expect.any(Date), true],
+      [[7, 8], true, expect.any(Date)],
     );
   });
 
@@ -311,8 +311,8 @@ describe('ClassService', () => {
       expect.objectContaining({ where: { teacherId: 8 } }),
     );
     expect(classRepository.query).toHaveBeenCalledWith(
-      expect.stringContaining('$4::boolean OR (e."startDate"'),
-      [[21], false, expect.any(Date), true],
+      expect.stringContaining('$2::boolean OR (e."startDate"'),
+      [[21], true, expect.any(Date)],
     );
     expect(classRepository.query.mock.calls[0][0]).toContain(
       '$2::boolean OR (a.published',
@@ -382,7 +382,7 @@ describe('ClassService', () => {
     expect(classRepository.find).not.toHaveBeenCalled();
     expect(classRepository.query).toHaveBeenCalledWith(
       expect.any(String),
-      [[7], false, expect.any(Date), false],
+      [[7], false, expect.any(Date)],
     );
 
     expect(qb.innerJoin).toHaveBeenCalledWith(

@@ -11,7 +11,9 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 import {
   AcceptInvitationDto,
   CreateInvitationDto,
@@ -23,24 +25,28 @@ import { InvitationService } from './invitation.service';
 export class InvitationController {
   constructor(private readonly service: InvitationService) {}
   @Get()
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   list(@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number) {
     return this.service.list(Math.max(1, page));
   }
   @Post()
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Throttle({ default: { limit: 60, ttl: 60000 } })
   create(@Body() dto: CreateInvitationDto) {
     return this.service.create(dto);
   }
   @Post(':id/resend')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   resend(@Param('id', ParseIntPipe) id: number) {
     return this.service.resend(id);
   }
   @Post(':id/revoke')
-  @UseGuards(JwtAuthGuard, AdminGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   revoke(@Param('id', ParseIntPipe) id: number) {
     return this.service.revoke(id);
   }
