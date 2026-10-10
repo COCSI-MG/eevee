@@ -6,17 +6,22 @@ Esse documento auxilia no entendimento e execução dos script presentes nessa p
 
 O PostgreSQL de produção roda dentro do cluster Kubernetes (`postgres-service`
 no namespace `eevee-cefetrj`) e não é acessível diretamente. O script conecta
-via SSH em `200.159.254.113` e executa `kubectl port-forward` no próprio
+via SSH no host configurado em `SSH_TARGET` e na porta `SSH_PORT` e executa `kubectl port-forward` no próprio
 servidor, encaminhando o resultado para `127.0.0.1:15432` na máquina local.
 
 Abra o túnel em um terminal PowerShell e mantenha-o aberto:
+
+Configure `SSH_TARGET` e `SSH_PORT` no ambiente local antes de executar.
+Ambos s?o obrigat?rios, sem valores de produ??o embutidos. No PowerShell,
+`-SshTarget` e `-SshPort` podem sobrescrever essas vari?veis. Mantenha os valores
+reais em configura??o privada fora do versionamento.
 
 ```powershell
 .\scripts\open-production-db-tunnel.ps1
 ```
 
 No macOS/Linux, use o script bash equivalente (mesmos parâmetros via variáveis
-de ambiente: `SSH_TARGET`, `LOCAL_PORT`, `REMOTE_PORT`, `NAMESPACE`, `SERVICE`):
+de ambiente: `SSH_TARGET`, `SSH_PORT`, `LOCAL_PORT`, `REMOTE_PORT`, `NAMESPACE`, `SERVICE`):
 
 ```bash
 ./scripts/open-production-db-tunnel.sh

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-  [string]$SshTarget = "200.159.254.113",
+  [string]$SshTarget = $env:SSH_TARGET,
+  [int]$SshPort = $env:SSH_PORT,
   [int]$LocalPort = 15432,
   [int]$RemotePort = 15432,
   [string]$Namespace = "eevee-cefetrj",
@@ -8,6 +9,13 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+
+if ([string]::IsNullOrWhiteSpace($SshTarget) -or $SshTarget.StartsWith('-')) {
+  throw "Set SSH_TARGET or pass -SshTarget with the production SSH host or config alias."
+}
+if ($SshPort -lt 1 -or $SshPort -gt 65535) {
+  throw "Set SSH_PORT or pass -SshPort with a valid SSH port (1-65535)."
+}
 
 if ($Namespace -notmatch '^[a-z0-9.-]+$' -or $Service -notmatch '^[a-z0-9.-]+$') {
   throw "Namespace and service must be valid Kubernetes names."
@@ -27,6 +35,7 @@ Write-Host "Remote: $remoteCommand"
 Write-Host "Keep this terminal open. Press Ctrl+C to close the tunnel."
 
 & ssh `
+  -p $SshPort `
   -o ExitOnForwardFailure=yes `
   -o ServerAliveInterval=30 `
   -o ServerAliveCountMax=3 `

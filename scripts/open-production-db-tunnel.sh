@@ -2,7 +2,12 @@
 # Bash equivalent of open-production-db-tunnel.ps1 for macOS/Linux.
 set -euo pipefail
 
-SSH_TARGET=${SSH_TARGET:-"200.159.254.113"}
+: "${SSH_TARGET:?Set SSH_TARGET to the production SSH host or config alias}"
+: "${SSH_PORT:?Set SSH_PORT to the production SSH port}"
+if [[ "$SSH_TARGET" == -* ]] || ! [[ "$SSH_PORT" =~ ^[0-9]{1,5}$ ]] || (( 10#$SSH_PORT < 1 || 10#$SSH_PORT > 65535 )); then
+  echo "Invalid SSH_TARGET or SSH_PORT (expected a port from 1 to 65535)." >&2
+  exit 1
+fi
 LOCAL_PORT=${LOCAL_PORT:-"15432"}
 REMOTE_PORT=${REMOTE_PORT:-"15432"}
 NAMESPACE=${NAMESPACE:-"eevee-cefetrj"}
@@ -27,6 +32,7 @@ echo "Remote: $REMOTE_COMMAND"
 echo "Mantenha este terminal aberto. Pressione Ctrl+C para fechar o túnel."
 
 ssh \
+  -p "$SSH_PORT" \
   -o ExitOnForwardFailure=yes \
   -o ServerAliveInterval=30 \
   -o ServerAliveCountMax=3 \
