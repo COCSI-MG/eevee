@@ -210,33 +210,7 @@ ingress:
     enabled: false
     secretName: eevee-tls-secret
 
-# -----------------------------------------------------------------------------
-# Ingress-NGINX controller subchart.
-# The controller is installed inside the same release, but its Service stays
-# cluster-internal so the VM can reach it through the private network/tunnel.
-# -----------------------------------------------------------------------------
-ingress-nginx:
-  enabled: false
-  controller:
-    scope:
-      enabled: true
-    watchIngressWithoutClass: true
-    ingressClassResource:
-      name: nginx
-      enabled: false
-      default: false
-    ingressClass: nginx
-    ingressClassByName: true
-    admissionWebhooks:
-      enabled: false
-    service:
-      type: ClusterIP
-  rbac:
-    create: false
-    scope: true
-  serviceAccount:
-    create: false
-    name: ns-admin
+# Optional ingress requires an externally managed controller.
 
 # Optional namespace-scoped cert-manager Issuer (ClusterIssuer requires cluster
 # permissions which are usually not available — keep using Issuer per-namespace).

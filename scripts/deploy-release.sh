@@ -23,7 +23,6 @@ for mapping in platformApi:platform-api-deployment:platform-api assignmentRunner
                --set-string "$component.image.tag=${image##*:}")
 done
 
-helm dependency build "$CHART"
 # Explicit caller overrides come last, e.g. the image built by this workflow.
 helm upgrade --install "$RELEASE" "$CHART" --namespace "$NAMESPACE" \
   --reset-values -f "$CHART/values.yaml" "${image_args[@]}" "$@" \

@@ -48,7 +48,6 @@ jobs:
         run: |
           bash -n scripts/deploy-release.sh
           bash scripts/test-deploy-release.sh
-          helm dependency build infrastructure/helm/eevee
           helm lint infrastructure/helm/eevee
           helm template eevee infrastructure/helm/eevee > /dev/null
 

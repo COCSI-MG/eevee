@@ -187,3 +187,7 @@ workerImages:
   nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:latest
   pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:latest
 ```
+
+The RNP deployment uses the entrypoint gateway NodePort with ingress disabled.
+This chart has no bundled ingress controller or external chart dependencies.
+Enabling optional Ingress resources requires an externally managed controller.
