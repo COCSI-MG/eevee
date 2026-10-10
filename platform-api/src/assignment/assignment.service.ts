@@ -24,11 +24,11 @@ import {
   Repository,
 } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
-import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { ClassService } from 'src/class/class.service';
-import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
-import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
+import { AssignmentTemplate } from './entities/assignment-template.entity';
+import { AssignmentParam } from './entities/assignment-param.entity';
 import { Template } from 'src/template/entities/template.entity';
+import { TemplateParam } from 'src/template/entities/template-param.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
@@ -42,6 +42,8 @@ import {
   AssignmentAlertService,
   DEFAULT_ASSIGNMENT_ALERT_POLICY
 } from 'src/assignment-alert/assignment-alert.service';
+import { UserRole } from 'src/user/user-role';
+import { ClassAccessService } from 'src/auth/class-access.service';
 
 @Injectable()
 export class AssignmentService {
@@ -56,20 +58,23 @@ export class AssignmentService {
     private readonly assignmentParamsRepository: Repository<AssignmentParam>,
     @InjectRepository(Template)
     private readonly templateRepository: Repository<Template>,
-    @InjectRepository(UserClass)
-    private readonly userClassRepository: Repository<UserClass>,
+    @InjectRepository(TemplateParam)
+    private readonly templateParamRepository: Repository<TemplateParam>,
     @InjectRepository(Attempt)
     private readonly attemptRepository: Repository<Attempt>,
     private readonly classservice: ClassService,
     private dataSource: DataSource,
     private readonly requestContextService: RequestContextService,
-    private readonly assignmentAlertService: AssignmentAlertService
+    private readonly assignmentAlertService: AssignmentAlertService,
+    private readonly classAccess: ClassAccessService
   ) {}
 
   private async assertTemplatesCompatibleWithWorkerType(options: {
-    templates: { templateId: number }[];
+    templates: AssignmentTemplateDto[];
     workerType: Assignment['workerType'];
+    classId: number;
     templateRepo?: Repository<Template>;
+    templateParamRepo?: Repository<TemplateParam>;
   }): Promise<void> {
     const templateRepo = options.templateRepo ?? this.templateRepository;
     const templateIds = options.templates.map((t) => t.templateId);
@@ -77,7 +82,7 @@ export class AssignmentService {
 
     const found = await templateRepo.find({
       where: { id: In(templateIds) },
-      select: { id: true, workerType: true },
+      select: { id: true, workerType: true, classId: true }
     });
 
     if (found.length !== templateIds.length) {
@@ -97,6 +102,43 @@ export class AssignmentService {
           .map((t) => t.id)
           .join(', ')}`,
       );
+    }
+
+    if (found.some((t) => t.classId !== options.classId)) {
+      throw new ForbiddenException('A template can only be used by assignments in its own class.');
+    }
+
+    const paramIds = options.templates.flatMap((item) => {
+      return item.params.map((param) => param.templateParamId)
+    });
+
+    if (paramIds.length) {
+      const templateParam = options.templateParamRepo ?? this.templateParamRepository
+
+      const params = await templateParam.find({
+        select: {
+          id: true,
+          templateId: true
+        },
+        where: {
+          id: In(paramIds)
+        }
+      });
+
+      const paramById = new Map(params.map((param) => [param.id, param.templateId]));
+      const findTempalteParams = paramIds.some((paramId) => !paramById.has(paramId))
+
+      if (findTempalteParams) {
+        throw new NotFoundException('A template parameter was not found.');
+      }
+
+      const someTemplateParamsId = options.templates.some((item) => item.params.some((param) => {
+        return paramById.get(param.templateParamId) !== item.templateId
+      }))
+
+      if (someTemplateParamsId) {
+        throw new ForbiddenException('Template parameters must belong to their selected template.');
+      }
     }
   }
 
@@ -322,6 +364,9 @@ export class AssignmentService {
     const assignmentParamRepo = manager
       ? manager.getRepository(AssignmentParam)
       : this.assignmentParamsRepository;
+    const templateParamRepo = manager
+      ? manager.getRepository(TemplateParam)
+      : this.templateParamRepository;
     const templateRepo = manager
       ? manager.getRepository(Template)
       : this.templateRepository;
@@ -352,6 +397,7 @@ export class AssignmentService {
         `Class with id ${createAssignmentDto.classId} not found`,
       );
     }
+    await this.classAccess.assertTeacherAssignment(createAssignmentDto.classId);
 
     const user = this.requestContextService.getUser();
 
@@ -384,7 +430,9 @@ export class AssignmentService {
       await this.assertTemplatesCompatibleWithWorkerType({
         templates,
         workerType: assignmentData.workerType,
+        classId: assignmentData.classId,
         templateRepo,
+        templateParamRepo,
       });
 
       const weights = this.normalizeTemplateWeights(templates);
@@ -419,7 +467,7 @@ export class AssignmentService {
   async findAllUserAssignments() {
     const user = this.requestContextService.getUser();
 
-    if (user.isAdmin) {
+    if (user.role === UserRole.ADMIN) {
       return this.findAll();
     }
 
@@ -427,12 +475,6 @@ export class AssignmentService {
     const query = this.assignmentRepository
       .createQueryBuilder('assignment')
       .innerJoin('assignment.class', 'class')
-      .innerJoin(
-        'class.userClasses',
-        'userClasses',
-        'userClasses.userId = :userId',
-        { userId: user.userId },
-      )
       .leftJoinAndSelect(
         'assignment.assignmentAttempts',
         'assignmentAttempts',
@@ -455,6 +497,12 @@ export class AssignmentService {
         { examNow: now }
       );
 
+    if (user.role === UserRole.TEACHER) {
+      query.andWhere('class.teacherId = :userId', { userId: user.userId });
+    } else {
+      query.innerJoin('class.userClasses', 'userClasses', 'userClasses.userId = :userId', { userId: user.userId });
+    }
+
     const assignments = await query.getMany();
 
     this.logger.debug(assignments, 'Assignments fetched for user');
@@ -470,14 +518,17 @@ export class AssignmentService {
       .then((assignments) => this.presentAssignments(assignments));
   }
 
-  findOptions(classId?: number) {
+  async findOptions(classId?: number) {
+    const user = this.requestContextService.getUser();
+    if (user.role === UserRole.STUDENT) return [];
+    if (classId) await this.classAccess.assertTeacherAssignment(classId);
     return this.assignmentRepository.find({
       select: {
         id: true,
         title: true,
         classId: true
       },
-      ...(classId ? { where: { classId } } : {}),
+      ...(classId ? { where: { classId } } : user.role === UserRole.TEACHER ? { where: { class: { teacherId: user.userId } } } : {}),
       order: {
         id: 'ASC',
         title: 'ASC'
@@ -489,6 +540,8 @@ export class AssignmentService {
     query: ListAssignmentsQueryDto,
   ): Promise<PaginatedResult<Assignment>> {
     const { page, pageSize, skip } = buildPaginationParams(query);
+    const currentUser = this.requestContextService.getUser();
+    if (currentUser.role === UserRole.STUDENT) throw new NotFoundException('Assignment not found');
 
     const qb = this.assignmentRepository
       .createQueryBuilder('assignment')
@@ -497,6 +550,8 @@ export class AssignmentService {
       .leftJoinAndSelect('class.userClasses', 'userClasses')
       .leftJoin('assignment.examAssignment', 'examAssignment')
       .orderBy('assignment.id', 'DESC');
+
+    if (currentUser.role === UserRole.TEACHER) qb.andWhere('class.teacherId = :teacherId', { teacherId: currentUser.userId });
 
     if (query.classId) {
       qb.andWhere('assignment.classId = :classId', {
@@ -537,21 +592,7 @@ export class AssignmentService {
 
   async findAssignmentsByClass(classId: number) {
     const user = this.requestContextService.getUser()!;
-
-    if (!user.isAdmin) {
-      const isUserInClass = await this.userClassRepository.findOne({
-        where: {
-          userId: user.userId,
-          classId,
-        },
-      });
-
-      if (!isUserInClass) {
-        throw new ForbiddenException(
-          'You are not authorized to access this class.',
-        );
-      }
-    }
+    await this.classAccess.assertClassAccess(classId);
 
     const query = this.assignmentRepository
       .createQueryBuilder('assignment')
@@ -565,7 +606,7 @@ export class AssignmentService {
       .where('assignment.classId = :classId', { classId })
       .andWhere('examAssignment.id IS NULL');
 
-    if (!user.isAdmin) {
+    if (user.role === UserRole.STUDENT) {
       query.andWhere(
         '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
         { now: new Date() }
@@ -592,6 +633,7 @@ export class AssignmentService {
   }
 
   async findOne(id: number) {
+    await this.classAccess.assertAssignmentAccess(id);
     await this.assignmentAlertService.assertCurrentUserNotSuspended(id);
     const user = this.requestContextService.getUser();
     const now = new Date();
@@ -601,7 +643,7 @@ export class AssignmentService {
       .leftJoinAndSelect('detailsExamAssignment.exam', 'detailsExam')
       .orderBy('assignmentAttempts.createdAt', 'DESC');
 
-    if (user.isAdmin) {
+    if (user.role === UserRole.ADMIN || user.role === UserRole.TEACHER) {
       query
         .leftJoinAndSelect('class.userClasses', 'userClasses')
         .leftJoinAndSelect(
@@ -641,6 +683,7 @@ export class AssignmentService {
   }
 
   async findOneForExecution(id: number) {
+    await this.classAccess.assertAssignmentAccess(id);
     const assignment = await this.createAssignmentDetailsQuery(id).getOne();
 
     if (!assignment) {
@@ -652,7 +695,7 @@ export class AssignmentService {
 
   async assertSubmissionOpen(assignmentId: number): Promise<void> {
     const user = this.requestContextService.getUser();
-    if (user?.isAdmin) return;
+    if (user?.role === UserRole.ADMIN) return;
 
     const window = await this.assignmentRepository
       .createQueryBuilder('assignment')
@@ -694,9 +737,7 @@ export class AssignmentService {
       ...assignmentDataToUpdate
     } = updateAssignmentDto;
 
-    const assignment = await this.assignmentRepository.findOne({
-      where: { id },
-    });
+    const assignment = await this.classAccess.assertAssignmentAccess(id, true);
 
     if (!assignment) {
       throw new NotFoundException('Tarefa não encontrada');
@@ -713,6 +754,10 @@ export class AssignmentService {
     const dataToUpdate: Partial<Assignment> = {
       ...assignmentDataToUpdate,
     };
+    if (dataToUpdate.classId !== undefined && dataToUpdate.classId !== assignment.classId) {
+      throw new ForbiddenException('An assignment cannot be moved to another class.');
+    }
+    delete dataToUpdate.classId;
     if (parsedStartDate !== undefined) {
       dataToUpdate.startDate = parsedStartDate;
     }
@@ -758,6 +803,8 @@ export class AssignmentService {
       await this.assertTemplatesCompatibleWithWorkerType({
         templates: updateAssignmentDto.templates,
         workerType: effectiveWorkerType,
+        classId: assignment.classId,
+        templateParamRepo: this.templateParamRepository,
       });
 
       const weights = this.normalizeTemplateWeights(
@@ -793,9 +840,7 @@ export class AssignmentService {
   }
 
   async remove(id: number) {
-    const assignmentExists = await this.assignmentRepository.findOne({
-      where: { id },
-    });
+    const assignmentExists = await this.classAccess.assertAssignmentAccess(id, true);
 
     if (!assignmentExists)
       throw new NotFoundException('Assignment não encontrado!');

@@ -8,19 +8,22 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard'
+import { Roles } from 'src/auth/roles.decorator'
+import { UserRole } from 'src/user/user-role'
 import { AssignmentAlertService } from './assignment-alert.service';
 import { CreateAssignmentUserAlertDto } from './dto/create-assignment-user-alert.dto';
 import { ListAssignmentAlertUsersDto } from './dto/list-assignment-alert-users.dto';
 
 @Controller('assignment/:assignmentId/alerts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AssignmentAlertController {
 
   constructor(private readonly assignmentAlertService: AssignmentAlertService) {}
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   record(
     @Param('assignmentId', ParseIntPipe) assignmentId: number,
     @Body() dto: CreateAssignmentUserAlertDto,
@@ -29,12 +32,13 @@ export class AssignmentAlertController {
   }
 
   @Get('me/status')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   getMyStatus(@Param('assignmentId', ParseIntPipe) assignmentId: number) {
     return this.assignmentAlertService.getCurrentUserStatus(assignmentId);
   }
 
   @Get('admin/users')
-  @UseGuards(AdminGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   listUsers(
     @Param('assignmentId', ParseIntPipe) assignmentId: number,
     @Query() query: ListAssignmentAlertUsersDto
@@ -43,7 +47,7 @@ export class AssignmentAlertController {
   }
 
   @Get('admin/users/:userId')
-  @UseGuards(AdminGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   listUserHistory(
     @Param('assignmentId', ParseIntPipe) assignmentId: number,
     @Param('userId', ParseIntPipe) userId: number,
@@ -53,7 +57,7 @@ export class AssignmentAlertController {
   }
 
   @Post('admin/users/:userId/alerts/:alertId/archive')
-  @UseGuards(AdminGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   archiveAlert(
     @Param('assignmentId', ParseIntPipe) assignmentId: number,
     @Param('userId', ParseIntPipe) userId: number,

@@ -13,6 +13,8 @@ import { Exam } from './entities/exam.entity';
 import { ExamController } from './exam.controller';
 import { ExamService } from './exam.service';
 import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -24,7 +26,7 @@ import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.mod
     AssignmentAlertModule
   ],
   controllers: [ExamController],
-  providers: [ExamService],
+  providers: [ExamService, JwtAuthGuard, RolesGuard],
   exports: [ExamService],
 })
 export class ExamModule {}

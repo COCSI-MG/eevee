@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import {
   BadRequestException,
   ConflictException,
@@ -10,16 +11,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Brackets, DataSource } from 'typeorm';
 import { AssignmentService } from './assignment.service';
 import { Assignment } from './entities/assignment.entity';
-import { AssignmentParam } from 'src/assignment-params/entities/assignment-param.entity';
-import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
+import { AssignmentParam } from './entities/assignment-param.entity';
+import { AssignmentTemplate } from './entities/assignment-template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { ClassService } from 'src/class/class.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { Template } from 'src/template/entities/template.entity';
-import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 import { AssignmentAlertType } from 'src/assignment-alert/enums/assignment-alert-type.enum';
+import { TemplateParam } from 'src/template/entities/template-param.entity';
+import { ClassAccessService } from 'src/auth/class-access.service';
 
 describe('AssignmentService', () => {
   let service: AssignmentService;
@@ -40,17 +42,30 @@ describe('AssignmentService', () => {
     const assignmentTemplateRepository = createRepositoryMock();
     const assignmentParamsRepository = createRepositoryMock();
     const templateRepository = createRepositoryMock();
-    const userClassRepository = createRepositoryMock();
+    const templateParamRepository = createRepositoryMock();
+    templateParamRepository.find.mockResolvedValue([]);
     const attemptRepository = createRepositoryMock();
     const classService = { findOne: jest.fn() };
     const dataSource = { transaction: jest.fn() };
     const requestContextService = {
-      getUser: jest.fn(),
+      getUser: jest.fn().mockReturnValue({
+        userId: 1,
+        role: UserRole.ADMIN
+      })
     };
     const assignmentAlertService = {
       decorateAssignments: jest.fn(async (assignments) => assignments),
       replaceRules: jest.fn(),
       assertCurrentUserNotSuspended: jest.fn()
+    };
+    const classAccess = {
+      assertTeacherAssignment: jest.fn().mockResolvedValue({ id: 12 }),
+      assertClassAccess: jest.fn().mockResolvedValue({ id: 1 }),
+      assertAssignmentAccess: jest.fn().mockResolvedValue({
+        id: 55,
+        classId: 1,
+        workerType: WorkerType.NODE_DEFAULT
+      })
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -73,8 +88,8 @@ describe('AssignmentService', () => {
           useValue: templateRepository,
         },
         {
-          provide: getRepositoryToken(UserClass),
-          useValue: userClassRepository,
+          provide: getRepositoryToken(TemplateParam),
+          useValue: templateParamRepository
         },
         {
           provide: getRepositoryToken(Attempt),
@@ -95,7 +110,11 @@ describe('AssignmentService', () => {
         {
           provide: AssignmentAlertService,
           useValue: assignmentAlertService
-        }
+        },
+        {
+          provide: ClassAccessService,
+          useValue: classAccess
+        },
       ],
     }).compile();
 
@@ -105,12 +124,13 @@ describe('AssignmentService', () => {
       assignmentTemplateRepository,
       assignmentParamsRepository,
       templateRepository,
-      userClassRepository,
+      templateParamRepository,
       attemptRepository,
       classService,
       dataSource,
       requestContextService,
-      assignmentAlertService
+      assignmentAlertService,
+      classAccess
     };
   };
 
@@ -189,7 +209,7 @@ describe('AssignmentService', () => {
     const assignments = [{ id: 1 }, { id: 2 }] as Assignment[];
     requestContextService.getUser.mockReturnValue({
       userId: 10,
-      isAdmin: true,
+      role: UserRole.ADMIN
     });
     jest.spyOn(service, 'findAll').mockResolvedValue(assignments as any);
 
@@ -229,7 +249,7 @@ describe('AssignmentService', () => {
           }
         ])
       };
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
+      requestContextService.getUser.mockReturnValue({ userId: 7, role: UserRole.STUDENT });
       jest.spyOn(service, 'findOne').mockResolvedValue({ id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true } as any)
 
       assignmentRepository.createQueryBuilder.mockReturnValue(query)
@@ -289,7 +309,7 @@ describe('AssignmentService', () => {
 
       const files = { 'src/app.ts': 'export const value = 1;' }
 
-      requestContextService.getUser.mockReturnValue({ userId: 7, isAdmin: false });
+      requestContextService.getUser.mockReturnValue({ userId: 7, role: UserRole.STUDENT });
       jest.spyOn(service, 'findOne').mockResolvedValue({ id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true } as any);
 
       assignmentRepository.findOne.mockResolvedValue({ id: 2, title: 'Origem', classId: 12, workerType: WorkerType.NODE_DEFAULT });
@@ -322,7 +342,7 @@ describe('AssignmentService', () => {
         attemptRepository,
         requestContextService
       } = await setup();
-      requestContextService.getUser.mockReturnValue({userId: 7, isAdmin: false})
+      requestContextService.getUser.mockReturnValue({userId: 7, role: UserRole.STUDENT})
       jest.spyOn(service, 'findOne').mockResolvedValue({id: 5, classId: 12, workerType: WorkerType.NODE_DEFAULT, allowProjectImport: true} as any)
       assignmentRepository.findOne.mockResolvedValue({id: 2, title: 'Origem', classId: 12, workerType: WorkerType.NODE_DEFAULT })
       attemptRepository.findOne.mockResolvedValue(null);
@@ -342,7 +362,7 @@ describe('AssignmentService', () => {
     classService.findOne.mockResolvedValue(null);
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
 
     await expect(
@@ -369,6 +389,7 @@ describe('AssignmentService', () => {
       assignmentTemplateRepository,
       assignmentParamsRepository,
       templateRepository,
+      templateParamRepository,
       requestContextService,
       assignmentAlertService
     } = await setup();
@@ -376,7 +397,7 @@ describe('AssignmentService', () => {
     classService.findOne.mockResolvedValue({ id: 12 });
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
     assignmentRepository.save.mockResolvedValue({
       id: 99,
@@ -384,8 +405,13 @@ describe('AssignmentService', () => {
       allowCopyPaste: true,
     });
     templateRepository.find.mockResolvedValue([
-      { id: 1, workerType: WorkerType.NODE_DEFAULT },
-      { id: 2, workerType: WorkerType.NODE_DEFAULT },
+      { id: 1, classId: 12, workerType: WorkerType.NODE_DEFAULT },
+      { id: 2, classId: 12, workerType: WorkerType.NODE_DEFAULT }
+    ]);
+    templateParamRepository.find.mockResolvedValue([
+      { id: 10, templateId: 1 },
+      { id: 11, templateId: 1 },
+      { id: 12, templateId: 2 }
     ]);
     assignmentTemplateRepository.save.mockResolvedValue([]);
     assignmentParamsRepository.save.mockResolvedValue([]);
@@ -473,7 +499,7 @@ describe('AssignmentService', () => {
     classService.findOne.mockResolvedValue({ id: 12 });
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
     assignmentRepository.save.mockResolvedValue({
       id: 99,
@@ -516,7 +542,7 @@ describe('AssignmentService', () => {
     classService.findOne.mockResolvedValue({ id: 12 });
     requestContextService.getUser.mockReturnValue({
       userId: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
     assignmentRepository.save.mockResolvedValue({
       id: 99,
@@ -551,27 +577,20 @@ describe('AssignmentService', () => {
   it('remove blocks deletion when attempts already exist', async () => {
     const {
       service,
-      assignmentRepository,
       attemptRepository,
       dataSource,
-      requestContextService,
+      classAccess
     } = await setup();
 
-    requestContextService.getUser.mockReturnValue({
-      userId: 7,
-      isAdmin: false,
-    });
-    assignmentRepository.findOne.mockResolvedValue({
+    classAccess.assertAssignmentAccess.mockResolvedValue({
       id: 55,
-      createdById: 7,
+      classId: 1
     });
     attemptRepository.count.mockResolvedValue(2);
 
     await expect(service.remove(55)).rejects.toBeInstanceOf(ConflictException);
 
-    expect(assignmentRepository.findOne).toHaveBeenCalledWith({
-      where: { id: 55 },
-    });
+    expect(classAccess.assertAssignmentAccess).toHaveBeenCalledWith(55, true);
     expect(attemptRepository.count).toHaveBeenCalledWith({
       where: { assignmentId: 55 },
     });
@@ -615,7 +634,7 @@ describe('AssignmentService', () => {
       assignmentRepository.createQueryBuilder.mockReturnValue(qb);
       requestContextService.getUser.mockReturnValue({
         userId: 10,
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
       jest
         .spyOn(service as any, 'attachBoilerplate')
@@ -690,15 +709,15 @@ describe('AssignmentService', () => {
       const {
         service,
         assignmentRepository,
-        userClassRepository,
+        classAccess,
         requestContextService,
       } = await setup();
 
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT,
       });
-      userClassRepository.findOne.mockResolvedValue({ userId: 7, classId: 1 });
+      classAccess.assertClassAccess.mockResolvedValue({ id: 1 });
       const qb = makeFindQueryBuilder();
       assignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
@@ -709,27 +728,27 @@ describe('AssignmentService', () => {
         'examAssignment',
       );
       expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
+      expect(classAccess.assertClassAccess).toHaveBeenCalledWith(1);
       expect(result).toEqual([]);
     });
 
-    it('throws ForbiddenException for a non-admin user not enrolled in the class', async () => {
+    it('rejects a user without class access before querying assignments', async () => {
       const {
         service,
         assignmentRepository,
-        userClassRepository,
+        classAccess,
         requestContextService,
       } = await setup();
 
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
-      userClassRepository.findOne.mockResolvedValue(null);
+      classAccess.assertClassAccess.mockRejectedValue(new NotFoundException('Class not found'));
 
-      await expect(service.findAssignmentsByClass(1)).rejects.toBeInstanceOf(
-        ForbiddenException,
-      );
+      await expect(service.findAssignmentsByClass(1)).rejects.toBeInstanceOf(NotFoundException);
 
+      expect(classAccess.assertClassAccess).toHaveBeenCalledWith(1);
       expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
     });
 
@@ -737,21 +756,21 @@ describe('AssignmentService', () => {
       const {
         service,
         assignmentRepository,
-        userClassRepository,
+        classAccess,
         requestContextService,
       } = await setup();
 
       requestContextService.getUser.mockReturnValue({
         userId: 10,
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
-      userClassRepository.findOne.mockResolvedValue({ userId: 10, classId: 1 });
+      classAccess.assertClassAccess.mockResolvedValue({ id: 1 });
       const qb = makeFindQueryBuilder();
       assignmentRepository.createQueryBuilder.mockReturnValue(qb);
 
       await service.findAssignmentsByClass(1);
 
-      expect(userClassRepository.findOne).not.toHaveBeenCalled();
+      expect(classAccess.assertClassAccess).toHaveBeenCalledWith(1);
       expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
       expect(qb.andWhere).toHaveBeenCalledTimes(1);
     });
@@ -777,7 +796,7 @@ describe('AssignmentService', () => {
     assignmentRepository.createQueryBuilder.mockReturnValue(query);
     requestContextService.getUser.mockReturnValue({
       userId: 10,
-      isAdmin: true,
+      role: UserRole.ADMIN
     });
 
     await expect(service.findOne(42)).resolves.toEqual(
@@ -789,15 +808,15 @@ describe('AssignmentService', () => {
   });
 
   it('allows an admin to update another admin assignment without changing its creator', async () => {
-    const { service, assignmentRepository, requestContextService } =
+    const { service, assignmentRepository, requestContextService, classAccess } =
       await setup();
-    assignmentRepository.findOne
-      .mockResolvedValueOnce({
-        id: 55,
-        createdById: 20,
-        workerType: WorkerType.NODE_DEFAULT,
-      })
-      .mockResolvedValueOnce({
+    classAccess.assertAssignmentAccess.mockResolvedValue({
+      id: 55,
+      classId: 1,
+      createdById: 20,
+      workerType: WorkerType.NODE_DEFAULT
+    });
+    assignmentRepository.findOne.mockResolvedValue({
         id: 55,
         createdById: 20,
         title: 'Updated',
@@ -821,20 +840,14 @@ describe('AssignmentService', () => {
   });
 
   it('updates the alert policy and increments its agreement version', async () => {
-    const { service, assignmentRepository, assignmentAlertService } =
+    const { service, assignmentRepository, assignmentAlertService, classAccess } =
       await setup();
-    assignmentRepository.findOne
-      .mockResolvedValueOnce({
-        id: 55,
-        workerType: WorkerType.NODE_DEFAULT,
-        alertPolicyVersion: 3,
-      })
-      .mockResolvedValueOnce({
-        id: 55,
-        suspensionAlertLimit: 2,
-        typingCharactersPerSecondLimit: 35,
-        alertPolicyVersion: 4,
-      });
+    classAccess.assertAssignmentAccess.mockResolvedValue({
+      id: 55,
+      classId: 1,
+      workerType: WorkerType.NODE_DEFAULT,
+      alertPolicyVersion: 3
+    });
 
     await service.update(55, {
       alertPolicy: {
@@ -857,14 +870,15 @@ describe('AssignmentService', () => {
   it('allows an admin to delete another admin assignment', async () => {
     const {
       service,
-      assignmentRepository,
       attemptRepository,
       dataSource,
       requestContextService,
+      classAccess,
     } = await setup();
     const manager = { delete: jest.fn().mockResolvedValue({ affected: 1 }) };
-    assignmentRepository.findOne.mockResolvedValue({
+    classAccess.assertAssignmentAccess.mockResolvedValue({
       id: 55,
+      classId: 1,
       createdById: 20,
     });
     attemptRepository.count.mockResolvedValue(0);
@@ -897,16 +911,16 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 12 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.save.mockResolvedValue({
         id: 10,
         boilerplateContent: '',
       });
       templateRepository.find.mockResolvedValue([
-        { id: 1, workerType: WorkerType.NODE_DEFAULT },
-        { id: 2, workerType: WorkerType.NODE_DEFAULT },
-        { id: 3, workerType: WorkerType.NODE_DEFAULT },
+        { id: 1, classId: 12, workerType: WorkerType.NODE_DEFAULT },
+        { id: 2, classId: 12, workerType: WorkerType.NODE_DEFAULT },
+        { id: 3, classId: 12, workerType: WorkerType.NODE_DEFAULT }
       ]);
       assignmentTemplateRepository.save.mockResolvedValue([]);
       assignmentParamsRepository.save.mockResolvedValue([]);
@@ -946,15 +960,15 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 12 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.save.mockResolvedValue({
         id: 11,
         boilerplateContent: '',
       });
       templateRepository.find.mockResolvedValue([
-        { id: 1, workerType: WorkerType.NODE_DEFAULT },
-        { id: 2, workerType: WorkerType.NODE_DEFAULT },
+        { id: 1, classId: 12, workerType: WorkerType.NODE_DEFAULT },
+        { id: 2, classId: 12, workerType: WorkerType.NODE_DEFAULT }
       ]);
       assignmentTemplateRepository.save.mockResolvedValue([]);
       assignmentParamsRepository.save.mockResolvedValue([]);
@@ -990,15 +1004,15 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 12 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.save.mockResolvedValue({
         id: 12,
         boilerplateContent: '',
       });
       templateRepository.find.mockResolvedValue([
-        { id: 1, workerType: WorkerType.NODE_DEFAULT },
-        { id: 2, workerType: WorkerType.NODE_DEFAULT },
+        { id: 1, classId: 12, workerType: WorkerType.NODE_DEFAULT },
+        { id: 2, classId: 12, workerType: WorkerType.NODE_DEFAULT }
       ]);
 
       await expect(
@@ -1029,14 +1043,14 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 12 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       assignmentRepository.save.mockResolvedValue({
         id: 13,
         boilerplateContent: '',
       });
       templateRepository.find.mockResolvedValue([
-        { id: 1, workerType: WorkerType.NODE_DEFAULT },
+        { id: 1, classId: 12, workerType: WorkerType.NODE_DEFAULT }
       ]);
 
       await expect(
@@ -1055,7 +1069,7 @@ describe('AssignmentService', () => {
     it('update persists normalised weights', async () => {
       const {
         service,
-        assignmentRepository,
+        classAccess,
         assignmentTemplateRepository,
         assignmentParamsRepository,
         templateRepository,
@@ -1064,19 +1078,18 @@ describe('AssignmentService', () => {
 
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
-      assignmentRepository.findOne
-        .mockResolvedValueOnce({
-          id: 55,
-          createdById: 7,
-          workerType: WorkerType.NODE_DEFAULT,
-        })
-        .mockResolvedValueOnce({ id: 55 });
+      classAccess.assertAssignmentAccess.mockResolvedValue({
+        id: 55,
+        classId: 1,
+        createdById: 7,
+        workerType: WorkerType.NODE_DEFAULT
+      });
       templateRepository.find.mockResolvedValue([
-        { id: 1, workerType: WorkerType.NODE_DEFAULT },
-        { id: 2, workerType: WorkerType.NODE_DEFAULT },
-        { id: 3, workerType: WorkerType.NODE_DEFAULT },
+        { id: 1, classId: 1, workerType: WorkerType.NODE_DEFAULT },
+        { id: 2, classId: 1, workerType: WorkerType.NODE_DEFAULT },
+        { id: 3, classId: 1, workerType: WorkerType.NODE_DEFAULT }
       ]);
       assignmentTemplateRepository.delete.mockResolvedValue(undefined);
       assignmentParamsRepository.delete.mockResolvedValue(undefined);
@@ -1119,7 +1132,7 @@ describe('AssignmentService', () => {
       classService.findOne.mockResolvedValue({ id: 1 });
       requestContextService.getUser.mockReturnValue({
         userId: 7,
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
       assignmentRepository.save.mockImplementation(async (value) => ({
         id: 90,
@@ -1164,9 +1177,10 @@ describe('AssignmentService', () => {
     });
 
     it('validates partial updates against the persisted date', async () => {
-      const { service, assignmentRepository } = await setup();
-      assignmentRepository.findOne.mockResolvedValue({
+      const { service, assignmentRepository, classAccess } = await setup();
+      classAccess.assertAssignmentAccess.mockResolvedValue({
         id: 55,
+        classId: 1,
         workerType: WorkerType.NODE_DEFAULT,
         dueDate: new Date('2026-08-25T12:00:00.000Z'),
       });
@@ -1181,15 +1195,15 @@ describe('AssignmentService', () => {
     });
 
     it('clears a date when null is supplied', async () => {
-      const { service, assignmentRepository } = await setup();
-      assignmentRepository.findOne
-        .mockResolvedValueOnce({
-          id: 55,
-          workerType: WorkerType.NODE_DEFAULT,
-          startDate: new Date('2026-08-24T12:00:00.000Z'),
-          dueDate: new Date('2026-08-25T12:00:00.000Z'),
-        })
-        .mockResolvedValueOnce({
+      const { service, assignmentRepository, classAccess } = await setup();
+      classAccess.assertAssignmentAccess.mockResolvedValue({
+        id: 55,
+        classId: 1,
+        workerType: WorkerType.NODE_DEFAULT,
+        startDate: new Date('2026-08-24T12:00:00.000Z'),
+        dueDate: new Date('2026-08-25T12:00:00.000Z')
+      });
+      assignmentRepository.findOne.mockResolvedValue({
           id: 55,
           startDate: null,
           dueDate: new Date('2026-08-25T12:00:00.000Z'),
@@ -1219,7 +1233,7 @@ describe('AssignmentService', () => {
       assignmentRepository.createQueryBuilder.mockReturnValue(query);
       requestContextService.getUser.mockReturnValue({
         userId: 10,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
 
       await expect(service.assertSubmissionOpen(42)).rejects.toBeInstanceOf(

@@ -15,12 +15,16 @@ import { ListUsersQueryDto } from './dto/request/list-users.query.dto';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserResponseDto } from './dto/response/user-response.dto';
 import { PaginatedUsersResponseDto } from './dto/response/paginated-users-response.dto';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 import { instanceToPlain } from 'class-transformer';
 import { UpdateUserDto } from './dto/request/update-user.dto';
 
 @Controller('user')
-@UseGuards(AdminGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 @ApiTags('User')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -42,6 +46,11 @@ export class UserController {
   async findAllPaginated(@Query() query: ListUsersQueryDto) {
     const result = await this.userService.findAllPaginated(query);
     return instanceToPlain(result);
+  }
+
+  @Get('teachers')
+  findTeachers() {
+    return this.userService.findTeachers();
   }
 
   @Get(':id')

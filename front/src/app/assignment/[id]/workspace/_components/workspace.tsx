@@ -1,4 +1,5 @@
 "use client";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 import React from "react";
 import WorkspaceCodeEditor from "./workspace-code-editor";
@@ -61,7 +62,7 @@ export default function Workspace({
     selectItem,
   });
 
-  const editorActionGuardMode = user.isAdmin
+  const editorActionGuardMode = user.role === UserRole.ADMIN
     ? EDITOR_ACTION_GUARD_MODE.EXEMPT
     : assignment.allowCopyPaste
       ? EDITOR_ACTION_GUARD_MODE.INTERNAL_ONLY

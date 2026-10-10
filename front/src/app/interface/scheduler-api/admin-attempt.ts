@@ -1,3 +1,4 @@
+import type { UserRole } from "@/app/interface/scheduler-api/user";
 export interface AdminAttemptDetail {
   id: number;
   attempt: number;
@@ -18,7 +19,7 @@ export interface AdminAttempt extends AdminAttemptDetail {
     id: number;
     name: string;
     email: string;
-    isAdmin: boolean;
+    role: UserRole;
   };
   assignment: {
     id: number;

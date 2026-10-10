@@ -12,15 +12,18 @@ import {
 import { SchedulingService } from './scheduling.service';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 import { Throttle } from '@nestjs/throttler';
 
 @Controller('scheduling')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class SchedulingController {
   constructor(private readonly schedulingService: SchedulingService) {}
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   async create(
     @Body()
@@ -30,6 +33,7 @@ export class SchedulingController {
   }
 
   @Post('wait')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   async createAndWait(
     @Body()
@@ -39,6 +43,7 @@ export class SchedulingController {
   }
 
   @Post('await')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   async createAsync(
     @Body()
@@ -50,6 +55,7 @@ export class SchedulingController {
   }
 
   @Post('preview')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   async createPreview(
     @Body()
@@ -59,6 +65,7 @@ export class SchedulingController {
   }
 
   @Get('preview/:previewRunId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @Throttle({ default: { limit: 120, ttl: 60000 } })
   async getPreviewRun(
     @Param('previewRunId', ParseIntPipe) previewRunId: number,
@@ -74,6 +81,7 @@ export class SchedulingController {
   }
 
   @Delete('preview/:previewRunId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   async cancelPreviewRun(
     @Param('previewRunId', ParseIntPipe) previewRunId: number,
@@ -82,18 +90,20 @@ export class SchedulingController {
   }
 
   @Post('retry/:attemptId')
-  @UseGuards(AdminGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   async retryAttempt(@Param('attemptId', ParseIntPipe) attemptId: number) {
     return await this.schedulingService.retryAttemptFromAdmin(attemptId);
   }
 
   @Post('attempt/:id/feedback')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   async requestFeedback(@Param('id', ParseIntPipe) id: number) {
     await this.schedulingService.requestAiFeedback(id);
     return { status: 'ok' };
   }
 
   @Get('attempt/:id/feedback')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   async getFeedback(@Param('id', ParseIntPipe) id: number) {
     const refinedReport = await this.schedulingService.getAiFeedback(id);
     return { refinedReport };

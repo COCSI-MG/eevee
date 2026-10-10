@@ -1,8 +1,9 @@
+import { UserRole } from 'src/user/user-role';
 import { HttpException, NotFoundException } from '@nestjs/common';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
-import { UserClass } from 'src/user-class/entities/user-class.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { AssignmentAlertService } from './assignment-alert.service';
+import { ClassAccessService } from 'src/auth/class-access.service';
 import { AssignmentAlertRule } from './entities/assignment-alert-rule.entity';
 import { AssignmentUserAlert } from './entities/assignment-user-alert.entity';
 import { AssignmentAlertType } from './enums/assignment-alert-type.enum';
@@ -13,7 +14,7 @@ describe('AssignmentAlertService', () => {
     duplicate?: AssignmentUserAlert | null;
     ruleExists?: boolean;
     limit?: number;
-    isAdmin?: boolean;
+    role?: UserRole;
     archiveAlert?: AssignmentUserAlert | null;
   }) => {
     const alertRepository = {
@@ -31,16 +32,16 @@ describe('AssignmentAlertService', () => {
       })
     } as unknown as jest.Mocked<Repository<Assignment>>;
 
-    const userClassRepository = {
-      findOne: jest.fn().mockResolvedValue({ classId: 9, userId: 7 })
-    } as unknown as jest.Mocked<Repository<UserClass>>;
-
     const requestContextService = {
       getUser: jest.fn().mockReturnValue({
         userId: 7,
-        isAdmin: options?.isAdmin ?? false
+        role: options?.role ?? UserRole.STUDENT
       })
     };
+
+    const classAccess = {
+      assertAssignmentAccess: jest.fn().mockResolvedValue({ id: 4, classId: 9 })
+    } as unknown as jest.Mocked<ClassAccessService>
 
     const duplicateQueryBuilder = {
       withDeleted: jest.fn().mockReturnThis(),
@@ -79,8 +80,8 @@ describe('AssignmentAlertService', () => {
       alertRepository,
       ruleRepository,
       assignmentRepository,
-      userClassRepository,
-      requestContextService as never
+      requestContextService as never,
+      classAccess
     );
 
     return {
@@ -188,7 +189,7 @@ describe('AssignmentAlertService', () => {
   });
 
   it('never records punitive alerts for administrators', async () => {
-    const { service, assignmentRepository } = createService({ isAdmin: true });
+    const { service, assignmentRepository } = createService({ role: UserRole.ADMIN });
 
     await expect(service.recordCurrentUserAlert(4, event)).resolves.toEqual(
       expect.objectContaining({ recorded: false, suspended: false })
@@ -205,7 +206,7 @@ describe('AssignmentAlertService', () => {
     } = createService({
       activeCount: 1,
       limit: 2,
-      isAdmin: true,
+      role: UserRole.ADMIN,
       archiveAlert: {
         id: 18,
         assignmentId: 4,
@@ -247,7 +248,7 @@ describe('AssignmentAlertService', () => {
 
   it('returns 404 when the alert does not belong to the assignment and user', async () => {
     const { service, archiveQueryBuilder } = createService({
-      isAdmin: true,
+      role: UserRole.ADMIN,
       archiveAlert: null
     });
 
@@ -261,7 +262,7 @@ describe('AssignmentAlertService', () => {
     const { service, archiveQueryBuilder } = createService({
       activeCount: 3,
       limit: 5,
-      isAdmin: true,
+      role: UserRole.ADMIN,
       archiveAlert: {
         id: 18,
         assignmentId: 4,

@@ -1,7 +1,12 @@
 import { NotFoundException } from '@nestjs/common';
+import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttemptController } from './attempt.controller';
 import { AttemptService } from './attempt.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { ROLES_KEY } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 
 describe('AttemptController', () => {
   let controller: AttemptController;
@@ -33,6 +38,29 @@ describe('AttemptController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('applies authentication and role guards to every attempt route', () => {
+    expect(Reflect.getMetadata(GUARDS_METADATA, AttemptController)).toEqual([
+      JwtAuthGuard,
+      RolesGuard
+    ]);
+  });
+
+  it('allows staff on every attempt route', () => {
+    const prototype = AttemptController.prototype;
+
+    expect(Reflect.getMetadata(ROLES_KEY, prototype.findAllForAdmin)).toEqual([
+      UserRole.ADMIN,
+      UserRole.TEACHER
+    ]);
+    expect(
+      Reflect.getMetadata(ROLES_KEY, prototype.findAllForAdminByAssignmentAndUser),
+    ).toEqual([UserRole.ADMIN, UserRole.TEACHER]);
+    expect(Reflect.getMetadata(ROLES_KEY, prototype.findOneForAdmin)).toEqual([
+      UserRole.ADMIN,
+      UserRole.TEACHER
+    ]);
   });
 
   it('delegates admin listing to the service', async () => {

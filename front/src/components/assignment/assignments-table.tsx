@@ -87,7 +87,7 @@ export default function AssignmentsTable({
           return (
             <TableRow key={assignment.id}>
               <TableCell>{assignment.title}</TableCell>
-              <TableCell>{assignment.class.name}</TableCell>
+              <TableCell>{assignment.class?.name ?? "Turma indisponível"}</TableCell>
               <TableCell
                 title={
                   description.length > ASSIGNMENT_DESCRIPTION_MAX_LENGTH

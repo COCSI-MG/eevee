@@ -15,9 +15,6 @@ import { RequestContextModule } from './request-context/request-context.module';
 import { ClsModule } from 'nestjs-cls';
 import { RequestContextMiddleware } from './request-context/request-context.middleware';
 import { TemplateModule } from './template/template.module';
-import { AssignmentTemplateModule } from './assignment-template/assignment-template.module';
-import { TemplateParamsModule } from './template-params/template-params.module';
-import { AssignmentParamsModule } from './assignment-params/assignment-params.module';
 import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import { GithubModule } from './github/github.module';
@@ -38,6 +35,7 @@ import { ExecutionPlatformEventsModule } from './execution/execution-platform-ev
 import { LearningActivityModule } from './learning-activity/learning-activity.module';
 import { InvitationModule } from './invitation/invitation.module';
 
+import { ClassAccessModule } from './auth/class-access.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -58,6 +56,7 @@ import { InvitationModule } from './invitation/invitation.module';
       ],
     }),
     DatabaseModule,
+    ClassAccessModule,
     NestScheduleModule.forRoot(),
     RequestContextModule,
     SchedulingModule,
@@ -69,9 +68,6 @@ import { InvitationModule } from './invitation/invitation.module';
     PassportModule,
     AuthModule,
     TemplateModule,
-    AssignmentTemplateModule,
-    TemplateParamsModule,
-    AssignmentParamsModule,
     FileSaverModule,
     GithubModule,
     AssignmentAlertModule,

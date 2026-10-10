@@ -1,4 +1,5 @@
 "use client";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 import WorkspaceHeader from "@/app/assignment/[id]/workspace/_components/workspace-header";
 import Workspace from "@/app/assignment/[id]/workspace/_components/workspace";
@@ -84,9 +85,9 @@ export default function Page() {
         return;
       }
 
-      router.replace(user?.isAdmin ? Route.AdminAssignments : `/${Route.Classes}`);
+      router.replace(user?.role === UserRole.ADMIN ? Route.AdminAssignments : `/${Route.Classes}`);
     }, 2000)
-  }, [id, isAssignmentUnavailable, router, user?.isAdmin, userId]);
+  }, [id, isAssignmentUnavailable, router, user?.role, userId]);
 
   const handleClearWorkspace = async () => {
     if (!resetWorkspaceAction || !assignmentData) {
@@ -191,12 +192,12 @@ export default function Page() {
 
   const isSubmissionClosed = Boolean(
     assignmentData &&
-    !user?.isAdmin &&
+    user?.role !== UserRole.ADMIN &&
     isDeadlinePassed(effectiveDueDate),
   );
 
   // Agreement check - APENAS para não-admins que ainda não aceitaram
-  if (user && !user.isAdmin && assignmentData && !securityAgreementAccepted) {
+  if (user && user.role !== UserRole.ADMIN && assignmentData && !securityAgreementAccepted) {
     return (
       <WorkspaceAgreement
         title={assignmentData.title}

@@ -9,6 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Class } from 'src/class/entities/class.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
+import { UserRole } from 'src/user/user-role';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { LearningActivity } from './entities/learning-activity.entity';
 import { LearningQuizAttempt } from './entities/learning-quiz-attempt.entity';
@@ -30,23 +31,37 @@ export class LearningActivityService {
     private readonly db: DataSource,
     private readonly context: RequestContextService,
   ) {}
+  private canManage() {
+    const role = this.context.getUser()?.role;
+    return role === UserRole.ADMIN || role === UserRole.TEACHER;
+  }
   private async access(classId: number, manager = this.db.manager) {
     const user = this.context.getUser();
     if (!user) throw new ForbiddenException();
-    if (!(await manager.exists(Class, { where: { id: classId } })))
-      throw new NotFoundException();
+
+    const cls = await manager.findOne(Class, { where: { id: classId } });
+
+    if (!cls) throw new NotFoundException();
+
     if (
-      !user.isAdmin &&
-      !(await manager.exists(UserClass, {
+      user.role === UserRole.ADMIN ||
+      (user.role === UserRole.TEACHER && cls.teacherId === user.userId)
+    ) return user;
+
+    const classUserManager = await manager.exists(UserClass, {
         where: { classId, userId: user.userId },
-      }))
-    )
-      throw new ForbiddenException();
-    return user;
+      })
+
+    if (
+      user.role === UserRole.STUDENT &&
+      classUserManager
+    ) return user;
+
+    throw new ForbiddenException();
   }
   private visible(activity: LearningActivity) {
     if (
-      !this.context.getUser()?.isAdmin &&
+      !this.canManage() &&
       (!activity.published ||
         (activity.startDate && activity.startDate > new Date()))
     )
@@ -55,7 +70,7 @@ export class LearningActivityService {
   private present(activity: LearningActivity) {
     return {
       ...activity,
-      questions: this.context.getUser()?.isAdmin
+      questions: this.canManage()
         ? activity.questions
         : publicQuestions(activity.questions),
     };
@@ -86,7 +101,7 @@ export class LearningActivityService {
     return records
       .filter(
         (a) =>
-          this.context.getUser().isAdmin ||
+          this.canManage() ||
           (a.published && (!a.startDate || a.startDate <= new Date())),
       )
       .map((a) => this.present(a));
@@ -95,7 +110,7 @@ export class LearningActivityService {
     return this.present(await this.load(id));
   }
   async create(dto: LearningActivityDto) {
-    if (!this.context.getUser()?.isAdmin) throw new ForbiddenException();
+    if (!this.canManage()) throw new ForbiddenException();
     validateActivity(dto);
     await this.access(dto.classId);
     return this.activities.save(
@@ -109,7 +124,7 @@ export class LearningActivityService {
     );
   }
   async update(id: number, dto: LearningActivityDto) {
-    if (!this.context.getUser()?.isAdmin) throw new ForbiddenException();
+    if (!this.canManage()) throw new ForbiddenException();
     validateActivity(dto);
     return this.db.transaction(async (manager) => {
       const current = await this.load(id, manager, true);
@@ -149,7 +164,7 @@ export class LearningActivityService {
     return this.db.transaction(async (manager) => {
       const activity = await this.load(id, manager, true);
       const userId = this.context.getUser().userId;
-      if (this.context.getUser().isAdmin)
+      if (this.context.getUser().role !== UserRole.STUDENT)
         throw new BadRequestException(
           'Use uma conta de estudante para enviar respostas.',
         );
@@ -188,21 +203,22 @@ export class LearningActivityService {
   async attempts(id: number) {
     const activity = await this.load(id);
     const user = this.context.getUser();
+    const canManage = this.canManage();
     const records = await this.db.getRepository(LearningQuizAttempt).find({
       where: {
         activityId: id,
-        ...(user.isAdmin ? {} : { userId: user.userId }),
+        ...(canManage ? {} : { userId: user.userId }),
       },
-      relations: user.isAdmin ? ['user'] : [],
+      relations: canManage ? ['user'] : [],
       order: { id: 'DESC' },
       take: 1000,
     });
-    const reveal = user.isAdmin || activity.feedbackReleased;
+    const reveal = canManage || activity.feedbackReleased;
     return records.map((a) => ({
       id: a.id,
       attempt: a.attempt,
       userId: a.userId,
-      name: user.isAdmin ? a.user?.name : undefined,
+      name: canManage ? a.user?.name : undefined,
       createdAt: a.createdAt,
       answers: a.answers,
       score: reveal ? a.score : null,

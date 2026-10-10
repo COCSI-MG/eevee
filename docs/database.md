@@ -8,7 +8,9 @@ A Platform API usa PostgreSQL por TypeORM. Migrations em `platform-api/src/migra
 erDiagram
     USER ||--o{ USER_CLASS : matriculado
     CLASSE ||--o{ USER_CLASS : possui
+    USER o|--o{ CLASSE : responsavel
     CLASSE ||--o{ ASSIGNMENT : organiza
+    CLASSE ||--o{ TEMPLATE : organiza
     USER o|--o{ ASSIGNMENT : cria
     USER ||--o{ ATTEMPT : realiza
     ASSIGNMENT ||--o{ ATTEMPT : recebe
@@ -34,7 +36,7 @@ erDiagram
 
 ### `User`
 
-Armazena e-mail, nome, papel administrativo, hash da senha e `deletedAt`. A exclusão é lógica, o índice parcial de e-mail considera apenas usuários ativos, permitindo preservar o histórico sem impedir uma conta futura com o mesmo endereço.
+Armazena e-mail, nome, papel (`aluno`, `professor` ou `admin`), hash da senha e `deletedAt`. A exclusão é lógica, o índice parcial de e-mail considera apenas usuários ativos, permitindo preservar o histórico sem impedir uma conta futura com o mesmo endereço.
 
 ### `PasswordReset`
 
@@ -42,7 +44,7 @@ Registra o hash do token, expiração e `usedAt`. O token enviado ao usuário n�
 
 ### `Class` e `UserClass`
 
-`Class` guarda nome e descrição. `UserClass` representa a matrícula e possui unicidade para `(userId, classId)`. A turma não possui um professor proprietário exclusivo.
+`Class` guarda nome, descrição, `teacherId` (professor responsável atual) e `deletedAt` para arquivamento lógico. Turmas arquivadas preservam relações e histórico; apenas admins podem consultá-las e restaurá-las. Turmas antigas sem um responsável permanecem acessíveis somente a admins até a atribuição. `UserClass` representa a matrícula de alunos e possui unicidade para `(userId, classId)`.
 
 ## Atividades, gabaritos e provas
 
@@ -60,13 +62,17 @@ Mantém um gabarito por atividade. Seu conteúdo é armazenado em JSONB como uma
 
 ### Templates e parâmetros
 
-`Template` guarda título, descrição, conteúdo de teste, executor e dependências. `TemplateParam` define nome e tipo, `AssignmentTemplate` relaciona atividade e template, `AssignmentParam` guarda o valor do parâmetro para a atividade.
+`Template` guarda a turma proprietária, título, descrição, conteúdo de teste, executor e dependências. `TemplateParam` define nome e tipo, `AssignmentTemplate` relaciona atividade e template, `AssignmentParam` guarda o valor do parâmetro para a atividade. Um template só pode ser usado por atividades da sua própria turma, templates antigos sem associação ficam sem turma até um admin atribuí-los.
+
+## Isolamento por turma
+
+Admins têm acesso global. Professores acessam somente turmas ativas cujo `teacherId` é o próprio usuário. Alunos acessam somente turmas ativas em que há uma linha correspondente em `UserClass`, sem receber a lista de colegas. Atividades, provas e seus registros derivados usam a turma da atividade/prova como limite de acesso. As rotas da API verificam o escopo também para consultas diretas por ID. Desativar uma conta revoga sessões ativas e bloqueia tokens JWT existentes.
 
 ## Execução e correção
 
 ### `Attempt`
 
-Armazena número sequencial por usuário e atividade, estado, aceitação, pontuação, aprovados, falhas, arquivos recebidos em JSONB, relatório bruto, feedback refinado e data de criação.
+Armazena número sequencial por usuário e atividade, estado, aceitação, pontuação, aprovados, falhas, arquivos recebidos em JSONB, relatório bruto, feedback refinado e data de criação. Aluno, professor e admin podem enviar tentativas, sempre atribuídas à própria conta, o aluno recebe somente seu resultado e feedback sanitizados. A equipe da turma e admins podem consultar os detalhes administrativos.
 
 ### `SchedulingPreviewRun`
 

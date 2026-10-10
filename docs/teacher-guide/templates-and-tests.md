@@ -1,6 +1,6 @@
 # Templates e testes automatizados
 
-Um template é um teste executável que pode ser reutilizado em mais de uma atividade. Ele não representa uma questão de entrada e saída. Seu conteúdo é um código utilizando a biblioteca referente a linguagem em execução.
+Um template é um teste executável que pode ser reutilizado em atividades da mesma turma. Ele não representa uma questão de entrada e saída. Seu conteúdo é um código utilizando a biblioteca referente a linguagem em execução. Um template pertence a uma turma e não pode ser transferido para outra.
 
 ## Campos do template
 

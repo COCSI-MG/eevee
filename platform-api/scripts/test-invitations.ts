@@ -1,3 +1,4 @@
+import { UserRole } from '../src/user/user-role';
 import * as assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { DataSource } from 'typeorm';
@@ -22,7 +23,7 @@ async function main() {
     const mails:{to:string;text:string;html:string}[]=[];
     let sendSuccess=true;
     let admin=true;
-    const service=new InvitationService(db,{sendEmail:async(params:any)=>{mails.push(params);return {success:sendSuccess};}} as any,new ConfigService({FRONT_URL:'https://eevee.example.test'}),{getUser:()=>({userId:1,isAdmin:admin})} as any);
+    const service=new InvitationService(db,{sendEmail:async(params:any)=>{mails.push(params);return {success:sendSuccess};}} as any,new ConfigService({FRONT_URL:'https://eevee.example.test'}),{getUser:()=>({userId:1,role:admin ? UserRole.ADMIN : UserRole.STUDENT})} as any);
     const suffix=randomBytes(8).toString('hex');
     const groups=await manager.save(Class,[manager.create(Class,{name:`Invitation test ${suffix} A`}),manager.create(Class,{name:`Invitation test ${suffix} B`})]);
     const classIds=groups.map(c=>c.id);
@@ -48,7 +49,7 @@ async function main() {
     await assert.rejects(service.accept({token:firstToken,password:'short'}),/8 caracteres/);
     await service.accept({token:firstToken,password:'Personal-password-123'});
     const user=await manager.findOneByOrFail(User,{email});
-    assert.equal(user.isAdmin,false);
+    assert.equal(user.role,UserRole.STUDENT);
     assert(HashUtils.comparePassword('Personal-password-123',user.passwordHash));
     assert.equal(await manager.count(UserClass,{where:{userId:user.id}}),2);
     await assert.rejects(service.accept({token:firstToken,password:'Personal-password-123'}),/Convite inválido/);

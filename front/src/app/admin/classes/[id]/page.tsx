@@ -28,15 +28,16 @@ import { AxiosError } from "axios";
 import * as Yup from "yup";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { LearningActivityList } from "@/components/learning/activity-list";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UsersService } from "@/app/integration/scheduler-api/user";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const classUpsertSchema = Yup.object().shape({
   id: Yup.number().optional(),
   name: Yup.string().trim().required("Nome da turma é obrigatório"),
   description: Yup.string(),
-  students: Yup.array()
-    .of(Yup.number())
-    .min(1, "Pelo menos um aluno deve ser selecionado")
-    .required("Pelo menos um aluno deve ser selecionado"),
+  students: Yup.array().of(Yup.number()).required()
 });
 
 export default function ClassEditPage() {
@@ -47,6 +48,13 @@ export default function ClassEditPage() {
   }>();
 
   const isNewClass = id === "new";
+  const { user } = useAuthContext();
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const teachersQuery = useQuery({
+    queryKey: ["class-teachers"],
+    queryFn: () => UsersService.getTeachers(),
+    enabled: isAdmin
+  });
 
   const { mutateAsync: upsertClasses } = useMutation({
     mutationKey: ["upsertClasses", id],
@@ -108,10 +116,11 @@ export default function ClassEditPage() {
       name: "",
       description: "",
       students: [] as number[],
+      teacherId: undefined
     },
     validationSchema: classUpsertSchema,
     onSubmit: (values) => {
-      if (values.students.length === 0) {
+      if (isAdmin && values.students.length === 0) {
         formik.setFieldError(
           "students",
           "Pelo menos um aluno deve ser selecionado"
@@ -119,7 +128,12 @@ export default function ClassEditPage() {
         return;
       }
 
-      upsertClasses(values);
+      const classData = { ...values };
+      if (!isAdmin) {
+        delete classData.teacherId;
+      }
+
+      upsertClasses(classData);
     },
   });
 
@@ -142,6 +156,7 @@ export default function ClassEditPage() {
         name: classData.name,
         description: classData.description || "",
         students: studentsSelected,
+        teacherId: classData.teacherId ?? undefined
       });
 
       setSelectedUsers(
@@ -233,6 +248,24 @@ export default function ClassEditPage() {
                   <div className="text-destructive">{formik.errors.name}</div>
                 )}
               </div>
+
+              {isAdmin && (
+                <div className="space-y-2">
+                  <Label htmlFor="teacherId">Professor responsável</Label>
+
+                  <Select
+                    value={formik.values.teacherId ? String(formik.values.teacherId) : "unassigned"}
+                    onValueChange={(value) => formik.setFieldValue("teacherId", value === "unassigned" ? null : Number(value))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Selecione um professor" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Sem responsável</SelectItem>
+                      {teachersQuery.data?.map((teacher) => <SelectItem key={teacher.id} value={String(teacher.id)}>{teacher.name} ({teacher.email})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição da Turma</Label>
                 <Textarea
@@ -264,11 +297,22 @@ export default function ClassEditPage() {
                 <div className="text-destructive">Nenhum aluno selecionado.</div>
               )}
 
-              <UsersCard
-                selectedUsers={selectedUsers}
-                setSelectedUsers={setSelectedUsers}
-                onUsersSelectionChange={onUsersSelectionChange}
-              />
+              {isAdmin ? (
+                <UsersCard
+                  selectedUsers={selectedUsers}
+                  setSelectedUsers={setSelectedUsers}
+                  onUsersSelectionChange={onUsersSelectionChange}
+                />
+              ) : (
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  {selectedUsers.length
+                  ?
+                    selectedUsers.map((student) => <p key={student.id}>{student.name} - {student.email}</p>)
+                  :
+                    <p>Nenhum aluno matriculado. Peça a um administrador para gerenciar as matrículas.</p>
+                  }
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

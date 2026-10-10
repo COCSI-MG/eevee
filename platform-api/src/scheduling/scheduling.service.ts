@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
@@ -7,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { CreateSchedulingDto } from './dto/create-scheduling.dto';
 import { AttemptService } from 'src/attempt/attempt.service';
+import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { AssignmentService } from 'src/assignment/assignment.service';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
@@ -33,6 +35,9 @@ import { RequestContextService } from 'src/request-context/request-context.servi
 import { ExecutionRequestService } from 'src/execution/execution-request.service';
 import { EXECUTION_COMMAND_QUEUE, ExecutionCommand } from '@eevee/execution-contracts';
 import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
+import { ClassAccessService } from 'src/auth/class-access.service';
+import { UserRole } from 'src/user/user-role';
+import { JwtPayload } from 'src/auth/jwt.interface';
 
 @Injectable()
 export class SchedulingService {
@@ -51,6 +56,7 @@ export class SchedulingService {
     @InjectQueue(EXECUTION_COMMAND_QUEUE) private readonly evaluationQueue: Queue,
     @InjectQueue('ai-report-queue') private readonly aiReportQueue: Queue,
     private readonly assignmentAlertService: AssignmentAlertService,
+    private readonly classAccess: ClassAccessService
   ) {}
 
   async createAndWait(createSchedulingDto: CreateSchedulingDto) {
@@ -291,6 +297,7 @@ export class SchedulingService {
     if (!originalAttempt) {
       throw new BadRequestException('Attempt not found');
     }
+    await this.classAccess.assertAssignmentAccess(originalAttempt.assignmentId, true);
 
     if (!originalAttempt.receivedWork) {
       throw new BadRequestException(
@@ -351,11 +358,9 @@ export class SchedulingService {
 
   async requestAiFeedback(attemptId: number): Promise<void> {
     const user = this.requestContextService.getUser();
-    const attempt = await this.attemptService.findOne(attemptId);
 
-    if (!attempt || attempt.userId !== user.userId) {
-      throw new NotFoundException('Attempt not found');
-    }
+    const attempt = await this.validateAtemptUser(attemptId, user)
+
     await this.assignmentAlertService.assertCurrentUserNotSuspended(attempt.assignmentId);
     if (attempt.status !== AttemptStatus.COMPLETED) {
       throw new BadRequestException('Attempt is not completed');
@@ -371,9 +376,10 @@ export class SchedulingService {
 
   async getAiFeedback(attemptId: number): Promise<string | null> {
     const user = this.requestContextService.getUser();
-    const attempt = await this.attemptService.findOne(attemptId);
 
-    if (!attempt || attempt.userId !== user.userId) throw new NotFoundException('Attempt not found')
+    const attempt = await this.validateAtemptUser(attemptId, user)
+
+    if(user.role !== UserRole.STUDENT && attempt) return attempt.refinedReport ?? null
 
     await this.assignmentAlertService.assertCurrentUserNotSuspended(attempt.assignmentId);
     return this.attemptService.findRefinedReport(attemptId, user.userId);
@@ -467,6 +473,22 @@ export class SchedulingService {
       );
       return undefined;
     }
+  }
+
+  private async validateAtemptUser(attemptId: number, user: JwtPayload): Promise<Attempt> {
+    const attempt = await this.attemptService.findOne(attemptId);
+
+    if (!attempt) throw new NotFoundException('Attempt not found');
+
+    if (user.role === UserRole.STUDENT) {
+      if (attempt.userId !== user.userId) throw new NotFoundException('Attempt not found');
+
+      await this.classAccess.assertAssignmentAccess(attempt.assignmentId);
+    } else {
+      await this.classAccess.assertAssignmentAccess(attempt.assignmentId, true);
+    }
+
+    return attempt;
   }
 
 }

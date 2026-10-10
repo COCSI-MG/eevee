@@ -12,10 +12,12 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { ADMIN_ROUTES } from "@/app/admin/constants";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 export function AdminMobileHeader() {
   const pathname = usePathname();
-  const { logout } = useAuthContext();
+  const { logout, user } = useAuthContext();
+  const routes = ADMIN_ROUTES.filter((route) => user?.role === UserRole.ADMIN || route.href !== "/admin/users");
 
   const isActiveRoute = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -35,7 +37,7 @@ export function AdminMobileHeader() {
           {/* Mobile menu content with active state logic */}
           <div className="flex flex-col h-full overflow-y-auto">
             <nav className="flex-1 space-y-1 p-4">
-              {ADMIN_ROUTES.map((route) => (
+              {routes.map((route) => (
                 <Link
                   key={route.href}
                   href={route.href}

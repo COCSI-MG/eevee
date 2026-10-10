@@ -18,6 +18,8 @@ import {
   buildPaginationMeta,
   buildPaginationParams
 } from 'src/common/pagination/pagination';
+import { ClassAccessService } from 'src/auth/class-access.service';
+import { UserRole } from 'src/user/user-role';
 
 @Injectable()
 export class AttemptService {
@@ -27,6 +29,7 @@ export class AttemptService {
     @InjectRepository(Attempt)
     private readonly attemptRepository: Repository<Attempt>,
     private readonly clsService: ClsService,
+    private readonly classAccess: ClassAccessService
   ) {}
 
   async isUserAbleToAttemptAssignment(assignmentId: number): Promise<boolean> {
@@ -90,6 +93,10 @@ export class AttemptService {
   }
 
   async findAllForAdmin(query: ListAdminAttemptsQueryDto) {
+    const currentUser = this.classAccess.user();
+
+    if (currentUser.role === UserRole.STUDENT) throw new NotFoundException('Attempt not found');
+
     if (!query.assignmentId && !query.classId) {
       throw new BadRequestException(
         'At least one of assignmentId or classId must be provided',
@@ -107,12 +114,16 @@ export class AttemptService {
       .innerJoin('attempt.assignment', 'assignment');
 
     if (query.assignmentId) {
+      await this.classAccess.assertAssignmentAccess(query.assignmentId, true);
+
       baseQb.where('attempt.assignmentId = :assignmentId', {
         assignmentId: query.assignmentId,
       });
     }
 
     if (query.classId) {
+      await this.classAccess.assertClassAccess(query.classId, true);
+
       if (query.assignmentId) {
         baseQb.andWhere('assignment.classId = :classId', {
           classId: query.classId,
@@ -122,6 +133,11 @@ export class AttemptService {
           classId: query.classId,
         });
       }
+    }
+
+    if (currentUser.role === UserRole.TEACHER) {
+      baseQb.innerJoin('assignment.class', 'class')
+        .andWhere('class.teacherId = :teacherId', { teacherId: currentUser.userId });
     }
 
     if (query.userSearch?.trim()) {
@@ -225,6 +241,8 @@ export class AttemptService {
     userId: number,
     query: PaginationQueryDto,
   ) {
+    await this.classAccess.assertAssignmentAccess(assignmentId, true);
+
     const { page, pageSize, skip } = buildPaginationParams(query);
     const baseQb = this.attemptRepository
       .createQueryBuilder('attempt')
@@ -269,7 +287,12 @@ export class AttemptService {
     return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
-  findOneForAdmin(id: number) {
+  async findOneForAdmin(id: number) {
+    const attempt = await this.attemptRepository.findOne({ where: { id }, withDeleted: true, select: { id: true, assignmentId: true } });
+    if (!attempt) return null;
+
+    await this.classAccess.assertAssignmentAccess(attempt.assignmentId, true);
+
     return this.attemptRepository
       .createQueryBuilder('attempt')
       .withDeleted()
@@ -292,7 +315,7 @@ export class AttemptService {
         'user.id AS user_id',
         'user.name AS user_name',
         'user.email AS user_email',
-        'user.isAdmin AS user_isAdmin',
+        'user.role AS user_role',
         'assignment.id AS assignment_id',
         'assignment.title AS assignment_title',
         'assignment.description AS assignment_description',
@@ -323,7 +346,7 @@ export class AttemptService {
             id: Number(row.user_id),
             name: row.user_name,
             email: row.user_email,
-            isAdmin: Boolean(row.user_isadmin ?? row.user_isAdmin),
+            role: row.user_role
           },
           assignment: {
             id: Number(row.assignment_id),

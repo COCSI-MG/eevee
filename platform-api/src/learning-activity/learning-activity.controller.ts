@@ -9,13 +9,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 import { LearningActivityDto } from './dto/learning-activity.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { LearningActivityService } from './learning-activity.service';
 
 @Controller('learning-activity')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
 export class LearningActivityController {
   constructor(private readonly service: LearningActivityService) {}
   @Get('class/:classId') list(@Param('classId', ParseIntPipe) id: number) {
@@ -27,16 +30,22 @@ export class LearningActivityController {
   @Get(':id/attempts') attempts(@Param('id', ParseIntPipe) id: number) {
     return this.service.attempts(id);
   }
-  @Post() @UseGuards(AdminGuard) create(@Body() dto: LearningActivityDto) {
+  @Post()
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  create(@Body() dto: LearningActivityDto) {
     return this.service.create(dto);
   }
-  @Put(':id') @UseGuards(AdminGuard) update(
+  @Put(':id')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: LearningActivityDto,
   ) {
     return this.service.update(id, dto);
   }
-  @Post(':id/submit') submit(
+  @Post(':id/submit')
+  @Roles(UserRole.STUDENT)
+  submit(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: SubmitQuizDto,
   ) {

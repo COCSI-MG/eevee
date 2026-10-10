@@ -1,4 +1,5 @@
 'use client';
+import { getDefaultRouteForRole } from "@/app/routes";
 
 import type React from 'react';
 
@@ -39,7 +40,8 @@ export default function Login() {
     mutationFn: () => LoginService.login(formData.email, formData.password),
     onSuccess: (session) => {
       setSession(session);
-      replace(session.isAdmin ? '/admin' : '/classes');
+
+      replace(getDefaultRouteForRole(session.role));
     },
     onError: () => {
       toast({

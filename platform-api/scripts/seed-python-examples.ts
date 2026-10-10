@@ -1,3 +1,4 @@
+import { UserRole } from '../src/user/user-role';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 import { DataSource, QueryRunner } from 'typeorm';
@@ -436,7 +437,7 @@ async function findTeacher(
   teacherEmail: string,
 ): Promise<number> {
   const rows = await queryRunner.query(
-    `SELECT "id", "email", "isAdmin" FROM "user" WHERE "email" = $1 LIMIT 1`,
+    `SELECT "id", "email", "role" FROM "user" WHERE "email" = $1 LIMIT 1`,
     [teacherEmail],
   );
 
@@ -446,7 +447,7 @@ async function findTeacher(
     );
   }
 
-  if (!rows[0].isAdmin) {
+  if (rows[0].role !== UserRole.ADMIN) {
     throw new Error(
       `The seed teacher must be an administrator: ${teacherEmail}`,
     );
@@ -462,10 +463,10 @@ async function findStudents(
   if (!studentEmails.length) return [];
 
   const rows = await queryRunner.query(
-    `SELECT "id", "email", "isAdmin" FROM "user" WHERE "email" = ANY($1)`,
+    `SELECT "id", "email", "role" FROM "user" WHERE "email" = ANY($1)`,
     [studentEmails],
   );
-  type UserRow = { id: number; email: string; isAdmin: boolean };
+  type UserRow = { id: number; email: string; role: UserRole };
   const found = new Map<string, UserRow>(
     rows.map((row: UserRow) => [row.email, row] as [string, UserRow]),
   );

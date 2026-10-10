@@ -14,6 +14,8 @@ import { AiReportModule } from 'src/ai-report/ai-report.module';
 import { ExecutionModule } from 'src/execution/execution.module';
 import { AiReportJobConsumer } from './ai-report-job.processor';
 import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.mod
     WorkerPayloadBuilderService,
     SchedulingWorkerPreparationService,
     AiReportJobConsumer,
+    JwtAuthGuard,
+    RolesGuard
   ],
   exports: [SchedulingService],
 })

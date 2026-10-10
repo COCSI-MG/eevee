@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
@@ -54,12 +55,12 @@ describe('UserController', () => {
   });
 
   it('delegates update with a numeric id', async () => {
-    const dto = { isAdmin: true };
-    userService.update.mockResolvedValue({ id: 7, isAdmin: true });
+    const dto = { role: UserRole.ADMIN };
+    userService.update.mockResolvedValue({ id: 7, role: UserRole.ADMIN });
 
     await expect(controller.update('7', dto)).resolves.toEqual({
       id: 7,
-      isAdmin: true,
+      role: UserRole.ADMIN
     });
     expect(userService.update).toHaveBeenCalledWith(7, dto);
   });
