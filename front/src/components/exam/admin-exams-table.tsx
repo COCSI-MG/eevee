@@ -104,14 +104,14 @@ export default function AdminExamsTable({
                 {exam.description ?? "Empty"}
               </TableCell>
               <TableCell
-                className={cn(!exam.dueDate && "text-muted")}
-              >
-                {formatDateTime(exam.dueDate)}
-              </TableCell>
-              <TableCell
                 className={cn(!exam.startDate && "text-muted")}
               >
                 {formatDateTime(exam.startDate)}
+              </TableCell>
+              <TableCell
+                className={cn(!exam.dueDate && "text-muted")}
+              >
+                {formatDateTime(exam.dueDate)}
               </TableCell>
               <TableCell>
                 <TableActions

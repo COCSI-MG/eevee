@@ -6,6 +6,7 @@ import GithubService from 'src/github/github.service';
 import { FileEntry } from './entities/file-saver.entity';
 import { SyncJob } from './entities/sync-job.entity';
 import { FileSaverService } from './file-saver.service';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 describe('FileSaverService', () => {
   let service: FileSaverService;
@@ -34,6 +35,10 @@ describe('FileSaverService', () => {
           provide: ClsService,
           useValue: {},
         },
+        {
+          provide: AssignmentAlertService,
+          useValue: { assertCurrentUserNotSuspended: jest.fn() }
+        }
       ],
     }).compile();
 

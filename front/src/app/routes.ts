@@ -1,3 +1,5 @@
+import { UserRole } from "./interface/scheduler-api/user";
+
 export enum Route {
   Assignment = "assignment",
   Login = "login",
@@ -13,6 +15,14 @@ export enum Route {
   AdminAssignmentCreate = "admin/assignments/create",
   AdminTemplate = "/admin/templates",
   AdminAttempts = "/admin/attempts",
-  AssignmenstUsersSuspensions = "suspensions",
+  AssignmentAlerts = "suspensions",
   Classes = "classes",
 }
+
+const DEFAULT_ROUTE_BY_ROLE: Record<UserRole, string> = {
+  [UserRole.ADMIN]: `/${Route.Admin}`,
+  [UserRole.TEACHER]: `/${Route.AdminClasses}`,
+  [UserRole.STUDENT]: `/${Route.Classes}`
+};
+
+export const getDefaultRouteForRole = (role: UserRole): string => DEFAULT_ROUTE_BY_ROLE[role];

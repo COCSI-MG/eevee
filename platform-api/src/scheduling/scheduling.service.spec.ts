@@ -1,3 +1,5 @@
+import { UserRole } from 'src/user/user-role';
+import { ClassAccessService } from 'src/auth/class-access.service';
 import {
   BadRequestException,
   NotFoundException,
@@ -19,15 +21,12 @@ import {
 } from './entities/scheduling-preview-run.entity';
 import { Repository } from 'typeorm';
 import { AiReportService } from 'src/ai-report/ai-report.abstract';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 describe('SchedulingService', () => {
   let service: SchedulingService;
   let executionRequestService: jest.Mocked<
-    Pick<
-      ExecutionRequestService,
-      | 'execute'
-      | 'cancel'
-    >
+    Pick<ExecutionRequestService, 'execute' | 'cancel'>
   >;
   let attemptService: jest.Mocked<
     Pick<
@@ -63,6 +62,9 @@ describe('SchedulingService', () => {
   >;
   let aiReportService: jest.Mocked<Pick<AiReportService, 'refineReport'>>;
   let aiReportQueue: jest.Mocked<Pick<Queue, 'add'>>;
+  let assignmentAlertService: jest.Mocked<
+    Pick<AssignmentAlertService, 'assertCurrentUserNotSuspended'>
+  >;
 
   beforeEach(() => {
     executionRequestService = {
@@ -101,7 +103,7 @@ describe('SchedulingService', () => {
     };
 
     requestContextService = {
-      getUser: jest.fn().mockReturnValue({ userId: 42, isAdmin: false }),
+      getUser: jest.fn().mockReturnValue({ userId: 42, role: UserRole.STUDENT })
     };
 
     schedulingPreviewRunRepository = {
@@ -117,6 +119,9 @@ describe('SchedulingService', () => {
     aiReportQueue = {
       add: jest.fn(),
     };
+    assignmentAlertService = {
+      assertCurrentUserNotSuspended: jest.fn().mockResolvedValue(undefined)
+    };
 
     service = new SchedulingService(
       executionRequestService as unknown as ExecutionRequestService,
@@ -129,6 +134,8 @@ describe('SchedulingService', () => {
       schedulingPreviewRunRepository as unknown as Repository<SchedulingPreviewRun>,
       schedulingQueue as unknown as Queue,
       aiReportQueue as unknown as Queue,
+      assignmentAlertService as unknown as AssignmentAlertService,
+      { assertAssignmentAccess: jest.fn().mockResolvedValue({ id: 7 }) } as unknown as ClassAccessService,
     );
 
     jest.spyOn((service as any).logger, 'debug').mockImplementation(() => {});

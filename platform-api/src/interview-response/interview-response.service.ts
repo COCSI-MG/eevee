@@ -10,6 +10,7 @@ import { RequestContextService } from 'src/request-context/request-context.servi
 import { Repository } from 'typeorm';
 import { CreateInterviewResponseDto } from './dto/create-interview-response.dto';
 import { InterviewResponse } from './entities/interview-response.entity';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 @Injectable()
 export class InterviewResponseService {
@@ -21,6 +22,7 @@ export class InterviewResponseService {
     @InjectRepository(Attempt)
     private readonly attemptRepository: Repository<Attempt>,
     private readonly requestContextService: RequestContextService,
+    private readonly assignmentAlertService: AssignmentAlertService
   ) {}
 
   private async assertAssignmentExists(assignmentId: number): Promise<void> {
@@ -66,6 +68,8 @@ export class InterviewResponseService {
     if (!user?.userId) {
       throw new ForbiddenException('Authentication required');
     }
+
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(dto.assignmentId);
 
     await this.assertAssignmentExists(dto.assignmentId);
 
@@ -113,6 +117,8 @@ export class InterviewResponseService {
     if (!user?.userId) {
       throw new ForbiddenException('Authentication required');
     }
+
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(assignmentId);
 
     return this.interviewResponseRepository.findOne({
       where: {

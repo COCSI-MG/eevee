@@ -18,6 +18,7 @@ interface DeleteAlertDialogProps {
   isDeleting?: boolean;
   title?: string;
   description?: string;
+  confirmLabel?: string;
   onDelete: () => void | Promise<void>;
 }
 
@@ -29,8 +30,12 @@ export default function DeleteAlertDialog({
   isDeleting = false,
   title,
   description,
+  confirmLabel,
   onDelete,
 }: DeleteAlertDialogProps) {
+
+  const textDelete = confirmLabel ?? "Excluir"
+
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -56,7 +61,7 @@ export default function DeleteAlertDialog({
             {isDeleting && (
               <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {isDeleting ? "Excluindo…" : "Excluir"}
+            {isDeleting ? "Processando…" : textDelete}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

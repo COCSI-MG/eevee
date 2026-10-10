@@ -7,11 +7,14 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { ADMIN_ROUTES } from "@/app/admin/constants";
+import { ADMIN_ROUTES, TEACHER_ROUTES } from "@/app/admin/constants";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuthContext();
+  const { logout, user } = useAuthContext();
+
+  const routes = user?.role === UserRole.ADMIN ? ADMIN_ROUTES : TEACHER_ROUTES;
 
   const isActiveRoute = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
@@ -22,7 +25,7 @@ export function AdminSidebar() {
     <div className="flex flex-col h-full">
       {/* Navigation Links */}
       <nav className="flex-1 space-y-1">
-        {ADMIN_ROUTES.map((route) => {
+        {routes.map((route) => {
           const IconComponent = route.icon;
           const isActive = isActiveRoute(route.href);
 

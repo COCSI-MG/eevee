@@ -6,7 +6,7 @@ O workspace é o ambiente em que você lê o enunciado, organiza os arquivos e d
 
 No primeiro acesso à atividade neste navegador, o EEVEE apresenta as regras de conduta. Marque a confirmação de leitura e escolha **Continuar** para abrir o editor. A opção **Recusar** retorna à página anterior.
 
-A aceitação fica registrada no navegador para aquela atividade e não costuma ser solicitada novamente no mesmo ambiente.
+A aceitação fica registrada no navegador para aquela atividade e para a versão atual das regras. Quando o professor altera a política de alertas, o termo é apresentado novamente.
 
 <figure markdown="span">
   ![Termo de uso exibido antes do workspace](../images/assingment-term-of-use.png){ .screenshot }
@@ -14,7 +14,7 @@ A aceitação fica registrada no navegador para aquela atividade e não costuma 
 </figure>
 
 !!! warning "Siga as regras exibidas"
-    Trocar de aba, abrir ferramentas de desenvolvimento e realizar ações de área de transferência podem ser monitorados ou bloqueados. Em caso de suspensão indevida, entre em contato com o professor.
+    Sair da tela, abrir ferramentas de desenvolvimento, usar a área de transferência e exceder a velocidade de digitação podem ser bloqueados. O termo informa quais desses eventos contam como alerta punitivo e quantos alertas ativos bloqueiam a atividade.
 
 ## Conhecer a interface
 
@@ -57,9 +57,11 @@ O botão **Salvar** envia ao serviço de armazenamento apenas o arquivo que est�
 !!! warning "Use o mesmo navegador"
     O conteúdo automático do workspace é local. Limpar os dados do navegador ou mudar de navegador ou dispositivo pode impedir a recuperação dessa versão. Antes de encerrar o trabalho, confirme as orientações de armazenamento da sua instituição.
 
-## Suspensão
+## Alertas e bloqueio
 
-Quando a conta está suspensa em uma atividade, o workspace exibe uma mensagem de bloqueio e oferece apenas o retorno à página anterior. O desbloqueio é feito pelo professor.
+Cada ocorrência mostra um aviso. Quando o evento não está selecionado pelo professor, a ação continua bloqueada, mas não gera registro punitivo. Se a conexão falhar, um evento punitivo pendente é reenviado com o mesmo identificador, sem duplicar o alerta.
+
+Ao atingir o limite de alertas ativos, o workspace exibe uma mensagem de bloqueio e oferece apenas o retorno à página anterior. O professor pode arquivar ocorrências específicas; o acesso é liberado quando a quantidade de alertas ativos fica abaixo do limite, e os registros arquivados continuam disponíveis no histórico.
 
 ## Continuar
 

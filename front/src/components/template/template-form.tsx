@@ -43,6 +43,9 @@ import { Tooltip } from "../ui/tooltip";
 import { TemplateTestDialog } from "./template-test-dialog";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
+import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 const upsertTemplateSchema = Yup.object().shape({
   title: Yup.string()
@@ -57,6 +60,7 @@ const upsertTemplateSchema = Yup.object().shape({
   content: Yup.string().required(
     TEMPLATE_FORM_VALIDATION_MESSAGES.templateContentRequired,
   ),
+  classId: Yup.number().min(1, "Selecione uma turma").required("Selecione uma turma"),
   params: Yup.array().of(Yup.string()).optional(),
   dependencies: Yup.array()
     .of(
@@ -86,6 +90,13 @@ export default function TemplateForm() {
   const { back } = useRouter();
 
   const isNewTemplate = id === "new";
+
+  const { user } = useAuthContext();
+
+  const classesQuery = useQuery({
+    queryKey: ["templateClassOptions"],
+    queryFn: () => ClassesService.listOptions()
+  });
 
   const [paramsInput, setParamsInput] = useState("");
   const [paramTypesByName, setParamTypesByName] = useState<
@@ -127,6 +138,7 @@ export default function TemplateForm() {
   const formik = useFormik({
     initialValues: {
       id: isNewTemplate ? undefined : Number(id),
+      classId: 0,
       title: "",
       description: "",
       workerType: WorkerType.NODE_DEFAULT,
@@ -158,6 +170,11 @@ export default function TemplateForm() {
     },
   });
 
+  const hasSelectedClass = formik.values.classId !== 0;
+  const isClassLocked = !isNewTemplate && hasSelectedClass;
+  const hasNoAvailableClasses = classesQuery.data?.length === 0;
+  const isTeacherWithoutClasses = user?.role !== UserRole.ADMIN && hasNoAvailableClasses;
+
   const {
     isFetching: isFetchingTemplate,
     isError: isTemplateError,
@@ -183,6 +200,7 @@ export default function TemplateForm() {
 
       formik.setValues({
         id: template.id,
+        classId: template.classId ?? 0,
         title: template.title,
         description: template.description,
         workerType: template.workerType ?? WorkerType.NODE_DEFAULT,
@@ -347,6 +365,42 @@ export default function TemplateForm() {
                           {formik.errors.description}
                         </div>
                       )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="classId" className="text-foreground">Turma</Label>
+
+                    <Select
+                      value={formik.values.classId ? String(formik.values.classId) : ""}
+                      disabled={!isNewTemplate && formik.values.classId !== 0}
+                      onValueChange={(value) => formik.setFieldValue("classId", Number(value))}
+                    >
+                      <SelectTrigger className="bg-primary/20 border-border text-foreground">
+                        <SelectValue placeholder="Selecione a turma" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        {classesQuery.data?.map((classOption) => (
+                          <SelectItem key={classOption.id} value={String(classOption.id)}>{classOption.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {formik.submitCount > 0 && formik.errors.classId && (
+                      <div className="text-destructive">{formik.errors.classId}</div>
+                    )}
+
+                    {isClassLocked && (
+                      <p className="text-xs text-muted-foreground">
+                        O template não pode ser transferido para outra turma.
+                      </p>
+                    )}
+
+                    {isTeacherWithoutClasses && (
+                      <p className="text-xs text-destructive">
+                        Você precisa estar responsável por uma turma para criar templates.
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -558,6 +612,7 @@ export default function TemplateForm() {
       <TemplateTestDialog
         open={testDialogOpen}
         onOpenChange={setTestDialogOpen}
+        classId={Number(formik.values.classId)}
         workerType={formik.values.workerType as WorkerType}
         templateContent={formik.values.content}
         paramNames={formik.values.params}

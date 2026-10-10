@@ -1,6 +1,6 @@
 ---
 name: worker-execution-strategies
-description: 'Add or modify a worker type (e.g. a new language/framework runner, or a database-backed variant) in assignment-runner. Use when touching WorkerType enum, worker/strategies/*.strategy.ts, worker-definition.json, or WorkerService/SchedulingService wiring.'
+description: "Add or modify a worker type (e.g. a new language/framework runner, or a database-backed variant) in assignment-runner. Use when touching WorkerType enum, worker/strategies/*.strategy.ts, worker-definition.json, or WorkerService/SchedulingService wiring."
 ---
 
 # Worker Execution Strategies

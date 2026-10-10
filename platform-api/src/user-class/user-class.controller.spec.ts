@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
 import { UserClassController } from './user-class.controller';
 import { UserClassService } from './user-class.service';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { ROLES_KEY } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 
 describe('UserClassController', () => {
   let controller: UserClassController;
@@ -39,9 +42,13 @@ describe('UserClassController', () => {
   });
 
   it('requires admin access', () => {
-    expect(Reflect.getMetadata(GUARDS_METADATA, UserClassController)).toContain(
-      AdminGuard,
-    );
+    expect(Reflect.getMetadata(GUARDS_METADATA, UserClassController)).toEqual([
+      JwtAuthGuard,
+      RolesGuard
+    ]);
+    expect(Reflect.getMetadata(ROLES_KEY, UserClassController)).toEqual([
+      UserRole.ADMIN
+    ]);
   });
 
   it('delegates create to createMany', async () => {

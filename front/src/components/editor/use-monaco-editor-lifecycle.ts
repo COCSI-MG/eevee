@@ -22,6 +22,7 @@ interface UseMonacoEditorLifecycleOptions {
   workspaceTree?: FileNode;
   actionGuardMode: EditorActionGuardMode;
   actionGuardScope?: string;
+  onDidType?: (text: string) => void;
 }
 
 const BLOCKED_EDITOR_DRAG_EVENTS = [
@@ -47,12 +48,16 @@ export function useMonacoEditorLifecycle({
   workspaceTree,
   actionGuardMode,
   actionGuardScope,
+  onDidType,
 }: UseMonacoEditorLifecycleOptions): MonacoEditorMountHandler {
   const editorRef = React.useRef<editor.IStandaloneCodeEditor | null>(null);
   const runtimeRef = React.useRef<WorkspaceRuntime | null>(null);
   const actionCleanupRef = React.useRef<(() => void) | null>(null);
   const dragCleanupRef = React.useRef<(() => void) | null>(null);
   const contextMenuCleanupRef = React.useRef<(() => void) | null>(null);
+  const typingCleanupRef = React.useRef<(() => void) | null>(null);
+  const onDidTypeRef = React.useRef(onDidType);
+  onDidTypeRef.current = onDidType;
 
   React.useEffect(() => {
     if (preset !== "workspace" || !runtimeRef.current || !workspaceTree) {
@@ -100,6 +105,7 @@ export function useMonacoEditorLifecycle({
       actionCleanupRef.current?.();
       dragCleanupRef.current?.();
       contextMenuCleanupRef.current?.();
+      typingCleanupRef.current?.();
       runtimeRef.current?.dispose();
     },
     [],
@@ -109,6 +115,20 @@ export function useMonacoEditorLifecycle({
     editorRef.current = editorInstance;
 
     if (preset === "workspace") {
+      typingCleanupRef.current?.();
+      const typingDisposable = editorInstance.onKeyDown((event) => {
+        const keyboardEvent = event.browserEvent;
+        if (
+          !keyboardEvent.ctrlKey &&
+          !keyboardEvent.metaKey &&
+          !keyboardEvent.altKey &&
+          keyboardEvent.key.length === 1
+        ) {
+          onDidTypeRef.current?.(keyboardEvent.key);
+        }
+      });
+      typingCleanupRef.current = () => typingDisposable.dispose();
+
       actionCleanupRef.current?.();
       actionCleanupRef.current = registerEditorActionGuard(
         editorInstance,
@@ -151,11 +171,13 @@ export function useMonacoEditorLifecycle({
       actionCleanupRef.current?.();
       dragCleanupRef.current?.();
       contextMenuCleanupRef.current?.();
+      typingCleanupRef.current?.();
       runtimeRef.current?.dispose();
       editorRef.current = null;
       actionCleanupRef.current = null;
       dragCleanupRef.current = null;
       contextMenuCleanupRef.current = null;
+      typingCleanupRef.current = null;
       runtimeRef.current = null;
     });
   };

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -26,15 +27,17 @@ import { SelectedUser } from "@/types/shared";
 import { AxiosError } from "axios";
 import * as Yup from "yup";
 import QueryErrorState from "@/components/shared/query-error-state";
+import { LearningActivityList } from "@/components/learning/activity-list";
+import { useAuthContext } from "@/hooks/use-auth-context";
+import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UsersService } from "@/app/integration/scheduler-api/user";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const classUpsertSchema = Yup.object().shape({
   id: Yup.number().optional(),
   name: Yup.string().trim().required("Nome da turma é obrigatório"),
   description: Yup.string(),
-  students: Yup.array()
-    .of(Yup.number())
-    .min(1, "Pelo menos um aluno deve ser selecionado")
-    .required("Pelo menos um aluno deve ser selecionado"),
+  students: Yup.array().of(Yup.number()).required()
 });
 
 export default function ClassEditPage() {
@@ -45,6 +48,13 @@ export default function ClassEditPage() {
   }>();
 
   const isNewClass = id === "new";
+  const { user } = useAuthContext();
+  const isAdmin = user?.role === UserRole.ADMIN;
+  const teachersQuery = useQuery({
+    queryKey: ["class-teachers"],
+    queryFn: () => UsersService.getTeachers(),
+    enabled: isAdmin
+  });
 
   const { mutateAsync: upsertClasses } = useMutation({
     mutationKey: ["upsertClasses", id],
@@ -106,10 +116,11 @@ export default function ClassEditPage() {
       name: "",
       description: "",
       students: [] as number[],
+      teacherId: undefined
     },
     validationSchema: classUpsertSchema,
     onSubmit: (values) => {
-      if (values.students.length === 0) {
+      if (isAdmin && values.students.length === 0) {
         formik.setFieldError(
           "students",
           "Pelo menos um aluno deve ser selecionado"
@@ -117,7 +128,12 @@ export default function ClassEditPage() {
         return;
       }
 
-      upsertClasses(values);
+      const classData = { ...values };
+      if (!isAdmin) {
+        delete classData.teacherId;
+      }
+
+      upsertClasses(classData);
     },
   });
 
@@ -140,6 +156,7 @@ export default function ClassEditPage() {
         name: classData.name,
         description: classData.description || "",
         students: studentsSelected,
+        teacherId: classData.teacherId ?? undefined
       });
 
       setSelectedUsers(
@@ -164,7 +181,7 @@ export default function ClassEditPage() {
 
   const header = (
     <div className="flex items-center">
-      <Button variant="ghost" onClick={() => router.back()} className="mr-4">
+      <Button variant="ghost" onClick={() => router.push("/admin/classes")} className="mr-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Voltar
       </Button>
@@ -231,6 +248,24 @@ export default function ClassEditPage() {
                   <div className="text-destructive">{formik.errors.name}</div>
                 )}
               </div>
+
+              {isAdmin && (
+                <div className="space-y-2">
+                  <Label htmlFor="teacherId">Professor responsável</Label>
+
+                  <Select
+                    value={formik.values.teacherId ? String(formik.values.teacherId) : "unassigned"}
+                    onValueChange={(value) => formik.setFieldValue("teacherId", value === "unassigned" ? null : Number(value))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Selecione um professor" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">Sem responsável</SelectItem>
+                      {teachersQuery.data?.map((teacher) => <SelectItem key={teacher.id} value={String(teacher.id)}>{teacher.name} ({teacher.email})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição da Turma</Label>
                 <Textarea
@@ -262,11 +297,22 @@ export default function ClassEditPage() {
                 <div className="text-destructive">Nenhum aluno selecionado.</div>
               )}
 
-              <UsersCard
-                selectedUsers={selectedUsers}
-                setSelectedUsers={setSelectedUsers}
-                onUsersSelectionChange={onUsersSelectionChange}
-              />
+              {isAdmin ? (
+                <UsersCard
+                  selectedUsers={selectedUsers}
+                  setSelectedUsers={setSelectedUsers}
+                  onUsersSelectionChange={onUsersSelectionChange}
+                />
+              ) : (
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  {selectedUsers.length
+                  ?
+                    selectedUsers.map((student) => <p key={student.id}>{student.name} - {student.email}</p>)
+                  :
+                    <p>Nenhum aluno matriculado. Peça a um administrador para gerenciar as matrículas.</p>
+                  }
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -275,7 +321,7 @@ export default function ClassEditPage() {
           <Button
             variant="outline"
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push("/admin/classes")}
             className="mr-2"
           >
             Cancelar
@@ -286,6 +332,7 @@ export default function ClassEditPage() {
           </Button>
         </div>
       </form>
+      {!isNewClass && <section className="space-y-4 border-t pt-8"><Link href={`/admin/invitations?classId=${id}`} className="inline-block rounded-lg bg-primary px-4 py-2 text-primary-foreground">Convidar alunos para esta turma</Link><h2 className="text-2xl font-semibold">Práticas e questionários</h2><LearningActivityList classId={Number(id)} admin /></section>}
     </div>
   );
 }

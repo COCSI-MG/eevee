@@ -1,8 +1,9 @@
 import { Exclude } from 'class-transformer';
-import { AssignmentUserSuspension } from 'src/assignment-user-suspension/entities/assignment-user-suspension.entity';
+import { AssignmentUserAlert } from 'src/assignment-alert/entities/assignment-user-alert.entity';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
+import { UserRole } from '../user-role';
 import {
   Column,
   DeleteDateColumn,
@@ -17,6 +18,10 @@ import {
   unique: true,
   where: '"deletedAt" IS NULL',
 })
+@Index('UQ_user_identity_active', ['identityProvider', 'externalSubject'], {
+  unique: true,
+  where: '"deletedAt" IS NULL AND "externalSubject" IS NOT NULL',
+})
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -27,8 +32,20 @@ export class User {
   @Column()
   name: string;
 
-  @Column()
-  isAdmin: boolean;
+  @Column({
+    type: 'enum',
+    enum: Object.values(UserRole),
+    enumName: 'user_role_enum',
+    default: UserRole.STUDENT
+  })
+  role: UserRole;
+
+  /** Provider subject (Microsoft Entra object id, when linked). */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  externalSubject?: string | null;
+
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  identityProvider?: string | null;
 
   @Exclude()
   @Column()
@@ -44,8 +61,8 @@ export class User {
   @OneToMany(() => Attempt, (userAttempt) => userAttempt.user)
   userAttempts: Attempt[];
 
-  @OneToMany(() => AssignmentUserSuspension, (suspension) => suspension.user)
-  assignmentSuspensions?: AssignmentUserSuspension[];
+  @OneToMany(() => AssignmentUserAlert, (alert) => alert.user)
+  assignmentAlerts?: AssignmentUserAlert[];
 
   @OneToMany(() => Assignment, (assignment) => assignment.createdBy)
   createdAssignments?: Assignment[];

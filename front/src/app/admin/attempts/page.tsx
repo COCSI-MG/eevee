@@ -11,24 +11,33 @@ import {
   ADMIN_ATTEMPTS_SEARCH_DEBOUNCE_MS,
   ADMIN_ATTEMPTS_TEXT,
 } from "@/app/admin/attempts/constants";
-import { AttemptAdminService } from "@/app/integration/scheduler-api/attempt";
+import type { AdminUserAttemptSummary } from "@/app/interface/scheduler-api/admin-attempt";
 import AdminAttemptsFilters from "@/components/attempts/admin-attempts-filters";
 import AdminAttemptsTable from "@/components/attempts/admin-attempts-table";
+import AdminUserAttemptsDialog from "@/components/attempts/admin-user-attempts-dialog";
 import Loader from "@/components/loader";
 import { useAdminAttemptAssignmentOptions } from "@/hooks/use-admin-attempt-assignment-options";
 import { useAdminAttempts } from "@/hooks/use-admin-attempts";
 import { useClassOptions } from "@/hooks/use-class-options";
 import { useDelayedVisibility } from "@/hooks/use-delayed-visibility";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
-import { toast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 function AdminAttemptsPageContent() {
   const searchParams = useSearchParams();
-  const [selectedClassId, setSelectedClassId] = useState<string>("");
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState<string>("");
+  const [selectedClassId, setSelectedClassId] = useState("");
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState("");
+  const [selectedAttemptSummary, setSelectedAttemptSummary] =
+    useState<AdminUserAttemptSummary | null>(null);
+  const hasAppliedInitialParams = useRef(false);
+  const hasAutoOpenedLatest = useRef(false);
+
+  const classId = selectedClassId ? Number(selectedClassId) : undefined;
+  const assignmentId = selectedAssignmentId
+    ? Number(selectedAssignmentId)
+    : undefined;
+  const hasAttemptFilter = Boolean(classId || assignmentId);
 
   const {
     page,
@@ -42,15 +51,6 @@ function AdminAttemptsPageContent() {
       searchParams.get(ADMIN_ATTEMPTS_QUERY_PARAMS.userSearch) ?? "",
     debounceMs: ADMIN_ATTEMPTS_SEARCH_DEBOUNCE_MS,
   });
-
-  const [retryingAttemptId, setRetryingAttemptId] = useState<number | null>(null);
-  const [expandedAttemptIds, setExpandedAttemptIds] = useState<Set<number>>(new Set());
-  const hasAppliedInitialParams = useRef(false);
-  const hasAutoExpandedLatest = useRef(false);
-
-  const classId = selectedClassId ? Number(selectedClassId) : undefined;
-  const assignmentId = selectedAssignmentId ? Number(selectedAssignmentId) : undefined;
-  const hasAttemptFilter = Boolean(classId || assignmentId);
 
   const {
     data: classes,
@@ -73,58 +73,36 @@ function AdminAttemptsPageContent() {
   } = useAdminAttempts({
     classId,
     assignmentId,
-    userSearch: debouncedUserSearch.trim() ? debouncedUserSearch.trim() : undefined,
+    userSearch: debouncedUserSearch.trim() || undefined,
     page,
     pageSize: ADMIN_ATTEMPTS_DEFAULT_PAGE_SIZE,
   });
 
-  const isInitialAttemptsLoading = hasAttemptFilter && isAttemptsFetching && !attemptsResponse;
-  const isRefreshingAttempts = hasAttemptFilter && isAttemptsFetching && Boolean(attemptsResponse);
+  const isInitialAttemptsLoading =
+    hasAttemptFilter && isAttemptsFetching && !attemptsResponse;
+  const isRefreshingAttempts =
+    hasAttemptFilter && isAttemptsFetching && Boolean(attemptsResponse);
 
   const showInitialLoader = useDelayedVisibility(
     isInitialAttemptsLoading,
     ADMIN_ATTEMPTS_LOADING_INDICATOR_DELAY_MS,
   );
-
   const showRefreshingIndicator = useDelayedVisibility(
     isRefreshingAttempts,
     ADMIN_ATTEMPTS_LOADING_INDICATOR_DELAY_MS,
   );
-
-  const retryMutation = useMutation({
-    mutationFn: (attemptId: number) => AttemptAdminService.retryAttempt(attemptId),
-    onMutate: (attemptId) => {
-      setRetryingAttemptId(attemptId);
-    },
-    onSuccess: () => {
-      toast({
-        title: ADMIN_ATTEMPTS_TEXT.retry.successTitle,
-        description: ADMIN_ATTEMPTS_TEXT.retry.successDescription,
-      });
-      refetch();
-    },
-    onError: (error: unknown) => {
-      const description =
-        error instanceof Error ? error.message : ADMIN_ATTEMPTS_TEXT.retry.errorFallbackDescription;
-
-      toast({
-        title: ADMIN_ATTEMPTS_TEXT.retry.errorTitle,
-        description,
-        variant: "destructive",
-      });
-    },
-    onSettled: () => {
-      setRetryingAttemptId(null);
-    },
-  });
 
   useEffect(() => {
     if (hasAppliedInitialParams.current) {
       return;
     }
 
-    const initialAssignmentId = searchParams.get(ADMIN_ATTEMPTS_QUERY_PARAMS.assignmentId);
-    const initialClassId = searchParams.get(ADMIN_ATTEMPTS_QUERY_PARAMS.classId);
+    const initialAssignmentId = searchParams.get(
+      ADMIN_ATTEMPTS_QUERY_PARAMS.assignmentId,
+    );
+    const initialClassId = searchParams.get(
+      ADMIN_ATTEMPTS_QUERY_PARAMS.classId,
+    );
 
     if (initialClassId) {
       setSelectedClassId(initialClassId);
@@ -138,42 +116,42 @@ function AdminAttemptsPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    if (!assignmentId || classId || !assignments) return;
-
-    const assignment = assignments.find((option) => option.id === assignmentId);
-
-    if (assignment) setSelectedClassId(String(assignment.classId))
-
-  }, [assignmentId, assignments, classId]);
-
-  useEffect(() => {
-    const shouldOpenLatest = searchParams.get(ADMIN_ATTEMPTS_QUERY_PARAMS.openLatest) === ADMIN_ATTEMPTS_OPEN_LATEST_VALUE;
-
-    if (!shouldOpenLatest || hasAutoExpandedLatest.current) {
+    if (!assignmentId || classId || !assignments) {
       return;
     }
 
-    const firstAttempt = attemptsResponse?.data?.[0];
+    const assignment = assignments.find((option) => option.id === assignmentId);
+
+    if (assignment) {
+      setSelectedClassId(String(assignment.classId));
+    }
+  }, [assignmentId, assignments, classId]);
+
+  useEffect(() => {
+    const shouldOpenLatest =
+      searchParams.get(ADMIN_ATTEMPTS_QUERY_PARAMS.openLatest) ===
+      ADMIN_ATTEMPTS_OPEN_LATEST_VALUE;
+
+    if (!shouldOpenLatest || hasAutoOpenedLatest.current) {
+      return;
+    }
+
+    const firstAttempt = attemptsResponse?.data[0];
     if (!firstAttempt) {
       return;
     }
 
-    setExpandedAttemptIds(new Set([firstAttempt.id]));
-    hasAutoExpandedLatest.current = true;
+    setSelectedAttemptSummary(firstAttempt);
+    hasAutoOpenedLatest.current = true;
   }, [attemptsResponse, searchParams]);
-
-  const collapseExpandedAttempts = () => {
-    setExpandedAttemptIds(new Set())
-  };
 
   const resetAttemptView = () => {
     setPage(ADMIN_ATTEMPTS_INITIAL_PAGE);
-    collapseExpandedAttempts()
+    setSelectedAttemptSummary(null);
   };
 
   const handleClassChange = (value: string) => {
-    setSelectedClassId(value === ADMIN_ATTEMPTS_ALL_CLASSES_VALUE ? "" : value)
-
+    setSelectedClassId(value === ADMIN_ATTEMPTS_ALL_CLASSES_VALUE ? "" : value);
     setSelectedAssignmentId("");
     resetAttemptView();
   };
@@ -186,12 +164,14 @@ function AdminAttemptsPageContent() {
     }
 
     setSelectedAssignmentId(value);
+
     const assignment = assignments?.find(
       (option) => option.id === Number(value),
     );
     if (assignment && assignment.classId !== classId) {
       setSelectedClassId(String(assignment.classId));
     }
+
     resetAttemptView();
   };
 
@@ -202,19 +182,7 @@ function AdminAttemptsPageContent() {
 
   const handlePageChange = (nextPage: number) => {
     setPage(nextPage);
-    collapseExpandedAttempts();
-  };
-
-  const handleToggleExpand = (attemptId: number) => {
-    setExpandedAttemptIds((current) => {
-      const next = new Set(current);
-      if (next.has(attemptId)) {
-        next.delete(attemptId);
-      } else {
-        next.add(attemptId);
-      }
-      return next;
-    });
+    setSelectedAttemptSummary(null);
   };
 
   if (isClassesLoading || (!classId && isAssignmentsLoading)) {
@@ -224,8 +192,12 @@ function AdminAttemptsPageContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">{ADMIN_ATTEMPTS_TEXT.title}</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{ADMIN_ATTEMPTS_TEXT.description}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          {ADMIN_ATTEMPTS_TEXT.title}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {ADMIN_ATTEMPTS_TEXT.description}
+        </p>
       </div>
 
       <AdminAttemptsFilters
@@ -270,13 +242,20 @@ function AdminAttemptsPageContent() {
           pageSize={attemptsResponse.meta.pageSize}
           total={attemptsResponse.meta.total}
           totalPages={attemptsResponse.meta.totalPages}
-          expandedAttemptIds={expandedAttemptIds}
-          retryingAttemptId={retryingAttemptId}
-          onToggleExpand={handleToggleExpand}
-          onRetry={(attemptId) => retryMutation.mutate(attemptId)}
+          onViewAttempts={setSelectedAttemptSummary}
           onPageChange={handlePageChange}
         />
       )}
+
+      <AdminUserAttemptsDialog
+        attemptSummary={selectedAttemptSummary}
+        open={selectedAttemptSummary !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedAttemptSummary(null);
+          }
+        }}
+      />
     </div>
   );
 }

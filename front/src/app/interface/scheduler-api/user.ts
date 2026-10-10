@@ -1,19 +1,25 @@
-import { AssignmentUserSuspension } from "./assignment-user-suspension";
 import { UserClass } from "./user-class";
+
+export const UserRole = {
+  STUDENT: "aluno",
+  TEACHER: "professor",
+  ADMIN: "admin",
+} as const;
+
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export interface User {
    id: number;
    name: string;
    email: string;
-   isAdmin: boolean;
+   role: UserRole;
    userClasses: UserClass[];
-   assignmentSuspensions?: AssignmentUserSuspension[];
 }
 
 interface UserInput {
    name: string;
    email: string;
-   isAdmin: boolean;
+   role: UserRole;
 }
 
 export interface CreateUserRequest extends UserInput {

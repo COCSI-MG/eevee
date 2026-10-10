@@ -1,7 +1,9 @@
 import { WorkerExibitionMap } from "@/app/admin/assignments/constants";
+import type { AssignmentAlertPolicy } from "@/app/interface/scheduler-api/assignment-alert";
 import { Class } from "@/app/interface/scheduler-api/class";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import { FormikToggle } from "@/components/shared/formik-toggle";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ExpandableDialog,
@@ -10,8 +12,15 @@ import {
 } from "@/components/ui/expandable";
 import { Label } from "@/components/ui/label";
 import { Tooltip } from "@/components/ui/tooltip";
-import { ErrorMessage, Field } from "formik";
+import { ErrorMessage, Field, useFormikContext } from "formik";
+import { Settings } from "lucide-react";
+import { useState } from "react";
+import { AssignmentAlertPolicyDialog } from "./assignment-alert-policy-dialog";
 import { ASSIGNMENT_FORM_TEXT } from "./constants";
+
+interface AssignmentConfigFormValues {
+  alertPolicy: AssignmentAlertPolicy;
+}
 
 export interface AssignmentConfigFormProps {
   classes: Class[];
@@ -21,6 +30,8 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
   classes,
 }) => {
   const descriptionExpandable = useExpandable();
+  const [isAlertPolicyDialogOpen, setIsAlertPolicyDialogOpen] = useState(false);
+  const { values, setFieldValue } = useFormikContext<AssignmentConfigFormValues>();
 
   return (
     <>
@@ -213,8 +224,26 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
             </div>
 
           </div>
+
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAlertPolicyDialogOpen(true)}
+            >
+              <Settings className="h-4 w-4" />
+              Configurar bloqueios
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      <AssignmentAlertPolicyDialog
+        open={isAlertPolicyDialogOpen}
+        value={values.alertPolicy}
+        onOpenChange={setIsAlertPolicyDialogOpen}
+        onSave={(alertPolicy) => { setFieldValue("alertPolicy", alertPolicy, true) }}
+      />
 
       <ExpandableDialog
         open={descriptionExpandable.isOpen}

@@ -84,6 +84,19 @@ const AssigmentReview = ({
             <p className="text-white">{formatDateTime(values.dueDate)}</p>
           </div>
         </div>
+        <div className="rounded-md border border-border p-3">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">
+            Política de alertas
+          </p>
+          <p className="text-sm text-foreground">
+            Bloqueio com {values.alertPolicy?.suspensionAlertLimit ?? 5} alertas
+            ativos · limite de digitação de{" "} {values.alertPolicy?.typingCharactersPerSecondLimit ?? 20} caracteres/s
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {values.alertPolicy?.punitiveTypes?.length ?? 0} tipo(s) punitivo(s)
+            selecionado(s)
+          </p>
+        </div>
       </div>
     </div>
   );

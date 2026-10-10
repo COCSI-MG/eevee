@@ -1,6 +1,7 @@
 import {
   AdminAttempt,
   AdminAttemptsListResponse,
+  AdminUserAttemptsResponse
 } from "@/app/interface/scheduler-api/admin-attempt";
 import { axiosClientWithAuth } from "./client";
 
@@ -24,6 +25,19 @@ export class AttemptAdminService {
   static async getAdminAttemptById(id: number) {
     const response = await axiosClientWithAuth.get(`/attempt/${id}`);
     return response.data as AdminAttempt;
+  }
+
+  static async getAdminAttemptsByAssignmentAndUser(
+    assignmentId: number,
+    userId: number,
+    params: { page?: number; pageSize?: number }
+  ) {
+    const response = await axiosClientWithAuth.get(
+      `/attempt/admin/assignment/${assignmentId}/user/${userId}`,
+      { params }
+    );
+
+    return response.data as AdminUserAttemptsResponse;
   }
 
   static async retryAttempt(id: number) {

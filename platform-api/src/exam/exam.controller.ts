@@ -22,8 +22,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 import { CreateAndLinkAssignmentDto } from './dto/create-and-link-assignment.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { LinkAssignmentDto } from './dto/link-assignment.dto';
@@ -40,12 +42,14 @@ import { ExamService } from './exam.service';
 
 @ApiTags('Exam')
 @Controller('exam')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ExamController {
   constructor(
     private readonly examService: ExamService,
   ) {}
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiCreatedResponse({
     type: ExamResponseDto,
     description: 'Exam created successfully',
@@ -54,23 +58,22 @@ export class ExamController {
     description: 'Invalid body (e.g. title missing/blank or longer than 100 chars)',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
-  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiForbiddenResponse({ description: 'User cannot manage the selected class' })
   @ApiNotFoundResponse({
     description: 'classId references a non-existent class',
   })
-  @UseGuards(AdminGuard)
   create(@Body() createExamDto: CreateExamDto) {
     return this.examService.create(createExamDto);
   }
 
   @Get('class/:classId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @ApiOkResponse({ type: PaginatedExamsResponseDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
   @ApiForbiddenResponse({
     description: 'User is not enrolled in this class',
   })
   @ApiNotFoundResponse({ description: 'Class not found' })
-  @UseGuards(JwtAuthGuard)
   findByClass(
     @Param('classId') classId: string,
     @Query() query: ListExamsByClassQueryDto,
@@ -79,11 +82,11 @@ export class ExamController {
   }
 
   @Get(':idExam/student')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOkResponse({ type: PaginatedExamStudentsResponseDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
-  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiForbiddenResponse({ description: 'User cannot manage the selected class' })
   @ApiNotFoundResponse({ description: 'Exam not found' })
-  @UseGuards(AdminGuard)
   findStudents(
     @Param('idExam') idExam: string,
     @Query() query: ListExamStudentsQueryDto,
@@ -92,6 +95,7 @@ export class ExamController {
   }
 
   @Get(':idExam')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   @ApiOkResponse({ type: ExamWithAssignmentsResponseDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
   @ApiForbiddenResponse({
@@ -99,12 +103,12 @@ export class ExamController {
       'User is not enrolled in the class of this exam, or the exam has no class',
   })
   @ApiNotFoundResponse({ description: 'Exam not found' })
-  @UseGuards(JwtAuthGuard)
   findOne(@Param('idExam') idExam: string) {
     return this.examService.findOneWithAssignments(+idExam);
   }
 
   @Post(':examId/assignments')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiCreatedResponse({
     type: CreateAssignmentAndLinkResponseDto,
     description: 'Assignment created and linked to the exam',
@@ -114,7 +118,7 @@ export class ExamController {
       'classId in body does not match the exam.classId',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
-  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiForbiddenResponse({ description: 'User cannot manage the selected class' })
   @ApiNotFoundResponse({
     description:
       'Exam not found, or classId references a non-existent class',
@@ -123,7 +127,6 @@ export class ExamController {
     description:
       'Assignment could not be linked to the exam; transaction rolled back',
   })
-  @UseGuards(AdminGuard)
   @HttpCode(HttpStatus.CREATED)
   async createAssignmentAndLink(
     @Param('examId') examId: string,
@@ -133,6 +136,7 @@ export class ExamController {
   }
 
   @Post(':examId/assignments/:assignmentId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiCreatedResponse({
     type: ExamAssignmentResponseDto,
     description: 'Link created successfully',
@@ -144,8 +148,7 @@ export class ExamController {
     description: 'Assignment is already linked to an exam',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
-  @ApiForbiddenResponse({ description: 'User is not an admin' })
-  @UseGuards(AdminGuard)
+  @ApiForbiddenResponse({ description: 'User cannot manage the selected class' })
   @HttpCode(HttpStatus.CREATED)
   async linkAssignment(
     @Param('examId') examId: string,
@@ -156,16 +159,16 @@ export class ExamController {
   }
 
   @Delete(':idExam/assignments/:assignmentId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiNoContentResponse({
     description: 'Assignment successfully unlinked from the exam',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
-  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiForbiddenResponse({ description: 'User cannot manage the selected class' })
   @ApiNotFoundResponse({
     description:
       'Exam not found, Assignment not found, or the link between them does not exist',
   })
-  @UseGuards(AdminGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async unlinkAssignment(
     @Param('idExam') idExam: string,
@@ -175,6 +178,7 @@ export class ExamController {
   }
 
   @Patch(':examId/assignments/:assignmentId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOkResponse({
     type: ExamAssignmentResponseDto,
     description: 'Assignment score updated successfully',
@@ -183,12 +187,11 @@ export class ExamController {
     description: 'score must be greater than 0',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
-  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiForbiddenResponse({ description: 'User cannot manage the selected class' })
   @ApiNotFoundResponse({
     description:
       'Exam not found, Assignment not found, or the link between them does not exist',
   })
-  @UseGuards(AdminGuard)
   async updateAssignmentScore(
     @Param('examId') examId: string,
     @Param('assignmentId') assignmentId: string,
@@ -198,24 +201,24 @@ export class ExamController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOkResponse({ type: ExamResponseDto })
   @ApiBadRequestResponse({
     description: 'Invalid body (e.g. title longer than 100 chars)',
   })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
-  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiForbiddenResponse({ description: 'User cannot manage the selected class' })
   @ApiNotFoundResponse({ description: 'Exam not found' })
-  @UseGuards(AdminGuard)
   update(@Param('id') id: string, @Body() updateExamDto: UpdateExamDto) {
     return this.examService.update(+id, updateExamDto);
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @ApiOkResponse({ description: 'Exam and its assignment links deleted' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid JWT' })
-  @ApiForbiddenResponse({ description: 'User is not an admin' })
+  @ApiForbiddenResponse({ description: 'User cannot manage the selected class' })
   @ApiNotFoundResponse({ description: 'Exam not found' })
-  @UseGuards(AdminGuard)
   remove(@Param('id') id: string) {
     return this.examService.remove(+id);
   }

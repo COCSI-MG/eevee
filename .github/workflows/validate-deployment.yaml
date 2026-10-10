@@ -1,0 +1,93 @@
+name: Validate deployment
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  applications:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [platform-api, assignment-runner, front]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: ${{ matrix.app }}/package-lock.json
+      - run: npm ci
+        working-directory: ${{ matrix.app }}
+      - name: Build shared execution contracts
+        if: matrix.app != 'front'
+        run: ./node_modules/.bin/tsc -p ../packages/execution-contracts/tsconfig.json
+        working-directory: ${{ matrix.app }}
+      - name: Unit tests
+        run: npm test -- --runInBand
+        working-directory: ${{ matrix.app }}
+      - name: Compile application
+        run: npm run build
+        working-directory: ${{ matrix.app }}
+
+  chart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4.3.0
+        with:
+          version: v3.17.3
+      - name: Test deployment scripts and render chart
+        env:
+          FRONT_IMAGE: cocsi-mg/eevee-front
+          PLATFORM_API_IMAGE: cocsi-mg/eevee-platform-api
+          ASSIGNMENT_RUNNER_IMAGE: cocsi-mg/eevee-assignment-runner
+        run: |
+          bash -n scripts/deploy-release.sh
+          bash scripts/test-deploy-release.sh
+          helm lint infrastructure/helm/eevee
+          helm template eevee infrastructure/helm/eevee > /dev/null
+
+  remote:
+    needs: [applications, chart]
+    runs-on: ubuntu-latest
+    concurrency:
+      group: eevee-production-deploy
+      cancel-in-progress: false
+      queue: max
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate jumpbox and release before building images
+        uses: ./.github/actions/remote-kubectl
+        with:
+          host: "${{ vars.INPUT_HOST }}"
+          username: "${{ vars.INPUT_USER }}"
+          port: "${{ vars.INPUT_PORT || '22' }}"
+          private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+          script: |
+            set -euo pipefail
+            DEPLOY_WORKDIR='${{ vars.DEPLOY_WORKDIR }}'
+            : "${DEPLOY_WORKDIR:?Set the repository variable DEPLOY_WORKDIR (not a secret)}"
+            cd "$DEPLOY_WORKDIR"
+            git rev-parse --show-toplevel
+            command -v helm
+            command -v kubectl
+            git fetch origin '${{ github.sha }}'
+            CHART_WORKDIR=$(mktemp -d)
+            trap 'rm -rf "$CHART_WORKDIR"' EXIT
+            git archive '${{ github.sha }}' infrastructure/helm/eevee scripts/deploy-release.sh | tar -x -C "$CHART_WORKDIR"
+            export CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
+            kubectl -n eevee-cefetrj get secret eevee-secrets ghcr-auth -o name
+            for resource in deployments services configmaps secrets; do
+              for verb in get create patch update; do
+                kubectl auth can-i "$verb" "$resource" -n eevee-cefetrj --quiet
+              done
+            done
+            # Exercise the same Helm command without changing cluster resources.
+            # Suppress rendered manifests so credentials cannot enter Actions logs.
+            bash "$CHART_WORKDIR/scripts/deploy-release.sh" --dry-run=server --hide-secret > /dev/null

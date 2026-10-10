@@ -1,3 +1,4 @@
+import { UserRole } from "@/app/interface/scheduler-api/user";
 import { BookOpenCheck, CalendarClock, Code, CodeSquare } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -47,6 +48,8 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     number | null
   >(null);
 
+  const isAdminOrTeacher = user?.role === UserRole.ADMIN || user?.role === UserRole.TEACHER
+
   const shouldShowExpandButton = (description: string | undefined) => {
     if (!description) return false;
     return description.length > 80;
@@ -57,17 +60,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
   };
 
   const canAccessAssignment = (assignment: Assignment) => {
-    if (!userId) {
-      return false;
-    }
-
-    if ((assignment.suspensions?.length ?? 0) === 0) {
-      return true;
-    }
-
-    return !assignment.suspensions?.some(
-      (suspension) => suspension.userId === userId,
-    );
+    return Boolean(userId && !assignment.currentUserAlertStatus?.suspended);
   };
 
   const getLastAttempt = (assignment: Assignment) => {
@@ -89,13 +82,12 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
         const isProcessing = lastAttemptStatus
           ? PROCESSING_ATTEMPT_STATUSES.has(lastAttemptStatus)
           : false;
-        const canViewAnswerKey =
-          Boolean(assignment.answerKeyId) && assignment.answerKeyVisible;
+        const canOpenAnswerKey = isAdminOrTeacher || (Boolean(assignment.answerKeyId) && assignment.answerKeyVisible);
         const effectiveDueDate = earliestDate(
           assignment.dueDate,
           assignment.examAssignment?.exam?.dueDate,
         );
-        const deadlinePassed = !user?.isAdmin && isDeadlinePassed(effectiveDueDate);
+        const deadlinePassed = user?.role !== UserRole.ADMIN && isDeadlinePassed(effectiveDueDate);
 
         return (
           <Card
@@ -264,7 +256,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     </Button>
                   )}
 
-                  {canViewAnswerKey && (
+                  {canOpenAnswerKey && (
                     <Button
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground disabled:bg-primary/20 disabled:text-muted-foreground"
                       onClick={() =>
@@ -272,7 +264,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                           `/${Route.Assignment}/${assignment.id}/${Route.Workspace}/${Route.AnswerKey}`,
                         )
                       }
-                      disabled={!canAccess}
+                      disabled={!canAccess && !isAdminOrTeacher}
                     >
                       <BookOpenCheck className="h-4 w-4 mr-2" />
                       Gabarito

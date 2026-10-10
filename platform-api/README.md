@@ -38,6 +38,44 @@ Execution orchestrator -> execution-results -> Platform API -> WebSocket client
 
 The PostgreSQL attempt record remains the source of truth. Socket messages are notifications only; clients must read the attempt API after reconnecting.
 
+## Database migrations using this package's `.env`
+
+Email invitations are available through the admin Users and Class screens. See
+[invitation setup and classroom workflow](../docs/teacher-guide/invitations.md)
+for SMTP configuration, migration order and testing.
+
+Automatic schema synchronization is disabled in every environment, including
+`ENV=local`. Run migrations after pulling schema changes and before starting the API.
+
+Set `PG_HOST`, `PG_USERNAME`, `PG_PASSWORD`, and `PG_DATABASE` in
+`platform-api/.env`. `PG_PORT` defaults to `5432` when omitted. For the SSH
+database tunnel, use `PG_HOST=127.0.0.1` and the tunnel's local port, and keep
+the tunnel running.
+
+From the repository root (`eevee`), use the centralized Makefile commands:
+
+```bash
+# Show executed [X] and pending [ ] migrations without applying them
+make migration-show
+
+# Apply all pending migrations
+make migration-run
+```
+
+From the parent workspace (`Pesquisa`), the same commands are:
+
+```bash
+make -C eevee migration-show
+make -C eevee migration-run
+```
+
+Both commands build the API first and explicitly load **this package's `.env`**,
+regardless of the caller's directory. Database values in the shell do not override
+the file. Missing required values or an invalid port stop the command. The CLI
+owns the connection lifecycle; automatic schema synchronization is disabled.
+`migration:run` uses TypeORM's single-transaction mode and applies **all** pending
+migrations, including any older ones, not only the latest feature migration.
+
 ## Run tests
 
 ```bash
@@ -52,6 +90,12 @@ $ npm run test:cov
 ```
 
 ## Run seed
+
+For the professor's classes, guided labs and native questionnaires, use
+`make seed-classroom-preview` and `make seed-classroom` from the repository root.
+These commands create draft content and do not create accounts or enroll students.
+See [classroom seed documentation](scripts/classroom/README.md) for content,
+source corrections, validation and rerun behavior.
 
 Just use this in development environment to populate the database with initial data.
 

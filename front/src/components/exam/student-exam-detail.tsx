@@ -10,20 +10,16 @@ import { formatDateTime } from "@/utils/date";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import QueryErrorState from "@/components/shared/query-error-state";
-import { useAuthContext } from "@/hooks/use-auth-context";
 import AssignmentsCard from "@/components/assignment/assignments-card";
 import {
   Assignment,
   WorkerDefinition,
 } from "@/app/interface/scheduler-api/assignment";
 import { AssignmentSummary, Exam } from "@/app/interface/scheduler-api/exam";
-import { AssignmentUserSuspension } from "@/app/interface/scheduler-api/assignment-user-suspension";
 import { Class } from "@/app/interface/scheduler-api/class";
-import { User } from "@/app/interface/scheduler-api/user";
 
 function summaryToAssignment(
   s: AssignmentSummary,
-  currentUserId: number | undefined,
   examWindow: Pick<Exam, "startDate" | "dueDate">,
 ): Assignment {
   return {
@@ -36,21 +32,12 @@ function summaryToAssignment(
     dueDate: s.dueDate,
     workerType: s.workerType,
     assignmentAttempts: s.lastAttempt ? [s.lastAttempt] : [],
-    suspensions:
-      s.suspensions.length > 0 && currentUserId
-        ? s.suspensions.map(
-            (susp): AssignmentUserSuspension => ({
-              id: susp.id,
-              assignmentId: s.id,
-              userId: currentUserId,
-              reason: susp.reason ?? undefined,
-              createdAt: new Date(susp.createdAt),
-              isActive: true,
-              user: {} as User,
-              assignment: {} as Assignment,
-            }),
-          )
-        : [],
+    currentUserAlertStatus: s.currentUserAlertStatus,
+    alertPolicy: {
+      suspensionAlertLimit: s.currentUserAlertStatus.limit,
+      typingCharactersPerSecondLimit: 20,
+      punitiveTypes: [],
+    },
     workerDefinition: {
       files: null,
       startCommands: [],
@@ -75,18 +62,16 @@ export default function StudentExamDetail() {
   const { id, idExam } = useParams<{ id: string; idExam: string }>();
   const classId = Number(id);
   const examId = Number(idExam);
-  const { user } = useAuthContext();
 
   const { data, isFetching, isError, error, refetch } = useFetchExam(examId);
   const exam = data?.exam;
-  const assignments = data?.assignments ?? [];
 
   const hydratedAssignments = useMemo<Assignment[]>(
     () =>
       exam
-        ? assignments.map((s) => summaryToAssignment(s, user?.userId, exam))
+        ? (data?.assignments ?? []).map((s) => summaryToAssignment(s, exam))
         : [],
-    [assignments, exam, user?.userId],
+    [data?.assignments, exam],
   );
 
   if (isFetching && !data) {

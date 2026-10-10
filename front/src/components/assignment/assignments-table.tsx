@@ -17,7 +17,7 @@ import {
 import TableActions from "../table/table-actions";
 import {
   WorkspaceLinkComponent,
-  ViewUserSuspensionComponent,
+  ViewAssignmentAlertsComponent,
 } from "./activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
@@ -87,7 +87,7 @@ export default function AssignmentsTable({
           return (
             <TableRow key={assignment.id}>
               <TableCell>{assignment.title}</TableCell>
-              <TableCell>{assignment.class.name}</TableCell>
+              <TableCell>{assignment.class?.name ?? "Turma indisponível"}</TableCell>
               <TableCell
                 title={
                   description.length > ASSIGNMENT_DESCRIPTION_MAX_LENGTH
@@ -138,8 +138,8 @@ export default function AssignmentsTable({
                       key={`${assignment.id}-answer-key`}
                       assignmentId={assignment.id.toString()}
                     />,
-                    <ViewUserSuspensionComponent
-                      key={`${assignment.id}-suspensions`}
+                    <ViewAssignmentAlertsComponent
+                      key={`${assignment.id}-alerts`}
                       assignmentId={assignment.id.toString()}
                     />,
                   ]}

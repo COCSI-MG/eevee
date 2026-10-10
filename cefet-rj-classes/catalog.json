@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "sourceRoot": "cefet-rj-classes",
+  "courses": [
+    {
+      "slug": "arquitetura-de-computadores",
+      "name": "Arquitetura de Computadores",
+      "source": "arquitetura-de-computadores/lista_exercicios_arquitetura_computadores.pdf",
+      "workerType": "adhoc-review",
+      "status": "needs-extraction"
+    },
+    {
+      "slug": "banco-de-dados-II",
+      "name": "Banco de Dados II",
+      "source": "banco-de-dados-II/exercicios_sql_banco_dados.pdf",
+      "workerType": "adhoc-review",
+      "status": "needs-extraction"
+    },
+    {
+      "slug": "tecnico-industrial-nao-graduacao",
+      "name": "Técnico Industrial — Arquitetura de Computadores",
+      "source": "tecnico-industrial-nao-graduacao/lista_exercicios_arquitetura_computadores.pdf",
+      "workerType": "adhoc-review",
+      "status": "needs-extraction"
+    }
+  ]
+}

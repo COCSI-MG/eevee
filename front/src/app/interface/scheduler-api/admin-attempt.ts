@@ -1,8 +1,7 @@
-export interface AdminAttempt {
+import type { UserRole } from "@/app/interface/scheduler-api/user";
+export interface AdminAttemptDetail {
   id: number;
   attempt: number;
-  userId: number;
-  assignmentId: number;
   isAcceptable: boolean;
   score: number;
   passes: number;
@@ -11,11 +10,16 @@ export interface AdminAttempt {
   status: string;
   receivedWork?: Record<string, string>;
   createdAt: string;
+}
+
+export interface AdminAttempt extends AdminAttemptDetail {
+  userId: number;
+  assignmentId: number;
   user: {
     id: number;
     name: string;
     email: string;
-    isAdmin: boolean;
+    role: UserRole;
   };
   assignment: {
     id: number;
@@ -25,10 +29,34 @@ export interface AdminAttempt {
   };
 }
 
-export type AdminAttemptListItem = Omit<AdminAttempt, "report" | "receivedWork">;
+export interface AdminUserAttemptSummary {
+  user: {
+    id: number;
+    email: string;
+  };
+  assignment: {
+    id: number;
+    title: string;
+  };
+  attemptsCount: number;
+  lastAttempt: Pick<
+    AdminAttemptDetail,
+    "id" | "attempt" | "status" | "score" | "createdAt"
+  >;
+}
 
 export interface AdminAttemptsListResponse {
-  data: AdminAttemptListItem[];
+  data: AdminUserAttemptSummary[];
+  meta: {
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
+}
+
+export interface AdminUserAttemptsResponse {
+  data: AdminAttemptDetail[];
   meta: {
     total: number;
     page: number;

@@ -26,6 +26,7 @@ export function MonacoCodeEditor({
   preset,
   value,
   onChange,
+  onDidType,
   height = "100%",
   className,
   path,
@@ -56,6 +57,7 @@ export function MonacoCodeEditor({
     workspaceTree,
     actionGuardMode,
     actionGuardScope,
+    onDidType,
   });
 
   return (

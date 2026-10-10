@@ -8,17 +8,7 @@ import {
 } from 'lucide-react';
 import { Route } from '@/app/routes';
 
-export const ADMIN_ROUTES = [
-  {
-    href: '/admin',
-    label: 'Painel',
-    icon: LayoutDashboard,
-  },
-  {
-    href: '/admin/users',
-    label: 'Usuários',
-    icon: Users,
-  },
+export const TEACHER_ROUTES = [
   {
     href: '/admin/classes',
     label: 'Turmas',
@@ -39,4 +29,18 @@ export const ADMIN_ROUTES = [
     label: 'Tentativas de testes',
     icon: FlaskConical,
   },
+];
+
+export const ADMIN_ROUTES = [
+  {
+    href: '/admin',
+    label: 'Painel',
+    icon: LayoutDashboard,
+  },
+  {
+    href: '/admin/users',
+    label: 'Usuários',
+    icon: Users,
+  },
+  ...TEACHER_ROUTES
 ];

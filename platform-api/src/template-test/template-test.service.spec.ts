@@ -1,11 +1,12 @@
 import { TemplateTestService } from './template-test.service';
 import { ExecutionRequestService } from 'src/execution/execution-request.service';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
-import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
+import { TemplateParamType } from 'src/template/enums/template-param-type.enum';
 
 describe('TemplateTestService', () => {
   let service: TemplateTestService;
   let executionRequestService: jest.Mocked<Pick<ExecutionRequestService, 'execute'>>;
+  let classAccess: { assertTeacherAssignment: jest.Mock };
 
   beforeEach(() => {
     executionRequestService = {
@@ -15,13 +16,16 @@ describe('TemplateTestService', () => {
         completeTrace: 'Tests: 2 passed, 2 total',
       }),
     };
+    classAccess = { assertTeacherAssignment: jest.fn().mockResolvedValue({ id: 1 }) };
     service = new TemplateTestService(
       executionRequestService as unknown as ExecutionRequestService,
+      classAccess as any,
     );
   });
 
   it('mirrors the application file into both srcPath and testPath so tests can import it from either location', async () => {
     await service.run({
+      classId: 1,
       workerType: WorkerType.NODE_DEFAULT,
       templateContent: 'test("ok", () => expect(1).toBe(1));',
       applicationFileContent: 'export const sum = (a, b) => a + b;',
@@ -50,6 +54,7 @@ describe('TemplateTestService', () => {
 
   it('merges user-supplied files with the mirrored app.ts', async () => {
     await service.run({
+      classId: 1,
       workerType: WorkerType.NODE_NESTJS,
       templateContent: 'test("a", () => {});',
       applicationFileContent: 'export const app = 1;',
@@ -69,6 +74,7 @@ describe('TemplateTestService', () => {
 
   it('omits the mirrored app.ts when applicationFileContent is empty', async () => {
     await service.run({
+      classId: 1,
       workerType: WorkerType.NODE_DEFAULT,
       templateContent: 'test("a", () => {});',
       applicationFileContent: '',
@@ -87,6 +93,7 @@ describe('TemplateTestService', () => {
 
   it('forwards dependencies as-is', async () => {
     await service.run({
+      classId: 1,
       workerType: WorkerType.NODE_DEFAULT,
       templateContent: 'test("a", () => {});',
       applicationFileContent: '',
@@ -99,6 +106,7 @@ describe('TemplateTestService', () => {
 
   it('generates a non-empty templateVariablesModuleContent with the params supplied', async () => {
     await service.run({
+      classId: 1,
       workerType: WorkerType.NODE_DEFAULT,
       templateContent: 'test("a", () => {});',
       applicationFileContent: '',
@@ -118,6 +126,7 @@ describe('TemplateTestService', () => {
 
   it('returns the WorkerResponse unchanged', async () => {
     const result = await service.run({
+      classId: 1,
       workerType: WorkerType.NODE_DEFAULT,
       templateContent: '',
       applicationFileContent: '',
@@ -129,4 +138,3 @@ describe('TemplateTestService', () => {
     });
   });
 });
-

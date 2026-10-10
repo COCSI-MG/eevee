@@ -4,11 +4,12 @@ import { applyLanguageDefaults } from "../intellisense/compiler";
 import { applyTypePack, clearTypePacks } from "../intellisense/type-packs";
 import { resolveMonacoLanguage } from "../language";
 import { findWorkerEditorConfig } from "../worker-editor-config";
+import { applyPythonIntellisense, disposePythonIntellisense } from "../python/pyodide-client";
 import {
   getImportPathSuggestions,
   normalizeWorkspacePath,
 } from "./import-paths";
-import { disposeWorkspaceModels, syncWorkspaceModels } from "./models";
+import { disposeWorkspaceModels, syncWorkspaceModels, workspaceModelPath } from "./models";
 
 type MonacoNamespace = typeof import("monaco-editor");
 type Disposable = import("monaco-editor").IDisposable;
@@ -116,6 +117,18 @@ function refreshRuntime(): void {
 
   syncWorkspaceModels(latest.monaco, latest.tree, activePaths);
 
+  // Run before the worker-type early return: files change within a workspace.
+  if (findWorkerEditorConfig(latest.workerType)?.pythonIntellisense) {
+    const paths = new Set(collectFilePaths(latest.tree).map(
+      (path) => latest.monaco.Uri.parse(workspaceModelPath(path)).toString(),
+    ));
+    applyPythonIntellisense(latest.monaco, latest.monaco.editor.getModels().filter(
+      (model) => paths.has(model.uri.toString()),
+    ));
+  } else {
+    disposePythonIntellisense();
+  }
+
   const nextWorkerType = latest.workerType?.toString();
   if (nextWorkerType === appliedWorkerType) return;
   appliedWorkerType = nextWorkerType;
@@ -157,6 +170,7 @@ export function registerWorkspaceRuntime(
 
       completionDisposables.forEach((disposable) => disposable.dispose());
       completionDisposables = [];
+      disposePythonIntellisense();
       disposeWorkspaceModels(monaco);
       clearTypePacks(monaco);
       appliedWorkerType = undefined;

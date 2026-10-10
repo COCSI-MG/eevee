@@ -1,6 +1,6 @@
 # Provas e notas
 
-Uma prova agrupa atividades de uma turma e define quantos pontos cada atividade vale. Ela não substitui as atividades: tentativas, suspensões, resultados e gabaritos continuam associados a cada atividade.
+Uma prova agrupa atividades de uma turma e define quantos pontos cada atividade vale. Ela não substitui as atividades: tentativas, alertas, bloqueios derivados, resultados e gabaritos continuam associados a cada atividade.
 
 ## Criar e disponibilizar uma prova
 
@@ -48,4 +48,3 @@ A ação de reexecução administrativa cria uma nova tentativa usando os arquiv
 - [Criar atividades](assignments.md)
 - [Criar e liberar gabaritos](answer-keys.md)
 - [Acompanhar tentativas e resultados](application-and-results.md)
-

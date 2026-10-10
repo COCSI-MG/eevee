@@ -12,6 +12,8 @@ on:
       - ".github/workflows/postgresql-workers.yaml"
       - "packages/execution-contracts/**"
       - "scripts/deploy-release.sh"
+      - "scripts/test-deploy-release.sh"
+      - ".github/workflows/validate-deployment.yaml"
       - ".github/actions/remote-kubectl/**"
       - ".github/workflows/deploy-assignment-runner.yaml"
 
@@ -20,7 +22,12 @@ env:
   ASSIGNMENT_RUNNER_IMAGE: "${{ vars.ASSIGNMENT_RUNNER_IMAGE || 'cocsi-mg/eevee-assignment-runner' }}"
 
 jobs:
+  validate:
+    uses: ./.github/workflows/validate-deployment.yaml
+    secrets: inherit
+
   postgresql-workers:
+    needs: validate
     uses: ./.github/workflows/postgresql-workers.yaml
     permissions:
       contents: read
@@ -29,7 +36,7 @@ jobs:
       publish: true
 
   build-and-deploy:
-    needs: postgresql-workers
+    needs: [validate, postgresql-workers]
     runs-on: ubuntu-latest
     concurrency:
       group: eevee-production-deploy
@@ -59,7 +66,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build e Push da Imagem Docker
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./assignment-runner/Dockerfile
@@ -79,7 +86,10 @@ jobs:
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
             set -euo pipefail
-            cd "${{ vars.DEPLOY_WORKDIR }}"
+            DEPLOY_WORKDIR='${{ vars.DEPLOY_WORKDIR }}'
+            : "${DEPLOY_WORKDIR:?Set the repository variable DEPLOY_WORKDIR (not a secret)}"
+            cd "$DEPLOY_WORKDIR"
+            git rev-parse --show-toplevel
             git fetch origin '${{ github.sha }}'
             CHART_WORKDIR=$(mktemp -d)
             trap 'rm -rf "$CHART_WORKDIR"' EXIT

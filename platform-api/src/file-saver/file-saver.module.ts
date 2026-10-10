@@ -8,6 +8,7 @@ import { SyncJob } from './entities/sync-job.entity';
 import { GithubModule } from 'src/github/github.module';
 import { BullMQModule } from 'src/bullmq/bullmq.module';
 import { FileSaverConsumer } from './file-saver.processor';
+import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
 
 @Module({
   controllers: [FileSaverController],
@@ -16,6 +17,7 @@ import { FileSaverConsumer } from './file-saver.processor';
     RequestContextModule,
     GithubModule,
     BullMQModule,
+    AssignmentAlertModule
   ],
   providers: [FileSaverService, FileSaverConsumer],
   exports: [FileSaverService],

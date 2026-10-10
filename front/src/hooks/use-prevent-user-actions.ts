@@ -1,62 +1,110 @@
-import { useRouter } from "next/navigation";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useClipboardGuard } from "./user-actions/use-clipboard-guard";
-import { useClipboardViolationTracker } from "./user-actions/use-clipboard-violation-tracker";
 import { useContextMenuGuard } from "./user-actions/use-context-menu-guard";
 import { useDevToolsGuard } from "./user-actions/use-devtools-guard";
 import { useKeyboardShortcutGuard } from "./user-actions/use-keyboard-shortcut-guard";
-import { ClipboardAction, SecurityViolationReason } from "./user-actions/types";
+import {
+  ClipboardAction,
+  SecurityViolationEvent,
+  SecurityViolationReason,
+} from "./user-actions/types";
+import {
+  AssignmentAlertType,
+  type AssignmentAlertDetails,
+} from "@/app/interface/scheduler-api/assignment-alert";
+
+const DEVTOOLS_SHORTCUT_REASON = "devtools_shortcut";
+
+const DEVTOOLS_SIGNAL_BY_REASON = {
+  [DEVTOOLS_SHORTCUT_REASON]: "shortcut",
+  devtools_console: "console",
+  devtools_debugger: "debugger",
+  devtools_performance: "performance",
+  devtools_viewport: "viewport",
+} as const satisfies Record<
+  SecurityViolationReason | typeof DEVTOOLS_SHORTCUT_REASON,
+  NonNullable<AssignmentAlertDetails["devtoolsSignal"]>
+>;
+
+type DevToolsDetectionReason = keyof typeof DEVTOOLS_SIGNAL_BY_REASON;
 
 interface UsePreventUserActionsOptions {
   enabled?: boolean;
   allowedDragAreaSelector?: string;
   allowedDragMimeType?: string;
-  clipboardViolationLimit?: number;
-  onClipboardViolation?: (action: ClipboardAction, attempts: number) => void;
-  onClipboardViolationLimit?: (
-    action: ClipboardAction,
-    attempts: number,
-  ) => void;
-  onSecurityViolation?: (
-    reason: SecurityViolationReason,
-  ) => Promise<void> | void;
+  onSecurityViolation?: (event: SecurityViolationEvent) => Promise<void> | void;
 }
+
+const focusBlur = (
+  handleBlur: (event: FocusEvent) => void,
+  handleFocus: (event: FocusEvent) => void
+) => {
+  window.addEventListener("blur", handleBlur);
+  window.addEventListener("focus", handleFocus);
+
+  return () => {
+    window.removeEventListener("blur", handleBlur);
+    window.removeEventListener("focus", handleFocus);
+  };
+};
 
 export function usePreventUserActions({
   enabled = true,
   allowedDragAreaSelector,
   allowedDragMimeType,
-  clipboardViolationLimit = 10,
-  onClipboardViolation,
-  onClipboardViolationLimit,
   onSecurityViolation,
 }: UsePreventUserActionsOptions = {}) {
-  const { back } = useRouter();
-  const hasHandledDevToolsViolation = useRef(false);
+  const lastDevToolsViolationAt = useRef(0);
+  const focusLossEpisode = useRef(false);
 
-  const registerClipboardAttempt = useClipboardViolationTracker({
-    violationLimit: clipboardViolationLimit,
-    onViolation: onClipboardViolation,
-    onViolationLimit: onClipboardViolationLimit,
-  });
+  const registerClipboardAttempt = useCallback(
+    (action: ClipboardAction) => {
+      onSecurityViolation?.({
+        type: AssignmentAlertType.Clipboard,
+        details: { clipboardAction: action }
+      });
+    },
+    [onSecurityViolation]
+  );
 
   const handleDevToolsDetected = useCallback(
-    async (reason: SecurityViolationReason) => {
-      if (hasHandledDevToolsViolation.current) {
+    (reason: DevToolsDetectionReason) => {
+      const now = Date.now();
+
+      if (now - lastDevToolsViolationAt.current < 3000) {
         return;
       }
 
-      hasHandledDevToolsViolation.current = true;
-      await onSecurityViolation?.(reason);
-      window.setTimeout(() => {
-        alert(
-          "DevTools detectado, você será suspenso da tarefa. Entre em contato com o responsável pela tarefa, se acha que é um erro.",
-        );
-        back();
-      }, 0);
+      lastDevToolsViolationAt.current = now;
+
+      onSecurityViolation?.({
+        type: AssignmentAlertType.DevTools,
+        details: {
+          devtoolsSignal: DEVTOOLS_SIGNAL_BY_REASON[reason]
+        }
+      });
     },
-    [back, onSecurityViolation],
+    [onSecurityViolation],
   );
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const handleBlur = () => {
+      if (focusLossEpisode.current) return;
+
+      focusLossEpisode.current = true;
+      onSecurityViolation?.({
+        type: AssignmentAlertType.WindowFocusLoss,
+      });
+    };
+
+    const handleFocus = () => {
+      focusLossEpisode.current = false;
+    };
+
+    return focusBlur(handleBlur, handleFocus)
+  }, [enabled, onSecurityViolation]);
 
   useContextMenuGuard({
     enabled,
@@ -67,6 +115,7 @@ export function usePreventUserActions({
   useKeyboardShortcutGuard({
     enabled,
     onClipboardShortcut: registerClipboardAttempt,
+    onDevToolsShortcut: () => handleDevToolsDetected(DEVTOOLS_SHORTCUT_REASON)
   });
   useDevToolsGuard({ enabled, onDetected: handleDevToolsDetected });
 }

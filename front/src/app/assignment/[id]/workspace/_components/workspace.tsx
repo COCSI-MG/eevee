@@ -1,4 +1,5 @@
 "use client";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 import React from "react";
 import WorkspaceCodeEditor from "./workspace-code-editor";
@@ -37,8 +38,14 @@ export default function Workspace({
   onResetWorkspaceReady,
   onResettingChange,
 }: WorkspaceProps) {
-  const { replaceFileTree, selectedItem, selectItem, fileTreeData } =
-    useWorkspaceContext();
+  const {
+    replaceFileTree,
+    selectedItem,
+    selectItem,
+    fileTreeData,
+    securityPaused,
+    registerTypedText
+  } = useWorkspaceContext();
   const userId = user.userId;
   const { explorerWidth, startResize } = useWorskpaceResizing();
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
@@ -55,7 +62,7 @@ export default function Workspace({
     selectItem,
   });
 
-  const editorActionGuardMode = user.isAdmin
+  const editorActionGuardMode = user.role === UserRole.ADMIN
     ? EDITOR_ACTION_GUARD_MODE.EXEMPT
     : assignment.allowCopyPaste
       ? EDITOR_ACTION_GUARD_MODE.INTERNAL_ONLY
@@ -197,6 +204,12 @@ export default function Workspace({
     onResettingChange?.(isResetting);
   }, [isResetting, onResettingChange]);
 
+  const editorCommonProps = {
+    actionGuardMode: editorActionGuardMode,
+    readOnly: securityPaused,
+    onDidType: registerTypedText
+  };
+
   return (
     <div className="flex flex-1 min-h-0">
       <div
@@ -249,24 +262,24 @@ export default function Workspace({
           <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-border">
             <div className="min-w-0 min-h-0 flex flex-col">
               <WorkspaceCodeEditor
+                {...editorCommonProps}
                 file={activeFile}
                 onEditorChange={handleEditorChange}
-                actionGuardMode={editorActionGuardMode}
               />
             </div>
             <div className="min-w-0 min-h-0 flex flex-col">
               <WorkspaceCodeEditor
+                {...editorCommonProps}
                 file={secondaryFile}
                 onEditorChange={handleSecondaryEditorChange}
-                actionGuardMode={editorActionGuardMode}
               />
             </div>
           </div>
         ) : (
           <WorkspaceCodeEditor
+            {...editorCommonProps}
             file={activeFile}
             onEditorChange={handleEditorChange}
-            actionGuardMode={editorActionGuardMode}
           />
         )}
       </div>

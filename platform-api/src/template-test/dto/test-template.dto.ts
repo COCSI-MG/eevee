@@ -6,9 +6,11 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsInt,
+  Min,
   ValidateNested,
 } from 'class-validator';
-import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
+import { TemplateParamType } from 'src/template/enums/template-param-type.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 export class TestTemplateParamDefDto {
@@ -21,6 +23,12 @@ export class TestTemplateParamDefDto {
 }
 
 export class TestTemplateDto {
+  @ApiProperty({ description: 'Turma proprietária do template em teste.' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  classId: number;
+
   @ApiProperty({ enum: WorkerType })
   @IsEnum(WorkerType)
   workerType: WorkerType;

@@ -1,10 +1,14 @@
 import { Controller, Get, Post, Body, Param, Delete, UseGuards } from '@nestjs/common';
 import { UserClassService } from './user-class.service';
 import { CreateUserClassDto } from './dto/create-user-class.dto';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 
 @Controller('user-class')
-@UseGuards(AdminGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 export class UserClassController {
   constructor(private readonly userClassService: UserClassService) {}
 

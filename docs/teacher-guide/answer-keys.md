@@ -4,9 +4,9 @@ O gabarito é uma solução de referência associada a uma atividade. Ele possui
 
 ## Criar ou editar
 
-Na lista administrativa de atividades, abra o menu de ações e escolha **Gabarito**. Quando ainda não existe um gabarito, o editor começa com a estrutura inicial da atividade, em acessos posteriores, carrega a versão salva.
+Na lista administrativa de atividades, abra o menu de ações e escolha **Gabarito**. O professor responsável também pode abrir o gabarito pela lista de atividades da própria turma. Quando ainda não existe um gabarito, o editor começa com a estrutura inicial da atividade, em acessos posteriores, carrega a versão salva.
 
-Use o explorador e o editor como no workspace do estudante. Somente administradores podem alterar os arquivos.
+Use o explorador e o editor como no workspace do estudante. Administradores e o professor responsável pela turma podem alterar e testar os arquivos, mesmo quando o gabarito está oculto para estudantes.
 
 ## Testar e salvar
 
@@ -37,4 +37,3 @@ O estudante recebe uma visualização somente leitura. Desativar a visibilidade 
 - [Criar uma atividade](assignments.md)
 - [Testar templates](templates-and-tests.md)
 - [Aplicar atividades e acompanhar resultados](application-and-results.md)
-

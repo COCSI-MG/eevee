@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthSession } from "@/app/interface/scheduler-api/auth";
+import { refreshSchedulingSocketSession } from "./realtime";
 import { Route } from "@/app/routes";
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
@@ -28,9 +29,16 @@ let renewalInFlight: Promise<AuthSession | null> | null = null;
 
 export function renewSession(): Promise<AuthSession | null> {
   if (!renewalInFlight) {
-    renewalInFlight = requestRenewal().finally(() => {
-      renewalInFlight = null;
-    });
+    renewalInFlight = requestRenewal()
+      .then((session) => {
+        if (session) {
+          refreshSchedulingSocketSession();
+        }
+        return session;
+      })
+      .finally(() => {
+        renewalInFlight = null;
+      });
   }
 
   return renewalInFlight;

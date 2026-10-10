@@ -29,15 +29,15 @@ export class AssignmentAttemptSummaryDto {
   createdAt: Date;
 }
 
-export class AssignmentUserSuspensionSummaryDto {
+export class AssignmentAlertStatusSummaryDto {
+  @ApiProperty({ example: 2 })
+  activeCount: number;
+
   @ApiProperty({ example: 5 })
-  id: number;
+  limit: number;
 
-  @ApiProperty({ example: 'Cheating detected', nullable: true })
-  reason: string | null;
-
-  @ApiProperty({ type: String, format: 'date-time' })
-  createdAt: Date;
+  @ApiProperty({ example: false })
+  suspended: boolean;
 }
 
 export class AssignmentSummaryResponseDto {
@@ -68,8 +68,8 @@ export class AssignmentSummaryResponseDto {
   @ApiProperty({ type: () => AssignmentAttemptSummaryDto, nullable: true })
   lastAttempt: AssignmentAttemptSummaryDto | null;
 
-  @ApiProperty({ type: () => [AssignmentUserSuspensionSummaryDto] })
-  suspensions: AssignmentUserSuspensionSummaryDto[];
+  @ApiProperty({ type: () => AssignmentAlertStatusSummaryDto })
+  currentUserAlertStatus: AssignmentAlertStatusSummaryDto;
 
   @ApiProperty({ example: 3 })
   score: number;
