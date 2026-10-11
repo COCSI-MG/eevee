@@ -47,11 +47,11 @@ describe("User edit", () => {
     const name = `${user.name} admin`;
     const email = `admin.${user.email}`;
 
-    cy.log("Change name, email and password and mark as admin");
+    cy.log("Change name, email and password and choose the admin role");
     cy.get("#name").clear().type(name);
     cy.get("#email").clear().type(email);
     cy.get("#password").type("newPassword123");
-    cy.get("#isAdmin").click();
+    cy.get("#role").select("admin");
 
     cy.log("Save the changes");
     cy.contains("button", "Salvar Alterações").click();

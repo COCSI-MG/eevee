@@ -1,5 +1,5 @@
 import { apiUrl } from "./api";
-import type { CreatedUser, TestUser } from "./types";
+import type { CreatedUser, TestUser, UserRole } from "./types";
 
 const slug = (value: string) =>
   value
@@ -9,18 +9,18 @@ const slug = (value: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-Cypress.Commands.add("buildUser", (isAdmin = false) => {
+Cypress.Commands.add("buildUser", (role: UserRole = "aluno") => {
   const testCase = Cypress.currentTest.title;
   const suffix = Date.now();
   const user: TestUser = {
     name: `${testCase} ${suffix}`,
     email: `${slug(testCase)}.${suffix}@test.local`,
     password: "password12345",
-    isAdmin,
+    role,
   };
   Cypress.log({
     name: "buildUser",
-    message: `Built ${isAdmin ? "admin" : "regular"} user ${user.email}`,
+    message: `Built ${role} user ${user.email}`,
   });
   return cy.wrap<TestUser>(user, { log: false });
 });
@@ -38,12 +38,6 @@ Cypress.Commands.add("createUser", (user: TestUser) => {
 
 Cypress.Commands.add("deleteUser", (id: number) => {
   Cypress.log({ name: "deleteUser", message: `Cleaning up user ${id} via API` });
-  cy.request({
-    method: "PATCH",
-    url: `${apiUrl()}/user/${id}`,
-    body: { isAdmin: false },
-    failOnStatusCode: false,
-  });
   cy.request({
     method: "DELETE",
     url: `${apiUrl()}/user/${id}`,

@@ -1,6 +1,6 @@
 import type { CreatedUser } from "../../helpers/types";
 
-describe("User deletion", () => {
+describe("User deactivation", () => {
   let user: CreatedUser | undefined;
 
   beforeEach(() => {
@@ -21,22 +21,22 @@ describe("User deletion", () => {
     }
   });
 
-  it("deletes a user after confirming the dialog", () => {
+  it("deactivates a user after confirming the dialog", () => {
     const { email } = user!;
     cy.filterUsers(email);
 
-    cy.log("Open the row menu and choose delete");
+    cy.log("Open the row menu and choose deactivate");
     cy.userRow(email).find("button").click();
-    cy.contains('[role="menuitem"]', "Excluir").click();
+    cy.contains('[role="menuitem"]', "Desativar").click();
 
-    cy.log("Confirm the deletion dialog");
+    cy.log("Confirm the deactivation dialog");
     cy.get('[role="alertdialog"]')
-      .should("contain.text", "Excluir este usuário?")
-      .contains("button", "Excluir")
+      .should("contain.text", "Desativar esta conta?")
+      .contains("button", "Desativar conta")
       .click();
 
     cy.log("Check the success toast and that the user left the list");
-    cy.contains("Usuário excluído").should("be.visible");
+    cy.contains("Conta desativada").should("be.visible");
     cy.contains("td", email)
       .should("not.exist")
       .then(() => {

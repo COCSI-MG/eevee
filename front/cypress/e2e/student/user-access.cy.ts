@@ -55,7 +55,7 @@ describe("User management as a student", () => {
         name: "student attempt",
         email: `student-attempt.${Date.now()}@test.local`,
         password: "password12345",
-        isAdmin: true,
+        role: "admin",
       },
       failOnStatusCode: false,
     })

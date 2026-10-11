@@ -19,7 +19,7 @@ describe("User creation", () => {
     }
   });
 
-  it("creates a regular user", () => {
+  it("creates a student user", () => {
     cy.buildUser().then((built) => {
       user = built;
       cy.log("Fill in name, email and password");
@@ -37,21 +37,21 @@ describe("User creation", () => {
       cy.contains("Usuário criado").should("be.visible");
       cy.location("pathname").should("eq", "/admin/users");
 
-      cy.log("Check the user is listed as a regular user");
+      cy.log("Check the user is listed as a student");
       cy.filterUsers(user.email);
       cy.userRow(user.email).should("contain.text", user.name);
-      cy.userRow(user.email).should("contain.text", "Usuário");
+      cy.userRow(user.email).should("contain.text", "Aluno");
     });
   });
 
   it("creates an admin user", () => {
-    cy.buildUser(true).then((built) => {
+    cy.buildUser("admin").then((built) => {
       user = built;
-      cy.log("Fill in name, email and password and mark as admin");
+      cy.log("Fill in name, email and password and choose the admin role");
       cy.get("#name").type(user.name);
       cy.get("#email").type(user.email);
       cy.get("#password").type(user.password);
-      cy.get("#isAdmin").click();
+      cy.get("#role").select("admin");
 
       cy.log("Submit the form");
       cy.contains("button", "Criar Usuário").click();
@@ -69,7 +69,7 @@ describe("User creation", () => {
     });
   });
 
-  it("does not create a regular user without a password", () => {
+  it("does not create a student user without a password", () => {
     cy.buildUser().then((built) => {
       cy.log("Fill in name and email, leaving the password empty");
       cy.get("#name").type(built.name);
@@ -86,11 +86,11 @@ describe("User creation", () => {
   });
 
   it("does not create an admin user without a password", () => {
-    cy.buildUser(true).then((built) => {
-      cy.log("Fill in name and email as admin, leaving the password empty");
+    cy.buildUser("admin").then((built) => {
+      cy.log("Fill in name and email with the admin role, leaving the password empty");
       cy.get("#name").type(built.name);
       cy.get("#email").type(built.email);
-      cy.get("#isAdmin").click();
+      cy.get("#role").select("admin");
 
       cy.log("Submit the form");
       cy.contains("button", "Criar Usuário").click();
