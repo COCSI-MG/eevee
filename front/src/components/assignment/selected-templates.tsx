@@ -113,7 +113,7 @@ export default function SelectedTemplates({
                 {selectedTemplate.params?.map((param) => {
                   const paramName = templates
                     ?.find((t) => t.id === selectedTemplate.templateId)
-                    ?.templateParams.find(
+                    ?.templateParams?.find(
                       (p) => p.id === param.templateParamId
                     )?.name;
 

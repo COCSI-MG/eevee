@@ -9,6 +9,8 @@ export class ClassHelper {
       id: classEntity.id,
       name: classEntity.name,
       description: classEntity.description,
+      teacherId: classEntity.teacherId ?? null,
+      deletedAt: classEntity.deletedAt ?? null,
       users: classEntity.userClasses?.length
         ? UserClassHelper.toResponseDto(classEntity.userClasses).map(
           (userClass) => ({

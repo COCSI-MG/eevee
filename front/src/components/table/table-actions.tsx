@@ -21,6 +21,8 @@ interface TableActionsProps {
   itemName?: string;
   deleteTitle?: string;
   deleteDescription?: string;
+  deleteActionLabel?: string;
+  deleteMenuLabel?: string;
 }
 
 export default function TableActions({
@@ -34,6 +36,8 @@ export default function TableActions({
   itemName,
   deleteTitle,
   deleteDescription,
+  deleteActionLabel,
+  deleteMenuLabel
 }: TableActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
   const [showUnlinkDialog, setShowUnlinkDialog] = useState<boolean>(false);
@@ -117,7 +121,7 @@ export default function TableActions({
               onClick={handleDeleteClick}
             >
               <Trash className="h-4 w-4 mr-2" />
-              Excluir
+              {deleteMenuLabel ?? "Excluir"}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
@@ -132,6 +136,7 @@ export default function TableActions({
         isDeleting={isDeleting}
         title={deleteTitle}
         description={deleteDescription}
+        confirmLabel={deleteActionLabel}
       />
 
       <DeleteAlertDialog

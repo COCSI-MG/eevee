@@ -1,14 +1,18 @@
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtPayload } from '../jwt.interface';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { getTokenFromCookieHeader } from '../auth-cookie.util';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly userService: UserService
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => getTokenFromCookieHeader(request?.headers?.cookie),
@@ -18,11 +22,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: JwtPayload): JwtPayload {
+  async validate(payload: JwtPayload): Promise<JwtPayload> {
+    const user = await this.userService.findOne(payload.userId);
+    if (!user) throw new UnauthorizedException('Account is inactive or unavailable.');
     return {
-      userId: payload.userId,
-      email: payload.email,
-      isAdmin: payload.isAdmin,
+      userId: user.id,
+      email: user.email,
+      role: user.role,
       familyId: payload.familyId,
       exp: payload.exp,
     };

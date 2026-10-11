@@ -4,7 +4,7 @@
   "description": "Default worker node.js project",
   "scripts": {
     "start": "ts-node ./trigger.ts",
-    "test": "jest --runInBand --roots . --testMatch '**/*.spec.ts' --testMatch '**/*.test.ts' --json --outputFile=./test-results.json"
+    "test": "jest --runInBand --forceExit --roots . --testMatch '**/*.spec.ts' --testMatch '**/*.test.ts' --json --outputFile=./test-results.json"
   },
   "author": "João Vitor Coimbra & Diego Castro",
   "license": "ISC",

@@ -12,6 +12,10 @@ export class ClassResponseDto
 
   @ApiProperty()
   description: string;
+  @ApiProperty({ required: false, nullable: true })
+  teacherId?: number | null;
+  @ApiProperty({ required: false, nullable: true })
+  deletedAt?: Date | null;
   @ApiProperty()
   users: Omit<UserClassResponseDto, 'classes'>[];
 }

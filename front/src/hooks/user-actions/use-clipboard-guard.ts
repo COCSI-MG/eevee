@@ -90,7 +90,6 @@ export function useClipboardGuard({
 
         onClipboardAttempt(CLIPBOARD_ACTION.PASTE);
 
-        alert("Ação não permitida. Cole apenas conteúdo copiado dentro desta atividade.");
         return false;
       }
 
@@ -100,7 +99,6 @@ export function useClipboardGuard({
         onClipboardAttempt(action);
       }
 
-      alert("Ação não permitida. Por favor, não copie ou cole conteúdo enquanto estiver no editor.");
       return false;
     };
 

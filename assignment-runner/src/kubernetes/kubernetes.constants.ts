@@ -2,7 +2,7 @@ export const DEFAULT_NAMESPACE: string =
   process.env.K8S_NAMESPACE?.trim() || 'default';
 
 export const JOB_IMAGE_PULL_POLICY: string =
-  process.env.K8S_JOB_IMAGE_PULL_POLICY?.trim() || 'IfNotPresent';
+  process.env.K8S_JOB_IMAGE_PULL_POLICY?.trim() || 'Always';
 
 export const JOB_IMAGE_PULL_SECRETS: string[] =
   (process.env.K8S_JOB_IMAGE_PULL_SECRETS || '')

@@ -8,6 +8,7 @@ import { RegisterRequestDto } from './dto/request/register-request.dto';
 import { AuthSessionResponseDto } from './dto/response/auth-session-response.dto';
 import { RefreshSessionService } from './refresh-session.service';
 import { SessionStatus } from './enums/session-status.enum';
+import { UserRole } from 'src/user/user-role';
 
 export interface StartedSession {
   accessToken: string;
@@ -50,7 +51,7 @@ export class AuthService {
     const payload: JwtPayload = {
       email: user.email,
       userId: user.id,
-      isAdmin: user.isAdmin,
+      role: user.role,
       familyId: rotation.session.familyId,
     };
 
@@ -72,7 +73,7 @@ export class AuthService {
       return this.startSession({
         id: user.id,
         email: user.email,
-        isAdmin: user.isAdmin,
+        role: user.role
       });
     }
   }
@@ -85,13 +86,13 @@ export class AuthService {
       const createdUser = await this.userService.createOrReplace({
         ...registerData,
         email,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
 
       return this.startSession({
         id: createdUser.id,
         email: createdUser.email,
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
     }
   }
@@ -107,7 +108,7 @@ export class AuthService {
   private async startSession(user: {
     id: number;
     email: string;
-    isAdmin: boolean;
+    role: UserRole;
   }): Promise<StartedSession> {
     const { token: refreshToken, session } =
       await this.refreshSessionService.create(user.id);
@@ -115,7 +116,7 @@ export class AuthService {
     const payload: JwtPayload = {
       email: user.email,
       userId: user.id,
-      isAdmin: user.isAdmin,
+      role: user.role,
       familyId: session.familyId,
     };
 
@@ -142,7 +143,7 @@ export class AuthService {
     return {
       userId: payload.userId,
       email: payload.email,
-      isAdmin: payload.isAdmin,
+      role: payload.role,
       expiresIn,
     };
   }

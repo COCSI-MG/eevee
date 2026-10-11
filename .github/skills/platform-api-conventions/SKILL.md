@@ -1,6 +1,6 @@
 ---
 name: platform-api-conventions
-description: 'NestJS module/DTO/entity/migration conventions in platform-api. Use when adding an API endpoint, entity, DB migration, or module in platform-api, or running its Jest/e2e tests and seed script.'
+description: "NestJS module/DTO/entity/migration conventions in platform-api. Use when adding an API endpoint, entity, DB migration, or module in platform-api, or running its Jest/e2e tests and seed script."
 ---
 
 # platform-api Conventions (NestJS)
@@ -27,11 +27,13 @@ consumers live in `platform-api`, Kubernetes-execution consumers live in
 ## Common modifications
 
 **New API endpoint:**
+
 1. DTO in `src/feature/dto/`.
 2. Method on `FeatureService`.
 3. Route on `FeatureController` with `@Post()`/`@Get()` + `@ApiOperation()`.
 
 **Database change:**
+
 1. Edit the entity under `src/*/entities/`.
 2. `npm run migration:generate -n DescriptiveNameForChange`.
 3. `npm run migration:run`.

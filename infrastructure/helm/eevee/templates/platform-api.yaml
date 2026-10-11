@@ -40,6 +40,10 @@ spec:
           env:
             - name: ENV
               value: {{ .Values.platformApi.env | quote }}
+            {{- with .Values.platformApi.nodeOptions }}
+            - name: NODE_OPTIONS
+              value: {{ . | quote }}
+            {{- end }}
             {{- include "eevee.appEnv" . | nindent 12 }}
             - name: PORT
               value: {{ .Values.platformApi.containerPort | quote }}

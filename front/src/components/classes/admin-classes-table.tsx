@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { Class } from "@/app/interface/scheduler-api/class";
 import { Route } from "@/app/routes";
 import Link from "next/link";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, RotateCcw } from "lucide-react";
 
 const ViewExamsComponent = ({ classId }: { classId: number }) => (
   <Link
@@ -30,12 +30,14 @@ const ViewExamsComponent = ({ classId }: { classId: number }) => (
 interface AdminClassesTableProps {
   classes: Array<Class> | undefined;
   handleDelete: (id: number) => void;
+  handleRestore: (id: number) => void;
   emptyMessage?: string;
 }
 
 export default function AdminClassesTable({
   classes,
   handleDelete,
+  handleRestore,
   emptyMessage = "Nenhuma turma encontrada.",
 }: AdminClassesTableProps) {
   return (
@@ -62,6 +64,26 @@ export default function AdminClassesTable({
           </TableRow>
         )}
         {(classes ?? []).map((cls) => {
+
+          const otherActions = cls.deletedAt
+            ?
+              [
+                <DropdownMenuItem
+                  key={`${cls.id}-restore`}
+                  onClick={() => handleRestore(cls.id)}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Restaurar turma
+                </DropdownMenuItem>,
+              ]
+            :
+              [
+                <ViewExamsComponent
+                  key={`${cls.id}-exams`}
+                  classId={cls.id}
+                />,
+              ];
+
           return (
             <TableRow key={cls.id}>
               <TableCell className="font-medium">{cls.name}</TableCell>
@@ -70,14 +92,14 @@ export default function AdminClassesTable({
               </TableCell>
               <TableCell>
                 <TableActions
-                  href={`/admin/classes/${cls.id}`}
-                  onDelete={() => handleDelete(cls.id)}
-                  otherActions={[
-                    <ViewExamsComponent
-                      key={`${cls.id}-exams`}
-                      classId={cls.id}
-                    />,
-                  ]}
+                  href={cls.deletedAt ? undefined : `/admin/classes/${cls.id}`}
+                  onDelete={cls.deletedAt ? undefined : () => handleDelete(cls.id)}
+                  deleteTitle="Arquivar turma"
+                  deleteDescription="O histórico será preservado e a turma poderá ser restaurada por um administrador."
+                  deleteActionLabel="Arquivar turma"
+                  deleteMenuLabel="Arquivar"
+
+                  otherActions={otherActions}
                 />
               </TableCell>
             </TableRow>

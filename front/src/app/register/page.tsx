@@ -1,4 +1,5 @@
 'use client';
+import { getDefaultRouteForRole } from "@/app/routes";
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
@@ -43,7 +44,7 @@ export default function Register() {
     mutationFn: (values: RegisterRequest) => RegisterService.register(values),
     onSuccess: (session) => {
       setSession(session);
-      replace(session.isAdmin ? '/admin' : '/classes');
+      replace(getDefaultRouteForRole(session.role));
     },
     onError: () => {
       toast({

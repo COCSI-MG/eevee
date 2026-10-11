@@ -25,10 +25,10 @@ Database workers request 100m CPU/256Mi memory and have limits of 1 CPU/768Mi.
 From the repository root:
 
 ```sh
-docker build --build-arg WORKER=node-default -f images/node/postgresql/Dockerfile -t eevee-postgresql-node:test .
-docker build --build-arg WORKER=nest.js -f images/node/postgresql/Dockerfile -t eevee-postgresql-nest:test .
-python images/node/postgresql/smoke.py eevee-postgresql-node:test
-python images/node/postgresql/smoke.py eevee-postgresql-nest:test
+docker build --build-arg WORKER=node-default -f images/node/postgresql/Dockerfile -t eevee-postgresql-node:latest .
+docker build --build-arg WORKER=nest.js -f images/node/postgresql/Dockerfile -t eevee-postgresql-nest:latest .
+python images/node/postgresql/smoke.py eevee-postgresql-node:latest
+python images/node/postgresql/smoke.py eevee-postgresql-nest:latest
 ```
 
 The smoke tests exercise a seeded database through each real Node trigger,
@@ -39,33 +39,48 @@ ownership/failure cleanup, application timeout cleanup, and timely log collectio
 ## Publish and roll out
 
 The Assignment Runner deployment workflow first builds, tests, and publishes
-both database images under the full commit SHA. Only then does it update the
-runner and both image environment variables together. It also grants its
-configured service account the ConfigMap and Pod-deletion permissions needed
-for seeding and cancellation. No existing stuck Jobs are removed by deployment.
+both database images with the `latest` tag. Only then does it update the
+runner and both image environment variables together. RBAC is provisioned
+separately by an authorized namespace administrator; the deployment identity
+does not need permission to manage Roles or RoleBindings. No existing stuck
+Jobs are removed by deployment.
 
-For a Helm installation, publish first and supply the resulting immutable tags:
+The runner needs `create/get/delete` on ConfigMaps and `get/list/delete` on
+Pods in addition to its existing Job and log permissions. If these are missing,
+an authorized administrator can apply
+`infrastructure/rbac/postgresql-worker-lifecycle.yaml`. Check that the manifest
+subject matches the runner Deployment service account (currently `ns-admin`)
+before applying it. Do not run this bootstrap step with the restricted CI identity.
 
 ```sh
-make build-worker-node-default-postgresql build-worker-nestjs-postgresql TAG=<commit-sha>
-make push-worker-node-default-postgresql push-worker-nestjs-postgresql TAG=<commit-sha>
-helm upgrade --install eevee infrastructure/helm/eevee --namespace eevee-cefetrj \
-  --set-string workerImages.nodeDefaultPostgresql=ghcr.io/cocsi-mg/worker-node-default-postgresql-img:<commit-sha> \
-  --set-string workerImages.nodeNestjsPostgresql=ghcr.io/cocsi-mg/worker-nestjs-postgresql-img:<commit-sha>
+kubectl get deployment assignment-runner-deployment -n eevee-cefetrj \
+  -o jsonpath='{.spec.template.spec.serviceAccountName}'
+# Run using an administrator context authorized to manage namespace RBAC:
+kubectl apply -f infrastructure/rbac/postgresql-worker-lifecycle.yaml
 ```
 
-Both `pg-harness-v1` release images were published on 2026-09-17. The Helm
-defaults pin their manifests by digest, and the registry manifests were checked
-against the locally tested images. Do not overwrite a released tag. Upgrade
-Helm RBAC before rolling out a runner outside the automated deployment workflow.
+For a Helm installation, publish first and use `latest` for both workers:
+
+```sh
+make build-worker-node-default-postgresql build-worker-nestjs-postgresql
+make push-worker-node-default-postgresql push-worker-nestjs-postgresql
+helm upgrade --install eevee infrastructure/helm/eevee --namespace eevee-cefetrj \
+  --set-string workerImages.nodeDefaultPostgresql=ghcr.io/cocsi-mg/worker-node-default-postgresql-img:latest \
+  --set-string workerImages.nodeNestjsPostgresql=ghcr.io/cocsi-mg/worker-nestjs-postgresql-img:latest
+```
+
+Worker images always use `latest`, including bootstrap and local test images.
+Production Jobs pull on every start. Helm and the runner normalize legacy tag
+and digest overrides to `latest`. Upgrade Helm RBAC before rolling out a runner
+outside the automated deployment workflow.
 
 ## Minikube integration suite
 
 After building the images above and the runner, run:
 
 ```sh
-docker build -t eevee-worker-bootstrap:pg-harness-test images/worker-bootstrap
-minikube image load eevee-postgresql-node:test eevee-postgresql-nest:test eevee-worker-bootstrap:pg-harness-test
+docker build -t eevee-worker-bootstrap:latest images/worker-bootstrap
+minikube image load eevee-postgresql-node:latest eevee-postgresql-nest:latest eevee-worker-bootstrap:latest
 cd assignment-runner
 npm run build
 node scripts/test-postgresql-minikube.cjs

@@ -1,7 +1,9 @@
+import type { UserRole } from "./user";
+
 export interface AuthSession {
   userId: number;
   email: string;
-  isAdmin: boolean;
+  role: UserRole;
   expiresIn: number;
 }
 

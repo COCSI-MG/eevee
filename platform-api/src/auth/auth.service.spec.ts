@@ -1,3 +1,4 @@
+import { UserRole } from 'src/user/user-role';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { HashUtils } from 'src/utils/hash.utils';
@@ -53,7 +54,7 @@ describe('AuthService', () => {
     userService.findByEmail.mockResolvedValue({
       id: 12,
       email: 'admin@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
       passwordHash: 'hashed-password',
     });
     jest.spyOn(HashUtils, 'comparePassword').mockReturnValue(true);
@@ -70,7 +71,7 @@ describe('AuthService', () => {
       session: {
         userId: 12,
         email: 'admin@example.com',
-        isAdmin: true,
+        role: UserRole.ADMIN,
         expiresIn: 0,
       },
     });
@@ -78,7 +79,7 @@ describe('AuthService', () => {
     expect(jwtService.sign).toHaveBeenCalledWith({
       userId: 12,
       email: 'admin@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
       familyId: 'family-1',
     });
   });
@@ -87,7 +88,7 @@ describe('AuthService', () => {
     userService.findByEmail.mockResolvedValue({
       id: 12,
       email: 'admin@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
       passwordHash: 'hashed-password',
     });
     jest.spyOn(HashUtils, 'comparePassword').mockReturnValue(false);
@@ -123,7 +124,7 @@ describe('AuthService', () => {
       session: {
         userId: 33,
         email: 'student@example.com',
-        isAdmin: false,
+        role: UserRole.STUDENT,
         expiresIn: 0,
       },
     });
@@ -132,7 +133,7 @@ describe('AuthService', () => {
       email: 'student@example.com',
       password: 'secret',
       name: 'Student',
-      isAdmin: false,
+      role: UserRole.STUDENT
     });
   });
 
@@ -140,7 +141,7 @@ describe('AuthService', () => {
     userService.findByEmail.mockResolvedValue({
       id: 12,
       email: 'admin@example.com',
-      isAdmin: true,
+      role: UserRole.ADMIN,
       passwordHash: 'hashed-password',
     });
 
@@ -195,7 +196,7 @@ describe('AuthService', () => {
       userService.findOne.mockResolvedValue({
         id: 12,
         email: 'admin@example.com',
-        isAdmin: true,
+        role: UserRole.ADMIN
       });
       jwtService.sign.mockReturnValue('novo-access');
 
@@ -206,7 +207,7 @@ describe('AuthService', () => {
         session: {
           userId: 12,
           email: 'admin@example.com',
-          isAdmin: true,
+          role: UserRole.ADMIN,
           expiresIn: 0,
         },
       });
@@ -214,7 +215,7 @@ describe('AuthService', () => {
       expect(jwtService.sign).toHaveBeenCalledWith({
         email: 'admin@example.com',
         userId: 12,
-        isAdmin: true,
+        role: UserRole.ADMIN,
         familyId: 'family-1',
       });
     });
@@ -224,14 +225,14 @@ describe('AuthService', () => {
       userService.findOne.mockResolvedValue({
         id: 12,
         email: 'novo@example.com',
-        isAdmin: false,
+        role: UserRole.STUDENT
       });
       jwtService.sign.mockReturnValue('novo-access');
 
       const result = await service.refreshSession('token');
 
       expect(result).toMatchObject({
-        session: { email: 'novo@example.com', isAdmin: false },
+        session: { email: 'novo@example.com', role: UserRole.STUDENT }
       });
     });
   });
@@ -244,13 +245,13 @@ describe('AuthService', () => {
         service.buildSession({
           userId: 12,
           email: 'admin@example.com',
-          isAdmin: true,
+          role: UserRole.ADMIN,
           exp,
         }),
       ).toEqual({
         userId: 12,
         email: 'admin@example.com',
-        isAdmin: true,
+        role: UserRole.ADMIN,
         expiresIn: 900,
       });
 
@@ -262,7 +263,7 @@ describe('AuthService', () => {
         service.buildSession({
           userId: 12,
           email: 'admin@example.com',
-          isAdmin: true,
+          role: UserRole.ADMIN,
         }).expiresIn,
       ).toBe(0);
     });
@@ -272,7 +273,7 @@ describe('AuthService', () => {
         service.buildSession({
           userId: 12,
           email: 'admin@example.com',
-          isAdmin: true,
+          role: UserRole.ADMIN,
           exp: Math.floor(Date.now() / 1000) - 60,
         }).expiresIn,
       ).toBe(0);
@@ -282,7 +283,7 @@ describe('AuthService', () => {
       const session = service.buildSession({
         userId: 12,
         email: 'admin@example.com',
-        isAdmin: true,
+        role: UserRole.ADMIN,
         familyId: 'family-1',
         exp: Math.floor(Date.now() / 1000) + 60,
       });

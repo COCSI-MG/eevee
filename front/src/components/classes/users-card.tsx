@@ -1,4 +1,5 @@
 "use client";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 
 import {
   Command,
@@ -43,7 +44,7 @@ export default function UsersCard({
 
     return users.filter(
       (user) =>
-        user.isAdmin === false &&
+        user.role === UserRole.STUDENT &&
         (user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           user.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );

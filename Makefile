@@ -13,7 +13,13 @@ DOCS_PORT  ?= 8000
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front seed down prepare-workers
+.PHONY: test-invitations
+test-invitations:
+	cd platform-api && npm run test:invitations
+
+.PHONY: seed-classroom seed-classroom-preview check-classroom-seed
+
+.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front seed down prepare-workers migration-show migration-run deploy
 
 help:
 	@echo "EEVEE - comandos de desenvolvimento"
@@ -25,9 +31,16 @@ help:
 	@echo "  make up-assignment-runner  Inicia o Assignment Runner"
 	@echo "  make up-front              Inicia o frontend"
 	@echo "  make seed                  Cria os usuarios locais de demonstracao"
+	@echo "  make seed-classroom-preview Mostra as turmas e atividades a criar, sem gravar"
+	@echo "  make seed-classroom         Cria turmas, laboratorios e questionarios em rascunho"
+	@echo "  make test-invitations       Testa convites com rollback e e-mail simulado"
+	@echo "  make check-classroom-seed   Valida os exercicios sem conectar ao banco"
+	@echo "  make migration-show        Lista as migrations usando platform-api/.env"
+	@echo "  make migration-run         Aplica as migrations pendentes usando platform-api/.env"
 	@echo "  make down                  Encerra a infraestrutura local"
 	@echo "  make up-docs               Serve a documentacao em http://localhost:$(DOCS_PORT)"
 	@echo "  make check-docs            Valida a documentacao em modo estrito"
+	@echo "  make deploy                Helm install/upgrade e depois reinicia os deployments (rollout)"
 
 setup:
 	cd packages/execution-contracts && npm ci && npm run build
@@ -67,6 +80,21 @@ up-front:
 seed:
 	cd platform-api && npm run seed
 
+seed-classroom-preview:
+	cd platform-api && npm run seed:classroom:preview
+
+seed-classroom:
+	cd platform-api && npm run seed:classroom
+
+check-classroom-seed:
+	cd platform-api && npm run seed:classroom:check
+
+migration-show:
+	cd platform-api && npm run migration:show
+
+migration-run:
+	cd platform-api && npm run migration:run
+
 prepare-workers:
 	$(MAKE) -C images rebuild-all
 	minikube image load postgres:16
@@ -76,7 +104,7 @@ down:
 	minikube stop
 	cd infrastructure && docker compose down
 
-.PHONY: images build-images push-images build-workers push-workers
+.PHONY: images build-images push-images build-workers push-workers rollout-restart rollout-restart-all
 images: build-images push-images
 
 .PHONY: build-packages build-execution-contracts
@@ -123,6 +151,19 @@ push-workers: \
 	push-worker-react-cypress \
 	push-worker-python-default
 
+rollout-restart:
+	@test -n "$(DEPLOYMENT)" || { echo "Usage: make rollout-restart DEPLOYMENT=<deployment-name>"; exit 1; }
+	kubectl -n $(NAMESPACE) rollout restart deployment/$(DEPLOYMENT)
+	kubectl -n $(NAMESPACE) rollout status deployment/$(DEPLOYMENT) --timeout=5m
+
+rollout:
+	@set -e; \
+	for deployment in platform-api-deployment assignment-runner-deployment eevee-front-deployment eevee-entrypoint-gateway; do \
+		echo "Restarting $$deployment"; \
+		kubectl -n $(NAMESPACE) rollout restart deployment/$$deployment; \
+		kubectl -n $(NAMESPACE) rollout status deployment/$$deployment --timeout=5m; \
+	done
+
 # Per-image targets ----------------------------------------------------------
 # Each app/worker has a `build-*` and `push-*` target so a single image can be
 # rebuilt without re-running the whole pipeline.
@@ -146,57 +187,57 @@ push-front:
 
 .PHONY: build-eevee-worker-bootstrap push-eevee-worker-bootstrap
 build-eevee-worker-bootstrap:
-	docker build -t $(GHCR_NAMESPACE)/eevee-worker-bootstrap:$(TAG) images/worker-bootstrap
+	docker build -t $(GHCR_NAMESPACE)/eevee-worker-bootstrap:latest images/worker-bootstrap
 push-eevee-worker-bootstrap:
-	docker push $(GHCR_NAMESPACE)/eevee-worker-bootstrap:$(TAG)
+	docker push $(GHCR_NAMESPACE)/eevee-worker-bootstrap:latest
 
 .PHONY: build-worker-node-default push-worker-node-default
 build-worker-node-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG) images/node/node-default
+	docker build -t $(GHCR_NAMESPACE)/worker-node-default-img:latest images/node/node-default
 push-worker-node-default:
-	docker push $(GHCR_NAMESPACE)/worker-node-default-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-default-img:latest
 
 .PHONY: build-worker-node-javascript-default push-worker-node-javascript-default
 build-worker-node-javascript-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-javascript-default-img:$(TAG) images/javascript-default
+	docker build -t $(GHCR_NAMESPACE)/worker-node-javascript-default-img:latest images/javascript-default
 push-worker-node-javascript-default:
-	docker push $(GHCR_NAMESPACE)/worker-node-javascript-default-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-javascript-default-img:latest
 
 .PHONY: build-worker-node-teraorm push-worker-node-teraorm
 build-worker-node-teraorm:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG) images/node/node-teraorm
+	docker build -t $(GHCR_NAMESPACE)/worker-node-teraorm-img:latest images/node/node-teraorm
 push-worker-node-teraorm:
-	docker push $(GHCR_NAMESPACE)/worker-node-teraorm-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-teraorm-img:latest
 
 .PHONY: build-worker-nestjs-default push-worker-nestjs-default
 build-worker-nestjs-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-nestjs-default-img:$(TAG) images/node/nest.js
+	docker build -t $(GHCR_NAMESPACE)/worker-nestjs-default-img:latest images/node/nest.js
 push-worker-nestjs-default:
-	docker push $(GHCR_NAMESPACE)/worker-nestjs-default-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-nestjs-default-img:latest
 
 .PHONY: build-worker-node-grpcjs push-worker-node-grpcjs
 build-worker-node-grpcjs:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG) -f images/node/grpc/Dockerfile images
+	docker build -t $(GHCR_NAMESPACE)/worker-node-grpcjs-img:latest -f images/node/grpc/Dockerfile images
 push-worker-node-grpcjs:
-	docker push $(GHCR_NAMESPACE)/worker-node-grpcjs-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-grpcjs-img:latest
 
 .PHONY: build-worker-node-nextjs-cypress push-worker-node-nextjs-cypress
 build-worker-node-nextjs-cypress:
-	docker build -t $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:$(TAG) images/node/next.js-cypress
+	docker build -t $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:latest images/node/next.js-cypress
 push-worker-node-nextjs-cypress:
-	docker push $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-nextjs-cypress-img:latest
 
 .PHONY: build-worker-react-cypress push-worker-react-cypress
 build-worker-react-cypress:
-	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG) images/node/reactjs-cypress
+	docker build -t $(GHCR_NAMESPACE)/worker-react-cypress-img:latest images/node/reactjs-cypress
 push-worker-react-cypress:
-	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-react-cypress-img:latest
 
 .PHONY: build-worker-python-default push-worker-python-default
 build-worker-python-default:
-	docker build -t $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG) images/python-default
+	docker build -t $(GHCR_NAMESPACE)/worker-python-default-img:latest images/python-default
 push-worker-python-default:
-	docker push $(GHCR_NAMESPACE)/worker-python-default-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-python-default-img:latest
 
 proxy:
 	@echo Starting backup VM reverse-proxy tunnel to single entrypoint NodePort
@@ -220,6 +261,8 @@ install:
 		--set assignmentRunner.image.pullPolicy=Always \
 		$(if $(wildcard $(VALUES)),-f $(VALUES))
 
+deploy: install rollout
+
 uninstall:
 	helm uninstall $(HELM_RELEASE) -n $(NAMESPACE)
 
@@ -242,12 +285,12 @@ check-docs: build-docs
 		mkdocs build --strict --site-dir /tmp/site
 .PHONY: build-worker-node-default-postgresql push-worker-node-default-postgresql
 build-worker-node-default-postgresql:
-	docker build --build-arg WORKER=node-default -f images/node/postgresql/Dockerfile -t $(GHCR_NAMESPACE)/worker-node-default-postgresql-img:$(TAG) .
+	docker build --build-arg WORKER=node-default -f images/node/postgresql/Dockerfile -t $(GHCR_NAMESPACE)/worker-node-default-postgresql-img:latest .
 push-worker-node-default-postgresql:
-	docker push $(GHCR_NAMESPACE)/worker-node-default-postgresql-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-node-default-postgresql-img:latest
 
 .PHONY: build-worker-nestjs-postgresql push-worker-nestjs-postgresql
 build-worker-nestjs-postgresql:
-	docker build --build-arg WORKER=nest.js -f images/node/postgresql/Dockerfile -t $(GHCR_NAMESPACE)/worker-nestjs-postgresql-img:$(TAG) .
+	docker build --build-arg WORKER=nest.js -f images/node/postgresql/Dockerfile -t $(GHCR_NAMESPACE)/worker-nestjs-postgresql-img:latest .
 push-worker-nestjs-postgresql:
-	docker push $(GHCR_NAMESPACE)/worker-nestjs-postgresql-img:$(TAG)
+	docker push $(GHCR_NAMESPACE)/worker-nestjs-postgresql-img:latest

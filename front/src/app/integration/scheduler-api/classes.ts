@@ -1,6 +1,7 @@
 import {
   Class,
   ClassOption,
+  ClassStatusFilter,
   UpsertClass
 } from "@/app/interface/scheduler-api/class";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
@@ -10,6 +11,8 @@ interface ListPaginatedClassesParams {
   page?: number;
   pageSize?: number;
   search?: string;
+  includeArchived?: boolean;
+  status?: ClassStatusFilter;
 }
 
 export class ClassesService {
@@ -47,6 +50,11 @@ export class ClassesService {
 
   static async remove(id: number): Promise<void> {
     return await axiosClientWithAuth.delete(`/class/${id}`);
+  }
+
+  static async restore(id: number): Promise<Class> {
+    const response = await axiosClientWithAuth.patch(`/class/${id}/restore`)
+    return response.data
   }
 
   static async listPaginated(

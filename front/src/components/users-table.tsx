@@ -1,4 +1,5 @@
 "use client";
+import { User, UserRole } from "@/app/interface/scheduler-api/user";
 
 import {
   Table,
@@ -10,7 +11,6 @@ import {
 } from "./ui/table";
 import { Badge } from "./ui/badge";
 import TableActions from "./table/table-actions";
-import { User } from "@/app/interface/scheduler-api/user";
 
 interface UsersTableProps {
   users: User[] | undefined;
@@ -24,6 +24,13 @@ export default function UsersTable({
   emptyMessage = "Nenhum usuário encontrado.",
 }: UsersTableProps) {
   const rows = users ?? [];
+
+  const userRoleLabel: Record<UserRole, string> = {
+    [UserRole.STUDENT]: "Aluno",
+    [UserRole.TEACHER]: "Professor",
+    [UserRole.ADMIN]: "Administrador"
+  }
+
 
   return (
     <Table>
@@ -55,8 +62,8 @@ export default function UsersTable({
               <TableCell className="font-medium">{user.name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>
-                <Badge variant={user.isAdmin ? "default" : "outline"}>
-                  {user.isAdmin ? "Administrador" : "Usuário"}
+                <Badge variant={user.role === UserRole.ADMIN ? "default" : "outline"}>
+                  { userRoleLabel[user.role] }
                 </Badge>
               </TableCell>
               <TableCell>
@@ -65,8 +72,10 @@ export default function UsersTable({
                   onDelete={() => handleDelete(user.id)}
                   resourceName="usuário"
                   itemName={`${user.name} (${user.email})`}
-                  deleteTitle="Excluir este usuário?"
-                  deleteDescription={`O usuário ${user.name} perderá o acesso à plataforma. Suas tentativas e demais registros históricos serão preservados.`}
+                  deleteTitle="Desativar esta conta?"
+                  deleteDescription={`A conta de ${user.name} perderá o acesso imediatamente. As sessões serão revogadas e os registros históricos serão preservados.`}
+                  deleteActionLabel="Desativar conta"
+                  deleteMenuLabel="Desativar"
                 />
               </TableCell>
             </TableRow>

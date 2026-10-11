@@ -150,16 +150,18 @@ export function useDevToolsGuard({
       return;
     }
 
-    let hasDetectedDevTools = false;
+    let devToolsEpisodeActive = false;
+    let clearDetectionCount = 0;
     let isDetectingDevTools = false;
     const detectionCounts = new Map<SecurityViolationReason, number>();
 
     const reportDevToolsDetected = (reason: SecurityViolationReason) => {
-      if (hasDetectedDevTools) {
+      if (devToolsEpisodeActive) {
         return;
       }
 
-      hasDetectedDevTools = true;
+      devToolsEpisodeActive = true;
+      clearDetectionCount = 0;
       onDetected(reason);
     };
 
@@ -180,7 +182,7 @@ export function useDevToolsGuard({
     };
 
     const detectDevTools = async () => {
-      if (hasDetectedDevTools || isDetectingDevTools) {
+      if (isDetectingDevTools) {
         return;
       }
 
@@ -194,9 +196,14 @@ export function useDevToolsGuard({
           getDevToolsDebuggerReason();
 
         if (reason) {
+          clearDetectionCount = 0;
           reportConfirmedDevToolsDetected(reason);
         } else {
           detectionCounts.clear();
+          clearDetectionCount += 1;
+          if (clearDetectionCount >= 2) {
+            devToolsEpisodeActive = false;
+          }
         }
       } finally {
         isDetectingDevTools = false;

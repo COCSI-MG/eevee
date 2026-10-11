@@ -11,6 +11,9 @@ on:
       - "images/node/nest.js/**"
       - ".github/workflows/postgresql-workers.yaml"
       - "packages/execution-contracts/**"
+      - "scripts/deploy-release.sh"
+      - "scripts/test-deploy-release.sh"
+      - ".github/workflows/validate-deployment.yaml"
       - ".github/actions/remote-kubectl/**"
       - ".github/workflows/deploy-assignment-runner.yaml"
 
@@ -19,7 +22,12 @@ env:
   ASSIGNMENT_RUNNER_IMAGE: "${{ vars.ASSIGNMENT_RUNNER_IMAGE || 'cocsi-mg/eevee-assignment-runner' }}"
 
 jobs:
+  validate:
+    uses: ./.github/workflows/validate-deployment.yaml
+    secrets: inherit
+
   postgresql-workers:
+    needs: validate
     uses: ./.github/workflows/postgresql-workers.yaml
     permissions:
       contents: read
@@ -28,8 +36,12 @@ jobs:
       publish: true
 
   build-and-deploy:
-    needs: postgresql-workers
+    needs: [validate, postgresql-workers]
     runs-on: ubuntu-latest
+    concurrency:
+      group: eevee-production-deploy
+      cancel-in-progress: false
+      queue: max
     permissions:
       contents: read
       packages: write
@@ -37,6 +49,14 @@ jobs:
     steps:
       - name: Checkout do codigo
         uses: actions/checkout@v4
+
+      - name: Check deployment value precedence
+        run: bash scripts/test-deploy-release.sh
+
+      - name: Set worker registry namespace
+        id: worker-registry
+        shell: bash
+        run: echo "namespace=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Login no GitHub Container Registry
         uses: docker/login-action@v3
@@ -46,7 +66,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build e Push da Imagem Docker
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./assignment-runner/Dockerfile
@@ -65,41 +85,21 @@ jobs:
           private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
           known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
           script: |
-            RUNNER_SERVICE_ACCOUNT=$(kubectl get deployment assignment-runner-deployment -n eevee-cefetrj -o jsonpath='{.spec.template.spec.serviceAccountName}')
-            kubectl apply -n eevee-cefetrj -f - <<YAML
-            apiVersion: rbac.authorization.k8s.io/v1
-            kind: Role
-            metadata:
-              name: postgresql-worker-lifecycle
-            rules:
-              - apiGroups: [""]
-                resources: ["configmaps"]
-                verbs: ["create", "get", "delete"]
-              - apiGroups: [""]
-                resources: ["pods"]
-                verbs: ["get", "list", "delete"]
-            ---
-            apiVersion: rbac.authorization.k8s.io/v1
-            kind: RoleBinding
-            metadata:
-              name: postgresql-worker-lifecycle
-            roleRef:
-              apiGroup: rbac.authorization.k8s.io
-              kind: Role
-              name: postgresql-worker-lifecycle
-            subjects:
-              - kind: ServiceAccount
-                name: ${RUNNER_SERVICE_ACCOUNT:-default}
-                namespace: eevee-cefetrj
-            YAML
-            kubectl patch deployment assignment-runner-deployment -n eevee-cefetrj --type=strategic -p '
-              {"spec":{"template":{"spec":{"containers":[{"name":"assignment-runner",
-                "image":"${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}:${{ github.sha }}",
-                "env":[
-                  {"name":"WORKER_IMAGE_NODE_DEFAULT_POSTGRESQL","value":"ghcr.io/${{ github.repository_owner }}/worker-node-default-postgresql-img:${{ github.sha }}"},
-                  {"name":"WORKER_IMAGE_NODE_NESTJS_POSTGRESQL","value":"ghcr.io/${{ github.repository_owner }}/worker-nestjs-postgresql-img:${{ github.sha }}"}
-                ]
-              }]}}}}'
+            set -euo pipefail
+            DEPLOY_WORKDIR='${{ vars.DEPLOY_WORKDIR }}'
+            : "${DEPLOY_WORKDIR:?Set the repository variable DEPLOY_WORKDIR (not a secret)}"
+            cd "$DEPLOY_WORKDIR"
+            git rev-parse --show-toplevel
+            git fetch origin '${{ github.sha }}'
+            CHART_WORKDIR=$(mktemp -d)
+            trap 'rm -rf "$CHART_WORKDIR"' EXIT
+            git archive '${{ github.sha }}' infrastructure/helm/eevee scripts/deploy-release.sh | tar -x -C "$CHART_WORKDIR"
+            export CHART="$CHART_WORKDIR/infrastructure/helm/eevee"
+            bash "$CHART_WORKDIR/scripts/deploy-release.sh" \
+              --set-string assignmentRunner.image.repository="${{ env.REGISTRY }}/${{ env.ASSIGNMENT_RUNNER_IMAGE }}" \
+              --set-string assignmentRunner.image.tag='${{ github.sha }}' \
+              --set-string workerImages.nodeDefaultPostgresql="${{ steps.worker-registry.outputs.namespace }}/worker-node-default-postgresql-img:latest" \
+              --set-string workerImages.nodeNestjsPostgresql="${{ steps.worker-registry.outputs.namespace }}/worker-nestjs-postgresql-img:latest"
             if ! kubectl rollout status deployment/assignment-runner-deployment -n eevee-cefetrj --timeout=5m; then
               kubectl get pods -n eevee-cefetrj -o wide
               kubectl describe deployment/assignment-runner-deployment -n eevee-cefetrj

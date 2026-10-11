@@ -15,13 +15,10 @@ import { RequestContextModule } from './request-context/request-context.module';
 import { ClsModule } from 'nestjs-cls';
 import { RequestContextMiddleware } from './request-context/request-context.middleware';
 import { TemplateModule } from './template/template.module';
-import { AssignmentTemplateModule } from './assignment-template/assignment-template.module';
-import { TemplateParamsModule } from './template-params/template-params.module';
-import { AssignmentParamsModule } from './assignment-params/assignment-params.module';
 import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import { GithubModule } from './github/github.module';
-import { AssignmentUserSuspensionModule } from './assignment-user-suspension/assignment-user-suspension.module';
+import { AssignmentAlertModule } from './assignment-alert/assignment-alert.module';
 import { DatabaseModule } from './database/database.module';
 import { CookieParserMiddleware } from './auth/auth-cookie.middleware';
 import { ThrottlerModule } from '@nestjs/throttler';
@@ -35,6 +32,10 @@ import { TemplateTestModule } from './template-test/template-test.module';
 import { AnswerKeyModule } from './answer-key/answer-key.module';
 import { ExamModule } from './exam/exam.module';
 import { ExecutionPlatformEventsModule } from './execution/execution-platform-events.module';
+import { LearningActivityModule } from './learning-activity/learning-activity.module';
+import { InvitationModule } from './invitation/invitation.module';
+
+import { ClassAccessModule } from './auth/class-access.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -55,6 +56,7 @@ import { ExecutionPlatformEventsModule } from './execution/execution-platform-ev
       ],
     }),
     DatabaseModule,
+    ClassAccessModule,
     NestScheduleModule.forRoot(),
     RequestContextModule,
     SchedulingModule,
@@ -66,12 +68,9 @@ import { ExecutionPlatformEventsModule } from './execution/execution-platform-ev
     PassportModule,
     AuthModule,
     TemplateModule,
-    AssignmentTemplateModule,
-    TemplateParamsModule,
-    AssignmentParamsModule,
     FileSaverModule,
     GithubModule,
-    AssignmentUserSuspensionModule,
+    AssignmentAlertModule,
     InterviewResponseModule,
     MailModule,
     RealtimeModule,
@@ -79,6 +78,8 @@ import { ExecutionPlatformEventsModule } from './execution/execution-platform-ev
     AnswerKeyModule,
     ExamModule,
     ExecutionPlatformEventsModule,
+    LearningActivityModule,
+    InvitationModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,4 +1,4 @@
-import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
+import { TemplateParamType } from 'src/template/enums/template-param-type.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 export type TemplateVariablesLanguage = 'typescript' | 'javascript';

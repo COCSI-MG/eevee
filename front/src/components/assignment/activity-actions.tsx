@@ -20,17 +20,17 @@ export const WorkspaceLinkComponent = ({
   </Link>
 );
 
-export const ViewUserSuspensionComponent = ({
+export const ViewAssignmentAlertsComponent = ({
   assignmentId,
 }: {
   assignmentId: string;
 }) => (
   <Link
-    href={`${AppRoutes.AdminAssignments}/${AppRoutes.AssignmenstUsersSuspensions}/${assignmentId}`}
+    href={`${AppRoutes.AdminAssignments}/${AppRoutes.AssignmentAlerts}/${assignmentId}`}
   >
     <DropdownMenuItem>
       <UserCog className="h-4 w-4" />
-      Usuários Suspensos
+      Alertas e bloqueios
     </DropdownMenuItem>
   </Link>
 );

@@ -1,12 +1,16 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { AdminGuard } from 'src/auth/guards/admin.guard';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 import { WorkerResponse } from 'src/worker/worker.interfaces';
 import { TestTemplateDto } from './dto/test-template.dto';
 import { TemplateTestService } from './template-test.service';
 
 @Controller('template')
-@UseGuards(AdminGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN, UserRole.TEACHER)
 export class TemplateTestController {
   constructor(private readonly service: TemplateTestService) {}
 

@@ -20,6 +20,7 @@ import { Cron, Interval } from '@nestjs/schedule';
 import { readFile, rm } from 'node:fs/promises';
 import GithubService from 'src/github/github.service';
 import { ClsService } from 'nestjs-cls';
+import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 
 @Injectable()
 export class FileSaverService {
@@ -34,6 +35,7 @@ export class FileSaverService {
     private readonly fileSaverQueue: Queue,
     private githubService: GithubService,
     private clsService: ClsService,
+    private readonly assignmentAlertService: AssignmentAlertService
   ) {}
 
   async createFileEntry(
@@ -118,6 +120,7 @@ export class FileSaverService {
     file: Express.Multer.File,
     fileUploadDto: FileUploadDto,
   ): Promise<FileEntry> {
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(fileUploadDto.assignmentId);
     const user = this.clsService.get('user');
     const uploadDir = resolve(__dirname, '..', '..', '..', 'uploads');
     const assignmentDir = `${uploadDir}/assignment-${fileUploadDto.assignmentId}`;

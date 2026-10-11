@@ -16,6 +16,7 @@ export interface TemplateParam {
 
 export interface Template {
   id: number;
+  classId: number | null;
   title: string;
   description: string;
   workerType: WorkerType;
@@ -26,6 +27,7 @@ export interface Template {
 
 export interface CreateTemplateRequest {
   id?: number; // Optional for new templates
+  classId: number | null;
   title: string;
   description: string;
   workerType: WorkerType;
@@ -36,6 +38,7 @@ export interface CreateTemplateRequest {
 }
 
 export interface TestTemplateRequest {
+  classId: number;
   workerType: WorkerType;
   templateContent: string;
   applicationFileContent: string;

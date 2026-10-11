@@ -1,5 +1,7 @@
 "use client";
 
+import { UserRole } from "@/app/interface/scheduler-api/user";
+
 import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
 import { Route } from "@/app/routes";
@@ -44,6 +46,11 @@ export function useWorkspaceCorrection({
       }
     },
     Boolean(assignment?.id),
+    () => {
+      void queryClient.invalidateQueries({
+        queryKey: ["assignment", assignment?.id],
+      });
+    },
   );
 
   const correctionStorageKey = React.useMemo(() => {
@@ -152,7 +159,7 @@ export function useWorkspaceCorrection({
           duration: 5000,
         });
 
-        if (user?.isAdmin) {
+        if (user?.role === UserRole.ADMIN) {
           const params = new URLSearchParams({
             assignmentId: String(assignment?.id ?? ""),
             userSearch: user.email,

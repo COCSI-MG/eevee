@@ -5,6 +5,7 @@ export const EXECUTION_REQUEST_QUEUE = 'execution-requests';
 export type ExecutionLifecycleStatus = 'running' | 'completed' | 'failed';
 
 export interface ExecutionWorkerPayload {
+  executionMode?: 'graded' | 'adhoc';
   applicationFileContent?: string;
   files?: Record<string, string> | null;
   testFilesContent?: string[];

@@ -36,8 +36,8 @@ export default function UsersPage() {
     try {
       await UsersService.deleteUser(id);
       toast({
-        title: "Usuário excluído",
-        description: "O usuário foi excluído com sucesso.",
+        title: "Conta desativada",
+        description: "O acesso foi revogado e o histórico foi preservado.",
         duration: 4000,
       });
       refetch();
@@ -60,7 +60,7 @@ export default function UsersPage() {
       toast({
         title: "Erro",
         description:
-          err instanceof Error ? err.message : "Falha ao excluir usuário.",
+          err instanceof Error ? err.message : "Falha ao desativar conta.",
         variant: "destructive",
         duration: 4000,
       });
@@ -99,6 +99,7 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-6">
+      <Link href="/admin/invitations" className="inline-block rounded-lg bg-primary px-4 py-2 text-primary-foreground">Convidar alunos por e-mail</Link>
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Usuários</h1>
         <Link href="/admin/users/new">

@@ -1,10 +1,13 @@
 "use client";
 
+import { UserRole } from "@/app/interface/scheduler-api/user";
+
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthService } from "../integration/scheduler-api/auth-service";
 import { renewSession } from "../integration/scheduler-api/client";
 import { AuthSession } from "../interface/scheduler-api/auth";
+import { getDefaultRouteForRole } from "../routes";
 
 const AUTH_ROUTES = new Set(["/login", "/register"]);
 const RENEWAL_RATIO = 0.8;
@@ -31,6 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthSession | null>(null);
   const [isHydrating, setIsHydrating] = useState(true);
   const refreshRequestIdRef = useRef(0);
+
+  const validationStudentWrongPath = pathname.startsWith("/admin") && user && user.role === UserRole.STUDENT
+  const validationTeacherWrongPath = pathname === "/admin" && user?.role === UserRole.TEACHER
 
   const setSession = useCallback((session: AuthSession | null) => {
     refreshRequestIdRef.current += 1;
@@ -103,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (isAuthRoute(pathname) && user) {
-      router.replace(user.isAdmin ? "/admin" : "/classes");
+      router.replace(getDefaultRouteForRole(user.role));
       return;
     }
 
@@ -112,9 +118,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    if (pathname.startsWith("/admin") && user && !user.isAdmin) {
-      router.replace("/classes");
-    }
+    if (validationStudentWrongPath) router.replace("/classes");
+
+    if (validationTeacherWrongPath) router.replace("/admin/classes");
+
   }, [isHydrating, pathname, router, user]);
 
   const logout = useCallback(async () => {
@@ -134,7 +141,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isProtectedRoute(pathname) ||
         pathname.startsWith("/admin"))) ||
     (isAuthRoute(pathname) && user) ||
-    (pathname.startsWith("/admin") && user && !user.isAdmin) ||
+    validationStudentWrongPath ||
+    validationTeacherWrongPath ||
     (!user && (isProtectedRoute(pathname) || pathname.startsWith("/admin")));
 
   if (shouldHideContent) {

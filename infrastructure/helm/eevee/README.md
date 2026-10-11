@@ -3,22 +3,57 @@
 Umbrella chart that deploys the whole EEVEE platform onto Kubernetes in a
 single release:
 
-| Component       | Templates                                         |
-| --------------- | ------------------------------------------------- |
-| Postgres        | Deployment + Service + PVC                        |
-| Redis           | Deployment + Service                              |
-| Platform API    | Deployment + Service                              |
-| Assignment Runner | Deployment + RBAC (ServiceAccount/Role)         |
-| Frontend        | Deployment + Service                              |
-| Entrypoint      | Nginx gateway + NodePort Service                  |
-| Ingress (nginx) | Ingress with optional TLS                         |
-| cert-manager    | Namespace-scoped `Issuer` (optional)              |
-| Config / Secret | `eevee-config` ConfigMap + `eevee-secrets` Secret |
+| Component         | Templates                                         |
+| ----------------- | ------------------------------------------------- |
+| Postgres          | Deployment + Service + PVC                        |
+| Redis             | Deployment + Service                              |
+| Platform API      | Deployment + Service                              |
+| Assignment Runner | Deployment + RBAC (ServiceAccount/Role)           |
+| Frontend          | Deployment + Service                              |
+| Entrypoint        | Nginx gateway + NodePort Service                  |
+| Ingress (nginx)   | Ingress with optional TLS                         |
+| cert-manager      | Namespace-scoped `Issuer` (optional)              |
+| Config / Secret   | `eevee-config` ConfigMap + `eevee-secrets` Secret |
 
 This replaces the previous raw manifests under `k8s/` and the Kustomize
 `overlays/prod` overlay.
 
 ## Operator workflow (shared cluster, namespace-scoped)
+
+### CI configuration and image ownership
+
+Before any deployment workflow builds or publishes application/worker images,
+`validate-deployment.yaml` runs all three applications' unit tests and compilation,
+checks the Helm chart and deployment script, and validates the jumpbox checkout,
+required secrets, resource permissions, and a server-connected Helm dry run.
+PostgreSQL worker publication also depends on this gate and its existing lifecycle
+smoke tests. These checks do not guarantee application behavior under production
+load or replace database migration planning.
+
+Set **repository variable** `DEPLOY_WORKDIR=/home/eevee-cefetrj/eevee` (not an
+Actions secret). The workflow fails with an explicit message if it is missing.
+Rerunning an old Actions run uses its original commit; start a new run on updated
+`main` to execute newly merged workflow fixes.
+
+All four deployment workflows use `scripts/deploy-release.sh`. Each upgrade
+resets Helm values and explicitly loads this chart's committed `values.yaml`.
+Memory limits, Node options, and other configuration therefore come from Git;
+old release values cannot silently override a configuration change. Move any
+intentional production overrides into the committed values before deploying.
+
+The script reads the three live application Deployments and preserves their
+image repositories and tags, including images previously changed with kubectl.
+The service workflow then overrides its own image with the newly built commit
+SHA. Infrastructure-only changes preserve all three application images. Missing
+Deployments use chart defaults on first install; failed Kubernetes reads abort.
+Digest image references currently fail explicitly because the chart expects tags.
+
+Chart changes trigger the infrastructure workflow automatically. All deployment
+jobs share the production concurrency group. Secrets remain provisioned
+out-of-band and are not recreated or rotated by an infrastructure deployment.
+
+Run `bash scripts/test-deploy-release.sh` to check image preservation, override
+precedence, first installs, and failure handling without accessing a cluster.
 
 Secrets and the GHCR pull secret are **created out-of-band**. Helm only
 references them by name and never manages their lifecycle (this avoids
@@ -33,7 +68,7 @@ CHART=infrastructure/helm/eevee
 ### 1. Create the GHCR image pull secret
 
 The COCSI-MG packages are private; the cluster needs a docker-registry
-secret to pull them. Paste your PAT directly into the terminal — do not
+secret to pull them. Paste your PAT directly into the terminal - do not
 commit it.
 
 ```bash
@@ -132,7 +167,7 @@ If you change the external setup, update:
 
 ## Node pinning
 
-All pods — including worker Jobs spawned by Assignment Runner at runtime —
+All pods - including worker Jobs spawned by Assignment Runner at runtime -
 are pinned to a single node via `nodeSelector.kubernetes.io/hostname`
 (default `whx-rn`). Change `nodeSelector` in values to retarget, or set
 it to `{}` to schedule freely.
@@ -140,7 +175,7 @@ it to `{}` to schedule freely.
 ## Overriding worker images
 
 Assignment Runner reads worker image names from environment variables,
-so new image tags don't require a code change — just bump
+so new image tags don't require a code change - just bump
 `workerImages.*` in values and `helm upgrade`. Defaults point to the
 COCSI-MG GHCR packages:
 
@@ -150,4 +185,5 @@ workerImages:
   nodeDefault: ghcr.io/cocsi-mg/worker-node-default-img:latest
   # ...
   nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:latest
+  pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:latest
 ```

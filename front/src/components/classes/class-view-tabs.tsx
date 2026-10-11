@@ -5,12 +5,22 @@ import { BookOpen, GraduationCap } from "lucide-react";
 import ClassesAssignments from "@/components/assignment/classes-assignments";
 import ClassesExams from "@/components/exam/classes-exams";
 import { Button } from "@/components/ui/button";
+import { LearningActivityList } from "@/components/learning/activity-list";
 
-type View = "assignments" | "exams";
+export enum ClassView {
+  ASSIGNMENTS = "assignments",
+  EXAMS = "exams",
+  LEARNING = "learning",
+}
 
-const VIEWS: { key: View; label: string; icon: typeof BookOpen }[] = [
-  { key: "assignments", label: "Tarefas", icon: BookOpen },
-  { key: "exams", label: "Provas", icon: GraduationCap },
+const VIEWS: { key: ClassView; label: string; icon: typeof BookOpen }[] = [
+  { key: ClassView.ASSIGNMENTS, label: "Tarefas", icon: BookOpen },
+  { key: ClassView.EXAMS, label: "Provas", icon: GraduationCap },
+  {
+    key: ClassView.LEARNING,
+    label: "Práticas e questionários",
+    icon: BookOpen,
+  },
 ];
 
 export default function ClassViewTabs() {
@@ -19,16 +29,19 @@ export default function ClassViewTabs() {
   const searchParams = useSearchParams();
 
   const raw = searchParams.get("view");
-  const current: View = raw === "exams" ? "exams" : "assignments";
+  const current: ClassView =
+    raw === ClassView.EXAMS || raw === ClassView.LEARNING
+      ? raw
+      : ClassView.ASSIGNMENTS;
 
-  const setView = (next: View) => {
-    const qs = next === "assignments" ? "" : `?view=${next}`;
+  const setView = (next: ClassView) => {
+    const qs = next === ClassView.ASSIGNMENTS ? "" : `?view=${next}`;
     router.replace(`/classes/${id}${qs}`, { scroll: false });
   };
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-6 border-b border-border/50 pb-4">
+      <div className="flex flex-wrap items-center gap-2 mb-6 border-b border-border/50 pb-4">
         {VIEWS.map(({ key, label, icon: Icon }) => (
           <Button
             key={key}
@@ -42,7 +55,9 @@ export default function ClassViewTabs() {
         ))}
       </div>
 
-      {current === "assignments" ? (
+      {current === ClassView.LEARNING ? (
+        <LearningActivityList classId={Number(id)} />
+      ) : current === ClassView.ASSIGNMENTS ? (
         <ClassesAssignments />
       ) : (
         <ClassesExams />

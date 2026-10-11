@@ -30,6 +30,7 @@ interface TemplateCardProps {
     React.SetStateAction<SelectedTemplate[] | null>
   >;
   workerType: WorkerType;
+  classId: number;
   onWeightChange: (templateId: number, weight: number | undefined) => void;
   weightError: string | null;
 }
@@ -83,6 +84,7 @@ export default function TemplateCard({
   selectedTemplates,
   setSelectedTemplates,
   workerType,
+  classId,
   onWeightChange,
   weightError,
 }: TemplateCardProps) {
@@ -111,7 +113,7 @@ export default function TemplateCard({
     isFetching: isFetchingTemplates,
     isError: isTemplatesError,
     refetch: refetchTemplates,
-  } = useTemplates(normalizedWorkerType);
+  } = useTemplates(normalizedWorkerType, classId);
 
   // why are we using reducer again?
 

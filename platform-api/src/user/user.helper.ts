@@ -7,6 +7,7 @@ export class UserHelper {
       id: user.id,
       email: user.email,
       name: user.name,
+      role: user.role,
       userClasses: user.userClasses?.map((userClass) => ({
         id: userClass.id,
         classes: userClass.class.map(ClassHelper.toResponseDto),

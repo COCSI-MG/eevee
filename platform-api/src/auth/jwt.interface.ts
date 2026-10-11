@@ -1,7 +1,9 @@
+import { UserRole } from 'src/user/user-role';
+
 export interface JwtPayload {
   email: string;
   userId: number;
-  isAdmin: boolean;
+  role: UserRole;
   familyId?: string;
   exp?: number;
 }

@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { UserRole } from 'src/user/user-role';
 
 export class AuthSessionResponseDto {
   @ApiProperty()
@@ -7,8 +8,8 @@ export class AuthSessionResponseDto {
   @ApiProperty()
   email: string;
 
-  @ApiProperty()
-  isAdmin: boolean;
+  @ApiProperty({ enum: Object.values(UserRole) })
+  role: UserRole;
 
   @ApiProperty({ description: 'Segundos restantes até o token de acesso vencer' })
   expiresIn: number;

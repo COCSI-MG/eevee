@@ -18,9 +18,14 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "migration:generate": "npm run build && npx typeorm migration:generate -d ./dist/data-source.js -p",
-    "migration:run": "npm run build && npx typeorm migration:run -d ./dist/data-source.js",
+    "test:invitations": "npm run build && node dist/scripts/test-invitations.js",
+    "migration:generate": "npm run build && typeorm migration:generate -d ./dist/data-source.js -p",
+    "migration:show": "npm run build && typeorm migration:show -d ./dist/data-source.js",
+    "migration:run": "npm run build && typeorm migration:run -d ./dist/data-source.js",
     "seed": "ts-node scripts/seed.ts",
+    "seed:classroom": "npm run build && node dist/scripts/seed-classroom.js --apply",
+    "seed:classroom:preview": "npm run build && node dist/scripts/seed-classroom.js --preview",
+    "seed:classroom:check": "npm run build && node scripts/classroom/verify.mjs",
     "seed:teraorm-study": "ts-node scripts/seed-teraorm-ab-study.ts",
     "script:add-resource": "nest g resource",
     "script:generate-jwt-key": "node -e \"console.log(require('crypto').randomBytes(60).toString('base64'))\""
@@ -39,6 +44,7 @@
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.0.3",
     "@nestjs/throttler": "^6.5.0",
+    "@azure/msal-node": "^3.8.1",
     "@nestjs/typeorm": "^11.0.0",
     "@nestjs/websockets": "^11.1.28",
     "bcrypt": "^5.1.1",
@@ -91,6 +97,10 @@
       "ts"
     ],
     "rootDir": "src",
+    "roots": [
+      "<rootDir>",
+      "<rootDir>/../scripts"
+    ],
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

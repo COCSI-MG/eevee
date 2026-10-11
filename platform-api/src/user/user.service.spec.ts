@@ -1,8 +1,10 @@
+import { UserRole } from 'src/user/user-role';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
 import { HashUtils } from 'src/utils/hash.utils';
+import { RefreshSession } from 'src/auth/entities/refresh-session.entity';
 
 describe('UserService', () => {
   let service: UserService;
@@ -13,6 +15,7 @@ describe('UserService', () => {
     softDelete: jest.Mock;
     createQueryBuilder: jest.Mock;
   };
+  let refreshSessionRepository: { update: jest.Mock }
 
   beforeEach(async () => {
     userRepository = {
@@ -22,6 +25,7 @@ describe('UserService', () => {
       softDelete: jest.fn(),
       createQueryBuilder: jest.fn(),
     };
+    refreshSessionRepository = { update: jest.fn().mockResolvedValue({ affected: 1 }) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -30,6 +34,10 @@ describe('UserService', () => {
           provide: getRepositoryToken(User),
           useValue: userRepository,
         },
+        {
+          provide: getRepositoryToken(RefreshSession),
+          useValue: refreshSessionRepository
+        }
       ],
     }).compile();
 
@@ -45,7 +53,7 @@ describe('UserService', () => {
       email: 'teacher@example.com',
       name: 'Teacher',
       password: 'plain-password',
-      isAdmin: false,
+      role: UserRole.STUDENT
     };
 
     jest.spyOn(HashUtils, 'hashPassword').mockReturnValue('hashed-password');
@@ -55,7 +63,7 @@ describe('UserService', () => {
       id: 10,
       email: dto.email,
       name: dto.name,
-      isAdmin: dto.isAdmin,
+      role: dto.role,
       userClasses: [],
       } as unknown as User);
     userRepository.save.mockResolvedValue({ id: 10 } as User);
@@ -67,7 +75,7 @@ describe('UserService', () => {
       expect.objectContaining({
         email: dto.email,
         name: dto.name,
-        isAdmin: dto.isAdmin,
+        role: dto.role,
         passwordHash: 'hashed-password',
       }),
     );
@@ -81,6 +89,7 @@ describe('UserService', () => {
       id: 10,
       email: dto.email,
       name: dto.name,
+      role: dto.role,
       userClasses: [],
     });
   });
@@ -93,7 +102,7 @@ describe('UserService', () => {
       id: 42,
       email: 'saved@example.com',
       name: 'Saved User',
-      isAdmin: false,
+      role: UserRole.STUDENT,
       userClasses: [],
       } as unknown as User);
     userRepository.save.mockResolvedValue({ id: 42 } as User);
@@ -102,7 +111,7 @@ describe('UserService', () => {
       email: 'saved@example.com',
       name: 'Saved User',
       password: 'secret',
-      isAdmin: false,
+      role: UserRole.STUDENT
     } as any);
 
     expect(userRepository.save).toHaveBeenCalledWith(
@@ -113,15 +122,15 @@ describe('UserService', () => {
     });
   });
 
-  it('updates an admin flag without replacing the current password', async () => {
+  it('updates a role without replacing the current password', async () => {
     const existingUser = {
       id: 7,
       email: 'student@example.com',
       name: 'Student',
-      isAdmin: false,
+      role: UserRole.STUDENT,
       passwordHash: 'current-hash',
     } as User;
-    const updatedUser = { ...existingUser, isAdmin: true };
+    const updatedUser = { ...existingUser, role: UserRole.ADMIN };
 
     userRepository.findOne
       .mockResolvedValueOnce(existingUser)
@@ -129,11 +138,11 @@ describe('UserService', () => {
     userRepository.update.mockResolvedValue({ affected: 1 } as any);
     const hashPassword = jest.spyOn(HashUtils, 'hashPassword');
 
-    const result = await service.update(7, { isAdmin: true });
+    const result = await service.update(7, { role: UserRole.ADMIN });
 
     expect(hashPassword).not.toHaveBeenCalled();
     expect(userRepository.update).toHaveBeenCalledWith(7, {
-      isAdmin: true,
+      role: UserRole.ADMIN
     });
     expect(userRepository.update.mock.calls[0][1]).not.toHaveProperty(
       'passwordHash',
@@ -142,6 +151,7 @@ describe('UserService', () => {
       id: 7,
       email: 'student@example.com',
       name: 'Student',
+      role: UserRole.ADMIN,
       userClasses: undefined,
     });
   });
@@ -149,7 +159,7 @@ describe('UserService', () => {
   it('throws when updating a missing user', async () => {
     userRepository.findOne.mockResolvedValue(null);
 
-    await expect(service.update(99, { isAdmin: true })).rejects.toThrow(
+    await expect(service.update(99, { role: UserRole.ADMIN })).rejects.toThrow(
       'User not found',
     );
     expect(userRepository.update).not.toHaveBeenCalled();
@@ -162,26 +172,32 @@ describe('UserService', () => {
     expect(userRepository.softDelete).not.toHaveBeenCalled();
   });
 
-  it('throws when removing an admin user', async () => {
+  it('deactivates an admin and revokes every active session for that user', async () => {
     userRepository.findOne.mockResolvedValue({
       id: 1,
-      isAdmin: true,
+      role: UserRole.ADMIN
     } as unknown as User);
+    userRepository.softDelete.mockResolvedValue({ affected: 1 } as any);
 
-    await expect(service.remove(1)).rejects.toThrow('Cannot delete admin user');
-    expect(userRepository.softDelete).not.toHaveBeenCalled();
+    await expect(service.remove(1)).resolves.toEqual({ deactivated: true });
+    expect(userRepository.softDelete).toHaveBeenCalledWith({ id: 1 });
+    expect(refreshSessionRepository.update).toHaveBeenCalledWith(
+      { userId: 1, revokedAt: expect.anything() },
+      { revokedAt: expect.any(Date) }
+    );
   });
 
   it('deletes a removable user', async () => {
     userRepository.findOne.mockResolvedValue({
       id: 7,
-      isAdmin: false,
+      role: UserRole.STUDENT
     } as unknown as User);
     userRepository.softDelete.mockResolvedValue({ affected: 1 } as any);
 
     await service.remove(7);
 
     expect(userRepository.softDelete).toHaveBeenCalledWith({ id: 7 });
+    expect(refreshSessionRepository.update).toHaveBeenCalled();
   });
 
   const makeQueryBuilder = () => {
@@ -208,7 +224,7 @@ describe('UserService', () => {
             id: 1,
             name: 'Alice',
             email: 'a@x.com',
-            isAdmin: false,
+            role: UserRole.STUDENT,
             userClasses: [],
           },
         ],
@@ -231,7 +247,7 @@ describe('UserService', () => {
             id: 1,
             name: 'Alice',
             email: 'a@x.com',
-            isAdmin: false,
+            role: UserRole.STUDENT,
             userClasses: [],
           },
         ],

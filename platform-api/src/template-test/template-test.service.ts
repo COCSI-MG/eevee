@@ -8,6 +8,7 @@ import {
   templateVariablesLanguageForWorker,
 } from 'src/utils/template-variables.utils';
 import { TestTemplateDto } from './dto/test-template.dto';
+import { ClassAccessService } from 'src/auth/class-access.service';
 
 const APP_FILE_EXTENSION_BY_WORKER_TYPE: Partial<Record<WorkerType, string>> = {
   [WorkerType.JAVASCRIPT_DEFAULT]: '.js',
@@ -20,9 +21,14 @@ const APP_FILE_EXTENSION_DEFAULT = '.ts';
 export class TemplateTestService {
   private readonly logger = new Logger(TemplateTestService.name);
 
-  constructor(private readonly executionRequestService: ExecutionRequestService) {}
+  constructor(
+    private readonly executionRequestService: ExecutionRequestService,
+    private readonly classAccess: ClassAccessService,
+  ) {}
 
   async run(body: TestTemplateDto): Promise<WorkerResponse> {
+    await this.classAccess.assertTeacherAssignment(body.classId);
+
     const paramSpecs = (body.paramDefs ?? []).map((d) => ({
       name: d.name,
       type: d.type,

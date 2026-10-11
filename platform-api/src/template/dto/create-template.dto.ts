@@ -3,11 +3,12 @@ import {
   IsArray,
   IsEnum,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 import { IsNotBlank } from 'src/common/decorators/is-not-blank.decorator';
-import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
+import { TemplateParamType } from 'src/template/enums/template-param-type.enum';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 export class CreateTemplateParamDefinitionDto {
@@ -48,6 +49,11 @@ export class CreateTemplateDto {
   @IsNotEmpty()
   @IsEnum(WorkerType)
   workerType: WorkerType;
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Type(() => Number)
+  classId: number;
 
   @IsOptional()
   @IsArray()

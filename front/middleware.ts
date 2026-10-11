@@ -1,3 +1,4 @@
+import { UserRole } from "@/app/interface/scheduler-api/user";
 import { NextRequest, NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -33,10 +34,10 @@ export async function middleware(request: NextRequest) {
     const session = (await response.json()) as {
       userId: number;
       email: string;
-      isAdmin: boolean;
+      role: UserRole;
     };
 
-    if (!session.isAdmin) {
+    if (session.role !== UserRole.ADMIN) {
       return redirectToClasses(request);
     }
 

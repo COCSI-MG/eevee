@@ -1,17 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MinLength,
-} from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { UserRole } from 'src/user/user-role';
 
 export class CreateUserDto {
-  @ApiProperty()
-  @IsBoolean()
+  @ApiProperty({ enum: Object.values(UserRole) })
+  @IsEnum(UserRole)
   @IsNotEmpty()
-  isAdmin: boolean;
+  role: UserRole;
 
   @ApiProperty()
   @IsString()

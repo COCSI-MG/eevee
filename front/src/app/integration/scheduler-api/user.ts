@@ -18,6 +18,11 @@ export class UsersService {
     return response.data;
   }
 
+  static async getTeachers() {
+    const response = await axiosClientWithAuth.get<User[]>("/user/teachers")
+    return response.data;
+  }
+
   static async getUserById(id: number) {
     const response = await axiosClientWithAuth.get<User>(`/user/${id}`);
     return response.data;

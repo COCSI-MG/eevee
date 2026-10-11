@@ -7,9 +7,11 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TemplateService } from './template.service';
 import { Template } from './entities/template.entity';
-import { TemplateParam } from 'src/template-params/entities/template-param.entity';
-import { AssignmentTemplate } from 'src/assignment-template/entities/assignment-template.entity';
-import { TemplateParamType } from 'src/template-params/enums/template-param-type.enum';
+import { TemplateParam } from 'src/template/entities/template-param.entity';
+import { AssignmentTemplate } from 'src/assignment/entities/assignment-template.entity';
+import { ClassAccessService } from 'src/auth/class-access.service';
+import { TemplateParamType } from 'src/template/enums/template-param-type.enum';
+import { UserRole } from 'src/user/user-role';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 describe('TemplateService', () => {
@@ -28,6 +30,13 @@ describe('TemplateService', () => {
     const templateRepository = createRepositoryMock();
     const templateParamsRepository = createRepositoryMock();
     const assignmentTemplateRepository = createRepositoryMock();
+    const classAccess = {
+      assertTeacherAssignment: jest.fn().mockResolvedValue(undefined),
+      assertClassAccess: jest.fn().mockResolvedValue(undefined),
+      assertTemplateAccess: jest.fn( async (id: number) => templateRepository.findOne({ where: { id } }) ),
+      isAdmin: jest.fn().mockReturnValue(true),
+      user: jest.fn().mockReturnValue({ userId: 1, role: UserRole.ADMIN }),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -44,6 +53,10 @@ describe('TemplateService', () => {
           provide: getRepositoryToken(AssignmentTemplate),
           useValue: assignmentTemplateRepository,
         },
+        {
+          provide: ClassAccessService,
+          useValue: classAccess
+        }
       ],
     }).compile();
 
@@ -52,6 +65,7 @@ describe('TemplateService', () => {
       templateRepository,
       templateParamsRepository,
       assignmentTemplateRepository,
+      classAccess
     };
   };
 
@@ -68,6 +82,7 @@ describe('TemplateService', () => {
       service,
       templateRepository,
       templateParamsRepository,
+      classAccess
     } = await setup();
 
     templateRepository.save.mockResolvedValue({ id: 8 });
@@ -79,6 +94,7 @@ describe('TemplateService', () => {
       content: 'content',
       workerType: WorkerType.NODE_DEFAULT,
       dependencies: [],
+      classId: 3
     });
 
     const result = await service.create({
@@ -87,6 +103,7 @@ describe('TemplateService', () => {
       content: 'content',
       workerType: WorkerType.NODE_DEFAULT,
       params: ['inputValue'],
+      classId: 3
     });
 
     expect(templateRepository.save).toHaveBeenCalledWith({
@@ -96,7 +113,9 @@ describe('TemplateService', () => {
       content: 'content',
       workerType: WorkerType.NODE_DEFAULT,
       dependencies: [],
+      classId: 3
     });
+    expect(classAccess.assertTeacherAssignment).toHaveBeenCalledWith(3);
     expect(templateParamsRepository.save).toHaveBeenCalledWith([
       {
         name: 'inputValue',
@@ -233,7 +252,7 @@ describe('TemplateService', () => {
 
     await expect(service.remove(10)).rejects.toBeInstanceOf(ConflictException);
 
-    expect(templateRepository.findOne).not.toHaveBeenCalled();
+    expect(templateRepository.findOne).toHaveBeenCalledTimes(1);
     expect(templateRepository.delete).not.toHaveBeenCalled();
   });
 
