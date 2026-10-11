@@ -1,6 +1,7 @@
 import { axiosClientWithAuth } from "./client";
 import {
   Assignment,
+  AdminAssignmentListItem,
   AssignmentImportProject,
   AssignmentImportSource,
   CreateAssignmentRequest,
@@ -94,7 +95,7 @@ export class AssignmentService {
 
   static async listPaginated(params: ListPaginatedAssignmentsParams) {
     const response = await axiosClientWithAuth.get<
-      PaginatedResponse<Assignment>
+      PaginatedResponse<AdminAssignmentListItem>
     >("/assignment/paginated", {
       params,
     });

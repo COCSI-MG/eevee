@@ -44,6 +44,7 @@ import {
 } from 'src/assignment-alert/assignment-alert.service';
 import { UserRole } from 'src/user/user-role';
 import { ClassAccessService } from 'src/auth/class-access.service';
+import { AssignmentListItem } from './dto/assignment-list-item.dto';
 
 @Injectable()
 export class AssignmentService {
@@ -538,17 +539,23 @@ export class AssignmentService {
 
   async findAllPaginated(
     query: ListAssignmentsQueryDto,
-  ): Promise<PaginatedResult<Assignment>> {
+  ): Promise<PaginatedResult<AssignmentListItem>> {
     const { page, pageSize, skip } = buildPaginationParams(query);
     const currentUser = this.requestContextService.getUser();
     if (currentUser.role === UserRole.STUDENT) throw new NotFoundException('Assignment not found');
 
     const qb = this.assignmentRepository
       .createQueryBuilder('assignment')
-      .leftJoinAndSelect('assignment.assignmentAttempts', 'assignmentAttempts')
-      .leftJoinAndSelect('assignment.class', 'class')
-      .leftJoinAndSelect('class.userClasses', 'userClasses')
-      .leftJoin('assignment.examAssignment', 'examAssignment')
+      .select([
+        'assignment.id',
+        'assignment.title',
+        'assignment.description',
+        'assignment.workerType',
+        'assignment.startDate',
+        'assignment.dueDate',
+        'class.name'
+      ])
+      .leftJoin('assignment.class', 'class')
       .orderBy('assignment.id', 'DESC');
 
     if (currentUser.role === UserRole.TEACHER) qb.andWhere('class.teacherId = :teacherId', { teacherId: currentUser.userId });
@@ -585,7 +592,15 @@ export class AssignmentService {
       .skip(skip)
       .take(pageSize)
       .getManyAndCount();
-    const data = await this.presentAssignments(rows);
+    const data: AssignmentListItem[] = rows.map((assignment) => ({
+      id: assignment.id,
+      title: assignment.title,
+      description: assignment.description,
+      workerType: assignment.workerType,
+      startDate: assignment.startDate,
+      dueDate: assignment.dueDate,
+      class: { name: assignment.class.name }
+    }));
 
     return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
