@@ -176,7 +176,7 @@ describe('AssignmentService', () => {
       { id: 2, createdById: 20, boilerplateContent: '' },
     ]);
 
-    await expect(service.findAll()).resolves.toEqual([
+    await expect(service.findAllUserAssignments()).resolves.toEqual([
       expect.objectContaining({ id: 1, createdById: 10 }),
       expect.objectContaining({ id: 2, createdById: 20 }),
     ]);
@@ -184,7 +184,7 @@ describe('AssignmentService', () => {
     expect(assignmentRepository.find).toHaveBeenCalledWith({
       relations: ['assignmentAttempts', 'class', 'class.userClasses']
     });
-    expect(requestContextService.getUser).not.toHaveBeenCalled();
+    expect(requestContextService.getUser).toHaveBeenCalledTimes(1);
   });
 
   it('lists lightweight assignment options filtered by class', async () => {
@@ -201,22 +201,6 @@ describe('AssignmentService', () => {
       where: { classId: 5 },
       order: { title: 'ASC', id: 'ASC' },
     });
-  });
-
-  it('uses the global assignment list for the admin me endpoint', async () => {
-    const { service, assignmentRepository, requestContextService } =
-      await setup();
-    const assignments = [{ id: 1 }, { id: 2 }] as Assignment[];
-    requestContextService.getUser.mockReturnValue({
-      userId: 10,
-      role: UserRole.ADMIN
-    });
-    jest.spyOn(service, 'findAll').mockResolvedValue(assignments as any);
-
-    await expect(service.findAllUserAssignments()).resolves.toBe(assignments);
-
-    expect(service.findAll).toHaveBeenCalledTimes(1);
-    expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
   });
 
   describe('project import from submitted attempts', () => {
