@@ -1,4 +1,4 @@
-import type { TestUser } from "../../support/types";
+import type { TestUser } from "../../helpers/types";
 
 describe("User creation", () => {
   let user: TestUser;

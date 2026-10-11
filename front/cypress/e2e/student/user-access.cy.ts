@@ -1,4 +1,4 @@
-import { apiUrl } from "../../support/api";
+import { apiUrl } from "../../helpers/api";
 
 describe("User management as a student", () => {
   beforeEach(() => {

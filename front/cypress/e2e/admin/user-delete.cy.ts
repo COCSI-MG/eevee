@@ -1,4 +1,4 @@
-import type { CreatedUser } from "../../support/types";
+import type { CreatedUser } from "../../helpers/types";
 
 describe("User deletion", () => {
   let user: CreatedUser | undefined;
