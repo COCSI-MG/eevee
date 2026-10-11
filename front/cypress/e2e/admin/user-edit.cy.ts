@@ -1,6 +1,7 @@
 import type { CreatedUser } from "../../helpers/types";
 
 describe("User edit", () => {
+  const newPassword = "newPassword123";
   let user: CreatedUser;
 
   beforeEach(() => {
@@ -18,6 +19,7 @@ describe("User edit", () => {
   });
 
   afterEach(() => {
+    cy.login();
     cy.deleteUser(user.id);
   });
 
@@ -28,7 +30,7 @@ describe("User edit", () => {
     cy.log("Change name, email and password");
     cy.get("#name").clear().type(name);
     cy.get("#email").clear().type(email);
-    cy.get("#password").type("newPassword123");
+    cy.get("#password").type(newPassword);
 
     cy.log("Save the changes");
     cy.contains("button", "Salvar Alterações").click();
@@ -41,6 +43,10 @@ describe("User edit", () => {
     cy.log("Check the list shows the new name and email");
     cy.filterUsers(email);
     cy.userRow(email).should("contain.text", name);
+
+    cy.log("Check the password was changed");
+    cy.loginWith(email, user.password).its("status").should("eq", 401);
+    cy.loginWith(email, newPassword).its("status").should("eq", 201);
   });
 
   it("promotes a user to admin", () => {
@@ -50,7 +56,7 @@ describe("User edit", () => {
     cy.log("Change name, email and password and choose the admin role");
     cy.get("#name").clear().type(name);
     cy.get("#email").clear().type(email);
-    cy.get("#password").type("newPassword123");
+    cy.get("#password").type(newPassword);
     cy.get("#role").select("admin");
 
     cy.log("Save the changes");
@@ -64,12 +70,15 @@ describe("User edit", () => {
     cy.log("Check the user is listed as an admin");
     cy.filterUsers(email);
     cy.userRow(email).should("contain.text", "Administrador");
+
+    cy.log("Check the user can log in with the new password");
+    cy.loginWith(email, newPassword).its("status").should("eq", 201);
   });
 
   it("does not update a user without a name", () => {
     cy.log("Clear the name field");
     cy.get("#name").clear();
-    cy.get("#password").type("newPassword123");
+    cy.get("#password").type(newPassword);
 
     cy.log("Save the changes");
     cy.contains("button", "Salvar Alterações").click();
@@ -83,7 +92,7 @@ describe("User edit", () => {
   it("does not update a user without an email", () => {
     cy.log("Clear the email field");
     cy.get("#email").clear();
-    cy.get("#password").type("newPassword123");
+    cy.get("#password").type(newPassword);
 
     cy.log("Save the changes");
     cy.contains("button", "Salvar Alterações").click();

@@ -17,6 +17,7 @@ declare global {
   namespace Cypress {
     interface Chainable {
       login(role?: Role): Chainable<void>;
+      loginWith(email: string, password: string): Chainable<Cypress.Response<unknown>>;
       buildUser(role?: UserRole): Chainable<TestUser>;
       createUser(user: TestUser): Chainable<CreatedUser>;
       deleteUser(id: number): Chainable<void>;
