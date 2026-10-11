@@ -1,4 +1,5 @@
 import { apiUrl } from "../../helpers/api";
+import type { CreatedUser } from "../../helpers/types";
 
 describe("User management as a student", () => {
   beforeEach(() => {
@@ -61,5 +62,63 @@ describe("User management as a student", () => {
     })
       .its("status")
       .should("eq", 403);
+  });
+
+  describe("with an existing user", () => {
+    let target: CreatedUser;
+
+    beforeEach(() => {
+      cy.login();
+      cy.buildUser()
+        .then((built) => cy.createUser(built))
+        .then((created) => {
+          target = created;
+        });
+      cy.login("student");
+    });
+
+    afterEach(() => {
+      cy.login();
+      cy.deleteUser(target.id);
+    });
+
+    const shouldKeepUserUnchanged = () => {
+      cy.log("Check as admin that the user was not changed");
+      cy.login();
+      cy.request(`${apiUrl()}/user/${target.id}`)
+        .its("body")
+        .should("include", {
+          name: target.name,
+          email: target.email,
+          role: target.role,
+        });
+    };
+
+    it("blocks a student from updating a user in the API", () => {
+      cy.log("Try to update the user");
+      cy.request({
+        method: "PATCH",
+        url: `${apiUrl()}/user/${target.id}`,
+        body: { name: "student attempt", role: "admin" },
+        failOnStatusCode: false,
+      })
+        .its("status")
+        .should("eq", 403);
+
+      shouldKeepUserUnchanged();
+    });
+
+    it("blocks a student from deleting a user in the API", () => {
+      cy.log("Try to delete the user");
+      cy.request({
+        method: "DELETE",
+        url: `${apiUrl()}/user/${target.id}`,
+        failOnStatusCode: false,
+      })
+        .its("status")
+        .should("eq", 403);
+
+      shouldKeepUserUnchanged();
+    });
   });
 });
