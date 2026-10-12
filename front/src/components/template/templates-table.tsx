@@ -20,7 +20,7 @@ import {
 import { Route } from "@/app/routes";
 import TableActions from "../table/table-actions";
 import React from "react";
-import { Template } from "@/app/interface/scheduler-api/template";
+import { PaginatedTemplate } from "@/app/interface/scheduler-api/template";
 import {
   TEMPLATE_TABLE_TEXT,
   WorkerTypeLabelMap,
@@ -29,7 +29,7 @@ import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";
 import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 interface TemplatesTableProps {
-  templates: Template[] | undefined;
+  templates: PaginatedTemplate[] | undefined;
   handleDelete: (id: number) => void;
   emptyMessage?: string;
 }
