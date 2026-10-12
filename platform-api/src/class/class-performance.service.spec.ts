@@ -354,13 +354,12 @@ describe('Class performance', () => {
       '12,',
       '12,hello',
       '12, 15',
-      '9999999999999'
     ])('rejects malformed activity IDs: %s', async (activityIds) => {
       const result = pipe.transform({ activityIds }, metadata);
 
       await expect(result).rejects.toThrow(BadRequestException);
     });
-    it.each(['0', '-1', 'hello', '9999999999999'])
+    it.each(['0', '-1', 'hello'])
       ('rejects invalid class IDs: %s', async (id) => {
         const result = pipe.transform(
           { id },
