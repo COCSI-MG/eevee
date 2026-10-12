@@ -15,6 +15,12 @@ import Pagination from "@/components/shared/pagination";
 import ClassActivitiesSelect from "@/components/classes/class-activities-select";
 import ClassPerformanceTable from "@/components/classes/class-performance-table";
 
+const sameActivitySelection = (a?: number[], b?: number[]): boolean => {
+  if (!a || !b) return a === b
+
+  return a.length === b.length && a.every((id) => b.includes(id));
+}
+
 export default function ClassInfosPage() {
   const { id } = useParams<{ id: string }>();
   return <ClassInfosContent key={id} id={Number(id)} />;
@@ -26,7 +32,9 @@ function ClassInfosContent({ id }: { id: number }) {
   const allowed = user?.role === UserRole.ADMIN || user?.role === UserRole.TEACHER;
   const validId = id > 0;
   const [page, setPage] = useState(1);
+  const [pendingActivityIds, setPendingActivityIds] = useState<number[] | undefined>();
   const [activityIds, setActivityIds] = useState<number[] | undefined>();
+  const hasPendingChanges = !sameActivitySelection(pendingActivityIds, activityIds);
 
   const infos = useQuery({
     queryKey: ["class-infos", user?.userId, user?.role, id],
@@ -55,7 +63,7 @@ function ClassInfosContent({ id }: { id: number }) {
         signal
       ),
     enabled: allowed && validId && infos.isSuccess,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: false
   });
 
   useEffect(() => {
@@ -187,14 +195,24 @@ function ClassInfosContent({ id }: { id: number }) {
         aria-labelledby="activities-tab"
         className="space-y-4"
       >
-        <ClassActivitiesSelect
-          activities={infos.data.activities}
-          selectedIds={activityIds}
-          onChange={(ids) => {
-            setActivityIds(ids);
-            setPage(1);
-          }}
-        />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <ClassActivitiesSelect
+            activities={infos.data.activities}
+            selectedIds={pendingActivityIds}
+            onChange={setPendingActivityIds}
+          />
+
+          <Button
+            type="button"
+            disabled={!hasPendingChanges || performance.isFetching}
+            onClick={() => {
+              setActivityIds(pendingActivityIds);
+              setPage(1);
+            }}
+          >
+            Consultar
+          </Button>
+        </div>
 
         <p className="text-sm text-muted-foreground">
           Notas de 0 a 10, considerando a última tentativa concluída. A média
