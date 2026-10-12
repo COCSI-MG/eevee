@@ -273,6 +273,7 @@ describe('TemplateService', () => {
       const qb: Record<string, jest.Mock> = {
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         take: jest.fn().mockReturnThis(),
@@ -301,6 +302,13 @@ describe('TemplateService', () => {
 
       expect(qb.skip).toHaveBeenCalledWith(0);
       expect(qb.take).toHaveBeenCalledWith(10);
+      expect(qb.select).toHaveBeenCalledWith([
+        'template.id',
+        'template.title',
+        'template.description',
+        'template.workerType',
+        'template.content'
+      ]);
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
     });
