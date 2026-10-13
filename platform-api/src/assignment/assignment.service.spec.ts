@@ -9,6 +9,7 @@ import {
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Brackets, DataSource } from 'typeorm';
+import { join } from 'node:path';
 import { AssignmentService } from './assignment.service';
 import { Assignment } from './entities/assignment.entity';
 import { AssignmentParam } from './entities/assignment-param.entity';
@@ -601,6 +602,7 @@ describe('AssignmentService', () => {
     const makeQueryBuilder = () => {
       const qb: Record<string, jest.Mock> = {
         select: jest.fn().mockReturnThis(),
+        withDeleted: jest.fn().mockReturnThis(),
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),

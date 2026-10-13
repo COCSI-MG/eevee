@@ -545,8 +545,11 @@ export class AssignmentService {
     if (currentUser.role === UserRole.STUDENT) throw new NotFoundException('Assignment not found');
 
     const qb = this.assignmentRepository
-      .createQueryBuilder('assignment')
-      .select([
+      .createQueryBuilder('assignment');
+
+    if (currentUser.role === UserRole.ADMIN) qb.withDeleted();
+
+    qb.select([
         'assignment.id',
         'assignment.title',
         'assignment.description',

@@ -1,13 +1,6 @@
 import { Class } from 'src/class/entities/class.entity';
-import { Assignment } from '../entities/assignment.entity';
+import { BaseAssignmentDto } from './base-assignment.dto';
 
-export type AssignmentListItem = Pick<Assignment,
-  'id' | 
-  'title' | 
-  'description' | 
-  'workerType' | 
-  'startDate' | 
-  'dueDate'
-> & {
-  class: Pick<Class, 'name'>
-};
+export interface AssignmentListItem extends BaseAssignmentDto {
+  class: Pick<Class, 'name'>;
+}
