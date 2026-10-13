@@ -14,7 +14,7 @@ export default function PageHeader( { title, backLabel = "Voltar", href, onBack 
   return (
     <div className="flex items-center gap-4">
       <Button variant="ghost" asChild={href !== undefined} onClick={onBack}>
-        {href !== undefined ? (
+        {href ? (
           <Link href={href}>
             <ArrowLeft className="mr-2 h-4 w-4" />
 

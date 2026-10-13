@@ -11,7 +11,6 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { ClassPerformanceController } from './class-performance.controller';
 import { ClassPerformanceService } from './class-performance.service';
 import { Assignment } from 'src/assignment/entities/assignment.entity';
-import { Attempt } from 'src/attempt/entities/attempt.entity';
 import { UserClass } from 'src/user-class/entities/user-class.entity';
 
 @Module({
@@ -22,7 +21,6 @@ import { UserClass } from 'src/user-class/entities/user-class.entity';
       Class,
       User,
       Assignment,
-      Attempt,
       UserClass
     ]),
     UserClassModule,

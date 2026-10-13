@@ -3,7 +3,7 @@ import {
   ForbiddenException,
   NotFoundException,
   UnauthorizedException,
-  ValidationPipe
+  ValidationPipe,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GUARDS_METADATA } from '@nestjs/common/constants';
@@ -12,6 +12,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { UserRole } from 'src/user/user-role';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
+import { CLASS_PERFORMANCE_QUERY } from './class-performance.query';
 import { ClassPerformanceService } from './class-performance.service';
 import { ClassPerformanceController } from './class-performance.controller';
 import { ClassIdParamsDto } from './dto/request/class-id-params.dto';
@@ -19,24 +20,18 @@ import { ClassPerformanceQueryDto } from './dto/request/class-performance.query.
 
 function builder() {
   const qb: Record<string, jest.Mock> = {};
-  [
-    'select',
-    'addSelect',
-    'where',
-    'andWhere',
-    'orderBy',
-    'addOrderBy',
-    'innerJoin',
-    'offset',
-    'limit',
-    'distinctOn',
-    'clone'
-  ].forEach((name) => qb[name] = jest.fn(() => qb));
+  ['select', 'addSelect', 'where', 'andWhere', 'orderBy', 'addOrderBy'].forEach((name) => {
+      return (qb[name] = jest.fn(() => qb))
+  });
 
   qb.getRawMany = jest.fn();
-  qb.getRawOne = jest.fn();
 
   return qb;
+}
+
+const userOne = {
+  userId: 20,
+  name: 'Ana'
 }
 
 describe('Class performance', () => {
@@ -45,216 +40,149 @@ describe('Class performance', () => {
     { id: 15, title: 'B' }
   ];
 
-  const students = [
-    { userId: 20, name: 'Ana' },
-    { userId: 21, name: 'Bia' }
+  const data = [
+    {
+      ...userOne,
+      grades: [
+        { activityId: 12, grade: 8 },
+        { activityId: 15, grade: 0 }
+      ],
+      average: 4
+    },
+    {
+      userId: 21,
+      name: 'Bia',
+      grades: [
+        { activityId: 12, grade: 8 },
+        { activityId: 15, grade: null }
+      ],
+      average: 4
+    },
   ];
 
   let assignmentQb: ReturnType<typeof builder>;
-  let attemptQb: ReturnType<typeof builder>;
-  let enrollmentQb: ReturnType<typeof builder>;
+  let enrollmentRepository: { query: jest.Mock };
   let access: { assertTeacherAssignment: jest.Mock };
   let service: ClassPerformanceService;
-  let attemptRepository: { createQueryBuilder: jest.Mock };
 
   beforeEach(() => {
     assignmentQb = builder();
-    attemptQb = builder();
-    enrollmentQb = builder();
     assignmentQb.getRawMany.mockResolvedValue(activities);
-    enrollmentQb.getRawMany.mockResolvedValue(students);
-    enrollmentQb.getRawOne.mockResolvedValue({ total: '25' });
-    attemptQb.getRawMany.mockResolvedValue([
-      {
-        userId: 20,
-        activityId: 12,
-        score: 0.8,
-        status: AttemptStatus.COMPLETED
-      },
-      {
-        userId: 20,
-        activityId: 15,
-        score: 0,
-        status: AttemptStatus.COMPLETED
-      },
-      {
-        userId: 21,
-        activityId: 12,
-        score: 0.8,
-        status: AttemptStatus.COMPLETED
-      }
-    ]);
-    access = {
-      assertTeacherAssignment: jest
-        .fn()
-        .mockResolvedValue({
-          id: 17,
-          name: 'Turma',
-          description: null
-        })
+    enrollmentRepository = {
+      query: jest.fn().mockResolvedValue([{ total: '25', data }])
     };
-    attemptRepository = { createQueryBuilder: jest.fn(() => attemptQb) };
+    access = {
+      assertTeacherAssignment: jest.fn().mockResolvedValue({
+        id: 17,
+        name: 'Turma',
+        description: null
+      })
+    };
     service = new ClassPerformanceService(
       { createQueryBuilder: () => assignmentQb } as any,
-      attemptRepository as any,
-      { createQueryBuilder: () => enrollmentQb } as any,
+      enrollmentRepository as any,
       access as any
-    )
-  })
+    );
+  });
 
-  it('converts scores, distinguishes zero from absence, and includes both in the average', async () => {
+  it('returns database aggregation and builds pagination metadata', async () => {
     const result = await service.performance(17, { page: 2, pageSize: 10 });
 
-    expect(result.data).toEqual([
-      {
-        ...students[0],
-        grades: [
-          { activityId: 12, grade: 8 },
-          { activityId: 15, grade: 0 }
-        ],
-        average: 4
-      },
-      {
-        ...students[1],
-        grades: [
-          { activityId: 12, grade: 8 },
-          { activityId: 15, grade: null }
-        ],
-        average: 4
+    expect(result).toEqual({
+      activities,
+      data,
+      meta: {
+        total: 25,
+        page: 2,
+        pageSize: 10,
+        totalPages: 3
       }
-    ]);
+    });
+    expect(enrollmentRepository.query).toHaveBeenCalledWith(
+      CLASS_PERFORMANCE_QUERY,
+      [
+        17,
+        UserRole.STUDENT,
+        null,
+        10,
+        10,
+        [12, 15],
+        AttemptStatus.COMPLETED,
+        AttemptStatus.FAILED
+      ]
+    );
+  });
 
-    expect(result.meta).toEqual({
-      total: 25,
-      page: 2,
-      pageSize: 10,
-      totalPages: 3
+  it('passes trimmed search as a parameter and preserves selected activity ordering', async () => {
+    assignmentQb.getRawMany.mockResolvedValue([activities[1], activities[0]]);
+
+    await service.performance(17, {
+      search: "  Bia' OR 1=1 --  ",
+      activityIds: [15, 12]
     });
 
-    expect(enrollmentQb.offset).toHaveBeenCalledWith(10);
-    expect(enrollmentQb.limit).toHaveBeenCalledWith(10);
-
-    expect(enrollmentQb.select).toHaveBeenCalledWith(
-      'enrollment.userId',
-      'userId'
+    expect(enrollmentRepository.query).toHaveBeenCalledWith(
+      CLASS_PERFORMANCE_QUERY,
+      [
+        17,
+        UserRole.STUDENT,
+        "%Bia' OR 1=1 --%",
+        0,
+        10,
+        [15, 12],
+        AttemptStatus.COMPLETED,
+        AttemptStatus.FAILED
+      ]
     );
-
-    expect(enrollmentQb.addSelect).toHaveBeenCalledTimes(1);
-    expect(enrollmentQb.where).toHaveBeenCalledWith(
-      'enrollment.classId = :classId',
-      { classId: 17 }
-    );
-    expect(attemptQb.where).toHaveBeenCalledWith(
-      'attempt.userId IN (:...studentIds)',
-      { studentIds: [20, 21] }
-    );
-    expect(attemptQb.andWhere).toHaveBeenCalledWith(
-      'attempt.status IN (:...statuses)',
-      { statuses: [ AttemptStatus.COMPLETED, AttemptStatus.FAILED ] }
-    );
-    expect(attemptQb.distinctOn).toHaveBeenCalledWith([ 'attempt.userId', 'attempt.assignmentId' ]);
-    expect(attemptQb.orderBy).toHaveBeenCalledWith('attempt.userId', 'ASC');
-    expect(attemptQb.addOrderBy.mock.calls).toEqual([
-      ['attempt.assignmentId', 'ASC'],
-      ['attempt.createdAt', 'DESC'],
-      ['attempt.id', 'DESC']
-    ]);
-    expect(attemptQb.select).toHaveBeenCalledWith('attempt.userId', 'userId');
-    expect(attemptQb.addSelect).toHaveBeenCalledWith('attempt.status', 'status');
-    expect(attemptQb.addSelect).toHaveBeenCalledTimes(3);
-    expect(attemptQb.getRawMany).toHaveBeenCalledTimes(1);
   });
 
-  it.each([0, 0.8])(
-    'returns zero for a failed attempt with stored score %s, while absence stays null',
+  it('keeps the total when the requested page is empty', async () => {
+    enrollmentRepository.query.mockResolvedValue([{ total: '25', data: [] }]);
 
-    async (score) => {
-      attemptQb.getRawMany.mockResolvedValue([
-        {
-          userId: 20,
-          activityId: 12,
-          score,
-          status: AttemptStatus.FAILED
-        },
-        {
-          userId: 20,
-          activityId: 15,
-          score: 0.8,
-          status: AttemptStatus.COMPLETED
-        }
-      ]);
+    const result = await service.performance(17, { page: 4, pageSize: 10 });
 
-      const result = await service.performance(17, {});
+    expect(result.data).toEqual([]);
+    expect(result.meta).toEqual({
+      total: 25,
+      page: 4,
+      pageSize: 10,
+      totalPages: 3
+    })
+  });
 
-      expect(result.data[0]).toEqual({
-        ...students[0],
-        grades: [
-          { activityId: 12, grade: 0 },
-          { activityId: 15, grade: 8 }
-        ],
-        average: 4
-      });
-      expect(result.data[1]).toEqual({
-        ...students[1],
-        grades: [
-          { activityId: 12, grade: null },
-          { activityId: 15, grade: null }
-        ],
-        average: 0
-      });
-    },
-  );
-
-  it('calculates the average only from selected activities, without intermediate rounding', async () => {
-    assignmentQb.getRawMany.mockResolvedValue([activities[0]]);
-    attemptQb.getRawMany.mockResolvedValue([
+  it('passes an empty activity array for classes with no graded activities', async () => {
+    assignmentQb.getRawMany.mockResolvedValue([]);
+    enrollmentRepository.query.mockResolvedValue([
       {
-        userId: 20,
-        activityId: 12,
-        score: 1 / 3,
-        status: AttemptStatus.COMPLETED
+        total: '1',
+        data: [
+          {
+            ...userOne,
+            grades: [],
+            average: null
+          }
+        ]
       }
     ]);
 
-    const result = await service.performance(17, { activityIds: [12] });
-
-    expect(result.data[0].average).toBe((1 / 3) * 10);
-    expect(result.data[1].average).toBe(0);
-    expect(attemptQb.andWhere).toHaveBeenCalledWith(
-      'attempt.assignmentId IN (:...activityIds)',
-      { activityIds: [12] }
-    );
-
-  });
-
-  it('returns students with no evaluation when the class has no graded activities', async () => {
-    assignmentQb.getRawMany.mockResolvedValue([]);
     const result = await service.performance(17, {});
 
     expect(result.data[0]).toEqual({
-      ...students[0],
+      ...userOne,
       grades: [],
       average: null
-    });
-    expect(attemptRepository.createQueryBuilder).not.toHaveBeenCalled();
+    })
+
+    expect(enrollmentRepository.query.mock.calls[0][1][5]).toEqual([])
   });
 
-  it('does not query attempts when the page has no enrolled students', async () => {
-    enrollmentQb.getRawMany.mockResolvedValue([]);
-    enrollmentQb.getRawOne.mockResolvedValue({ total: '0' });
-
-    expect((await service.performance(17, {})).meta.total).toBe(0);
-    expect(attemptRepository.createQueryBuilder).not.toHaveBeenCalled();
-  });
-
-  it('rejects activities outside the class or without evaluation before querying students', async () => {
+  it('rejects activities outside the class or without evaluation before querying performance', async () => {
     assignmentQb.getRawMany.mockResolvedValue([activities[0]]);
 
     await expect(service.performance(17, { activityIds: [12, 999] }))
         .rejects.toBeInstanceOf(BadRequestException);
 
-    expect(enrollmentQb.getRawMany).not.toHaveBeenCalled();
-    expect(attemptRepository.createQueryBuilder).not.toHaveBeenCalled();
+    expect(enrollmentRepository.query).not.toHaveBeenCalled();
   });
 
   it('checks class ownership before reading either metadata or performance', async () => {
@@ -264,7 +192,7 @@ describe('Class performance', () => {
     await expect(service.performance(17, {})).rejects.toBeInstanceOf(NotFoundException);
 
     expect(assignmentQb.getRawMany).not.toHaveBeenCalled();
-    expect(enrollmentQb.getRawMany).not.toHaveBeenCalled();
+    expect(enrollmentRepository.query).not.toHaveBeenCalled();
   });
 
   it('returns only class metadata and graded activity options', async () => {
@@ -353,14 +281,14 @@ describe('Class performance', () => {
       '1.5',
       '12,',
       '12,hello',
-      '12, 15',
+      '12, 15'
     ])('rejects malformed activity IDs: %s', async (activityIds) => {
       const result = pipe.transform({ activityIds }, metadata);
 
-      await expect(result).rejects.toThrow(BadRequestException);
-    });
-    it.each(['0', '-1', 'hello'])
-      ('rejects invalid class IDs: %s', async (id) => {
+        await expect(result).rejects.toThrow(BadRequestException);
+      }
+    )
+    it.each(['0', '-1', 'hello'])('rejects invalid class IDs: %s', async (id) => {
         const result = pipe.transform(
           { id },
           { type: 'param', metatype: ClassIdParamsDto }
