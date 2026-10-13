@@ -20,11 +20,11 @@ import {
   ViewAssignmentAlertsComponent,
 } from "./activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { AdminAssignmentListItem } from "@/app/interface/scheduler-api/assignment";
 import { formatDateTime } from "@/utils/date";
 
 interface AssignmentsTableProps {
-  assignments: Array<Assignment>;
+  assignments: Array<AdminAssignmentListItem>;
   emptyMessage?: string;
 }
 
