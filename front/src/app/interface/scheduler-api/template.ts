@@ -30,8 +30,7 @@ export type PaginatedTemplate = Pick<
   "id" |
   "title" |
   "description" |
-  "workerType" |
-  "content"
+  "workerType"
 >;
 
 export interface CreateTemplateRequest {

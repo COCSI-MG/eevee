@@ -95,8 +95,7 @@ export class TemplateService {
         'template.id',
         'template.title',
         'template.description',
-        'template.workerType',
-        'template.content'
+        'template.workerType'
       ])
       .orderBy('template.id', 'DESC');
 

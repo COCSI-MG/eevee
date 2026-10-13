@@ -13,7 +13,4 @@ export class TemplateListItemResponseDto {
 
   @ApiProperty({ enum: Object.values(WorkerType) })
   workerType: WorkerType;
-
-  @ApiProperty({ example: 'test("deve funcionar", () => {})' })
-  content: string;
 }

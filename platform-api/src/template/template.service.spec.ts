@@ -307,7 +307,6 @@ describe('TemplateService', () => {
         'template.title',
         'template.description',
         'template.workerType',
-        'template.content'
       ]);
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
