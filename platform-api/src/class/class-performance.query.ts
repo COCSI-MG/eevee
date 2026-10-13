@@ -37,7 +37,8 @@ export const CLASS_PERFORMANCE_QUERY = `
       "activityId",
       position
     FROM
-      unnest($6::int[]) WITH ORDINALITY AS activity("activityId", position)
+      unnest($6::int[])
+    WITH ORDINALITY AS activity("activityId", position)
   ),
   student_grades AS (
     SELECT
