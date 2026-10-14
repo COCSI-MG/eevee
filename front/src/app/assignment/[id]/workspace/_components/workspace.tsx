@@ -40,7 +40,8 @@ export default function Workspace({
     replaceFileTree,
     selectedItem,
     selectItem,
-    fileTreeData
+    fileTreeData,
+    registerTypedText
   } = useWorkspaceContext();
   const userId = user.userId;
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
@@ -214,6 +215,7 @@ export default function Workspace({
       onEditorChange={handleEditorChange}
       onSecondaryEditorChange={handleSecondaryEditorChange}
       editorActionGuardMode={editorActionGuardMode}
+      onDidType={registerTypedText}
     />
   );
 }

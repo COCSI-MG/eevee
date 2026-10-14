@@ -14,6 +14,7 @@ interface WorkspaceShellProps {
   onSecondaryEditorChange: (value: string | undefined) => void;
   editorActionGuardMode: Parameters<typeof WorkspaceCodeEditor>[0]["actionGuardMode"];
   editorReadOnly?: boolean;
+  onDidType?: Parameters<typeof WorkspaceCodeEditor>[0]["onDidType"];
   onItemMoved?: (oldPath: string, newPath: string) => void;
   fileTreeData?: FileNode;
   selectedItem?: SelectedItem;
@@ -26,7 +27,8 @@ export default function WorkspaceShell({
   onEditorChange,
   onSecondaryEditorChange,
   editorActionGuardMode,
-  editorReadOnly = false
+  editorReadOnly = false,
+  onDidType
 }: WorkspaceShellProps) {
 
   const { explorerWidth, startResize } = useWorskpaceResizing();
@@ -38,7 +40,8 @@ export default function WorkspaceShell({
 
   const commonEditorProps = {
     "actionGuardMode": editorActionGuardMode,
-    "readOnly": editorReadOnly
+    "readOnly": editorReadOnly,
+    onDidType
   }
 
   const primaryEditorProps = {
