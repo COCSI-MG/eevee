@@ -128,6 +128,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const params = useParams();
   const queryClient = useQueryClient();
   const { user } = useAuthContext();
+  const isSecurityExempt = user?.role === UserRole.ADMIN || user?.role === UserRole.TEACHER;
   const currentUserId = user?.userId ?? 0;
   const assignmentId = Number(params.id);
   const isViewingAnotherUser = Boolean(params.userId);
@@ -141,7 +142,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     queryFn: () => AssignmentAlertService.getMyStatus(assignmentId),
     enabled: Boolean(
       user?.userId &&
-        user.role !== UserRole.ADMIN &&
+        !isSecurityExempt &&
         Number.isInteger(assignmentId) &&
         assignmentId > 0
     ),
@@ -153,7 +154,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const isUserSuspended = Boolean(assignmentData?.currentUserAlertStatus?.suspended);
   const shouldPreventUserActions = Boolean(
     enableSecurityGuards && user?.userId &&
-    user.role !== UserRole.ADMIN && assignmentData &&
+    !isSecurityExempt && assignmentData &&
     securityAgreementAccepted && !isUserSuspended
   );
   const [securityWarning, setSecurityWarning] = React.useState<SecurityWarning | null>(null);
@@ -216,7 +217,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   }, [isViewingAnotherUser]);
 
   React.useEffect(() => {
-    if (!assignmentData?.alertPolicy || user?.role === UserRole.ADMIN) return;
+    if (!assignmentData?.alertPolicy || isSecurityExempt) return;
 
     const version = assignmentData.alertPolicy.version ?? 1;
 
@@ -227,7 +228,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     assignmentData?.alertPolicy,
     assignmentId,
     currentUserId,
-    user?.role
+    isSecurityExempt
   ]);
 
   React.useEffect(
@@ -261,7 +262,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   React.useEffect(() => {
     const status = statusQuery.data;
-    if (!status) return;
+    if (isSecurityExempt || !status) return;
 
     const shouldReloadAssignment =
       !status.suspended &&
@@ -276,6 +277,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     }
   }, [
     assignmentData,
+    isSecurityExempt,
     refetchAssignment,
     statusQuery.data,
     updateAssignmentStatus,
@@ -284,7 +286,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   React.useEffect(() => {
     if (
       !user?.userId ||
-      user.role === UserRole.ADMIN ||
+      isSecurityExempt ||
       statusQuery.data?.suspended
     ) {
       return;
@@ -295,11 +297,11 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     }, 15000);
 
     return () => window.clearInterval(timer);
-  }, [refetchAssignment, statusQuery.data?.suspended, user?.role, user?.userId]);
+  }, [isSecurityExempt, refetchAssignment, statusQuery.data?.suspended, user?.userId]);
 
   const sendPendingAlert = React.useCallback(
     async (payload: RecordAssignmentAlertRequest, retryAttempt = 0) => {
-      if (inFlightEventIds.current.has(payload.eventId)) return;
+      if (!shouldPreventUserActions || inFlightEventIds.current.has(payload.eventId)) return;
 
       inFlightEventIds.current.add(payload.eventId);
 
@@ -332,7 +334,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
         inFlightEventIds.current.delete(payload.eventId);
       }
     },
-    [assignmentId, removePendingAlert, updateAssignmentStatus],
+    [assignmentId, removePendingAlert, shouldPreventUserActions, updateAssignmentStatus],
   );
 
   React.useEffect(() => {
@@ -349,10 +351,12 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
       timers.forEach((timer) => window.clearTimeout(timer));
       timers.clear();
     };
-  }, []);
+  }, [shouldPreventUserActions]);
 
   const handleSecurityViolation = React.useCallback(
     (event: SecurityViolationEvent) => {
+      if (!shouldPreventUserActions) return;
+
       if (event.type === AssignmentAlertType.TypingRate) {
         if (typingWarningOpen.current) return;
 
@@ -385,7 +389,8 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
       assignmentData?.alertPolicy?.punitiveTypes,
       assignmentId,
       currentUserId,
-      sendPendingAlert
+      sendPendingAlert,
+      shouldPreventUserActions
     ],
   );
 
@@ -460,7 +465,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     fileTreeData: treeData,
     workerType: workerType ?? assignmentData?.workerType,
     clipboardScope,
-    securityAgreementAccepted,
+    securityAgreementAccepted: isSecurityExempt || securityAgreementAccepted,
     registerTypedText,
     acceptSecurityAgreement,
     selectItem,
@@ -473,7 +478,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   return (
     <WorkspaceContext.Provider value={value}>
       {children}
-      <AlertDialog open={Boolean(securityWarning)}>
+      <AlertDialog open={!isSecurityExempt && Boolean(securityWarning)}>
         <AlertDialogContent
           onEscapeKeyDown={(event) => event.preventDefault()}
         >

@@ -46,6 +46,7 @@ export default function Workspace({
   const userId = user.userId;
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
   const [, setActiveFileContent] = React.useState("");
+  const [isSplitView, setIsSplitView] = React.useState(false);
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
 
@@ -57,7 +58,7 @@ export default function Workspace({
     selectItem,
   });
 
-  const editorActionGuardMode = user.role === UserRole.ADMIN
+  const editorActionGuardMode = user.role === UserRole.ADMIN || user.role === UserRole.TEACHER
     ? EDITOR_ACTION_GUARD_MODE.EXEMPT
     : assignment.allowCopyPaste
       ? EDITOR_ACTION_GUARD_MODE.INTERNAL_ONLY
@@ -142,6 +143,7 @@ export default function Workspace({
       type: "file",
       path: node.path,
     });
+    setIsSplitView(true);
   }, []);
 
   const handleItemMoved = React.useCallback(
@@ -212,6 +214,8 @@ export default function Workspace({
       }
       activeFile={activeFile}
       secondaryFile={secondaryFile}
+      isSplitView={isSplitView}
+      onSplitViewChange={setIsSplitView}
       onEditorChange={handleEditorChange}
       onSecondaryEditorChange={handleSecondaryEditorChange}
       editorActionGuardMode={editorActionGuardMode}

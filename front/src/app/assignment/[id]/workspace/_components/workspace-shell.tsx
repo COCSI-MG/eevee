@@ -10,6 +10,8 @@ interface WorkspaceShellProps {
   explorer: React.ReactNode;
   activeFile: Parameters<typeof WorkspaceCodeEditor>[0]["file"];
   secondaryFile: Parameters<typeof WorkspaceCodeEditor>[0]["file"];
+  isSplitView: boolean;
+  onSplitViewChange: (value: boolean) => void;
   onEditorChange: (value: string | undefined) => void;
   onSecondaryEditorChange: (value: string | undefined) => void;
   editorActionGuardMode: Parameters<typeof WorkspaceCodeEditor>[0]["actionGuardMode"];
@@ -24,6 +26,8 @@ export default function WorkspaceShell({
   explorer,
   activeFile,
   secondaryFile,
+  isSplitView,
+  onSplitViewChange,
   onEditorChange,
   onSecondaryEditorChange,
   editorActionGuardMode,
@@ -32,11 +36,6 @@ export default function WorkspaceShell({
 }: WorkspaceShellProps) {
 
   const { explorerWidth, startResize } = useWorskpaceResizing();
-  const [isSplitView, setIsSplitView] = React.useState(false);
-
-  React.useEffect(() => {
-    if (secondaryFile) setIsSplitView(true);
-  }, [secondaryFile]);
 
   const commonEditorProps = {
     "actionGuardMode": editorActionGuardMode,
@@ -75,7 +74,7 @@ export default function WorkspaceShell({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsSplitView(false)}
+              onClick={() => onSplitViewChange(false)}
               disabled={!secondaryFile}
             >
               Fechar página 2
@@ -85,7 +84,7 @@ export default function WorkspaceShell({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsSplitView((current) => !current)}
+            onClick={() => onSplitViewChange(!isSplitView)}
           >
             {isSplitView ? "Página única" : "Duas páginas"}
           </Button>

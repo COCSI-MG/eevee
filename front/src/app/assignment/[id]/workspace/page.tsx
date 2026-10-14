@@ -27,6 +27,7 @@ export default function Page() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuthContext();
+  const isSecurityExempt = user?.role === UserRole.ADMIN || user?.role === UserRole.TEACHER;
   const userId = user?.userId;
   const assignmentId = Number(id);
   const isInvalidAssignmentId =
@@ -166,7 +167,7 @@ export default function Page() {
     return <WorkspaceLoading />;
   }
 
-  if (isSuspendedResponse) {
+  if (!isSecurityExempt && isSuspendedResponse) {
     return <WorkspaceSuspension />;
   }
 
@@ -185,7 +186,7 @@ export default function Page() {
   }
 
   // Suspension check
-  if (assignmentData?.currentUserAlertStatus?.suspended) {
+  if (!isSecurityExempt && assignmentData?.currentUserAlertStatus?.suspended) {
     return <WorkspaceSuspension />;
   }
 
@@ -197,8 +198,12 @@ export default function Page() {
     isDeadlinePassed(effectiveDueDate),
   );
 
-  // Agreement check - APENAS para não-admins que ainda não aceitaram
-  if (user && user.role !== UserRole.ADMIN && assignmentData && !securityAgreementAccepted) {
+  if (
+    user &&
+    !isSecurityExempt &&
+    assignmentData &&
+    !securityAgreementAccepted
+  ) {
     return (
       <WorkspaceAgreement
         title={assignmentData.title}
@@ -210,7 +215,6 @@ export default function Page() {
     );
   }
 
-  // Workspace principal (após aceitar ou se for admin)
   return (
     <div className="h-screen text-foreground flex flex-col">
       <WorkspaceHeader

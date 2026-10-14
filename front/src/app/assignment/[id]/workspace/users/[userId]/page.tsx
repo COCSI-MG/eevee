@@ -37,6 +37,7 @@ export default function SubmittedWorkPage() {
   const enabled = canViewSubmittedWork && assignmentIdValid && userIdValid && attemptIdValid;
 
   const [secondaryPath, setSecondaryPath] = useState<string | null>(null);
+  const [isSplitView, setIsSplitView] = useState(false);
 
   const { data, isPending, isError, error } = useQuery({
     queryKey: ["adminSubmittedWork", user?.userId, user?.role, assignmentId, userId, attemptId],
@@ -160,11 +161,16 @@ export default function SubmittedWorkPage() {
             selectedItem={selectedItem}
             onFileSelect={(node) => selectItem({ id: node.id, type: "file", path: node.path })}
             onSelectItem={selectItem}
-            onOpenInSecondary={(node) => setSecondaryPath(node.path)}
+            onOpenInSecondary={(node) => {
+              setSecondaryPath(node.path);
+              setIsSplitView(true);
+            }}
           />
         }
         activeFile={activeFile}
         secondaryFile={secondaryFile}
+        isSplitView={isSplitView}
+        onSplitViewChange={setIsSplitView}
         onEditorChange={() => undefined}
         onSecondaryEditorChange={() => undefined}
         editorActionGuardMode="exempt"
