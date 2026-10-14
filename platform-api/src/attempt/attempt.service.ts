@@ -365,6 +365,8 @@ export class AttemptService {
     userId: number,
     attemptId: number
   ) {
+    await this.classAccess.assertAssignmentAccess(assignmentId, true);
+
     const attempt = await this.attemptRepository.findOne({
       where: {
         id: attemptId,

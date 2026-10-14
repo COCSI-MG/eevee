@@ -63,6 +63,10 @@ describe('AttemptController', () => {
       UserRole.ADMIN,
       UserRole.TEACHER
     ]);
+    expect(Reflect.getMetadata(ROLES_KEY, prototype.findSubmittedWorkForAdmin)).toEqual([
+      UserRole.ADMIN,
+      UserRole.TEACHER
+    ]);
   });
 
   it('delegates admin listing to the service', async () => {

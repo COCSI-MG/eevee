@@ -408,6 +408,8 @@ describe('AttemptService', () => {
         data: [
           {
             id: 12,
+            assignmentId: 99,
+            userId: 7,
             attempt: 2,
             status: AttemptStatus.COMPLETED,
             isAcceptable: true,
@@ -470,7 +472,8 @@ describe('AttemptService', () => {
     });
   });
 
-  it('returns submitted work for the requested attempt only', async () => {
+  it.each([UserRole.ADMIN, UserRole.TEACHER])('returns submitted work for the requested attempt to authorized %s', async (role) => {
+    classAccessService.user.mockReturnValue({ userId: 4, role });
     const submittedAttempt = {
       id: 12,
       assignmentId: 99,
@@ -509,5 +512,34 @@ describe('AttemptService', () => {
         },
       }),
     );
+    expect(classAccessService.assertAssignmentAccess).toHaveBeenCalledWith(99, true);
+    expect(classAccessService.assertAssignmentAccess.mock.invocationCallOrder[0]).toBeLessThan(attemptRepository.findOne.mock.invocationCallOrder[0]);
+  });
+
+  it('does not query submitted files when the teacher does not manage the assignment class', async () => {
+    classAccessService
+      .user
+      .mockReturnValue(
+        {
+          userId: 4,
+          role: UserRole.TEACHER
+        }
+      );
+
+    classAccessService.assertAssignmentAccess.mockRejectedValue(new NotFoundException('Class not found'));
+
+    await expect(service.findSubmittedWorkForAdmin(99, 7, 12))
+      .rejects
+      .toBeInstanceOf(NotFoundException);
+
+    expect(attemptRepository.findOne)
+      .not
+      .toHaveBeenCalled();
+  });
+
+  it.each([null, { id: 12, receivedWork: null }])('rejects missing submitted work (%p)', async (attempt) => {
+    attemptRepository.findOne.mockResolvedValue(attempt);
+
+    await expect(service.findSubmittedWorkForAdmin(99, 7, 12)).rejects.toThrow('Submitted project not found');
   });
 });

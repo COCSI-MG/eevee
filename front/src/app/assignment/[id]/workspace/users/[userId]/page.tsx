@@ -8,6 +8,7 @@ import { findNodeByPath } from "@/app/assignment/[id]/workspace/_utils/workspace
 import { useWorkspaceContext } from "@/app/assignment/[id]/workspace/_providers/workspace-provider";
 import { AttemptAdminService } from "@/app/integration/scheduler-api/attempt";
 import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { UserRole } from "@/app/interface/scheduler-api/user";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth-context";
@@ -23,14 +24,22 @@ export default function SubmittedWorkPage() {
   const router = useRouter();
   const { user } = useAuthContext();
   const { replaceFileTree, selectItem, selectedItem, fileTreeData } = useWorkspaceContext();
+
   const assignmentId = Number(params.id);
   const userId = Number(params.userId);
   const attemptId = Number(searchParams.get("attemptId"));
-  const enabled = Boolean(user?.isAdmin && assignmentId > 0 && userId > 0 && attemptId > 0);
+
+  const canViewSubmittedWork = user?.role === UserRole.ADMIN || user?.role === UserRole.TEACHER;
+  const assignmentIdValid = assignmentId > 0
+  const userIdValid = userId > 0
+  const attemptIdValid = attemptId > 0
+
+  const enabled = canViewSubmittedWork && assignmentIdValid && userIdValid && attemptIdValid;
+
   const [secondaryPath, setSecondaryPath] = useState<string | null>(null);
 
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ["adminSubmittedWork", assignmentId, userId, attemptId],
+    queryKey: ["adminSubmittedWork", user?.userId, user?.role, assignmentId, userId, attemptId],
     queryFn: () => AttemptAdminService.getSubmittedWork(assignmentId, userId, attemptId),
     enabled,
     refetchOnWindowFocus: false
@@ -115,8 +124,8 @@ export default function SubmittedWorkPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (!user?.isAdmin) {
-    return <div className="p-8 text-destructive">Apenas administradores podem visualizar este código.</div>;
+  if (!canViewSubmittedWork) {
+    return <div className="p-8 text-destructive">Apenas professores e administradores podem visualizar e baixar este código.</div>;
   }
 
   if (isPending) return <Loader />;

@@ -5,11 +5,8 @@ import {
   Param,
   ParseIntPipe,
   Query,
-  Res,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
-import { Response } from 'express';
-import { deflateRawSync } from 'zlib';
 import { AttemptService } from './attempt.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
@@ -44,6 +41,7 @@ export class AttemptController {
   }
 
   @Get('admin/assignment/:assignmentId/user/:userId/attempt/:attemptId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   findSubmittedWorkForAdmin(
     @Param('assignmentId', ParseIntPipe) assignmentId: number,
     @Param('userId', ParseIntPipe) userId: number,
