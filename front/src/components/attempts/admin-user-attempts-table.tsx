@@ -19,6 +19,7 @@ import {
 import { formatDateTime } from "@/utils/date";
 import { Play, RefreshCcw } from "lucide-react";
 import { Fragment } from "react";
+import Link from "next/link";
 
 interface AdminUserAttemptsTableProps {
   attempts: AdminAttemptDetail[];
@@ -91,16 +92,25 @@ export function AdminUserAttemptsTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="border-border bg-background text-foreground hover:bg-card"
-                        aria-expanded={isExpanded}
-                        onClick={() => onToggleAttempt(attempt.id)}
-                      >
-                        {isExpanded ? "Ver menos" : "Ver mais"}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="border-border bg-background text-foreground hover:bg-card"
+                          aria-expanded={isExpanded}
+                          onClick={() => onToggleAttempt(attempt.id)}
+                        >
+                          {isExpanded ? "Ver menos" : "Ver mais"}
+                        </Button>
+                        {attempt.receivedWork && (
+                          <Button asChild type="button" variant="outline" size="sm">
+                            <Link href={`/assignment/${attempt.assignmentId}/workspace/users/${attempt.userId}?attemptId=${attempt.id}`}>
+                              Ver código
+                            </Link>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
