@@ -14,6 +14,7 @@ import { Assignment } from './entities/assignment.entity';
 import { AssignmentParam } from './entities/assignment-param.entity';
 import { AssignmentTemplate } from './entities/assignment-template.entity';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { ClassService } from 'src/class/class.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { Template } from 'src/template/entities/template.entity';
@@ -679,13 +680,21 @@ describe('AssignmentService', () => {
 
   describe('findAssignmentsByClass', () => {
     const makeFindQueryBuilder = (rows: Record<string, unknown>[] = []) => {
+      const acceptedAttemptQueryBuilder: Record<string, jest.Mock> = {
+        select: jest.fn().mockReturnThis(),
+        from: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getQuery: jest.fn().mockReturnValue('(SELECT 1)')
+      };
       const qb: Record<string, jest.Mock> = {
         select: jest.fn().mockReturnThis(),
         addSelect: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        setParameter: jest.fn().mockReturnThis(),
+        setParameters: jest.fn().mockReturnThis(),
+        subQuery: jest.fn().mockReturnValue(acceptedAttemptQueryBuilder),
         getRawMany: jest.fn().mockResolvedValue(rows),
       };
       return qb;
@@ -709,13 +718,18 @@ describe('AssignmentService', () => {
 
       const result = await service.findAssignmentsByClass(1);
 
-      expect(qb.leftJoin).toHaveBeenCalledWith(
-        'assignment.examAssignment',
-        'examAssignment',
-      );
-      expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
+      expect(qb.leftJoin).toHaveBeenCalledWith('a.examAssignment', 'exam');
+
+      expect(qb.where).toHaveBeenCalledWith('a.classId = :classId AND exam.id IS NULL');
+
+      expect(qb.setParameters).toHaveBeenCalledWith({
+        classId: 1,
+        userId: 7,
+        completedStatus: AttemptStatus.COMPLETED
+      });
+
       expect(qb.andWhere).toHaveBeenCalledWith(
-        expect.stringContaining('assignment.startDate'),
+        '(a.startDate IS NULL OR a.startDate <= :now)',
         { now: expect.any(Date) }
       );
       expect(qb.leftJoinAndSelect).toBeUndefined();
@@ -773,23 +787,34 @@ describe('AssignmentService', () => {
           hasAcceptedAttempt: true
         },
       ]);
-      expect(qb.select).toHaveBeenCalledWith('assignment.id', 'assignment_id');
-
-      expect(qb.leftJoin.mock.calls[0].slice(1)).toEqual([
-        'latest_attempt',
-        'latest_attempt.assignment_id = assignment.id'
+      expect(qb.select).toHaveBeenCalledWith([
+        'a.id AS assignment_id',
+        'a.title AS title',
+        'a.description AS description',
+        'a.startDate AS start_date',
+        'a.dueDate AS due_date',
+        'a.answerKeyId AS answer_key_id',
+        'a.answerKeyVisible AS answer_key_visible',
+        'a.suspensionAlertLimit AS suspension_alert_limit',
+        'last.assignment_id AS last_attempt_assignment_id',
+        'last.status AS last_attempt_status',
+        'last.score AS last_attempt_score',
+        'last.is_acceptable AS last_attempt_is_acceptable'
       ]);
 
-      const latestAttemptSubquery = qb.leftJoin.mock.calls[0][0]
+      expect(qb.leftJoin.mock.calls[1].slice(1)).toEqual([
+        'last',
+        'last.assignment_id = a.id'
+      ]);
+
+      const latestAttemptSubquery = qb.leftJoin.mock.calls[1][0]
 
       const subqueryBuilder: Record<string, jest.Mock> = {
         select: jest.fn().mockReturnThis(),
-        addSelect: jest.fn().mockReturnThis(),
         distinctOn: jest.fn().mockReturnThis(),
         from: jest.fn().mockReturnThis(),
         innerJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         addOrderBy: jest.fn().mockReturnThis()
       };
@@ -797,13 +822,21 @@ describe('AssignmentService', () => {
       latestAttemptSubquery(subqueryBuilder);
 
       expect(subqueryBuilder.distinctOn).toHaveBeenCalledWith([
-        'latestAttempt.assignmentId'
+        't.assignmentId'
       ]);
+
+      expect(subqueryBuilder.orderBy).toHaveBeenCalledWith(
+        't.assignmentId',
+        'ASC'
+      );
+
       expect(subqueryBuilder.addOrderBy).toHaveBeenCalledWith(
-        'latestAttempt.attempt',
+        't.attempt',
         'DESC'
       );
-      expect(subqueryBuilder.andWhere).toHaveBeenCalledWith('attemptAssignment.classId = :classId')
+
+      expect(subqueryBuilder.addOrderBy).toHaveBeenCalledWith('t.id', 'DESC');
+      expect(subqueryBuilder.where).toHaveBeenCalledWith('t.userId = :userId AND related.classId = :classId');
     });
 
     it('returns no last attempt and no accepted history when a student has no attempts', async () => {
@@ -879,8 +912,9 @@ describe('AssignmentService', () => {
       await service.findAssignmentsByClass(1);
 
       expect(classAccess.assertClassAccess).toHaveBeenCalledWith(1);
-      expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
-      expect(qb.andWhere).toHaveBeenCalledTimes(1);
+
+      expect(qb.where).toHaveBeenCalledWith('a.classId = :classId AND exam.id IS NULL');
+      expect(qb.andWhere).not.toHaveBeenCalled();
     });
   });
 
