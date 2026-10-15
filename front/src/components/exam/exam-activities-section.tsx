@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { ClassAssignmentSummary } from "@/app/interface/scheduler-api/assignment";
 import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
 import ListSearch from "@/components/shared/list-search";
 import Pagination from "@/components/shared/pagination";
@@ -59,8 +59,8 @@ interface ExamActivitiesSectionProps {
     error: string | null;
     errorMessage: string | null;
     isLoading: boolean;
-    items: Assignment[] | undefined;
-    link: (assignment: Assignment) => void;
+    items: ClassAssignmentSummary[] | undefined;
+    link: (assignment: ClassAssignmentSummary) => void;
     isValidScore: (raw: string | undefined) => boolean;
   };
 }

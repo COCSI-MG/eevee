@@ -678,13 +678,15 @@ describe('AssignmentService', () => {
   });
 
   describe('findAssignmentsByClass', () => {
-    const makeFindQueryBuilder = () => {
+    const makeFindQueryBuilder = (rows: Record<string, unknown>[] = []) => {
       const qb: Record<string, jest.Mock> = {
-        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue([]),
+        setParameter: jest.fn().mockReturnThis(),
+        getRawMany: jest.fn().mockResolvedValue(rows),
       };
       return qb;
     };
@@ -712,8 +714,130 @@ describe('AssignmentService', () => {
         'examAssignment',
       );
       expect(qb.andWhere).toHaveBeenCalledWith('examAssignment.id IS NULL');
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('assignment.startDate'),
+        { now: expect.any(Date) }
+      );
+      expect(qb.leftJoinAndSelect).toBeUndefined();
       expect(classAccess.assertClassAccess).toHaveBeenCalledWith(1);
       expect(result).toEqual([]);
+    });
+
+    it('returns only the assignment card fields and last attempt summary', async () => {
+      const { service, assignmentRepository, assignmentAlertService, requestContextService } = await setup();
+
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        role: UserRole.STUDENT
+      });
+
+      const qb = makeFindQueryBuilder([
+        {
+          assignment_id: '12',
+          title: 'Tarefa',
+          description: 'Descrição',
+          start_date: null,
+          due_date: new Date('2026-10-20T12:00:00.000Z'),
+          answer_key_id: '5',
+          answer_key_visible: true,
+          suspension_alert_limit: '5',
+          last_attempt_assignment_id: '12',
+          last_attempt_status: 'failed',
+          last_attempt_score: '0',
+          last_attempt_is_acceptable: false,
+          has_accepted_attempt: true,
+          active_alert_count: '1',
+          receivedWork: { 'solution.ts': 'must not be returned' },
+          report: 'must not be returned',
+          refinedReport: 'must not be returned'
+        },
+      ]);
+
+      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      await expect(service.findAssignmentsByClass(1)).resolves.toEqual([
+        {
+          id: 12,
+          title: 'Tarefa',
+          description: 'Descrição',
+          startDate: null,
+          dueDate: new Date('2026-10-20T12:00:00.000Z'),
+          answerKeyId: 5,
+          answerKeyVisible: true,
+          currentUserAlertStatus: { suspended: false },
+          lastAttempt: {
+            status: 'failed',
+            score: 0,
+            isAcceptable: false
+          },
+          hasAcceptedAttempt: true
+        },
+      ]);
+      expect(qb.select).toHaveBeenCalledWith('assignment.id', 'assignment_id');
+
+      expect(qb.leftJoin.mock.calls[0].slice(1)).toEqual([
+        'latest_attempt',
+        'latest_attempt.assignment_id = assignment.id'
+      ]);
+
+      const latestAttemptSubquery = qb.leftJoin.mock.calls[0][0]
+
+      const subqueryBuilder: Record<string, jest.Mock> = {
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        distinctOn: jest.fn().mockReturnThis(),
+        from: jest.fn().mockReturnThis(),
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        addOrderBy: jest.fn().mockReturnThis()
+      };
+
+      latestAttemptSubquery(subqueryBuilder);
+
+      expect(subqueryBuilder.distinctOn).toHaveBeenCalledWith([
+        'latestAttempt.assignmentId'
+      ]);
+      expect(subqueryBuilder.addOrderBy).toHaveBeenCalledWith(
+        'latestAttempt.attempt',
+        'DESC'
+      );
+      expect(subqueryBuilder.andWhere).toHaveBeenCalledWith('attemptAssignment.classId = :classId')
+    });
+
+    it('returns no last attempt and no accepted history when a student has no attempts', async () => {
+      const { service, assignmentRepository, requestContextService } = await setup();
+
+      requestContextService.getUser.mockReturnValue({
+        userId: 7,
+        role: UserRole.STUDENT
+      });
+
+      const qb = makeFindQueryBuilder([
+        {
+          assignment_id: 12,
+          title: 'Tarefa',
+          description: 'Descrição',
+          start_date: null,
+          due_date: null,
+          answer_key_id: null,
+          answer_key_visible: false,
+          suspension_alert_limit: 5,
+          last_attempt_assignment_id: null,
+          last_attempt_status: null,
+          last_attempt_score: null,
+          last_attempt_is_acceptable: null,
+          has_accepted_attempt: false,
+          active_alert_count: '0'
+        },
+      ]);
+      assignmentRepository.createQueryBuilder.mockReturnValue(qb);
+
+      const [result] = await service.findAssignmentsByClass(1);
+
+      expect(result.lastAttempt).toBeNull();
+      expect(result.hasAcceptedAttempt).toBe(false);
     });
 
     it('rejects a user without class access before querying assignments', async () => {
