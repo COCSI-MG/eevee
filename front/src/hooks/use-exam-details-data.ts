@@ -10,7 +10,7 @@ import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { usePaginatedExamStudents } from "@/hooks/use-paginated-exam-students";
 import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
 import { ExamStudentGrades } from "@/app/interface/scheduler-api/exam-student-grades";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { ClassAssignmentSummary } from "@/app/interface/scheduler-api/assignment";
 import { toast } from "@/hooks/use-toast";
 
 interface UseExamDetailsDataParams {
@@ -203,7 +203,7 @@ export function useExamDetailsData({ examId, classId }: UseExamDetailsDataParams
     isError: isLinkableError,
     error: linkableError,
     refetch: refetchLinkable,
-  } = useQuery<Assignment[]>({
+  } = useQuery<ClassAssignmentSummary[]>({
     queryKey: ["linkable-assignments", classId],
     queryFn: () => AssignmentService.getLinkableByClassId(classId),
     enabled: isLinkOpen && Number.isFinite(classId),
@@ -275,7 +275,7 @@ export function useExamDetailsData({ examId, classId }: UseExamDetailsDataParams
     });
   };
 
-  const handleLinkAssignment = (assignment: Assignment) => {
+  const handleLinkAssignment = (assignment: ClassAssignmentSummary) => {
     const raw = scoresByAssignmentId[assignment.id];
     if (!isValidScore(raw)) return;
     setLinkError(null);
