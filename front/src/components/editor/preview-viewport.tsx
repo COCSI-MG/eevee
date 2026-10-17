@@ -207,7 +207,7 @@ export function PreviewViewportStage({ viewport, children, overlay } : PreviewVi
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 p-2 lg:p-3">
-      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
+      <div ref={containerRef} className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
         <div
           className="relative mx-auto overflow-hidden rounded-md bg-white ring-1 ring-inset ring-border/20"
           style={
