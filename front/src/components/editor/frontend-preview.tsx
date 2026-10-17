@@ -24,6 +24,7 @@ interface FrontendPreviewProps {
   react: boolean;
   paused?: boolean;
   onClose?: () => void;
+  blockContextMenu?: boolean;
 }
 
 interface SandpackFrameProps {
@@ -135,7 +136,13 @@ function SandpackFrame({ setup, startRoute, onRetry, viewport } : SandpackFrameP
   );
 }
 
-export function FrontendPreview({ tree, react, paused = false, onClose }: FrontendPreviewProps) {
+export function FrontendPreview({
+  tree,
+  react,
+  paused = false,
+  onClose,
+  blockContextMenu = false
+}: FrontendPreviewProps ) {
   const viewport = usePreviewViewport();
 
   const files = useMemo(() => previewFiles(tree), [tree]);
@@ -161,7 +168,7 @@ export function FrontendPreview({ tree, react, paused = false, onClose }: Fronte
 
     try {
       return {
-        setup: createPreviewSandbox(entry, files, react)
+        setup: createPreviewSandbox(entry, files, react, blockContextMenu)
       };
     } catch (error) {
       return {
@@ -169,7 +176,7 @@ export function FrontendPreview({ tree, react, paused = false, onClose }: Fronte
       };
     }
 
-  }, [entry, files, react, paused]);
+  }, [entry, files, react, paused, blockContextMenu]);
 
   const inactiveStatus = paused
   ? PreviewStatus.Paused
@@ -193,7 +200,7 @@ export function FrontendPreview({ tree, react, paused = false, onClose }: Fronte
                 <SelectValue />
               </SelectTrigger>
 
-              <SelectContent align="end" className="max-w-[min(28rem,90vw)]">
+              <SelectContent align="end" className="w-100">
                 {entries.map((item) => {
 
                   return <SelectItem
@@ -228,7 +235,7 @@ export function FrontendPreview({ tree, react, paused = false, onClose }: Fronte
 
       {prepared.setup ? (
         <SandpackFrame
-          key={`${entryKey}:${refresh.version}`}
+          key={`${entryKey}:${refresh.version}:${blockContextMenu}`}
           setup={prepared.setup}
           startRoute={refresh.entry === entryKey ? refresh.path : "/"}
           onRetry={retry}

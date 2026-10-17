@@ -318,6 +318,7 @@ export default function Workspace({
                   tree={fileTreeData}
                   react={isReactPreview}
                   paused={Boolean(assignment.currentUserAlertStatus?.suspended)}
+                  blockContextMenu={user.role === UserRole.STUDENT}
                   onClose={() => setIsPreviewOpen(false)}
                 />
               </div>

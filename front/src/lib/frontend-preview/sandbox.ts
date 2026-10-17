@@ -1,5 +1,6 @@
 import type { SandboxSetup } from "@codesandbox/sandpack-client";
 import type { FileNode } from "@/types/shared";
+import { PREVIEW_CONTEXT_MENU_SCRIPT } from "@/constants/frontend-preview";
 
 export interface PreviewEntry {
   kind: "react" | "html";
@@ -139,9 +140,29 @@ function prepareSandboxFiles(source: Record<string, string>): SandboxFiles {
   return files;
 }
 
+function blockHtmlContextMenu(files: SandboxFiles) {
+  for (const [path, file] of Object.entries(files)) {
+    if (!/\.html?$/i.test(path)) continue;
+
+    const document = new DOMParser().parseFromString(file.code, "text/html");
+
+    const script = document.createElement("script");
+
+    script.textContent = PREVIEW_CONTEXT_MENU_SCRIPT;
+
+    document.head.prepend(script);
+
+    files[path] = {
+      ...file,
+      code: `<!doctype html>\n${document.documentElement.outerHTML}`
+    };
+  }
+}
+
 function prepareEntry(
   entry: PreviewEntry,
-  files: SandboxFiles
+  files: SandboxFiles,
+  blockContextMenu: boolean
 ): string {
   let main = `/${entry.path}`;
 
@@ -149,6 +170,13 @@ function prepareEntry(
     files["/public/index.html"] = {
       code: REACT_HTML
     };
+
+    if (blockContextMenu) {
+      files[main] = {
+        ...files[main],
+        code: `${PREVIEW_CONTEXT_MENU_SCRIPT}\n${files[main].code}`
+      };
+    }
 
     return main;
   }
@@ -183,12 +211,15 @@ function createPackageJson(
 export function createPreviewSandbox(
   entry: PreviewEntry,
   source: Record<string, string>,
-  react: boolean
+  react: boolean,
+  blockContextMenu = false
 ): SandboxSetup {
   if (!Object.hasOwn(source, entry.path)) throw new Error(`Arquivo não encontrado: ${entry.path}`);
 
   const files = prepareSandboxFiles(source);
-  const main = prepareEntry(entry, files);
+  if (blockContextMenu) blockHtmlContextMenu(files);
+
+  const main = prepareEntry(entry, files, blockContextMenu);
 
   const dependencies = react ? PREVIEW_DEPENDENCIES : {};
 
