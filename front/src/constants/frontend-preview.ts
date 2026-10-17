@@ -8,6 +8,16 @@ import {
   type LucideIcon
 } from "lucide-react";
 
+export const PREVIEW_CONTEXT_MENU_SCRIPT = `(() => {
+  const key = Symbol.for("eevee.preview.context-menu");
+  if (window[key]) return;
+  window[key] = true;
+  window.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+})();`;
+
 export enum PreviewStatus {
   Loading = "loading",
   Dependencies = "dependencies",
