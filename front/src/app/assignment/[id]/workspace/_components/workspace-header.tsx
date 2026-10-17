@@ -70,7 +70,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   };
 
   return (
-    <header className="flex items-center justify-between p-3 border-b border-border">
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 p-3 border-b border-border">
       <div className="flex items-center gap-4">
         <div
           className="flex items-center space-x-2 cursor-pointer"
@@ -120,12 +120,12 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
         </Dialog>
       </div>
 
-      <div className="flex items-center">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-0">
         <Button variant="ghost" size="sm" onClick={() => back()}>
           Voltar
         </Button>
 
-        <div className="flex items-center gap-2 ml-4">
+        <div className="contents sm:ml-4 sm:flex sm:items-center sm:gap-2">
           <AlertDialog
             open={isClearDialogOpen}
             onOpenChange={setIsClearDialogOpen}

@@ -19,9 +19,18 @@ import {
   rebaseMovedPath,
 } from "../_utils/workspace-tree.utils";
 import { useSaveFileTree } from "@/hooks/use-filestash";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { WorkspaceViewControls, WorkspaceViewMode, WorkspaceMobilePane } from "./workspace-view-controls";
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 import WorkspaceImportControl from "./workspace-import-control";
+import dynamic from "next/dynamic";
+import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { previewEntries, previewFiles } from "@/lib/frontend-preview/sandbox";
+
+const FrontendPreview = dynamic(
+  () => import("@/components/editor/frontend-preview").then((module) => module.FrontendPreview),
+  { ssr: false }
+);
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -50,7 +59,21 @@ export default function Workspace({
   const { explorerWidth, startResize } = useWorskpaceResizing();
   const { mutateAsync: saveFileTreeAsync } = useSaveFileTree();
   const [, setActiveFileContent] = React.useState("");
+
+  const paneId = React.useId();
+
+  const [explorerOpen, setExplorerOpen] = React.useState(false);
   const [isSplitView, setIsSplitView] = React.useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+  const [mobilePane, setMobilePane] = React.useState<WorkspaceMobilePane>(WorkspaceMobilePane.Code);
+  const isReactPreview = assignment.workerType === WorkerType.NODE_REACTJS_CYPRESS;
+  const canPreview = React.useMemo(
+    () => previewEntries(
+      previewFiles(fileTreeData), isReactPreview
+    ).length > 0,
+    [fileTreeData, isReactPreview]
+  );
+  const showPreview = isPreviewOpen && canPreview;
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
 
@@ -147,6 +170,8 @@ export default function Workspace({
       type: "file",
       path: node.path,
     });
+    setIsPreviewOpen(false);
+    setExplorerOpen(false);
     setIsSplitView(true);
   }, []);
 
@@ -210,78 +235,128 @@ export default function Workspace({
     onDidType: registerTypedText
   };
 
+  const viewMode: WorkspaceViewMode = showPreview
+    ? WorkspaceViewMode.Preview
+    : isSplitView ? WorkspaceViewMode.Split : WorkspaceViewMode.Single;
+
+  const handleViewChange = (mode: WorkspaceViewMode) => {
+    if (mode === WorkspaceViewMode.Preview) {
+      setIsPreviewOpen((current) => !current);
+      setMobilePane(WorkspaceMobilePane.Preview);
+      setExplorerOpen(false);
+      return;
+    }
+
+    setIsPreviewOpen(false);
+
+    setIsSplitView(mode === WorkspaceViewMode.Split && (showPreview || !isSplitView));
+  };
+
   return (
-    <div className="flex flex-1 min-h-0">
-      <div
-        className="relative flex shrink-0 min-w-[150px] max-w-[400px] flex-col bg-card border-r border-border h-full min-h-0"
-        style={{ width: explorerWidth }}
-      >
-        <WorkspaceImportControl
-          assignment={assignment}
-          user={user}
-        />
-
-        <WorkspaceExplorer
-          onFileSelect={handleFileSelect}
-          onTreeChange={handleTreeChange}
-          onOpenInSecondary={handleOpenInSecondary}
-          onItemMoved={handleItemMoved}
-        />
-
-        <div
-          role="separator"
-          aria-label="Redimensionar explorador"
-          aria-orientation="vertical"
-          className="absolute right-0 top-0 h-full w-1 cursor-ew-resize bg-transparent transition-colors hover:bg-primary/40"
-          onMouseDown={(event) => startResize("explorer", event)}
-        />
-      </div>
-
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center justify-end gap-2 border-b border-border px-2 py-1">
-          {isSplitView && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSecondarySelectedItem(null)}
-                disabled={!secondarySelectedItem}
-              >
-                Fechar página 2
-              </Button>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+      <WorkspaceViewControls
+        id={paneId}
+        mode={viewMode}
+        canPreview={canPreview}
+        explorerOpen={explorerOpen}
+        mobilePane={mobilePane}
+        onModeChange={handleViewChange}
+        onExplorerToggle={() => setExplorerOpen((current) => !current)}
+        onMobilePaneChange={setMobilePane}
+        onCloseSecondary={isSplitView && !showPreview && secondarySelectedItem ? () => {
+          setSecondarySelectedItem(null);
+          setIsSplitView(false);
+        } : undefined}
+      />
+      <div className="flex min-h-0 min-w-0 flex-1">
+        <aside
+          id={`${paneId}-explorer`}
+          aria-label="Arquivos do workspace"
+          className={cn(
+            "relative h-full min-h-0 max-w-[75%] shrink-0 flex-col border-r border-border/25 bg-card lg:flex lg:max-w-[400px]",
+            explorerOpen ? "flex" : "hidden",
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsSplitView((current) => !current)}
-          >
-            {isSplitView ? "Página única" : "Duas páginas"}
-          </Button>
-        </div>
+          style={{ width: explorerWidth }}
+        >
 
-        {isSplitView ? (
-          <div className="flex-1 min-h-0 grid grid-cols-2 divide-x divide-border">
-            <div className="min-w-0 min-h-0 flex flex-col">
-              <WorkspaceCodeEditor
-                {...editorCommonProps}
-                file={activeFile}
-                onEditorChange={handleEditorChange}
-              />
-            </div>
-            <div className="min-w-0 min-h-0 flex flex-col">
-              <WorkspaceCodeEditor
-                {...editorCommonProps}
-                file={secondaryFile}
-                onEditorChange={handleSecondaryEditorChange}
-              />
-            </div>
-          </div>
-        ) : (
-          <WorkspaceCodeEditor
-            {...editorCommonProps}
-            file={activeFile}
-            onEditorChange={handleEditorChange}
+          <WorkspaceImportControl assignment={assignment} user={user} />
+
+          <WorkspaceExplorer
+            onFileSelect={(node) => {
+              handleFileSelect(node);
+              setExplorerOpen(false);
+              setMobilePane(WorkspaceMobilePane.Code);
+            }}
+            onTreeChange={handleTreeChange}
+            onOpenInSecondary={handleOpenInSecondary}
+            onItemMoved={handleItemMoved}
           />
-        )}
+
+          <div
+            role="separator"
+            aria-label="Redimensionar explorador"
+            aria-orientation="vertical"
+            className="absolute right-0 top-0 hidden h-full w-1 cursor-ew-resize bg-transparent transition-colors hover:bg-primary/40 lg:block"
+            onMouseDown={(event) => startResize("explorer", event)}
+          />
+        </aside>
+
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {showPreview ? (
+            <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-2 lg:divide-x lg:divide-border/25">
+              <div
+                id={`${paneId}-${WorkspaceMobilePane.Code}-panel`}
+                aria-labelledby={`${paneId}-${WorkspaceMobilePane.Code}-tab`}
+                className={cn("min-h-0 min-w-0 flex-col lg:flex", mobilePane === WorkspaceMobilePane.Code ? "flex" : "hidden")}
+              >
+                <WorkspaceCodeEditor
+                  {...editorCommonProps}
+                  file={activeFile}
+                  onEditorChange={handleEditorChange}
+                />
+              </div>
+
+              <div
+                id={`${paneId}-${WorkspaceMobilePane.Preview}-panel`}
+                aria-labelledby={`${paneId}-${WorkspaceMobilePane.Preview}-tab`}
+                className={cn("min-h-0 min-w-0 flex-col lg:flex", mobilePane === WorkspaceMobilePane.Preview ? "flex" : "hidden")}
+              >
+                <FrontendPreview
+                  tree={fileTreeData}
+                  react={isReactPreview}
+                  blockContextMenu={user.role === UserRole.STUDENT}
+                  paused={securityPaused || Boolean(assignment.currentUserAlertStatus?.suspended)}
+                  onClose={() => setIsPreviewOpen(false)}
+                />
+              </div>
+            </div>
+          ) : isSplitView ? (
+
+            <div className="grid min-h-0 flex-1 grid-cols-2 divide-x divide-border/25">
+              <div className="flex min-h-0 min-w-0 flex-col">
+                <WorkspaceCodeEditor
+                  {...editorCommonProps}
+                  file={activeFile}
+                  onEditorChange={handleEditorChange}
+                />
+              </div>
+              <div className="flex min-h-0 min-w-0 flex-col">
+                <WorkspaceCodeEditor
+                  {...editorCommonProps}
+                  file={secondaryFile}
+                  onEditorChange={handleSecondaryEditorChange}
+                />
+              </div>
+            </div>
+          ) : (
+
+            <WorkspaceCodeEditor
+              {...editorCommonProps}
+              file={activeFile}
+              onEditorChange={handleEditorChange}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
