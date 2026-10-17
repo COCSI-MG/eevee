@@ -122,7 +122,7 @@ type PreviewViewport = ReturnType<typeof usePreviewViewport>;
 export function PreviewViewportControls({ viewport }: { viewport: PreviewViewport }) {
   const id = useId();
 
-  const { mode, setMode, dimensions, draft, setDraft, errors, apply, scale } = viewport;
+  const { mode, setMode, dimensions, draft, setDraft, errors, apply } = viewport;
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-border/20 bg-background/20 px-3 py-2">
@@ -158,7 +158,7 @@ export function PreviewViewportControls({ viewport }: { viewport: PreviewViewpor
           className="flex w-full flex-wrap items-start gap-2"
         >
           {(["width", "height"] as const).map((dimension) => (
-            <div className="min-w-0 flex-1 basis-24">
+            <div key={dimension} className="min-w-0 flex-1 basis-24">
               <label
                 htmlFor={`${id}-${dimension}`}
                 className="mb-1 block text-[11px] text-muted-foreground"
