@@ -12,7 +12,24 @@ export const PREVIEW_CONTEXT_MENU_SCRIPT = `(() => {
   const key = Symbol.for("eevee.preview.context-menu");
   if (window[key]) return;
   window[key] = true;
+  const devToolsKeys = new Set(["c", "i", "j", "k"]);
   window.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  }, true);
+  window.addEventListener("keydown", (event) => {
+    const isF12 = event.key === "F12";
+
+    const isCtrlShift = event.ctrlKey && event.shiftKey;
+    const isCmdShift = event.metaKey && event.shiftKey;
+    const isCmdOption = event.metaKey && event.altKey;
+
+    const hasDevToolsKey = devToolsKeys.has(event.key.toLowerCase());
+
+    const isDevToolsShortcut = isF12 || ((isCtrlShift || isCmdShift || isCmdOption) && hasDevToolsKey);
+
+    if (!isDevToolsShortcut) return;
+
     event.preventDefault();
     event.stopImmediatePropagation();
   }, true);
