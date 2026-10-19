@@ -3,6 +3,7 @@ import {
   Assignment,
   AdminAssignmentListItem,
   ClassAssignmentSummary,
+  AdminAssignmentListItem,
   AssignmentImportProject,
   AssignmentImportSource,
   CreateAssignmentRequest,
