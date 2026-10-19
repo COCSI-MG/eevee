@@ -46,8 +46,8 @@ import {
 } from 'src/assignment-alert/assignment-alert.service';
 import { UserRole } from 'src/user/user-role';
 import { ClassAccessService } from 'src/auth/class-access.service';
-import { AssignmentListItem } from './dto/assignment-list-item.dto';
 import { ClassAssignmentSummaryDto } from './dto/class-assignment-summary.dto';
+import { AssignmentListItem } from './dto/assignment-list-item.dto';
 
 type ClassAssignmentSummaryUser = {
   userId: number;
