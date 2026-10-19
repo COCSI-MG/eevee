@@ -468,7 +468,7 @@ export class AssignmentService {
     const user = this.requestContextService.getUser();
 
     if (user.role === UserRole.ADMIN) {
-      return this.findAll();
+      return this.findAllForAdminMe();
     }
 
     const now = new Date();
@@ -510,7 +510,7 @@ export class AssignmentService {
     return this.presentAssignments(assignments);
   }
 
-  findAll() {
+  private findAllForAdminMe() {
     return this.assignmentRepository
       .find({
         relations: ['assignmentAttempts', 'class', 'class.userClasses']

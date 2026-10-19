@@ -16,7 +16,6 @@ describe('AssignmentController', () => {
   let controller: AssignmentController;
   let assignmentService: {
     create: jest.Mock;
-    findAll: jest.Mock;
     findOptions: jest.Mock;
     findAssignmentsByClass: jest.Mock;
     findAllUserAssignments: jest.Mock;
@@ -30,7 +29,6 @@ describe('AssignmentController', () => {
   beforeEach(async () => {
     assignmentService = {
       create: jest.fn(),
-      findAll: jest.fn(),
       findOptions: jest.fn(),
       findAssignmentsByClass: jest.fn(),
       findAllUserAssignments: jest.fn(),
@@ -72,13 +70,6 @@ describe('AssignmentController', () => {
       method: RequestMethod.POST,
       path: '/',
       roles: [UserRole.ADMIN, UserRole.TEACHER]
-    },
-    {
-      route: 'GET /assignment',
-      handler: AssignmentController.prototype.findAll,
-      method: RequestMethod.GET,
-      path: '/',
-      roles: [UserRole.ADMIN]
     },
     {
       route: 'GET /assignment/options',

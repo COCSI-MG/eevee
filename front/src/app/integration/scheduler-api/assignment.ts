@@ -33,12 +33,6 @@ export class AssignmentService {
     return <Assignment[]>response.data;
   }
 
-  static async GetAssignmentsAdmin() {
-    const response = await axiosClientWithAuth.get("/assignment");
-
-    return <Assignment[]>response.data;
-  }
-
   static async GetAssignmentById(id: number) {
     console.log("id", id);
     const response = await axiosClientWithAuth.get(`/assignment/${id}`);

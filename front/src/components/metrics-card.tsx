@@ -3,10 +3,8 @@
 import { FileText, GraduationCap, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
-import { useUsers } from "@/hooks/use-users";
-import { useClasses } from "@/hooks/use-classes";
 import { useQuery } from "@tanstack/react-query";
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import { DashboardService } from "@/app/integration/scheduler-api/dashboard";
 import Link from "next/link";
 import QueryErrorState from "@/components/shared/query-error-state";
 
@@ -23,61 +21,38 @@ interface Metric {
 
 export function MetricsCard() {
   const {
-    data: users,
-    isFetching: isFetchingUser,
-    isError: isUsersError,
-    refetch: refetchUsers,
-  } = useUsers();
-
-  const {
-    data: classes,
-    isFetching: isFetchingClasses,
-    isError: isClassesError,
-    refetch: refetchClasses,
-  } = useClasses();
-
-  const {
-    data: assignments,
-    isFetching: isFetchingAssignments,
-    isError: isAssignmentsError,
-    refetch: refetchAssignments,
+    data: metricsData,
+    isFetching,
+    isError,
+    refetch
   } = useQuery({
-    queryKey: ["adminAssignments"],
-    queryFn: async () => {
-      const assignmentsData = await AssignmentService.GetAssignmentsAdmin();
-      if (!assignmentsData) {
-        return [];
-      }
-      return assignmentsData;
-    },
+    queryKey: ["adminDashboardMetrics"],
+    queryFn: DashboardService.getMetrics,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
-  if (isFetchingUser || isFetchingClasses || isFetchingAssignments) {
+  if (isFetching) {
     return <div>Carregando...</div>;
   }
 
-  if (isUsersError || isClassesError || isAssignmentsError) {
+  if (isError) {
     return (
       <QueryErrorState
         title="Não foi possível carregar as métricas"
-        description="Uma ou mais consultas do dashboard falharam. Tente novamente."
-        onRetry={() => {
-          void Promise.all([
-            refetchUsers(),
-            refetchClasses(),
-            refetchAssignments(),
-          ]);
-        }}
+        description="A consulta das métricas do painel falhou. Tente novamente."
+        onRetry={() => void refetch()}
         retryLabel="Tentar novamente"
-        isRetrying={isFetchingUser || isFetchingClasses || isFetchingAssignments}
+        isRetrying={isFetching}
         className="md:col-span-3"
       />
     );
   }
 
-  const usersCount = users?.length ?? 0;
-  const classesCount = classes?.length ?? 0;
-  const assignmentsCount = assignments?.length ?? 0;
+  const usersCount = metricsData?.usersCount ?? 0;
+  const classesCount = metricsData?.classesCount ?? 0;
+  const assignmentsCount = metricsData?.assignmentsCount ?? 0;
 
   const metrics: Metric[] = [
     {
