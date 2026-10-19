@@ -2,6 +2,7 @@ import {
   CreateUserRequest,
   UpdateUserRequest,
   User,
+  UserListItem
 } from "@/app/interface/scheduler-api/user";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
@@ -44,7 +45,7 @@ export class UsersService {
   }
 
   static async getPaginatedUsers(params: GetPaginatedUsersParams) {
-    const response = await axiosClientWithAuth.get<PaginatedResponse<User>>(
+    const response = await axiosClientWithAuth.get<PaginatedResponse<UserListItem>>(
       "/user/paginated",
       { params },
     );
