@@ -100,6 +100,11 @@ platformApi:
   containerPort: 3000
   # Keep heap ~75% of the memory limit to leave room for native/off-heap memory.
   nodeOptions: "--max-old-space-size=768"
+  metrics:
+    enabled: false
+    port: 9091
+    secretName: eevee-metrics
+    secretKey: token
   resources:
     requests:
       memory: 256Mi
@@ -117,6 +122,10 @@ assignmentRunner:
     pullPolicy: Always
   env: "production"
   replicas: 1
+  nodeEligibility:
+    enabled: false
+    reportConfigMap: eevee-node-report
+    maxAgeSeconds: 180
   resources:
     requests:
       memory: 128Mi
@@ -132,6 +141,37 @@ assignmentRunner:
 # namespace's default SA and do not receive Jobs/Pods permissions.
 serviceAccount:
   name: ns-admin
+
+# Cluster-local diagnostics; enable after reviewing RBAC/storage/candidate nodes.
+# One sample per minute is a history, not continuous profiling or an SLA.
+diagnostics:
+  enabled: false
+  schedule: "* * * * *"
+  image: node:22-alpine
+  serviceAccountName: eevee-observer
+  rbac:
+    create: true
+    # Namespace admins cannot grant node/metrics-node reads. Admin provisioning required.
+    createClusterRole: false
+  candidateNodes: []
+  # Explicit control-plane HTTPS origins, using the cluster CA and valid SANs.
+  # Empty uses the same in-cluster endpoint as the runner, without backend attribution.
+  endpoints: []
+  reportConfigMap: eevee-node-report
+  ttlSeconds: 180
+  successesRequired: 3
+  maxNodeMemoryFraction: 0.90
+  maxReports: 1440
+  persistence:
+    existingClaim: ""
+    size: 1Gi
+    storageClass: ""
+  canary:
+    enabled: true
+    image: busybox:1.37
+  resources:
+    requests: { cpu: 25m, memory: 64Mi }
+    limits: { cpu: 250m, memory: 192Mi }
 
 # -----------------------------------------------------------------------------
 # Worker job images used by the assignment-runner at runtime to spawn

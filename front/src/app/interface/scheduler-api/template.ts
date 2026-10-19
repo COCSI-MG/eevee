@@ -25,6 +25,14 @@ export interface Template {
   dependencies: string[];
 }
 
+export type PaginatedTemplate = Pick<
+  Template,
+  "id" |
+  "title" |
+  "description" |
+  "workerType"
+>;
+
 export interface CreateTemplateRequest {
   id?: number; // Optional for new templates
   classId: number | null;
