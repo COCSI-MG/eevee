@@ -12,6 +12,7 @@ import {
   KubernetesJobResult,
 } from "./kubernetes.interfaces";
 import { tailLines } from "../common/log-tail.util";
+import { eligibleNodeAffinity } from './node-eligibility';
 
 @Injectable()
 export class KubernetesService {
@@ -23,6 +24,7 @@ export class KubernetesService {
         : config.fromKubeconfig(),
     version: "1.13",
   });
+  private reportClient: InstanceType<typeof Client1_13> | null = null;
 
   constructor() {}
 
@@ -247,6 +249,32 @@ export class KubernetesService {
     command: string[],
     options?: KubernetesJobOptions,
   ) {
+    let affinity: ReturnType<typeof eligibleNodeAffinity> | undefined;
+    if (process.env.K8S_NODE_DIAGNOSTICS_ENABLED === 'true') {
+      let timeout: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const maxAge = Number(process.env.K8S_NODE_REPORT_MAX_AGE_SECONDS || 180);
+        if (!Number.isFinite(maxAge) || maxAge <= 0 || maxAge > 600) throw new Error('invalid report age budget');
+        // Separate short-timeout transport: abort stalled diagnostic reads without
+        // changing the timeout policy for worker creation or log collection.
+        this.reportClient ??= new Client1_13({
+          config: { ...(process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_SERVICE_PORT
+            ? config.getInCluster() : config.fromKubeconfig()), timeout: 1500 },
+          version: '1.13',
+        });
+        const response: any = await Promise.race([
+          this.reportClient.api.v1.namespaces(DEFAULT_NAMESPACE)
+            .configmaps(process.env.K8S_NODE_REPORT_CONFIGMAP || 'eevee-node-report').get(),
+          new Promise((_, reject) => { timeout = setTimeout(() => reject(new Error('report read timeout')), 2000); }),
+        ]);
+        affinity = eligibleNodeAffinity(response.body.data?.['snapshot.json'], DEFAULT_NAMESPACE, JOB_NODE_SELECTOR, maxAge);
+        if (!affinity) this.logger.warn('No stable nodes reported; using normal Kubernetes scheduling');
+      } catch {
+        this.logger.warn('Node diagnostics unavailable; using normal Kubernetes scheduling');
+      } finally {
+        if (timeout) clearTimeout(timeout);
+      }
+    }
     const volumes: any[] = [];
     const volumeMounts: any[] = [];
 
@@ -323,6 +351,7 @@ export class KubernetesService {
           spec: {
             ...(initContainers.length ? { initContainers } : {}),
             automountServiceAccountToken: false, // security best practice
+            ...(affinity ? { affinity } : {}),
             ...(JOB_NODE_SELECTOR ? { nodeSelector: JOB_NODE_SELECTOR } : {}),
             ...(JOB_IMAGE_PULL_SECRETS.length
               ? {

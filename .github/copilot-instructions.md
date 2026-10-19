@@ -24,7 +24,14 @@ split into progressive-disclosure skills under `.github/skills/`:
 
 One-off feature specs (not reusable procedures) live under `.github/specs/`,
 e.g. [`postgresql-worker-harness.md`](./specs/postgresql-worker-harness.md) -
-the legacy-cluster PostgreSQL worker redesign (not yet implemented).
+the legacy-cluster PostgreSQL worker redesign (historical design; see its status
+update), and [`eevee-operational-harness.md`](./specs/eevee-operational-harness.md)
+for availability, node eligibility and latency validation.
+
+For changes to execution, availability or performance, increment the applicable
+harness with the new scenario, acceptance criteria, validation evidence and
+remaining limitations. Keep measured results separate from hypotheses and
+planned work; preserve the worker extension contract.
 
 Prefer adding new repo-specific know-how as a skill (bundled with
 references/scripts if needed) instead of growing this file indefinitely.

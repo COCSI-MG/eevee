@@ -45,6 +45,7 @@ describe('AssignmentService', () => {
     const templateParamRepository = createRepositoryMock();
     templateParamRepository.find.mockResolvedValue([]);
     const attemptRepository = createRepositoryMock();
+    attemptRepository.find.mockResolvedValue([]);
     const classService = { findOne: jest.fn() };
     const dataSource = { transaction: jest.fn() };
     const requestContextService = {
@@ -148,6 +149,7 @@ describe('AssignmentService', () => {
     const assignment = { id: 42 } as Assignment;
     const query = {
       leftJoinAndSelect: jest.fn().mockReturnThis(),
+      setFindOptions: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       getOne: jest.fn().mockResolvedValue(assignment),
     };
@@ -161,10 +163,10 @@ describe('AssignmentService', () => {
     expect(query.where).toHaveBeenCalledWith('assignment.id = :id', {
       id: 42,
     });
-    expect(query.leftJoinAndSelect).toHaveBeenCalledWith(
-      'template.templateParams',
-      'templateParams',
-    );
+    expect(query.setFindOptions).toHaveBeenCalledWith(expect.objectContaining({
+      relationLoadStrategy: 'query',
+      relations: ['assignmentParams', 'assignmentTemplates.template.templateParams'],
+    }));
     expect(requestContextService.getUser).not.toHaveBeenCalled();
   });
 
@@ -182,6 +184,7 @@ describe('AssignmentService', () => {
     ]);
 
     expect(assignmentRepository.find).toHaveBeenCalledWith({
+      relationLoadStrategy: 'query',
       relations: ['assignmentAttempts', 'class', 'class.userClasses']
     });
     expect(requestContextService.getUser).toHaveBeenCalledTimes(1);
@@ -681,6 +684,7 @@ describe('AssignmentService', () => {
     const makeFindQueryBuilder = () => {
       const qb: Record<string, jest.Mock> = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
+      setFindOptions: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
@@ -770,6 +774,7 @@ describe('AssignmentService', () => {
     } as Assignment;
     const query = {
       leftJoinAndSelect: jest.fn().mockReturnThis(),
+      setFindOptions: jest.fn().mockReturnThis(),
       leftJoin: jest.fn().mockReturnThis(),
       innerJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
@@ -1224,5 +1229,93 @@ describe('AssignmentService', () => {
         UnprocessableEntityException,
       );
     });
+  });
+
+  describe('bounded assignment relation loading', () => {
+    const detailsQuery = (assignment: any) => ({
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      innerJoinAndSelect: jest.fn().mockReturnThis(),
+      setFindOptions: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getOne: jest.fn().mockResolvedValue(assignment),
+    });
+
+    it.each([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT])(
+      'preserves detail attempts, ordering and visibility for %s', async (role) => {
+        const { service, assignmentRepository, attemptRepository, requestContextService, classAccess, assignmentAlertService } = await setup();
+        requestContextService.getUser.mockReturnValue({ userId: 7, role });
+        const query = detailsQuery({ id: 42, boilerplateContent: '' });
+        assignmentRepository.createQueryBuilder.mockReturnValue(query);
+        const attempts = [{ id: 2, receivedWork: { code: 'source' }, report: 'report' }];
+        attemptRepository.find.mockResolvedValue(attempts);
+        const result = await service.findOne(42);
+        expect(result.assignmentAttempts).toEqual(attempts);
+        expect(classAccess.assertAssignmentAccess).toHaveBeenCalledWith(42);
+        expect(assignmentAlertService.assertCurrentUserNotSuspended).toHaveBeenCalledWith(42);
+        expect(attemptRepository.find).toHaveBeenCalledWith({
+          where: { assignmentId: 42, ...(role === UserRole.STUDENT ? { userId: 7 } : {}) },
+          order: { createdAt: 'DESC' },
+        });
+        expect(query.leftJoinAndSelect.mock.calls.some(([relation]) => relation.includes('assignmentAttempts') || relation.includes('userClasses'))).toBe(false);
+        if (role === UserRole.STUDENT) {
+          expect(query.innerJoinAndSelect).toHaveBeenCalledWith('class.userClasses', 'userClasses', 'userClasses.userId = :userId', { userId: 7 });
+          expect(query.andWhere).toHaveBeenCalledWith('(assignment.startDate IS NULL OR assignment.startDate <= :assignmentNow)', expect.any(Object));
+          expect(query.andWhere).toHaveBeenCalledWith('(detailsExamAssignment.id IS NULL OR (detailsExam.startDate IS NOT NULL AND detailsExam.startDate <= :examNow))', expect.any(Object));
+        }
+      },
+    );
+
+    it('prepares execution without histories or all class members while keeping access checks', async () => {
+      const { service, assignmentRepository, attemptRepository, classAccess, assignmentAlertService } = await setup();
+      const query = detailsQuery({ id: 42, boilerplateContent: '' });
+      assignmentRepository.createQueryBuilder.mockReturnValue(query);
+      await service.findOne(42, false);
+      expect(attemptRepository.find).not.toHaveBeenCalled();
+      expect(query.setFindOptions).toHaveBeenLastCalledWith(expect.objectContaining({
+        relationLoadStrategy: 'query',
+        relations: ['assignmentParams', 'assignmentTemplates.template.templateParams'],
+      }));
+      expect(classAccess.assertAssignmentAccess).toHaveBeenCalledWith(42);
+      expect(assignmentAlertService.assertCurrentUserNotSuspended).toHaveBeenCalledWith(42);
+    });
+
+    it.each(['access', 'suspension'])('rejects %s failure before loading relations', async (failure) => {
+      const { service, assignmentRepository, attemptRepository, classAccess, assignmentAlertService } = await setup();
+      const denied = new ForbiddenException('denied');
+      (failure === 'access' ? classAccess.assertAssignmentAccess : assignmentAlertService.assertCurrentUserNotSuspended).mockRejectedValue(denied);
+      await expect(service.findOne(42, false)).rejects.toBe(denied);
+      expect(assignmentRepository.createQueryBuilder).not.toHaveBeenCalled();
+      expect(attemptRepository.find).not.toHaveBeenCalled();
+    });
+
+    it('does not load attempts for a hidden or missing assignment', async () => {
+      const { service, assignmentRepository, attemptRepository } = await setup();
+      assignmentRepository.createQueryBuilder.mockReturnValue(detailsQuery(null));
+      await expect(service.findOne(42)).rejects.toBeInstanceOf(NotFoundException);
+      expect(attemptRepository.find).not.toHaveBeenCalled();
+    });
+
+    it('keeps collection joins out of real TypeORM detail SQL without connecting to a database', async () => {
+      const { service } = await setup();
+      const source = new DataSource({ type: 'postgres', entities: [__dirname + '/../**/*.entity.ts'] });
+      await (source as any).buildMetadatas();
+      const repository = source.getRepository(Assignment);
+      (service as any).assignmentRepository = repository;
+      const detail = (service as any).createAssignmentDetailsQuery(42);
+      const detailSql = detail.getSql();
+      expect(detail.expressionMap.relationLoadStrategy).toBe('query');
+      expect(detailSql).not.toMatch(/JOIN "(?:attempt|assignment_param|assignment_template|template_param|user_class)"/);
+      // Exercise the actual relation loader: one query for all page IDs,
+      // rather than one query per assignment (no database connection).
+      const relation = repository.metadata.findRelationWithPropertyPath('assignmentAttempts');
+      const collectionQuery = source.createQueryBuilder().select('attempt').from(Attempt, 'attempt');
+      const load = jest.spyOn(collectionQuery, 'getMany').mockResolvedValue([]);
+      await source.relationLoader.load(relation!, [{ id: 41 }, { id: 42 }], undefined, collectionQuery);
+      expect(load).toHaveBeenCalledTimes(1);
+      expect(collectionQuery.getParameters()).toEqual({ attempt_assignmentId: [41, 42] });
+      expect(collectionQuery.getSql()).toContain(' IN (');
+
+    }, 60000);
   });
 });

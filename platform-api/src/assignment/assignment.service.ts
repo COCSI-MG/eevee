@@ -40,7 +40,7 @@ import {
 } from 'src/common/pagination/pagination';
 import {
   AssignmentAlertService,
-  DEFAULT_ASSIGNMENT_ALERT_POLICY
+  DEFAULT_ASSIGNMENT_ALERT_POLICY,
 } from 'src/assignment-alert/assignment-alert.service';
 import { UserRole } from 'src/user/user-role';
 import { ClassAccessService } from 'src/auth/class-access.service';
@@ -66,7 +66,7 @@ export class AssignmentService {
     private dataSource: DataSource,
     private readonly requestContextService: RequestContextService,
     private readonly assignmentAlertService: AssignmentAlertService,
-    private readonly classAccess: ClassAccessService
+    private readonly classAccess: ClassAccessService,
   ) {}
 
   private async assertTemplatesCompatibleWithWorkerType(options: {
@@ -82,7 +82,7 @@ export class AssignmentService {
 
     const found = await templateRepo.find({
       where: { id: In(templateIds) },
-      select: { id: true, workerType: true, classId: true }
+      select: { id: true, workerType: true, classId: true },
     });
 
     if (found.length !== templateIds.length) {
@@ -105,44 +105,57 @@ export class AssignmentService {
     }
 
     if (found.some((t) => t.classId !== options.classId)) {
-      throw new ForbiddenException('A template can only be used by assignments in its own class.');
+      throw new ForbiddenException(
+        'A template can only be used by assignments in its own class.',
+      );
     }
 
     const paramIds = options.templates.flatMap((item) => {
-      return item.params.map((param) => param.templateParamId)
+      return item.params.map((param) => param.templateParamId);
     });
 
     if (paramIds.length) {
-      const templateParam = options.templateParamRepo ?? this.templateParamRepository
+      const templateParam =
+        options.templateParamRepo ?? this.templateParamRepository;
 
       const params = await templateParam.find({
         select: {
           id: true,
-          templateId: true
+          templateId: true,
         },
         where: {
-          id: In(paramIds)
-        }
+          id: In(paramIds),
+        },
       });
 
-      const paramById = new Map(params.map((param) => [param.id, param.templateId]));
-      const findTempalteParams = paramIds.some((paramId) => !paramById.has(paramId))
+      const paramById = new Map(
+        params.map((param) => [param.id, param.templateId]),
+      );
+      const findTempalteParams = paramIds.some(
+        (paramId) => !paramById.has(paramId),
+      );
 
       if (findTempalteParams) {
         throw new NotFoundException('A template parameter was not found.');
       }
 
-      const someTemplateParamsId = options.templates.some((item) => item.params.some((param) => {
-        return paramById.get(param.templateParamId) !== item.templateId
-      }))
+      const someTemplateParamsId = options.templates.some((item) =>
+        item.params.some((param) => {
+          return paramById.get(param.templateParamId) !== item.templateId;
+        }),
+      );
 
       if (someTemplateParamsId) {
-        throw new ForbiddenException('Template parameters must belong to their selected template.');
+        throw new ForbiddenException(
+          'Template parameters must belong to their selected template.',
+        );
       }
     }
   }
 
-  private normalizeTemplateWeights(templates: AssignmentTemplateDto[]): number[] {
+  private normalizeTemplateWeights(
+    templates: AssignmentTemplateDto[],
+  ): number[] {
     if (templates.length === 0) return [];
 
     this.assertWeightsInRange(templates);
@@ -342,13 +355,16 @@ export class AssignmentService {
 
   private async presentAssignments(
     assignments: Assignment[],
-    manager?: EntityManager
+    manager?: EntityManager,
   ): Promise<Assignment[]> {
     const withBoilerplate = await Promise.all(
-      assignments.map((assignment) => this.attachBoilerplate(assignment))
+      assignments.map((assignment) => this.attachBoilerplate(assignment)),
     );
 
-    return this.assignmentAlertService.decorateAssignments(withBoilerplate, manager);
+    return this.assignmentAlertService.decorateAssignments(
+      withBoilerplate,
+      manager,
+    );
   }
 
   async create(
@@ -416,7 +432,8 @@ export class AssignmentService {
       dueDate,
       allowCopyPaste: assignmentData.allowCopyPaste ?? false,
       suspensionAlertLimit: alertPolicy.suspensionAlertLimit,
-      typingCharactersPerSecondLimit: alertPolicy.typingCharactersPerSecondLimit,
+      typingCharactersPerSecondLimit:
+        alertPolicy.typingCharactersPerSecondLimit,
       alertPolicyVersion: 1,
       workerType: assignmentData.workerType,
       executionMode: assignmentData.executionMode,
@@ -458,7 +475,7 @@ export class AssignmentService {
     await this.assignmentAlertService.replaceRules(
       newAssignment.id,
       alertPolicy.punitiveTypes,
-      manager
+      manager,
     );
 
     return (await this.presentAssignments([newAssignment], manager))[0];
@@ -480,27 +497,32 @@ export class AssignmentService {
         'assignmentAttempts',
         'assignmentAttempts.userId = :userId',
         { userId: user.userId },
-      )
+      );
 
     query
       .leftJoinAndSelect(
         'assignment.examAssignment',
-        'visibilityExamAssignment'
+        'visibilityExamAssignment',
       )
       .leftJoinAndSelect('visibilityExamAssignment.exam', 'visibilityExam')
       .andWhere(
         '(assignment.startDate IS NULL OR assignment.startDate <= :assignmentNow)',
-        { assignmentNow: now }
+        { assignmentNow: now },
       )
       .andWhere(
         '(visibilityExamAssignment.id IS NULL OR (visibilityExam.startDate IS NOT NULL AND visibilityExam.startDate <= :examNow))',
-        { examNow: now }
+        { examNow: now },
       );
 
     if (user.role === UserRole.TEACHER) {
       query.andWhere('class.teacherId = :userId', { userId: user.userId });
     } else {
-      query.innerJoin('class.userClasses', 'userClasses', 'userClasses.userId = :userId', { userId: user.userId });
+      query.innerJoin(
+        'class.userClasses',
+        'userClasses',
+        'userClasses.userId = :userId',
+        { userId: user.userId },
+      );
     }
 
     const assignments = await query.getMany();
@@ -513,7 +535,8 @@ export class AssignmentService {
   private findAllForAdminMe() {
     return this.assignmentRepository
       .find({
-        relations: ['assignmentAttempts', 'class', 'class.userClasses']
+        relationLoadStrategy: 'query',
+        relations: ['assignmentAttempts', 'class', 'class.userClasses'],
       })
       .then((assignments) => this.presentAssignments(assignments));
   }
@@ -526,12 +549,16 @@ export class AssignmentService {
       select: {
         id: true,
         title: true,
-        classId: true
+        classId: true,
       },
-      ...(classId ? { where: { classId } } : user.role === UserRole.TEACHER ? { where: { class: { teacherId: user.userId } } } : {}),
+      ...(classId
+        ? { where: { classId } }
+        : user.role === UserRole.TEACHER
+          ? { where: { class: { teacherId: user.userId } } }
+          : {}),
       order: {
         id: 'ASC',
-        title: 'ASC'
+        title: 'ASC',
       },
     });
   }
@@ -541,7 +568,8 @@ export class AssignmentService {
   ): Promise<PaginatedResult<Assignment>> {
     const { page, pageSize, skip } = buildPaginationParams(query);
     const currentUser = this.requestContextService.getUser();
-    if (currentUser.role === UserRole.STUDENT) throw new NotFoundException('Assignment not found');
+    if (currentUser.role === UserRole.STUDENT)
+      throw new NotFoundException('Assignment not found');
 
     const qb = this.assignmentRepository
       .createQueryBuilder('assignment')
@@ -551,11 +579,14 @@ export class AssignmentService {
       .leftJoin('assignment.examAssignment', 'examAssignment')
       .orderBy('assignment.id', 'DESC');
 
-    if (currentUser.role === UserRole.TEACHER) qb.andWhere('class.teacherId = :teacherId', { teacherId: currentUser.userId });
+    if (currentUser.role === UserRole.TEACHER)
+      qb.andWhere('class.teacherId = :teacherId', {
+        teacherId: currentUser.userId,
+      });
 
     if (query.classId) {
       qb.andWhere('assignment.classId = :classId', {
-        classId: query.classId
+        classId: query.classId,
       });
     }
 
@@ -573,8 +604,8 @@ export class AssignmentService {
             .orWhere(
               'LOWER(CAST(assignment.workerType AS TEXT)) LIKE LOWER(:search)',
               {
-                search: `%${search}%`
-              }
+                search: `%${search}%`,
+              },
             );
         }),
       );
@@ -609,7 +640,7 @@ export class AssignmentService {
     if (user.role === UserRole.STUDENT) {
       query.andWhere(
         '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
-        { now: new Date() }
+        { now: new Date() },
       );
     }
 
@@ -618,46 +649,37 @@ export class AssignmentService {
     return this.presentAssignments(assignments);
   }
 
-  private createAssignmentDetailsQuery(id: number) {
+  private createAssignmentDetailsQuery(id: number, includeMembers = false) {
     return this.assignmentRepository
       .createQueryBuilder('assignment')
       .leftJoinAndSelect('assignment.class', 'class')
-      .leftJoinAndSelect('assignment.assignmentParams', 'assignmentParams')
-      .leftJoinAndSelect(
-        'assignment.assignmentTemplates',
-        'assignmentTemplates',
-      )
-      .leftJoinAndSelect('assignmentTemplates.template', 'template')
-      .leftJoinAndSelect('template.templateParams', 'templateParams')
+      .setFindOptions({
+        relationLoadStrategy: 'query',
+        relations: [
+          'assignmentParams',
+          'assignmentTemplates.template.templateParams',
+          ...(includeMembers ? ['class.userClasses'] : []),
+        ],
+      })
       .where('assignment.id = :id', { id });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, includeAttempts = true) {
     await this.classAccess.assertAssignmentAccess(id);
     await this.assignmentAlertService.assertCurrentUserNotSuspended(id);
     const user = this.requestContextService.getUser();
     const now = new Date();
 
-    const query = this.createAssignmentDetailsQuery(id)
+    const query = this.createAssignmentDetailsQuery(
+      id,
+      includeAttempts &&
+        (user.role === UserRole.ADMIN || user.role === UserRole.TEACHER),
+    )
       .leftJoinAndSelect('assignment.examAssignment', 'detailsExamAssignment')
-      .leftJoinAndSelect('detailsExamAssignment.exam', 'detailsExam')
-      .orderBy('assignmentAttempts.createdAt', 'DESC');
+      .leftJoinAndSelect('detailsExamAssignment.exam', 'detailsExam');
 
-    if (user.role === UserRole.ADMIN || user.role === UserRole.TEACHER) {
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.TEACHER) {
       query
-        .leftJoinAndSelect('class.userClasses', 'userClasses')
-        .leftJoinAndSelect(
-          'assignment.assignmentAttempts',
-          'assignmentAttempts',
-        );
-    } else {
-      query
-        .leftJoinAndSelect(
-          'assignment.assignmentAttempts',
-          'assignmentAttempts',
-          'assignmentAttempts.userId = :userId',
-          { userId: user.userId },
-        )
         .innerJoinAndSelect(
           'class.userClasses',
           'userClasses',
@@ -666,11 +688,11 @@ export class AssignmentService {
         )
         .andWhere(
           '(assignment.startDate IS NULL OR assignment.startDate <= :assignmentNow)',
-          { assignmentNow: now }
+          { assignmentNow: now },
         )
         .andWhere(
           '(detailsExamAssignment.id IS NULL OR (detailsExam.startDate IS NOT NULL AND detailsExam.startDate <= :examNow))',
-          { examNow: now }
+          { examNow: now },
         );
     }
 
@@ -679,6 +701,15 @@ export class AssignmentService {
       throw new NotFoundException('Assignment not found');
     }
 
+    if (includeAttempts) {
+      response.assignmentAttempts = await this.attemptRepository.find({
+        where: {
+          assignmentId: id,
+          ...(user.role === UserRole.STUDENT ? { userId: user.userId } : {}),
+        },
+        order: { createdAt: 'DESC' },
+      });
+    }
     return (await this.presentAssignments([response]))[0];
   }
 
@@ -746,16 +777,23 @@ export class AssignmentService {
     const parsedStartDate = this.parseOptionalDate(startDateValue);
     const parsedDueDate = this.parseOptionalDate(dueDateValue);
 
-    const effectiveStartDate = parsedStartDate !== undefined ? parsedStartDate : assignment.startDate;
-    const effectiveDueDate   = parsedDueDate   !== undefined ? parsedDueDate : assignment.dueDate;
+    const effectiveStartDate =
+      parsedStartDate !== undefined ? parsedStartDate : assignment.startDate;
+    const effectiveDueDate =
+      parsedDueDate !== undefined ? parsedDueDate : assignment.dueDate;
 
     this.assertValidDateRange(effectiveStartDate, effectiveDueDate);
 
     const dataToUpdate: Partial<Assignment> = {
       ...assignmentDataToUpdate,
     };
-    if (dataToUpdate.classId !== undefined && dataToUpdate.classId !== assignment.classId) {
-      throw new ForbiddenException('An assignment cannot be moved to another class.');
+    if (
+      dataToUpdate.classId !== undefined &&
+      dataToUpdate.classId !== assignment.classId
+    ) {
+      throw new ForbiddenException(
+        'An assignment cannot be moved to another class.',
+      );
     }
     delete dataToUpdate.classId;
     if (parsedStartDate !== undefined) {
@@ -767,9 +805,11 @@ export class AssignmentService {
     if (alertPolicy) {
       dataToUpdate.suspensionAlertLimit = alertPolicy.suspensionAlertLimit;
 
-      dataToUpdate.typingCharactersPerSecondLimit = alertPolicy.typingCharactersPerSecondLimit;
+      dataToUpdate.typingCharactersPerSecondLimit =
+        alertPolicy.typingCharactersPerSecondLimit;
 
-      dataToUpdate.alertPolicyVersion = (assignment.alertPolicyVersion ?? 1) + 1;
+      dataToUpdate.alertPolicyVersion =
+        (assignment.alertPolicyVersion ?? 1) + 1;
     }
 
     const resolvedBoilerplateContent = this.resolvePayloadBoilerplateContent({
@@ -790,7 +830,10 @@ export class AssignmentService {
       await this.assignmentRepository.update(id, dataToUpdate);
 
     if (alertPolicy) {
-      await this.assignmentAlertService.replaceRules(id, alertPolicy.punitiveTypes);
+      await this.assignmentAlertService.replaceRules(
+        id,
+        alertPolicy.punitiveTypes,
+      );
     }
 
     if (
@@ -840,7 +883,10 @@ export class AssignmentService {
   }
 
   async remove(id: number) {
-    const assignmentExists = await this.classAccess.assertAssignmentAccess(id, true);
+    const assignmentExists = await this.classAccess.assertAssignmentAccess(
+      id,
+      true,
+    );
 
     if (!assignmentExists)
       throw new NotFoundException('Assignment não encontrado!');
@@ -873,25 +919,29 @@ export class AssignmentService {
         'source.assignmentAttempts',
         'attempt',
         'attempt.userId = :userId AND attempt.receivedWork IS NOT NULL',
-        { userId: user.userId }
+        { userId: user.userId },
       )
       .select('source.id', 'id')
       .addSelect('source.title', 'title')
       .addSelect('MAX(attempt.createdAt)', 'submittedAt')
       .where('source.classId = :classId', { classId: destination.classId })
-      .andWhere('source.workerType = :workerType', { workerType: destination.workerType })
-      .andWhere('source.id != :destinationAssignmentId', { destinationAssignmentId })
+      .andWhere('source.workerType = :workerType', {
+        workerType: destination.workerType,
+      })
+      .andWhere('source.id != :destinationAssignmentId', {
+        destinationAssignmentId,
+      })
       .groupBy('source.id')
       .addGroupBy('source.title')
       .orderBy('LOWER(source.title)', 'ASC')
       .addOrderBy('source.id', 'ASC')
-      .getRawMany<{ id: string; title: string; submittedAt: Date }>()
+      .getRawMany<{ id: string; title: string; submittedAt: Date }>();
 
     return rows.map((row) => ({
       id: Number(row.id),
       title: row.title,
-      submittedAt: row.submittedAt
-    }))
+      submittedAt: row.submittedAt,
+    }));
   }
 
   async findImportSource(
@@ -901,7 +951,10 @@ export class AssignmentService {
     const destination = await this.findOne(destinationAssignmentId);
     this.assertProjectImportAllowed(destination);
 
-    if (sourceAssignmentId === destinationAssignmentId) throw new BadRequestException('The destination assignment cannot be used as an import source.')
+    if (sourceAssignmentId === destinationAssignmentId)
+      throw new BadRequestException(
+        'The destination assignment cannot be used as an import source.',
+      );
 
     const source = await this.assignmentRepository.findOne({
       where: { id: sourceAssignmentId },
@@ -909,39 +962,46 @@ export class AssignmentService {
         id: true,
         title: true,
         classId: true,
-        workerType: true
-      }
+        workerType: true,
+      },
     });
 
-    if (!source) throw new NotFoundException('Import source not found')
+    if (!source) throw new NotFoundException('Import source not found');
 
     if (
       source.classId !== destination.classId ||
       source.workerType !== destination.workerType
-    ) throw new BadRequestException('The selected assignment does not have a compatible workspace.')
+    )
+      throw new BadRequestException(
+        'The selected assignment does not have a compatible workspace.',
+      );
 
     const user = this.requestContextService.getUser();
     const attempt = await this.attemptRepository.findOne({
       where: {
         assignmentId: sourceAssignmentId,
         userId: user.userId,
-        receivedWork: Not(IsNull())
+        receivedWork: Not(IsNull()),
       },
-      order: { attempt: 'DESC' }
-    })
+      order: { attempt: 'DESC' },
+    });
 
-    if (!attempt?.receivedWork) throw new NotFoundException('Submitted project not found')
+    if (!attempt?.receivedWork)
+      throw new NotFoundException('Submitted project not found');
 
     return {
       id: source.id,
       title: source.title,
       submittedAt: attempt.createdAt,
-      files: attempt.receivedWork
-    }
+      files: attempt.receivedWork,
+    };
   }
 
   private assertProjectImportAllowed(assignment: Assignment): void {
-    if (!assignment.allowProjectImport) throw new ForbiddenException('Project import is not allowed for this assignment.')
+    if (!assignment.allowProjectImport)
+      throw new ForbiddenException(
+        'Project import is not allowed for this assignment.',
+      );
   }
 
   async getAssignmentTemplates(assignment: Assignment) {
