@@ -9,6 +9,7 @@ import {
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Brackets, DataSource } from 'typeorm';
+import { join } from 'node:path';
 import { AssignmentService } from './assignment.service';
 import { Assignment } from './entities/assignment.entity';
 import { AssignmentParam } from './entities/assignment-param.entity';
@@ -584,6 +585,8 @@ describe('AssignmentService', () => {
   describe('findAllPaginated', () => {
     const makeQueryBuilder = () => {
       const qb: Record<string, jest.Mock> = {
+        select: jest.fn().mockReturnThis(),
+        withDeleted: jest.fn().mockReturnThis(),
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         leftJoin: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
@@ -620,10 +623,6 @@ describe('AssignmentService', () => {
         userId: 10,
         role: UserRole.ADMIN
       });
-      jest
-        .spyOn(service as any, 'attachBoilerplate')
-        .mockImplementation(async (assignment) => assignment);
-
       const result = await service.findAllPaginated({
         search: 'one',
         page: 1,
@@ -632,11 +631,29 @@ describe('AssignmentService', () => {
 
       expect(qb.skip).toHaveBeenCalledWith(0);
       expect(qb.take).toHaveBeenCalledWith(10);
-      expect(qb.leftJoin).toHaveBeenCalledWith(
-        'assignment.examAssignment',
-        'examAssignment',
-      );
+      expect(qb.select).toHaveBeenCalledWith([
+        'assignment.id',
+        'assignment.title',
+        'assignment.description',
+        'assignment.workerType',
+        'assignment.startDate',
+        'assignment.dueDate',
+        'class.name'
+      ]);
+      expect(qb.leftJoin).toHaveBeenCalledWith('assignment.class', 'class');
+      expect(qb.leftJoinAndSelect).not.toHaveBeenCalled();
       expect(qb.where).not.toHaveBeenCalled();
+      expect(result.data).toEqual([
+        {
+          id: 1,
+          title: 'Assignment One',
+          description: undefined,
+          workerType: 'worker-a',
+          startDate: undefined,
+          dueDate: undefined,
+          class: { name: 'Math' }
+        },
+      ]);
       expect(result.meta).toEqual({
         total: 1,
         page: 1,

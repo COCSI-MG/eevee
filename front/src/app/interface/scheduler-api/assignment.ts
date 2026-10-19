@@ -87,6 +87,17 @@ export interface Assignment {
   };
 }
 
+export type AdminAssignmentListItem = Pick<Assignment,
+  "id" | 
+  "title" | 
+  "description" | 
+  "workerType" | 
+  "startDate" | 
+  "dueDate"
+> & {
+  class: Pick<Class, "name">;
+};
+
 export interface AssignmentImportSource {
   id: number;
   title: string;
