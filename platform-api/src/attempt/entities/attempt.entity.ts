@@ -10,6 +10,7 @@ import {
 import { AttemptStatus } from '../enums/attempt-status.enum';
 
 @Entity()
+@Index('IDX_attempt_completed_assignment_user_latest', { synchronize: false })
 @Index('IDX_attempt_assignment_created_at_id', [
   'assignmentId',
   'createdAt',
