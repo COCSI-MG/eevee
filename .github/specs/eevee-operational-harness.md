@@ -1,5 +1,40 @@
 # Harness incremental: prontidão, memória e desempenho do EEVEE
 
+## Reconciliação com as otimizações de listas — 2026-10-18
+
+A base agora inclui o dashboard leve de #369 e as otimizações de atividades
+administrativas (#372), templates (#374), usuários (#376) e tarefas da turma
+(#382). Cada mudança de lista mantém o contrato enxuto da respectiva PR; o
+incremento local complementa essas mudanças, sem restaurar o endpoint antigo
+`GET /assignment` removido de `develop`.
+
+- O carregamento separado de coleções permanece em `findAllForAdminMe()` e
+  nos detalhes da atividade. O benchmark chama o método público
+  `findAllUserAssignments()`, preservando a renomeação de #369.
+- Preparo de preview/submissão busca detalhes sem carregar tentativas e todos
+  os membros; verificações de acesso, suspensão e prazo continuam no fluxo.
+- `findAllPaginated()` usa o DTO de #372, sem coleções nem decoração pesada.
+  A turma desativada permanece visível ao administrador sem quebrar o mapper.
+- A lista da turma usa o resumo de #382: última tentativa do próprio usuário,
+  existência de tentativa aceita concluída e suspensão por alertas ativos.
+- Diagnósticos, afinidade preferencial e listener de métricas continuam
+  opcionais e desabilitados nos valores padrão. Este release não provisiona
+  capacidade nem exige permissões de administrador dos nós.
+
+Validação local do conjunto: 438 testes da API, 48 do frontend, 31 do runner,
+8 dos scripts operacionais e 7 de integração com PostgreSQL 16 descartável.
+A integração cobre coleções completas, privacidade/ordenação do histórico,
+preparo sem histórico, turma desativada, templates sem conteúdo na lista,
+usuários sem hashes/matrículas e resumo/suspensão da turma. As fixtures são
+sintéticas; os testes não fazem requisições de escrita em produção.
+
+Smoke do benchmark reconciliado: três operações, concorrência 1, uma rodada,
+dois ciclos de três requests, contratos equivalentes. O resultado está em
+`.eevee-state/performance/run-1792370087392`. O detalhe teve p95 de 10,23 ms na
+baseline e 11,01 ms no patch; não há ganho universal nem prova de cura de
+vazamento. O ensaio representativo abaixo continua sendo evidência histórica,
+não uma nova medição da produção de 18/10.
+
 ## Incremento medido e política de fallback — 2026-10-13
 
 **Decisão explícita do usuário:** favorecer nós estáveis, mas nunca reter uma

@@ -11,6 +11,13 @@ import { UserClass } from '../user-class/entities/user-class.entity';
 import { User } from '../user/entities/user.entity';
 import { UserRole } from '../user/user-role';
 import { WorkerType } from '../worker/enum/worker-type.enum';
+import { AttemptStatus } from '../attempt/enums/attempt-status.enum';
+import { AssignmentUserAlert } from '../assignment-alert/entities/assignment-user-alert.entity';
+import { AssignmentAlertType } from '../assignment-alert/enums/assignment-alert-type.enum';
+import { TemplateService } from '../template/template.service';
+import { UserService } from '../user/user.service';
+import { RefreshSession } from '../auth/entities/refresh-session.entity';
+import { randomUUID } from 'node:crypto';
 
 // Explicit opt-in: no application .env, existing database or production access.
 // Run with Jest --testRegex assignment-loading.integration-spec.ts (see harness).
@@ -63,7 +70,7 @@ describe('assignment relation loading against PostgreSQL', () => {
       source.getRepository(TemplateParam), source.getRepository(Attempt),
       {} as any, source, { getUser: () => currentUser } as any,
       { decorateAssignments: async (rows: Assignment[]) => rows, assertCurrentUserNotSuspended: async () => {} } as any,
-      { assertAssignmentAccess: async () => {} } as any,
+      { assertAssignmentAccess: async () => {}, assertClassAccess: async () => {} } as any,
     );
   }, 60000);
 
@@ -103,5 +110,83 @@ describe('assignment relation loading against PostgreSQL', () => {
     expect(row.assignmentParams).toEqual([]);
     expect(row.assignmentTemplates).toEqual([]);
     expect(row).toMatchObject({ boilerplate: 'test boilerplate' });
+  });
+
+  it('lists admin assignments without histories and includes deactivated class names', async () => {
+    currentUser = { userId: teacher.id, role: UserRole.ADMIN };
+    const classes = source.getRepository(Class);
+    await classes.softDelete(assignments[0].classId);
+    try {
+      const page = await service.findAllPaginated({ page: 1, pageSize: 10 });
+      expect(page.meta.total).toBe(3);
+      expect(page.data.find(row => row.id === assignments[0].id)).toMatchObject({
+        title: 'First', class: { name: 'Large class' },
+      });
+      for (const row of page.data) {
+        expect(Object.keys(row).sort()).toEqual([
+          'class', 'description', 'dueDate', 'id', 'startDate', 'title', 'workerType',
+        ]);
+        expect(Object.keys(row.class)).toEqual(['name']);
+      }
+    } finally {
+      await classes.restore(assignments[0].classId);
+    }
+    currentUser = { userId: teacher.id, role: UserRole.TEACHER };
+    expect((await service.findAllPaginated({ page: 1, pageSize: 10 })).data).toHaveLength(2);
+  });
+
+  it('returns only template list fields, keeping content available on the detail route', async () => {
+    const template = await source.getRepository(Template).save({
+      classId: assignments[0].classId, title: 'Heavy template', description: 'Synthetic',
+      content: 'x'.repeat(200_000), workerType: WorkerType.NODE_DEFAULT,
+    });
+    const templates = new TemplateService(source.getRepository(Template),
+      source.getRepository(TemplateParam), source.getRepository(AssignmentTemplate),
+      { user: () => ({ userId: teacher.id }), isAdmin: () => true,
+        assertTemplateAccess: async () => {} } as any);
+    const page = await templates.findAllPaginated({ page: 1, pageSize: 10 });
+    expect(page.data).toEqual([expect.objectContaining({ id: template.id, title: template.title })]);
+    expect(Object.keys(page.data[0]).sort()).toEqual(['description', 'id', 'title', 'workerType']);
+    expect((await templates.findOne(template.id)).content).toHaveLength(200_000);
+  });
+
+  it('returns user summaries without password hashes or class memberships', async () => {
+    const users = new UserService(source.getRepository(User), source.getRepository(RefreshSession));
+    const page = await users.findAllPaginated({ page: 1, pageSize: 10 });
+    expect(page.meta.total).toBe(64);
+    expect(page.data).toHaveLength(10);
+    for (const row of page.data) {
+      expect(Object.keys(row).sort()).toEqual(['email', 'id', 'name', 'role']);
+    }
+  });
+
+  it('summarizes the current student latest attempt, accepted history and active suspension', async () => {
+    const assignmentId = assignments[0].id;
+    const userId = students[0].id;
+    const attempts = source.getRepository(Attempt);
+    await attempts.save([
+      { assignmentId, userId, attempt: 100, status: AttemptStatus.COMPLETED,
+        isAcceptable: true, score: 1, passes: 1, fails: 0, report: 'old accepted' },
+      { assignmentId, userId, attempt: 101, status: AttemptStatus.COMPLETED,
+        isAcceptable: false, score: 0.5, passes: 1, fails: 1, report: 'latest rejected' },
+      { assignmentId: assignments[1].id, userId: students[1].id, attempt: 102,
+        status: AttemptStatus.COMPLETED, isAcceptable: true, score: 1, passes: 1,
+        fails: 0, report: 'other student accepted' },
+    ]);
+    await source.getRepository(Assignment).update(assignmentId, { suspensionAlertLimit: 1 });
+    const alerts = source.getRepository(AssignmentUserAlert);
+    const alert = await alerts.save({ assignmentId, userId, eventId: randomUUID(),
+      type: AssignmentAlertType.WINDOW_FOCUS_LOSS });
+    currentUser = { userId, role: UserRole.STUDENT };
+    const rows = await service.findAssignmentsByClass(assignments[0].classId);
+    expect(rows.find(row => row.id === assignmentId)).toMatchObject({
+      lastAttempt: { status: 'completed', score: 0.5, isAcceptable: false },
+      hasAcceptedAttempt: true, currentUserAlertStatus: { suspended: true },
+    });
+    expect(rows.find(row => row.id === assignments[1].id)?.hasAcceptedAttempt).toBe(false);
+    expect(JSON.stringify(rows)).not.toMatch(/receivedWork|report|boilerplate|assignmentAttempts/);
+    await alerts.softDelete(alert.id);
+    const recovered = await service.findAssignmentsByClass(assignments[0].classId);
+    expect(recovered.find(row => row.id === assignmentId)?.currentUserAlertStatus?.suspended).toBe(false);
   });
 });
