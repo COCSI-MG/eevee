@@ -97,6 +97,24 @@ export type AdminAssignmentListItem = Pick<Assignment,
 > & {
   class: Pick<Class, "name">;
 };
+export interface ClassAssignmentAttemptSummary {
+  status: string;
+  score: number;
+  isAcceptable: boolean;
+}
+
+export interface ClassAssignmentSummary {
+  id: number;
+  title: string;
+  description: string;
+  startDate: string | null;
+  dueDate: string | null;
+  answerKeyId: number | null;
+  answerKeyVisible: boolean;
+  currentUserAlertStatus?: Pick<AssignmentAlertStatus, "suspended">;
+  lastAttempt: ClassAssignmentAttemptSummary | null;
+  hasAcceptedAttempt: boolean;
+}
 
 export interface AssignmentImportSource {
   id: number;

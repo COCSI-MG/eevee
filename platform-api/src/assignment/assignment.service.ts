@@ -32,6 +32,8 @@ import { TemplateParam } from 'src/template/entities/template-param.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
+import { AssignmentUserAlert } from 'src/assignment-alert/entities/assignment-user-alert.entity';
 import { ListAssignmentsQueryDto } from './dto/list-assignments.query.dto';
 import {
   PaginatedResult,
@@ -45,6 +47,29 @@ import {
 import { UserRole } from 'src/user/user-role';
 import { ClassAccessService } from 'src/auth/class-access.service';
 import { AssignmentListItem } from './dto/assignment-list-item.dto';
+import { ClassAssignmentSummaryDto } from './dto/class-assignment-summary.dto';
+
+type ClassAssignmentSummaryUser = {
+  userId: number;
+  role: UserRole;
+};
+
+type ClassAssignmentSummaryRow = {
+  assignment_id: number | string;
+  title: string;
+  description: string;
+  start_date: Date | null;
+  due_date: Date | null;
+  answer_key_id: number | string | null;
+  answer_key_visible: boolean;
+  suspension_alert_limit: number | string;
+  last_attempt_assignment_id: number | string | null;
+  last_attempt_status: string | null;
+  last_attempt_score: number | string | null;
+  last_attempt_is_acceptable: boolean | null;
+  has_accepted_attempt: boolean | string;
+  active_alert_count?: number | string;
+};
 
 @Injectable()
 export class AssignmentService {
@@ -639,32 +664,120 @@ export class AssignmentService {
     return { data, meta: buildPaginationMeta(total, page, pageSize) };
   }
 
-  async findAssignmentsByClass(classId: number) {
-    const user = this.requestContextService.getUser()!;
+  async findAssignmentsByClass(classId: number): Promise<ClassAssignmentSummaryDto[]> {
+    const user = this.requestContextService.getUser();
+
     await this.classAccess.assertClassAccess(classId);
 
-    const query = this.assignmentRepository
-      .createQueryBuilder('assignment')
-      .leftJoinAndSelect(
-        'assignment.assignmentAttempts',
-        'assignmentAttempts',
-        'assignmentAttempts.userId = :userId',
-        { userId: user.userId },
-      )
-      .leftJoin('assignment.examAssignment', 'examAssignment')
-      .where('assignment.classId = :classId', { classId })
-      .andWhere('examAssignment.id IS NULL');
+    const assignments = await this.findAssignmentSummaries(classId, user);
 
-    if (user.role === UserRole.STUDENT) {
-      query.andWhere(
-        '(assignment.startDate IS NULL OR assignment.startDate <= :now)',
-        { now: new Date() },
+    return assignments.map((assignment) => this.toAssignmentSummaryDto(assignment, user.role));
+  }
+
+  private async findAssignmentSummaries(classId: number, user: ClassAssignmentSummaryUser): Promise<ClassAssignmentSummaryRow[]> {
+    const query = this.assignmentRepository
+      .createQueryBuilder('a')
+      .select([
+        'a.id AS assignment_id',
+        'a.title AS title',
+        'a.description AS description',
+        'a.startDate AS start_date',
+        'a.dueDate AS due_date',
+        'a.answerKeyId AS answer_key_id',
+        'a.answerKeyVisible AS answer_key_visible',
+        'a.suspensionAlertLimit AS suspension_alert_limit',
+        'last.assignment_id AS last_attempt_assignment_id',
+        'last.status AS last_attempt_status',
+        'last.score AS last_attempt_score',
+        'last.is_acceptable AS last_attempt_is_acceptable'
+      ])
+      .leftJoin('a.examAssignment', 'exam')
+      .leftJoin(
+        (qb) =>
+          qb
+            .select([
+              't.assignmentId AS assignment_id',
+              't.status AS status',
+              't.score AS score',
+              't.isAcceptable AS is_acceptable'
+            ])
+            .from(Attempt, 't')
+            .innerJoin(Assignment, 'related', 'related.id = t.assignmentId')
+            .where('t.userId = :userId AND related.classId = :classId')
+            .distinctOn(['t.assignmentId'])
+            .orderBy('t.assignmentId', 'ASC')
+            .addOrderBy('t.attempt', 'DESC')
+            .addOrderBy('t.id', 'DESC'),
+        'last',
+        'last.assignment_id = a.id'
+      )
+      .where('a.classId = :classId AND exam.id IS NULL')
+      .setParameters({
+        classId,
+        userId: user.userId,
+        completedStatus: AttemptStatus.COMPLETED
+      });
+
+    const acceptedAttempt = query
+      .subQuery()
+      .select('1')
+      .from(Attempt, 't')
+      .where('t.assignmentId = a.id')
+      .andWhere('t.userId = :userId')
+      .andWhere('t.isAcceptable = TRUE')
+      .andWhere('t.status = :completedStatus')
+      .getQuery();
+
+    query.addSelect(`EXISTS ${acceptedAttempt}`, 'has_accepted_attempt');
+
+    if (user.role !== UserRole.ADMIN) {
+      query.addSelect(
+        (qb) =>
+          qb
+            .select('COUNT(alert.id)')
+            .from(AssignmentUserAlert, 'alert')
+            .where('alert.assignmentId = a.id')
+            .andWhere('alert.userId = :userId')
+            .andWhere('alert.deletedAt IS NULL'),
+        'active_alert_count'
       );
     }
 
-    const assignments = await query.getMany();
+    if (user.role === UserRole.STUDENT) {
+      query.andWhere('(a.startDate IS NULL OR a.startDate <= :now)', { now: new Date() });
+    }
 
-    return this.presentAssignments(assignments);
+    return query.getRawMany<ClassAssignmentSummaryRow>();
+  }
+
+  private toAssignmentSummaryDto(row: ClassAssignmentSummaryRow, role: UserRole): ClassAssignmentSummaryDto {
+    const lastAttempt = row.last_attempt_assignment_id == null
+        ? null
+        : {
+            status: row.last_attempt_status!,
+            score: Number(row.last_attempt_score),
+            isAcceptable: Boolean(row.last_attempt_is_acceptable)
+          }
+
+    const assignment: ClassAssignmentSummaryDto = {
+      id: Number(row.assignment_id),
+      title: row.title,
+      description: row.description,
+      startDate: row.start_date,
+      dueDate: row.due_date,
+      answerKeyId: row.answer_key_id == null ? null : Number(row.answer_key_id),
+      answerKeyVisible: Boolean(row.answer_key_visible),
+      lastAttempt,
+      hasAcceptedAttempt: row.has_accepted_attempt === true
+    };
+
+    if (role !== UserRole.ADMIN) {
+      assignment.currentUserAlertStatus = {
+        suspended: Number(row.active_alert_count ?? 0) >= Number(row.suspension_alert_limit)
+      };
+    }
+
+    return assignment;
   }
 
   private createAssignmentDetailsQuery(id: number, includeMembers = false) {
