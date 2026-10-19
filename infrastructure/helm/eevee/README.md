@@ -1,5 +1,77 @@
 # EEVEE Helm chart
 
+## Cluster diagnostics and worker node preference
+
+The optional observer replaces the GitHub health cron. It samples pod CPU/memory,
+node conditions/resources and API process metrics once per minute. A small canary
+on each configured candidate node emits a harmless timestamp; the observer tests
+the log route through the runner's in-cluster endpoint and any configured API
+backends. It never reads student logs, patches node labels or modifies worker Jobs.
+
+The runner uses fresh reports as **preferred node affinity**, not a mandatory
+allowlist. With no trusted nodes, stale/missing/forbidden reports, or unavailable
+preferred capacity, normal Kubernetes scheduling remains available. Diagnostics
+never delay the execution queue solely because nodes are untrusted. Existing
+operator-provided Job selectors and Kubernetes capacity/taints still apply.
+
+Everything is disabled by default and has not been deployed by this change.
+Prepare these values in the operator's existing release configuration:
+
+```yaml
+platformApi:
+  metrics:
+    enabled: true
+    secretName: eevee-metrics # existing Secret, key: token; no committed token
+assignmentRunner:
+  nodeEligibility:
+    enabled: true
+    reportConfigMap: eevee-node-report
+    maxAgeSeconds: 180
+diagnostics:
+  enabled: true
+  candidateNodes: [YOUR_WORKER_NODE] # explicit observation/canary scope
+  endpoints: [] # optionally: [{name: backend-name, url: https://API_HOST:PORT}]
+  rbac:
+    create: false # provision the dedicated observer SA/Role/Binding beforehand
+    createClusterRole: false # cluster administrator must grant node/metrics-node reads
+  persistence:
+    existingClaim: YOUR_REPORTS_PVC # otherwise the chart creates a kept 1 GiB RWO PVC
+```
+
+The dedicated observer ServiceAccount needs get/list on namespace pods and
+metrics.k8s.io pods, get on pods/log, get/patch on the named report ConfigMap,
+and get/list on cluster nodes and metrics.k8s.io nodes. The template can create
+these RBAC objects when the installing operator has those privileges. Namespace
+admin alone may not. The runner only needs get on the report ConfigMap, already
+included in the existing runner Role. Do not give the observer node-patch rights.
+
+Supply the same existing metrics-token Secret to the API and observer. The port
+9091 listener is separate from the public Service/gateway and has bearer auth;
+the NetworkPolicy permits its ingress from observer pods. NetworkPolicy requires
+an enforcing CNI. Backend URLs require the cluster CA and valid certificate SANs;
+TLS verification remains enabled. The in-cluster path is always sampled.
+
+Reports: `/reports/latest.json` and up to 1,440 `sample-<timestamp>.json` files on
+the PVC. `eevee-node-report` holds only the expiring scheduling snapshot. Default
+expiry is 180 seconds; three consecutive complete samples earn a stable
+preference. A failed/unknown sample immediately removes that preference, without
+evicting existing workers. A shared backend failure is not attributed to every node.
+Missing/stale resource metrics stay unknown. Review the memory-fraction threshold
+and sampling/retention budgets for the actual infrastructure; these are operator
+settings, not measured service SLAs.
+
+Sampling can miss short memory peaks and does not prove a leak is fixed. API
+request/CPU/GC counters are cumulative within a process; compare by pod UID and
+uptime. The GC sample is taken at callback delivery. The canary verifies log
+access, not the complete submission/queue/worker/result cycle. The observer also
+cannot report externally if the entire cluster is unreachable.
+
+The deploy script resets values from Git; preserve approved observer settings in
+the actual deployment configuration/caller arguments, not only in a prior Helm
+release. Reconcile the dirty checkout with the current base before publishing.
+See the [operational harness](../../../.github/specs/eevee-operational-harness.md)
+for measured benchmark results and the pre-deployment production snapshot.
+
 Umbrella chart that deploys the whole EEVEE platform onto Kubernetes in a
 single release:
 
@@ -187,3 +259,7 @@ workerImages:
   nodeTeraorm: ghcr.io/cocsi-mg/worker-node-teraorm-img:latest
   pythonDefault: ghcr.io/cocsi-mg/worker-python-default-img:latest
 ```
+
+The RNP deployment uses the entrypoint gateway NodePort with ingress disabled.
+This chart has no bundled ingress controller or external chart dependencies.
+Enabling optional Ingress resources requires an externally managed controller.

@@ -1,6 +1,8 @@
 import { axiosClientWithAuth } from "./client";
 import {
   Assignment,
+  ClassAssignmentSummary,
+  AdminAssignmentListItem,
   AssignmentImportProject,
   AssignmentImportSource,
   CreateAssignmentRequest,
@@ -29,12 +31,6 @@ export class AssignmentService {
 
   static async GetMyAssignments() {
     const response = await axiosClientWithAuth.get("/assignment/me");
-
-    return <Assignment[]>response.data;
-  }
-
-  static async GetAssignmentsAdmin() {
-    const response = await axiosClientWithAuth.get("/assignment");
 
     return <Assignment[]>response.data;
   }
@@ -77,24 +73,23 @@ export class AssignmentService {
     return <Assignment>response.data;
   }
 
-  static async GetAssignmentsByClassId(classId: number) {
-    const response = await axiosClientWithAuth.get(
-      `/assignment/class/${classId}`
-    );
-    return <Assignment[]>response.data;
+  static async GetAssignmentsByClassId(classId: number): Promise<ClassAssignmentSummary[]> {
+    const response = await axiosClientWithAuth.get<ClassAssignmentSummary[]>(`/assignment/class/${classId}`);
+    return response.data;
   }
 
-  static async getLinkableByClassId(classId: number): Promise<Assignment[]> {
-    const response = await axiosClientWithAuth.get<Assignment[]>(
-      `/assignment/class/${classId}`,
-      { params: { linkedToExam: false } },
-    );
+  static async getLinkableByClassId(classId: number): Promise<ClassAssignmentSummary[]> {
+    const response = await axiosClientWithAuth.get<ClassAssignmentSummary[]>(`/assignment/class/${classId}`, {
+      params: {
+        linkedToExam: false
+      }
+    });
     return response.data;
   }
 
   static async listPaginated(params: ListPaginatedAssignmentsParams) {
     const response = await axiosClientWithAuth.get<
-      PaginatedResponse<Assignment>
+      PaginatedResponse<AdminAssignmentListItem>
     >("/assignment/paginated", {
       params,
     });

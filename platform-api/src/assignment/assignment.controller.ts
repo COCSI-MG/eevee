@@ -31,12 +31,6 @@ export class AssignmentController {
     return this.assignmentService.create(createAssignmentDto);
   }
 
-  @Get()
-  @Roles(UserRole.ADMIN)
-  findAll() {
-    return this.assignmentService.findAll();
-  }
-
   @Get('options')
   @Roles(UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT)
   findOptions(@Query() query: ListAssignmentOptionsQueryDto) {

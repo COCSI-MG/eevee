@@ -1,5 +1,5 @@
 "use client";
-import { User, UserRole } from "@/app/interface/scheduler-api/user";
+import { UserListItem, UserRole } from "@/app/interface/scheduler-api/user";
 
 import {
   Table,
@@ -13,7 +13,7 @@ import { Badge } from "./ui/badge";
 import TableActions from "./table/table-actions";
 
 interface UsersTableProps {
-  users: User[] | undefined;
+  users: UserListItem[] | undefined;
   handleDelete: (id: number) => void;
   emptyMessage?: string;
 }
