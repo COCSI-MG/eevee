@@ -5,7 +5,7 @@ import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
 } from "@/app/interface/scheduler-api/pagination";
-import { User } from "@/app/interface/scheduler-api/user";
+import { UserListItem } from "@/app/interface/scheduler-api/user";
 import { useQuery } from "@tanstack/react-query";
 
 interface UsePaginatedUsersParams {
@@ -19,7 +19,7 @@ export const usePaginatedUsers = ({
   search,
   pageSize = ADMIN_LIST_PAGE_SIZE,
 }: UsePaginatedUsersParams) => {
-  return useQuery<PaginatedResponse<User>>({
+  return useQuery<PaginatedResponse<UserListItem>>({
     queryKey: ["paginatedUsers", page, search, pageSize],
     queryFn: () =>
       UsersService.getPaginatedUsers({
