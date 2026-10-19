@@ -105,6 +105,16 @@ export interface ClassAssignmentSummary {
   lastAttempt: ClassAssignmentAttemptSummary | null;
   hasAcceptedAttempt: boolean;
 }
+export type AdminAssignmentListItem = Pick<Assignment,
+  "id" | 
+  "title" | 
+  "description" | 
+  "workerType" | 
+  "startDate" | 
+  "dueDate"
+> & {
+  class: Pick<Class, "name">;
+};
 
 export interface AssignmentImportSource {
   id: number;
