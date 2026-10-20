@@ -14,21 +14,10 @@ import { cn } from "@/lib/utils";
 import { Class } from "@/app/interface/scheduler-api/class";
 import { Route } from "@/app/routes";
 import Link from "next/link";
-import { ClipboardList, RotateCcw } from "lucide-react";
-
-const ViewExamsComponent = ({ classId }: { classId: number }) => (
-  <Link
-    href={`/${Route.AdminClasses}/${classId}/${Route.AdminClassExams}`}
-  >
-    <DropdownMenuItem>
-      <ClipboardList className="h-4 w-4" />
-      provas
-    </DropdownMenuItem>
-  </Link>
-);
+import { ClipboardList, Info, RotateCcw } from "lucide-react";
 
 interface AdminClassesTableProps {
-  classes: Array<Class> | undefined;
+  classes: Class[];
   handleDelete: (id: number) => void;
   handleRestore: (id: number) => void;
   emptyMessage?: string;
@@ -44,33 +33,31 @@ export default function AdminClassesTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>
-            <div className="flex items-center">Nome da Turma</div>
-          </TableHead>
-          <TableHead>
-            <div className="flex items-center">Descrição</div>
-          </TableHead>
-          <TableHead>
-            <div className="flex items-center">Ações</div>
-          </TableHead>
+          <TableHead>Nome da Turma</TableHead>
+          <TableHead>Descrição</TableHead>
+          <TableHead>Ações</TableHead>
         </TableRow>
       </TableHeader>
+
       <TableBody>
-        {(classes ?? []).length === 0 && (
+        {classes.length === 0 && (
           <TableRow key={0}>
             <TableCell colSpan={3} className="text-center text-muted-foreground">
               {emptyMessage}
             </TableCell>
           </TableRow>
         )}
-        {(classes ?? []).map((cls) => {
+        {classes.map((cls) => {
 
-          const otherActions = cls.deletedAt
+          const isArchived = Boolean(cls.deletedAt);
+          const classPath = `/${Route.AdminClasses}/${cls.id}`;
+
+          const otherActions = isArchived
             ?
               [
                 <DropdownMenuItem
-                  key={`${cls.id}-restore`}
-                  onClick={() => handleRestore(cls.id)}
+                  key="restore"
+                  onSelect={() => handleRestore(cls.id)}
                 >
                   <RotateCcw className="h-4 w-4" />
                   Restaurar turma
@@ -78,10 +65,19 @@ export default function AdminClassesTable({
               ]
             :
               [
-                <ViewExamsComponent
-                  key={`${cls.id}-exams`}
-                  classId={cls.id}
-                />,
+                <DropdownMenuItem key="details" asChild>
+                  <Link href={`${classPath}/${Route.AdminClassInfos}`}>
+                    <Info className="h-4 w-4" />
+                    Ver detalhes
+                  </Link>
+                </DropdownMenuItem>,
+
+                <DropdownMenuItem key="exams" asChild>
+                  <Link href={`${classPath}/${Route.AdminClassExams}`}>
+                    <ClipboardList className="h-4 w-4" />
+                    Provas
+                  </Link>
+                </DropdownMenuItem>,
               ];
 
           return (

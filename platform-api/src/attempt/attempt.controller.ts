@@ -5,7 +5,7 @@ import {
   Param,
   ParseIntPipe,
   Query,
-  UseGuards,
+  UseGuards
 } from '@nestjs/common';
 import { AttemptService } from './attempt.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -37,6 +37,20 @@ export class AttemptController {
       assignmentId,
       userId,
       query
+    );
+  }
+
+  @Get('admin/assignment/:assignmentId/user/:userId/attempt/:attemptId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  findSubmittedWorkForAdmin(
+    @Param('assignmentId', ParseIntPipe) assignmentId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('attemptId', ParseIntPipe) attemptId: number,
+  ) {
+    return this.attemptService.findSubmittedWorkForAdmin(
+      assignmentId,
+      userId,
+      attemptId,
     );
   }
 
