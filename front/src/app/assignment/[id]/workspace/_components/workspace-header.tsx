@@ -50,29 +50,27 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
               </span>
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[70vh]">
-            <DialogHeader>
+          <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-6xl flex-col overflow-hidden">
+            <DialogHeader className="shrink-0">
               <DialogTitle className="text-2xl font-semibold text-foreground">
                 {assignment?.title}
               </DialogTitle>
             </DialogHeader>
-            <div className="mt-6 space-y-4">
-              <div className="p-6 bg-card/50 rounded-lg border border-border max-h-96 overflow-y-auto">
-                <MarkdownContent
-                  className="text-base"
-                  content={assignment?.description || "Nenhuma descrição fornecida."}
-                />
-                {(assignment.startDate || assignment.dueDate) && (
-                  <div className="mt-4 space-y-1 text-sm text-slate-400">
-                    {assignment.startDate && (
-                      <p>Início: {formatDateTime(assignment.startDate)}</p>
-                    )}
-                    {assignment.dueDate && (
-                      <p>Entrega: {formatDateTime(assignment.dueDate)}</p>
-                    )}
-                  </div>
-                )}
-              </div>
+            <div className="min-h-0 min-w-0 overflow-y-auto rounded-lg border border-border bg-card/50 p-4 sm:p-6">
+              <MarkdownContent
+                className="text-base"
+                content={assignment?.description || "Nenhuma descrição fornecida."}
+              />
+              {(assignment.startDate || assignment.dueDate) && (
+                <div className="mt-4 space-y-1 text-sm text-slate-400">
+                  {assignment.startDate && (
+                    <p>Início: {formatDateTime(assignment.startDate)}</p>
+                  )}
+                  {assignment.dueDate && (
+                    <p>Entrega: {formatDateTime(assignment.dueDate)}</p>
+                  )}
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
