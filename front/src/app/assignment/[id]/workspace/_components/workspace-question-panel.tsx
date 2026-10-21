@@ -17,7 +17,7 @@ export default function WorkspaceQuestionPanel({
   const [isExpanded, setIsExpanded] = React.useState(true);
 
   return (
-    <div className="border-b border-border bg-background/50">
+    <div className="min-w-0 border-b border-border bg-background/50">
       <div className="flex items-center justify-between p-3 hover:bg-card/50 transition-colors">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Button
