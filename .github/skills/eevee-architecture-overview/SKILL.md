@@ -12,7 +12,7 @@ current split is:
 
 - **`front/`** (Next.js 15) — student/teacher web UI.
 - **`platform-api/`** (NestJS) — public API: users, classes, assignments,
-  attempts, templates, realtime, GitHub file-saver sync, AI reports. Owns
+  attempts, templates, realtime, AI reports. Owns
   `scheduling`, `worker`, and `kubernetes` submodules for the platform-facing
   side of job orchestration (`platform-api/src/worker`,
   `platform-api/src/kubernetes`, `platform-api/src/scheduling`).
