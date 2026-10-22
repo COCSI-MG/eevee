@@ -221,7 +221,7 @@ front:
 # -----------------------------------------------------------------------------
 entrypointGateway:
   enabled: true
-  image: nginx:1.27-alpine
+  image: nginx:1.31.7-alpine
   replicas: 1
   containerPort: 8080
   servicePort: 80

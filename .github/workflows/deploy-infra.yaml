@@ -62,7 +62,7 @@ jobs:
             # Secrets are provisioned out-of-band; configuration deploys do not rotate them.
             bash "$CHART_WORKDIR/scripts/deploy-release.sh"
 
-            for deployment in platform-api-deployment assignment-runner-deployment eevee-front-deployment; do
+            for deployment in eevee-entrypoint-gateway platform-api-deployment assignment-runner-deployment eevee-front-deployment; do
               if ! kubectl -n "$NAMESPACE" rollout status "deployment/$deployment" --timeout=5m; then
                 kubectl get pods -n "$NAMESPACE" -o wide
                 kubectl describe "deployment/$deployment" -n "$NAMESPACE"
