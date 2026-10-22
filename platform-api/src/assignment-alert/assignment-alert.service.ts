@@ -103,7 +103,7 @@ export class AssignmentAlertService {
     const user = this.requestContextService.getUser();
     const countsByAssignment = new Map<number, number>();
 
-    if (user?.userId && user.role !== UserRole.ADMIN) {
+    if (user?.userId && user.role === UserRole.STUDENT) {
       const rows = await alertRepository
         .createQueryBuilder('alert')
         .select('alert.assignmentId', 'assignmentId')
@@ -127,7 +127,7 @@ export class AssignmentAlertService {
         version: assignment.alertPolicyVersion,
       };
 
-      if (user?.userId && user.role !== UserRole.ADMIN) {
+      if (user?.userId && user.role === UserRole.STUDENT) {
         const activeCount = countsByAssignment.get(assignment.id) ?? 0;
         assignment.currentUserAlertStatus = {
           activeCount,
@@ -166,15 +166,22 @@ export class AssignmentAlertService {
     const user = this.requestContextService.getUser();
     if (!user?.userId) throw new ForbiddenException('Authentication required');
 
+    const assignment = await this.assignmentRepository.findOne({
+      where: { id: assignmentId },
+      select: { id: true, classId: true, suspensionAlertLimit: true }
+    });
+    if (!assignment) throw new NotFoundException('Assignment not found');
+
     if (user.role !== UserRole.ADMIN) {
-      const assignment = await this.assignmentRepository.findOne({
-        where: { id: assignmentId },
-        select: { id: true, classId: true }
-      });
-
-      if (!assignment) throw new NotFoundException('Assignment not found');
-
       await this.assertUserCanAccessAssignment(assignment, user.userId);
+    }
+
+    if (user.role !== UserRole.STUDENT) {
+      return {
+        activeCount: 0,
+        limit: assignment.suspensionAlertLimit,
+        suspended: false
+      };
     }
 
     return this.getStatus(assignmentId, user.userId);
@@ -182,7 +189,7 @@ export class AssignmentAlertService {
 
   async assertCurrentUserNotSuspended(assignmentId: number): Promise<void> {
     const user = this.requestContextService.getUser();
-    if (!user?.userId || user.role === UserRole.ADMIN) return;
+    if (!user?.userId || user.role !== UserRole.STUDENT) return;
 
     const status = await this.getStatus(assignmentId, user.userId);
 

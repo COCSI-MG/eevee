@@ -15,7 +15,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import {
+  Assignment,
+  ClassAssignmentSummary
+} from "@/app/interface/scheduler-api/assignment";
+import { AssignmentAttempt } from "@/app/interface/scheduler-api/assignment-attempt";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useRouter } from "next/navigation";
 import { Route } from "@/app/routes";
@@ -35,8 +39,34 @@ import {
 } from "@/utils/date";
 
 interface AssignmentsCardProps {
-  data: Assignment[];
+  data: AssignmentCardData[];
 }
+
+type AssignmentCardAttempt = Pick<
+  AssignmentAttempt,
+  "status" | "score" | "isAcceptable"
+> & {
+  attempt?: AssignmentAttempt["attempt"];
+};
+
+type AssignmentCardData = Pick<
+  Assignment,
+  | "id"
+  | "title"
+  | "description"
+  | "startDate"
+  | "dueDate"
+  | "answerKeyId"
+  | "answerKeyVisible"
+> & {
+  score?: Assignment["score"];
+  examAssignment?: Assignment["examAssignment"];
+  currentUserAlertStatus?: {
+    suspended: boolean;
+  };
+  assignmentAttempts?: AssignmentCardAttempt[];
+  lastAttempt?: ClassAssignmentSummary["lastAttempt"];
+};
 
 const BADGE_COMPACT_CLASS = "text-[10px] px-2 py-0.5";
 
@@ -59,16 +89,15 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
     push(`/${Route.Assignment}/${id}/${Route.Workspace}`);
   };
 
-  const canAccessAssignment = (assignment: Assignment) => {
+  const canAccessAssignment = (assignment: AssignmentCardData) => {
     return Boolean(userId && !assignment.currentUserAlertStatus?.suspended);
   };
 
-  const getLastAttempt = (assignment: Assignment) => {
-    if (!assignment.assignmentAttempts?.length) {
-      return null;
-    }
-    return [...assignment.assignmentAttempts].sort(
-      (a, b) => b.attempt - a.attempt,
+  const getLastAttempt = (assignment: AssignmentCardData) => {
+    if (assignment.lastAttempt) return assignment.lastAttempt
+
+    return [...assignment.assignmentAttempts ?? []].sort(
+      (a, b) => (b.attempt ?? 0) - (a.attempt ?? 0),
     )[0];
   };
 
@@ -243,7 +272,7 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
                     Responder Entrevista
                   </Button>
 
-                  {assignment.assignmentAttempts?.length > 0 && (
+                  {lastAttempt && (
                     <Button
                       className="w-full bg-success hover:bg-success/90 text-success-foreground"
                       onClick={() =>

@@ -1,15 +1,6 @@
 "use client";
 
 import {
-  DialogHeader,
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogTitle,
-} from "../ui/dialog";
-import { Eye, Code } from "lucide-react";
-import { Button } from "../ui/button";
-import {
   Table,
   TableBody,
   TableCell,
@@ -20,16 +11,14 @@ import {
 import { Route } from "@/app/routes";
 import TableActions from "../table/table-actions";
 import React from "react";
-import { Template } from "@/app/interface/scheduler-api/template";
+import { PaginatedTemplate } from "@/app/interface/scheduler-api/template";
 import {
   TEMPLATE_TABLE_TEXT,
   WorkerTypeLabelMap,
 } from "@/app/admin/templates/constants";
-import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";
-import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 
 interface TemplatesTableProps {
-  templates: Template[] | undefined;
+  templates: PaginatedTemplate[] | undefined;
   handleDelete: (id: number) => void;
   emptyMessage?: string;
 }
@@ -63,11 +52,6 @@ export default function TemplatesTable({
           </TableHead>
           <TableHead className="cursor-pointer">
             <div className="flex items-center">
-              {TEMPLATE_TABLE_TEXT.contentHeader}
-            </div>
-          </TableHead>
-          <TableHead className="cursor-pointer">
-            <div className="flex items-center">
               {TEMPLATE_TABLE_TEXT.actionsHeader}
             </div>
           </TableHead>
@@ -76,7 +60,7 @@ export default function TemplatesTable({
       <TableBody>
         {list.length === 0 && (
           <TableRow>
-            <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+            <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
               {emptyText}
             </TableCell>
           </TableRow>
@@ -87,42 +71,6 @@ export default function TemplatesTable({
             <TableCell>{template.description}</TableCell>
             <TableCell>
               {WorkerTypeLabelMap[template.workerType] ?? template.workerType}
-            </TableCell>
-            <TableCell>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    size="sm"
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <Eye className="h-4 w-4" />
-                    {TEMPLATE_TABLE_TEXT.viewButton}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-card border-border max-w-4xl max-h-[80vh]">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground flex items-center gap-2">
-                      <Code className="w-5 h-5" />
-                      {template.title}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="bg-editor-bg border border-border rounded-md p-4 max-h-[50vh] overflow-auto min-w-0">
-                      <MonacoCodeEditor
-                        preset="read-only-preview"
-                        path={`template-${template.id}${getWorkerLanguageConfig(template.workerType).fileExtension}`}
-                        workerType={template.workerType}
-                        value={template.content}
-                        height="420px"
-                        optionOverrides={{
-                          links: false,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
             </TableCell>
             <TableCell>
               <TableActions

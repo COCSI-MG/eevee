@@ -2,10 +2,11 @@
 import { UserRole } from "@/app/interface/scheduler-api/user";
 
 import WorkspaceHeader from "@/app/assignment/[id]/workspace/_components/workspace-header";
+import WorkspaceHeaderActions from "@/app/assignment/[id]/workspace/_components/workspace-header-actions";
 import Workspace from "@/app/assignment/[id]/workspace/_components/workspace";
 import WorkspaceAgreement from "@/app/assignment/[id]/workspace/_components/workspace-agreement";
 import { WorkspaceLoading } from "@/app/assignment/[id]/workspace/_components/workspace-loading";
-import { WorkspaceRunPreviewDialog } from "@/app/assignment/[id]/workspace/_components/workspace-run-preview-dialog";
+import { WorkspaceRunPreviewDialog } from "@/app/assignment/[id]/workspace/_components/modals/workspace-run-preview-dialog";
 import { WorkspaceSuspension } from "@/app/assignment/[id]/workspace/_components/workspace-suspension";
 import { useWorkspaceCorrection } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-correction";
 import { useWorkspacePreview } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-preview";
@@ -26,6 +27,7 @@ export default function Page() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuthContext();
+  const isSecurityExempt = user?.role === UserRole.ADMIN || user?.role === UserRole.TEACHER;
   const userId = user?.userId;
   const assignmentId = Number(id);
   const isInvalidAssignmentId =
@@ -165,7 +167,7 @@ export default function Page() {
     return <WorkspaceLoading />;
   }
 
-  if (isSuspendedResponse) {
+  if (!isSecurityExempt && isSuspendedResponse) {
     return <WorkspaceSuspension />;
   }
 
@@ -184,7 +186,7 @@ export default function Page() {
   }
 
   // Suspension check
-  if (assignmentData?.currentUserAlertStatus?.suspended) {
+  if (!isSecurityExempt && assignmentData?.currentUserAlertStatus?.suspended) {
     return <WorkspaceSuspension />;
   }
 
@@ -196,8 +198,12 @@ export default function Page() {
     isDeadlinePassed(effectiveDueDate),
   );
 
-  // Agreement check - APENAS para não-admins que ainda não aceitaram
-  if (user && user.role !== UserRole.ADMIN && assignmentData && !securityAgreementAccepted) {
+  if (
+    user &&
+    !isSecurityExempt &&
+    assignmentData &&
+    !securityAgreementAccepted
+  ) {
     return (
       <WorkspaceAgreement
         title={assignmentData.title}
@@ -209,7 +215,6 @@ export default function Page() {
     );
   }
 
-  // Workspace principal (após aceitar ou se for admin)
   return (
     <div className="h-screen text-foreground flex flex-col">
       <WorkspaceHeader
@@ -219,16 +224,20 @@ export default function Page() {
           startDate: assignmentData?.startDate,
           dueDate: effectiveDueDate,
         }}
-        onRunClick={() => runPreview()}
-        onSubmitClick={() => submitAssignment()}
-        onSaveClick={() => saveFileInServer()}
-        onClearClick={handleClearWorkspace}
-        isRunningSync={previewLoading}
-        isSubmittingCorrection={isCorrectionInProgress}
-        isSaving={isSaving}
-        isClearing={isResettingWorkspace || isRefreshingAssignmentForClear}
-        canClear={Boolean(resetWorkspaceAction)}
-        isSubmissionClosed={isSubmissionClosed}
+        actions={
+          <WorkspaceHeaderActions
+            onRunClick={() => runPreview()}
+            onSubmitClick={() => submitAssignment()}
+            onSaveClick={() => saveFileInServer()}
+            onClearClick={handleClearWorkspace}
+            isRunningSync={previewLoading}
+            isSubmittingCorrection={isCorrectionInProgress}
+            isSaving={isSaving}
+            isClearing={isResettingWorkspace || isRefreshingAssignmentForClear}
+            canClear={Boolean(resetWorkspaceAction)}
+            isSubmissionClosed={isSubmissionClosed}
+          />
+        }
       />
 
       <WorkspaceRunPreviewDialog

@@ -69,6 +69,12 @@ spec:
           image: "{{ .Values.assignmentRunner.image.repository }}:{{ .Values.assignmentRunner.image.tag }}"
           imagePullPolicy: {{ .Values.assignmentRunner.image.pullPolicy }}
           env:
+            - name: K8S_NODE_DIAGNOSTICS_ENABLED
+              value: {{ .Values.assignmentRunner.nodeEligibility.enabled | quote }}
+            - name: K8S_NODE_REPORT_CONFIGMAP
+              value: {{ .Values.assignmentRunner.nodeEligibility.reportConfigMap | quote }}
+            - name: K8S_NODE_REPORT_MAX_AGE_SECONDS
+              value: {{ .Values.assignmentRunner.nodeEligibility.maxAgeSeconds | quote }}
             - name: ENV
               value: {{ .Values.assignmentRunner.env | quote }}
             {{- include "eevee.appEnv" . | nindent 12 }}

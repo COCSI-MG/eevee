@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { HashUtils } from 'src/utils/hash.utils';
 import { UserHelper } from './user.helper';
 import { ListUsersQueryDto } from './dto/request/list-users.query.dto';
+import { UserListItemResponseDto } from './dto/response/user-list-item-response.dto';
 import {
   PaginatedResult,
   buildPaginationMeta,
@@ -76,12 +77,12 @@ export class UserService {
     })
   }
 
-  async findAllPaginated(query: ListUsersQueryDto): Promise<PaginatedResult<User>> {
+  async findAllPaginated(query: ListUsersQueryDto): Promise<PaginatedResult<UserListItemResponseDto>> {
     const { page, pageSize, skip } = buildPaginationParams(query);
 
     const qb = this.userRepository
       .createQueryBuilder('user')
-      .leftJoinAndSelect('user.userClasses', 'userClasses')
+      .select(['user.id', 'user.name', 'user.email', 'user.role'])
       .orderBy('user.id', 'DESC');
 
     const search = query.search?.trim();

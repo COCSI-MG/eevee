@@ -223,11 +223,8 @@ export default function AssignmentInterviewPage() {
     if (!classAssignments || classAssignments.length === 0) {
       return false;
     }
-    return classAssignments.every((classAssignment) =>
-      (classAssignment.assignmentAttempts ?? []).some(
-        (attempt) => attempt.isAcceptable && attempt.status === "completed",
-      ),
-    );
+
+    return classAssignments.every((classAssignment) => classAssignment.hasAcceptedAttempt);
   }, [classAssignments]);
 
   const comparativeAssignmentId = useMemo(() => {

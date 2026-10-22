@@ -5,7 +5,7 @@ import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
 } from "@/app/interface/scheduler-api/pagination";
-import { Template } from "@/app/interface/scheduler-api/template";
+import { PaginatedTemplate } from "@/app/interface/scheduler-api/template";
 import { useQuery } from "@tanstack/react-query";
 
 interface UsePaginatedTemplatesParams {
@@ -21,7 +21,7 @@ export const usePaginatedTemplates = ({
   workerType,
   pageSize = ADMIN_LIST_PAGE_SIZE,
 }: UsePaginatedTemplatesParams) => {
-  return useQuery<PaginatedResponse<Template>>({
+  return useQuery<PaginatedResponse<PaginatedTemplate>>({
     queryKey: ["paginatedTemplates", page, search, workerType, pageSize],
     queryFn: () =>
       TemplatesService.listPaginated({

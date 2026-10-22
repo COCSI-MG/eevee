@@ -11,15 +11,6 @@ const hasProcessingAttempt = (assignment?: Assignment) =>
     ),
   );
 
-const useAdminAssignments = () => {
-  return useQuery({
-    queryKey: ['adminAssignments'],
-    retryOnMount: true,
-    initialData: [],
-    queryFn: AssignmentService.GetAssignmentsAdmin,
-  });
-};
-
 const useFetchAssignment = (id: number) => {
   return useQuery({
     queryKey: ['assignment', id],
@@ -36,4 +27,4 @@ const useFetchAssignment = (id: number) => {
   })
 }
 
-export { useAdminAssignments, useFetchAssignment };
+export { useFetchAssignment };

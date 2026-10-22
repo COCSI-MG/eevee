@@ -5,7 +5,7 @@ import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
 } from "@/app/interface/scheduler-api/pagination";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { AdminAssignmentListItem } from "@/app/interface/scheduler-api/assignment";
 import { useQuery } from "@tanstack/react-query";
 
 interface UsePaginatedAssignmentsParams {
@@ -21,7 +21,7 @@ export const usePaginatedAssignments = ({
   pageSize = ADMIN_LIST_PAGE_SIZE,
   classId,
 }: UsePaginatedAssignmentsParams) => {
-  return useQuery<PaginatedResponse<Assignment>>({
+  return useQuery<PaginatedResponse<AdminAssignmentListItem>>({
     queryKey: ["paginatedAssignments", page, search, pageSize, classId],
     queryFn: () =>
       AssignmentService.listPaginated({

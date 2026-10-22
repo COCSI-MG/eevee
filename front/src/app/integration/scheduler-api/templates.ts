@@ -1,5 +1,6 @@
 import {
   CreateTemplateRequest,
+  PaginatedTemplate,
   Template,
   TestTemplateRequest,
   TestTemplateResponse,
@@ -45,9 +46,9 @@ export class TemplatesService {
     }
 
     static async listPaginated(params: ListPaginatedTemplatesParams) {
-        const response = await axiosClientWithAuth.get<PaginatedResponse<Template>>(
+        const response = await axiosClientWithAuth.get<PaginatedResponse<PaginatedTemplate>>(
             "/template/paginated",
-            { params },
+            { params }
         );
         return response.data;
     }

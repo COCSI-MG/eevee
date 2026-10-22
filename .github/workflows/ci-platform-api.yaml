@@ -1,6 +1,13 @@
 name: CI Platform API
 
 on:
+  workflow_dispatch:
+    inputs:
+      performance_profile:
+        type: choice
+        options: [smoke, representative]
+        default: smoke
+        description: Synthetic assignment performance workload
   pull_request:
     branches:
       - develop
@@ -13,6 +20,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: eevee_harness
+          POSTGRES_USER: harness
+          POSTGRES_PASSWORD: local-harness-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U harness -d eevee_harness"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: platform-api
@@ -21,7 +42,7 @@ jobs:
       - name: Node.js Setup
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: platform-api/package-lock.json
       - run: npm ci
@@ -29,5 +50,29 @@ jobs:
         run: ./node_modules/.bin/tsc -p ../packages/execution-contracts/tsconfig.json
       - name: Tests
         run: npm test
+      - name: Assignment loading integration harness
+        env:
+          EEVEE_TEST_DATABASE_URL: postgresql://harness:local-harness-only@127.0.0.1:5432/eevee_harness
+        run: npm test -- --testRegex assignment-loading.integration-spec.ts
+      - name: Assignment performance comparison
+        env:
+          EEVEE_TEST_DATABASE_URL: postgresql://harness:local-harness-only@127.0.0.1:5432/eevee_harness
+          EEVEE_BENCH_PROFILE: ${{ inputs.performance_profile || 'smoke' }}
+          EEVEE_BENCH_ROUNDS: '2'
+          EEVEE_PERFORMANCE_LIMITS_JSON: ${{ vars.EEVEE_PERFORMANCE_LIMITS_JSON }}
+        run: |
+          if [ -n "$EEVEE_PERFORMANCE_LIMITS_JSON" ]; then
+            node -e 'require("fs").writeFileSync(".bench-limits.json", process.env.EEVEE_PERFORMANCE_LIMITS_JSON)'
+            export EEVEE_BENCH_LIMITS_FILE=.bench-limits.json
+          fi
+          node -r ts-node/register/transpile-only -r tsconfig-paths/register scripts/assignment-performance.ts
+      - name: Performance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: assignment-performance-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .eevee-state/performance/
+          retention-days: 90
+          if-no-files-found: warn
       - name: Build
         run: npm run build

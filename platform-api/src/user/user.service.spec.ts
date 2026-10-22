@@ -202,6 +202,7 @@ describe('UserService', () => {
 
   const makeQueryBuilder = () => {
     const qb: Record<string, jest.Mock> = {
+      select: jest.fn().mockReturnThis(),
       leftJoinAndSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),

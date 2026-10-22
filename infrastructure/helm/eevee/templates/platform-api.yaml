@@ -37,7 +37,20 @@ spec:
           imagePullPolicy: {{ .Values.platformApi.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.platformApi.containerPort }}
+            {{- if .Values.platformApi.metrics.enabled }}
+            - name: metrics
+              containerPort: {{ .Values.platformApi.metrics.port }}
+            {{- end }}
           env:
+            {{- if .Values.platformApi.metrics.enabled }}
+            - name: EEVEE_METRICS_PORT
+              value: {{ .Values.platformApi.metrics.port | quote }}
+            - name: EEVEE_METRICS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.platformApi.metrics.secretName }}
+                  key: {{ .Values.platformApi.metrics.secretKey }}
+            {{- end }}
             - name: ENV
               value: {{ .Values.platformApi.env | quote }}
             {{- with .Values.platformApi.nodeOptions }}

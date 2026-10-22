@@ -131,19 +131,15 @@ export const TEMPLATE_LIST_TOAST_MESSAGES = {
 export const TEMPLATE_TABLE_TITLE_HEADER = "Título";
 export const TEMPLATE_TABLE_DESCRIPTION_HEADER = "Descrição";
 export const TEMPLATE_TABLE_WORKER_TYPE_HEADER = "Tipo de Worker";
-export const TEMPLATE_TABLE_CONTENT_HEADER = "Conteúdo";
 export const TEMPLATE_TABLE_ACTIONS_HEADER = "Ações";
 export const TEMPLATE_TABLE_EMPTY_TEXT = "Nenhum template encontrado.";
-export const TEMPLATE_TABLE_VIEW_BUTTON = "Visualizar";
 
 export const TEMPLATE_TABLE_TEXT = {
   titleHeader: TEMPLATE_TABLE_TITLE_HEADER,
   descriptionHeader: TEMPLATE_TABLE_DESCRIPTION_HEADER,
   workerTypeHeader: TEMPLATE_TABLE_WORKER_TYPE_HEADER,
-  contentHeader: TEMPLATE_TABLE_CONTENT_HEADER,
   actionsHeader: TEMPLATE_TABLE_ACTIONS_HEADER,
   empty: TEMPLATE_TABLE_EMPTY_TEXT,
-  viewButton: TEMPLATE_TABLE_VIEW_BUTTON,
 } as const;
 
 // Keeping labels equal to enum values for now (no UX change),

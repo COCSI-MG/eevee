@@ -37,7 +37,11 @@ export async function middleware(request: NextRequest) {
       role: UserRole;
     };
 
-    if (session.role !== UserRole.ADMIN) {
+    const classesPath = request.nextUrl.pathname === '/admin/classes' || request.nextUrl.pathname.startsWith('/admin/classes/');
+
+    const teacherClassesAccess = session.role === UserRole.TEACHER && classesPath;
+
+    if (session.role !== UserRole.ADMIN && !teacherClassesAccess) {
       return redirectToClasses(request);
     }
 

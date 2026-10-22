@@ -36,6 +36,13 @@ function getErrorMessage(error: unknown): string {
   return "Erro no gabarito";
 }
 
+const ResultStatTone = {
+  OK: "ok",
+  BAD: "bad",
+} as const;
+
+type ResultStatTone = (typeof ResultStatTone)[keyof typeof ResultStatTone]
+
 export function AnswerKeyTestDialog({
   open,
   onOpenChange,
@@ -43,18 +50,16 @@ export function AnswerKeyTestDialog({
   data,
   error,
 }: AnswerKeyTestDialogProps) {
-  const hasResult = Boolean(data);
-  const hasError = Boolean(error);
-  const total = (data?.passes ?? 0) + (data?.failures ?? 0);
-  const score = total === 0 ? 0 : (data?.passes ?? 0) / total;
-  const isAcceptable = hasResult && score >= 0.7;
+  const hasResult = Boolean(data)
+  const hasError = Boolean(error)
+  const total = (data?.passes ?? 0) + (data?.failures ?? 0)
+  const score = total === 0 ? 0 : (data?.passes ?? 0) / total
+  const isAcceptable = hasResult && score >= 0.7
 
   return (
     <Dialog
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (!isPending) onOpenChange(nextOpen);
-      }}
+      onOpenChange={(nextOpen) => { if (!isPending) onOpenChange(nextOpen) }}
     >
       <DialogContent
         className="max-w-4xl max-h-[90vh] overflow-hidden bg-background text-foreground"
@@ -65,6 +70,7 @@ export function AnswerKeyTestDialog({
           if (isPending) event.preventDefault();
         }}
       >
+
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Play className="h-5 w-5" />
@@ -98,17 +104,28 @@ export function AnswerKeyTestDialog({
         {!isPending && hasResult && data && (
           <div className="space-y-4 min-w-0">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-              <ResultStat label="Passaram" value={data.passes} tone="ok" />
-              <ResultStat label="Falharam" value={data.failures} tone="bad" />
+              <ResultStat
+                label="Passaram"
+                value={data.passes}
+                tone={ResultStatTone.OK}
+              />
+
+              <ResultStat
+                label="Falharam"
+                value={data.failures}
+                tone={ResultStatTone.BAD}
+              />
+
               <ResultStat
                 label="Score"
                 value={`${(score * 100).toFixed(0)}%`}
-                tone={isAcceptable ? "ok" : "bad"}
+                tone={isAcceptable ? ResultStatTone.OK : ResultStatTone.BAD}
               />
+
               <ResultStat
                 label="Templates"
                 value={data.templateCount}
-                tone="ok"
+                tone={ResultStatTone.OK}
               />
               <Card>
                 <CardContent className="flex h-full items-center justify-center gap-2 p-3 text-center text-sm font-medium">
@@ -153,6 +170,11 @@ export function AnswerKeyTestDialog({
   );
 }
 
+const resultStatToneClassName: Record<ResultStatTone, string> = {
+  [ResultStatTone.OK]: "text-success",
+  [ResultStatTone.BAD]: "text-destructive",
+};
+
 function ResultStat({
   label,
   value,
@@ -160,9 +182,9 @@ function ResultStat({
 }: {
   label: string;
   value: number | string;
-  tone: "ok" | "bad";
+  tone: ResultStatTone;
 }) {
-  const color = tone === "ok" ? "text-success" : "text-destructive";
+  const color = resultStatToneClassName[tone];
 
   return (
     <Card>

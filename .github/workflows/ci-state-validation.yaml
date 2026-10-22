@@ -1,0 +1,25 @@
+name: CI operational state harness
+on:
+  pull_request:
+    paths:
+      - 'scripts/validate-state*.mjs'
+      - '.github/workflows/ci-state-validation.yaml'
+      - '.github/workflows/validate-state.yaml'
+      - 'scripts/cluster-observer.test.mjs'
+      - 'infrastructure/helm/eevee/**'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test scripts/validate-state.test.mjs
+      - run: node --test scripts/cluster-observer.test.mjs
+      - uses: azure/setup-helm@v4
+      - run: helm dependency build infrastructure/helm/eevee
+      - run: helm lint infrastructure/helm/eevee --set diagnostics.enabled=true --set platformApi.metrics.enabled=true --set 'diagnostics.candidateNodes[0]=test-node' --set diagnostics.rbac.createClusterRole=true

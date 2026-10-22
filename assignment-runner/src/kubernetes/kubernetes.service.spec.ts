@@ -31,6 +31,39 @@ describe('KubernetesService', () => {
     expect(service).toBeDefined();
   });
 
+  it('reads fresh diagnostic reports and applies eligibility to the shared Job builder', async () => {
+    process.env.K8S_NODE_DIAGNOSTICS_ENABLED = 'true';
+    const post = jest.fn().mockResolvedValue({});
+    const get = jest.fn().mockResolvedValue({ body: { data: { 'snapshot.json': JSON.stringify({
+      schemaVersion: 1, namespace: DEFAULT_NAMESPACE, timestamp: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 180000).toISOString(),
+      nodes: [{ name: 'stable-node', eligible: true, ready: true, schedulable: true, logAccess: true }],
+    }) } } });
+    (service as any).client = {
+      apis: { batch: { v1: { namespaces: () => ({ jobs: { post } }) } } },
+    };
+    (service as any).reportClient = { api: { v1: { namespaces: () => ({ configmaps: () => ({ get }) }) } } };
+    try {
+      await service.createJob('worker', 'any-strategy-image', []);
+      expect(post.mock.calls[0][0].body.spec.template.spec.affinity.nodeAffinity
+        .preferredDuringSchedulingIgnoredDuringExecution[0].preference.matchFields[0].values).toEqual(['stable-node']);
+      get.mockResolvedValue({ body: { data: { 'snapshot.json': '{}' } } });
+      await service.createJob('fallback', 'image', []);
+      expect(post).toHaveBeenCalledTimes(2);
+      expect(post.mock.calls[1][0].body.spec.template.spec.affinity).toBeUndefined();
+      get.mockRejectedValue(new Error('HTTP 403'));
+      await service.createJob('fallback-forbidden', 'image', []);
+      expect(post).toHaveBeenCalledTimes(3);
+      jest.useFakeTimers();
+      get.mockImplementation(() => new Promise(() => {}));
+      const stalled = service.createJob('fallback-timeout', 'image', []);
+      await jest.advanceTimersByTimeAsync(2000);
+      await stalled;
+      expect(post).toHaveBeenCalledTimes(4);
+      expect(post.mock.calls[3][0].body.spec.template.spec.affinity).toBeUndefined();
+    } finally { delete process.env.K8S_NODE_DIAGNOSTICS_ENABLED; }
+  });
+
   it('builds a bounded Job with the database resource requirements', async () => {
     const post = jest.fn().mockResolvedValue({});
     (service as any).client = {
