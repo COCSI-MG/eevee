@@ -14,7 +14,9 @@
     "prebuild": "npm run build:python-tools && npm run build:practice-sql",
     "test": "jest",
     "test:practice-sql": "node scripts/test-practice-sql.mjs",
-    "test:python-runtime": "npm run build:python-tools && node scripts/test-python-runtime.mjs"
+    "test:python-runtime": "npm run build:python-tools && node scripts/test-python-runtime.mjs",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run"
   },
   "dependencies": {
     "@electric-sql/pglite": "0.5.8",
@@ -67,6 +69,7 @@
     "@types/node": "22.15.17",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cypress": "^15.21.1",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
     "jest": "^29.7.0",
