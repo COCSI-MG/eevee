@@ -216,7 +216,7 @@ export default function Page() {
   }
 
   return (
-    <div className="h-screen text-foreground flex flex-col">
+    <div className="h-dvh min-w-0 text-foreground flex flex-col overflow-hidden">
       <WorkspaceHeader
         assignment={{
           title: assignmentData ? assignmentData.title : "",
