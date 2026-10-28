@@ -79,8 +79,7 @@ Key modules in `scheduler-api`:
 - **AssignmentModule** - Defines problems; validates template compatibility with `workerType`
 - **TemplateModule** - Boilerplate code; filtered by `workerType`
 - **AuthModule** - JWT-based auth; see `jwt.strategy.ts` for token validation
-- **FileSaverModule** - Syncs student files to GitHub via a BullMQ consumer (`file-saver-queue`)
-- **BullMQModule** - Async messaging over Redis (scheduling jobs, AI reports, file sync events)
+- **BullMQModule** - Async messaging over Redis (scheduling jobs, AI reports)
 
 Use `ClsModule` for request context (user ID injection across services via middleware).
 
