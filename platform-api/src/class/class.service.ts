@@ -1,5 +1,5 @@
 import { UserRole } from 'src/user/user-role';
-import { ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException, UseGuards } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnprocessableEntityException, UseGuards } from '@nestjs/common';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Class } from './entities/class.entity';
@@ -18,6 +18,10 @@ import {
 import { ClassResponseDto } from './dto/response/class-response.dto';
 import { User } from 'src/user/entities/user.entity';
 import { ClassAccessService } from 'src/auth/class-access.service';
+import { ClassInvitation } from './entities/class-invitation.entity';
+import { CreateClassInvitationDto } from './dto/request/create-class-invitation.dto';
+import { randomBytes } from 'node:crypto';
+import { createHash } from 'node:crypto';
 
 @Injectable()
 @UseGuards(JwtAuthGuard)
@@ -27,10 +31,88 @@ export class ClassService {
     private readonly classRepository: Repository<Class>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
+    @InjectRepository(ClassInvitation)
+    private readonly classInvitationRepository: Repository<ClassInvitation>,
+
     private readonly userClassService: UserClassService,
     private readonly requestContextService: RequestContextService,
     private readonly classAccess: ClassAccessService
   ) { }
+
+  async listActiveInvitations(classId: number) {
+    const cls = await this.classAccess.assertTeacherAssignment(classId);
+
+    if (cls.deletedAt) throw new NotFoundException('Class not found');
+
+    const now = new Date();
+
+    const rows = await this.classInvitationRepository
+      .createQueryBuilder('invitation')
+      .where('invitation.classId = :classId', { classId })
+      .andWhere('(invitation.expiresAt IS NULL OR invitation.expiresAt > :now)', { now })
+      .orderBy('invitation.createdAt', 'DESC')
+      .getMany();
+
+    return rows.map(({ id, tokenHash, expiresAt, createdAt }) => ({
+      id,
+      token: tokenHash,
+      expiresAt,
+      createdAt
+    }));
+  }
+
+  async createInvitation(classId: number, dto: CreateClassInvitationDto) {
+    const cls = await this.classAccess.assertTeacherAssignment(classId);
+
+    if (cls.deletedAt) throw new NotFoundException('Class not found');
+
+    const expiresAt = dto.expiresAt ? new Date(dto.expiresAt) : null;
+
+    if (expiresAt && expiresAt <= new Date()) {
+      throw new BadRequestException('A expiração deve estar no futuro.');
+    }
+
+    const token = createHash('sha256').update(randomBytes(32)).digest('hex');
+
+    const invitation = await this.classInvitationRepository.save({
+      classId,
+      tokenHash: token,
+      expiresAt
+    });
+
+    return {
+      id: invitation.id,
+      token,
+      expiresAt: invitation.expiresAt,
+      createdAt: invitation.createdAt
+    };
+  }
+
+  async acceptInvitation(tokenHash: string) {
+    const user = this.requestContextService.getUser();
+
+    const invitation = await this.classInvitationRepository.findOne({
+      where: { tokenHash }
+    });
+
+    if (!invitation || (invitation.expiresAt && invitation.expiresAt <= new Date())) {
+      throw new NotFoundException('Link de convite inválido.');
+    }
+
+    const cls = await this.classRepository.findOne({
+      where: {  id: invitation.classId }
+    });
+
+    if (!cls) throw new NotFoundException('Link de convite inválido.');
+
+    await this.userClassService.createMany([{
+      userId: user.userId,
+      classId: cls.id
+    }]);
+
+    return { classId: cls.id };
+  }
 
   async createOrReplace(createClassDto: CreateOrReplaceClassDto) {
     const currentUser = this.requestContextService.getUser();

@@ -4,6 +4,7 @@ import {
   ClassStatusFilter,
   UpsertClass
 } from "@/app/interface/scheduler-api/class";
+import type { ClassInvitation } from "@/app/interface/scheduler-api/class";
 import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
 import { axiosClientWithAuth } from "./client";
 import { ClassInfos, ClassPerformance, ClassPerformanceParams } from "@/app/interface/scheduler-api/class-performance";
@@ -17,6 +18,21 @@ interface ListPaginatedClassesParams {
 }
 
 export class ClassesService {
+  static async listInvitations(classId: number): Promise<ClassInvitation[]> {
+    const response = await axiosClientWithAuth.get<ClassInvitation[]>(`/class/${classId}/invitations`);
+    return response.data;
+  }
+
+  static async createInvitation(classId: number, expiresAt: string | null): Promise<ClassInvitation> {
+    const response = await axiosClientWithAuth.post<ClassInvitation>(`/class/${classId}/invitations`, { expiresAt });
+    return response.data;
+  }
+
+  static async acceptInvitation(token: string): Promise<{ classId: number }> {
+    const response = await axiosClientWithAuth.post<{ classId: number }>("/class/invitations/accept", { token });
+    return response.data;
+  }
+
   static async getInfos(id: number, signal?: AbortSignal): Promise<ClassInfos> {
     const response = await axiosClientWithAuth.get<ClassInfos>(`/class/${id}/infos`, { signal });
     return response.data;

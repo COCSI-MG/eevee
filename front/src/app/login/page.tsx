@@ -1,5 +1,5 @@
 'use client';
-import { getDefaultRouteForRole } from "@/app/routes";
+import { getDefaultRouteForRole, Route } from "@/app/routes";
 
 import type React from 'react';
 
@@ -22,6 +22,11 @@ import { toast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { LoginService } from '../integration/scheduler-api/login-service';
 import { useAuthContext } from '@/hooks/use-auth-context';
+import { UserRole } from '@/app/interface/scheduler-api/user';
+import {
+  clearPendingClassInvitation,
+  getPendingClassInvitation
+} from '@/utils/pending-class-invitation';
 
 export default function Login() {
   const { replace } = useRouter();
@@ -41,7 +46,14 @@ export default function Login() {
     onSuccess: (session) => {
       setSession(session);
 
-      replace(getDefaultRouteForRole(session.role));
+      const pendingInvitation = getPendingClassInvitation();
+
+      if (pendingInvitation && session.role === UserRole.STUDENT) {
+        replace(Route.ClassInvitation);
+      } else {
+        clearPendingClassInvitation();
+        replace(getDefaultRouteForRole(session.role));
+      }
     },
     onError: () => {
       toast({
