@@ -29,3 +29,10 @@ export interface UpsertClass {
   students: number[];
   teacherId?: number | null;
 }
+
+export interface ClassInvitation {
+  id: number;
+  token: string;
+  expiresAt: string | null;
+  createdAt: string;
+}
