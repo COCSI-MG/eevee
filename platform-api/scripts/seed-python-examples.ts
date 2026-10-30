@@ -27,16 +27,24 @@ export const PYTHON_EXAMPLES: PythonExample[] = [
   {
     code: 'PY01',
     title: 'PY01 - Saudação personalizada',
-    description: `Implemente a função saudacao(nome).
+    description: `Implemente a função saudacao(nome), que monta uma mensagem de boas-vindas.
 
-Regras:
+### Regras
+
 - receba uma string com o nome de uma pessoa;
-- retorne exatamente a mensagem "Olá, <nome>!";
+- retorne exatamente a mensagem \`"Olá, <nome>!"\`;
 - preserve os caracteres e espaços internos do nome.
 
-Exemplo: saudacao("Ana") deve retornar "Olá, Ana!".
+### Exemplo
 
-Não remova a função main(nome): ela é o ponto de entrada exigido pelo EEVEE e deve delegar para saudacao(nome).`,
+\`\`\`python
+>>> saudacao("Ana")
+'Olá, Ana!'
+>>> saudacao("João da Silva")
+'Olá, João da Silva!'
+\`\`\`
+
+> **Atenção:** não remova a função \`main(nome)\`. Ela é o ponto de entrada do EEVEE e deve continuar chamando \`saudacao(nome)\`.`,
     maxAttempts: 5,
     boilerplateContent: `def saudacao(nome):
     """Retorne uma saudação no formato: Olá, <nome>!"""
@@ -74,15 +82,28 @@ def test_main_delega_para_saudacao():
   {
     code: 'PY02',
     title: 'PY02 - Classificação de nota',
-    description: `Implemente a função classificar_nota(nota).
+    description: `Implemente a função classificar_nota(nota), que diz a situação do aluno a partir da nota.
 
-Regras:
-- notas de 7 a 10: "aprovado";
-- notas de 5 até abaixo de 7: "recuperação";
-- notas de 0 até abaixo de 5: "reprovado";
-- valores fora do intervalo de 0 a 10 devem gerar ValueError.
+### Regras
 
-Não remova a função main(nota): ela é o ponto de entrada exigido pelo EEVEE e deve delegar para classificar_nota(nota).`,
+- notas de 7 a 10: \`"aprovado"\`;
+- notas de 5 até abaixo de 7: \`"recuperação"\`;
+- notas de 0 até abaixo de 5: \`"reprovado"\`;
+- valores fora do intervalo de 0 a 10 devem gerar \`ValueError\`.
+
+### Exemplo
+
+\`\`\`python
+>>> classificar_nota(7)
+'aprovado'
+>>> classificar_nota(6.9)
+'recuperação'
+>>> classificar_nota(4.9)
+'reprovado'
+>>> classificar_nota(11)  # fora do intervalo: gera ValueError
+\`\`\`
+
+> **Atenção:** não remova a função \`main(nota)\`. Ela é o ponto de entrada do EEVEE e deve continuar chamando \`classificar_nota(nota)\`.`,
     maxAttempts: 5,
     boilerplateContent: `def classificar_nota(nota):
     """Classifique uma nota entre 0 e 10."""
@@ -129,11 +150,26 @@ def test_main_delega_para_classificacao():
   {
     code: 'PY03',
     title: 'PY03 - Soma dos números pares',
-    description: `Implemente a função somar_pares(numeros).
+    description: `Implemente a função somar_pares(numeros), que soma só os números pares de uma lista.
 
-A função deve receber uma lista de números inteiros e retornar a soma apenas dos elementos pares. Considere números negativos e retorne 0 quando a lista estiver vazia ou não possuir pares.
+### Regras
 
-Não remova a função main(numeros): ela é o ponto de entrada exigido pelo EEVEE e deve delegar para somar_pares(numeros).`,
+- receba uma lista de números inteiros;
+- retorne a soma apenas dos elementos pares (números negativos e o 0 também contam);
+- retorne 0 quando a lista estiver vazia ou não tiver pares.
+
+### Exemplo
+
+\`\`\`python
+>>> somar_pares([1, 2, 3, 4, 5, 6])
+12
+>>> somar_pares([-4, -3, -2, 0, 7])
+-6
+>>> somar_pares([1, 3, 5])
+0
+\`\`\`
+
+> **Atenção:** não remova a função \`main(numeros)\`. Ela é o ponto de entrada do EEVEE e deve continuar chamando \`somar_pares(numeros)\`.`,
     maxAttempts: 5,
     boilerplateContent: `def somar_pares(numeros):
     """Some somente os números pares da lista recebida."""
@@ -173,11 +209,23 @@ def test_main_delega_para_soma():
   {
     code: 'PY04',
     title: 'PY04 - Estatísticas de uma lista',
-    description: `Implemente a função estatisticas(numeros).
+    description: `Implemente a função estatisticas(numeros), que calcula o mínimo, o máximo e a média de uma lista.
 
-Para uma lista não vazia, retorne um dicionário com as chaves "minimo", "maximo" e "media". A média deve ser numérica. Para uma lista vazia, gere ValueError.
+### Regras
 
-Não remova a função main(numeros): ela é o ponto de entrada exigido pelo EEVEE e deve delegar para estatisticas(numeros).`,
+- para uma lista não vazia, retorne um dicionário com as chaves \`"minimo"\`, \`"maximo"\` e \`"media"\`;
+- a média deve ser numérica (pode ter casas decimais);
+- para uma lista vazia, gere \`ValueError\`.
+
+### Exemplo
+
+\`\`\`python
+>>> estatisticas([2, 4, 6, 8])
+{'minimo': 2, 'maximo': 8, 'media': 5.0}
+>>> estatisticas([])  # lista vazia: gera ValueError
+\`\`\`
+
+> **Atenção:** não remova a função \`main(numeros)\`. Ela é o ponto de entrada do EEVEE e deve continuar chamando \`estatisticas(numeros)\`.`,
     maxAttempts: 5,
     boilerplateContent: `def estatisticas(numeros):
     """Retorne mínimo, máximo e média em um dicionário."""
@@ -224,11 +272,25 @@ def test_main_delega_para_estatisticas():
   {
     code: 'PY05',
     title: 'PY05 - Frequência de palavras',
-    description: `Implemente a função frequencia_palavras(texto).
+    description: `Implemente a função frequencia_palavras(texto), que conta quantas vezes cada palavra aparece no texto.
 
-Converta o texto para minúsculas, considere como palavra cada sequência alfanumérica e retorne um dicionário com a contagem de ocorrências. Pontuação não deve fazer parte das palavras.
+### Regras
 
-Não remova a função main(texto): ela é o ponto de entrada exigido pelo EEVEE e deve delegar para frequencia_palavras(texto).`,
+- converta o texto para minúsculas;
+- considere como palavra cada sequência de letras e números (letras com acento contam);
+- pontuação não faz parte das palavras;
+- retorne um dicionário com a contagem de cada palavra (texto vazio devolve \`{}\`).
+
+### Exemplo
+
+\`\`\`python
+>>> frequencia_palavras("Python é ótimo. PYTHON é simples!")
+{'python': 2, 'é': 2, 'ótimo': 1, 'simples': 1}
+>>> frequencia_palavras("um, dois; um... três?")
+{'um': 2, 'dois': 1, 'três': 1}
+\`\`\`
+
+> **Atenção:** não remova a função \`main(texto)\`. Ela é o ponto de entrada do EEVEE e deve continuar chamando \`frequencia_palavras(texto)\`.`,
     maxAttempts: 5,
     boilerplateContent: `def frequencia_palavras(texto):
     """Conte palavras sem diferenciar letras maiúsculas e minúsculas."""
@@ -274,16 +336,34 @@ def test_main_delega_para_frequencia():
   {
     code: 'PY06',
     title: 'PY06 - Resumo de arquivo de texto',
-    description: `Implemente a função resumir_arquivo(caminho).
+    description: `Implemente a função resumir_arquivo(caminho), que resume o conteúdo de um arquivo de texto.
 
-Leia um arquivo UTF-8 e retorne um dicionário com:
-- "linhas": quantidade total de linhas;
-- "linhas_nao_vazias": linhas que possuem conteúdo após remover espaços;
-- "palavras": total de palavras separadas por espaços.
+### Regras
 
-Use with para abrir o arquivo.
+Abra o arquivo com \`with\` e encoding UTF-8 e retorne um dicionário com:
 
-Não remova a função main(caminho): ela é o ponto de entrada exigido pelo EEVEE e deve delegar para resumir_arquivo(caminho).`,
+- \`"linhas"\`: quantidade total de linhas;
+- \`"linhas_nao_vazias"\`: linhas que têm conteúdo depois de remover os espaços;
+- \`"palavras"\`: total de palavras separadas por espaços.
+
+O caminho pode chegar como texto (\`str\`) ou como \`Path\`.
+
+### Exemplo
+
+Para um arquivo \`entrada.txt\` com este conteúdo (a segunda linha está vazia):
+
+\`\`\`
+Python no CEFET
+
+Exercício online
+\`\`\`
+
+\`\`\`python
+>>> resumir_arquivo("entrada.txt")
+{'linhas': 3, 'linhas_nao_vazias': 2, 'palavras': 5}
+\`\`\`
+
+> **Atenção:** não remova a função \`main(caminho)\`. Ela é o ponto de entrada do EEVEE e deve continuar chamando \`resumir_arquivo(caminho)\`.`,
     maxAttempts: 5,
     boilerplateContent: `def resumir_arquivo(caminho):
     """Leia um arquivo UTF-8 e retorne um resumo do conteúdo."""
