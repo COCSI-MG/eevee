@@ -3,12 +3,31 @@ import OpenAI from 'openai';
 import { AiReportService } from './ai-report.abstract';
 import { hasAllTestsPassed, parseRawReport } from './jest-report-parser';
 import { hasAllCypressTestsPassed, parseCypressRawReport } from './cypress-report-parser';
+import {
+  hasAllPytestTestsPassed,
+  parsePytestRawReport,
+} from './pytest-report-parser';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 const CYPRESS_WORKER_TYPES = new Set<WorkerType>([
   WorkerType.NODE_REACTJS_CYPRESS,
   WorkerType.NODE_NEXTJS_CYPRESS,
 ]);
+
+const PYTEST_WORKER_TYPES = new Set<WorkerType>([WorkerType.PYTHON_DEFAULT]);
+
+function reportParser(workerType?: WorkerType) {
+  if (workerType && CYPRESS_WORKER_TYPES.has(workerType)) {
+    return {
+      allPassed: hasAllCypressTestsPassed,
+      parse: parseCypressRawReport,
+    };
+  }
+  if (workerType && PYTEST_WORKER_TYPES.has(workerType)) {
+    return { allPassed: hasAllPytestTestsPassed, parse: parsePytestRawReport };
+  }
+  return { allPassed: hasAllTestsPassed, parse: parseRawReport };
+}
 
 @Injectable()
 export class GroqReportService implements AiReportService {
@@ -32,19 +51,13 @@ export class GroqReportService implements AiReportService {
     files?: Record<string, string>,
     workerType?: WorkerType,
   ): Promise<string> {
-    const isCypress = workerType ? CYPRESS_WORKER_TYPES.has(workerType) : false;
+    const parser = reportParser(workerType);
 
-    const allPassed = isCypress
-      ? hasAllCypressTestsPassed(rawReport)
-      : hasAllTestsPassed(rawReport);
-
-    if (allPassed) {
+    if (parser.allPassed(rawReport)) {
       return 'Parabéns! Seu exercício está correto e passou em todos os testes.';
     }
 
-    const filteredReport = isCypress
-      ? parseCypressRawReport(rawReport)
-      : parseRawReport(rawReport);
+    const filteredReport = parser.parse(rawReport);
 
 
     if (!this.client) {
