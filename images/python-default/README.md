@@ -9,6 +9,7 @@ Worker image for running Python assignments with pytest.
 - `trigger.py` runs pytest with `/app/src` on `PYTHONPATH`.
 - Test output includes the summary consumed by Assignment Runner.
 - JUnit results are persisted at `/app/test-results.xml`.
+- Installed libraries (`requirements.txt`): `pytest` and `pandas`.
 
 ## Build and load
 
