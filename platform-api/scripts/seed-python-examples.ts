@@ -15,6 +15,8 @@ export type PythonExample = {
   templateTitle: string;
   templateDescription: string;
   testContent: string;
+  answerKeyContent?: string;
+  supportFiles?: Record<string, string>;
 };
 
 const DEFAULT_CLASS_NAME = 'Introdução à Programação com Python';
@@ -536,6 +538,7 @@ async function enrollUsers(
 async function ensureTemplate(
   queryRunner: QueryRunner,
   example: PythonExample,
+  classId: number,
 ): Promise<number> {
   const existing = await queryRunner.query(
     `SELECT "id" FROM "template" WHERE "title" = $1 ORDER BY "id"`,
@@ -567,6 +570,7 @@ async function ensureTemplate(
         templateId,
       ],
     );
+    await linkTemplateToClass(queryRunner, templateId, classId);
     return templateId;
   }
 
@@ -585,7 +589,22 @@ async function ensureTemplate(
     ],
   );
 
-  return Number(inserted[0].id);
+  const templateId = Number(inserted[0].id);
+  await linkTemplateToClass(queryRunner, templateId, classId);
+  return templateId;
+}
+
+async function linkTemplateToClass(
+  queryRunner: QueryRunner,
+  templateId: number,
+  classId: number,
+): Promise<void> {
+  if (!(await hasColumn(queryRunner, 'template', 'classId'))) return;
+
+  await queryRunner.query(
+    `UPDATE "template" SET "classId" = $1 WHERE "id" = $2`,
+    [classId, templateId],
+  );
 }
 
 async function ensureAssignment(options: {
@@ -685,6 +704,16 @@ async function ensureAssignment(options: {
     [assignmentId, templateId],
   );
 
+  if (await hasColumn(queryRunner, 'assignment', 'supportFiles')) {
+    await queryRunner.query(
+      `UPDATE "assignment" SET "supportFiles" = $1::jsonb WHERE "id" = $2`,
+      [
+        example.supportFiles ? JSON.stringify(example.supportFiles) : null,
+        assignmentId,
+      ],
+    );
+  }
+
   if (await hasColumn(queryRunner, 'assignment_param', 'assignmentId')) {
     await queryRunner.query(
       `DELETE FROM "assignment_param" WHERE "assignmentId" = $1`,
@@ -695,18 +724,61 @@ async function ensureAssignment(options: {
   return assignmentId;
 }
 
-async function run(): Promise<void> {
-  const teacherEmail =
-    process.env.PYTHON_SEED_TEACHER_EMAIL?.trim() || 'admin@example.com';
-  const studentEmails = parseEmails(process.env.PYTHON_SEED_STUDENT_EMAILS);
-  const className =
-    process.env.PYTHON_SEED_CLASS_NAME?.trim() || DEFAULT_CLASS_NAME;
+async function ensureAnswerKey(
+  queryRunner: QueryRunner,
+  assignmentId: number,
+  answerKeyContent: string,
+): Promise<void> {
+  const content = {
+    id: 'src',
+    isFile: false,
+    isSelectable: false,
+    path: 'src',
+    children: [
+      {
+        id: 'app.py',
+        isFile: true,
+        isSelectable: true,
+        path: 'src/app.py',
+        content: answerKeyContent,
+      },
+    ],
+  };
+
+  const rows = await queryRunner.query(
+    `INSERT INTO "answer_key" ("assignmentId", "content")
+     VALUES ($1, $2::jsonb)
+     ON CONFLICT ("assignmentId") DO UPDATE SET "content" = EXCLUDED."content"
+     RETURNING "id"`,
+    [assignmentId, JSON.stringify(content)],
+  );
+  await queryRunner.query(
+    `UPDATE "assignment" SET "answerKeyId" = $1 WHERE "id" = $2`,
+    [Number(rows[0].id), assignmentId],
+  );
+}
+
+export type PythonModuleSeed = {
+  examples: PythonExample[];
+  defaultClassName: string;
+  defaultClassDescription: string;
+  envPrefix: string;
+};
+
+export async function seedPythonModule({
+  examples,
+  defaultClassName,
+  defaultClassDescription,
+  envPrefix,
+}: PythonModuleSeed): Promise<void> {
+  const env = (name: string) => process.env[`${envPrefix}_${name}`];
+  const teacherEmail = env('TEACHER_EMAIL')?.trim() || 'admin@example.com';
+  const studentEmails = parseEmails(env('STUDENT_EMAILS'));
+  const className = env('CLASS_NAME')?.trim() || defaultClassName;
   const classDescription =
-    process.env.PYTHON_SEED_CLASS_DESCRIPTION?.trim() ||
-    DEFAULT_CLASS_DESCRIPTION;
+    env('CLASS_DESCRIPTION')?.trim() || defaultClassDescription;
   const dryRun =
-    process.argv.includes('--dry-run') ||
-    parseBoolean(process.env.PYTHON_SEED_DRY_RUN);
+    process.argv.includes('--dry-run') || parseBoolean(env('DRY_RUN'));
 
   const dataSource = new DataSource({
     type: 'postgres',
@@ -724,15 +796,31 @@ async function run(): Promise<void> {
 
   try {
     await assertPythonWorkerSchema(queryRunner);
+    if (
+      examples.some((example) => example.answerKeyContent) &&
+      !(await hasColumn(queryRunner, 'assignment', 'answerKeyId'))
+    ) {
+      throw new Error(
+        'Database schema is not ready for answer keys. Missing: assignment.answerKeyId',
+      );
+    }
+    if (
+      examples.some((example) => example.supportFiles) &&
+      !(await hasColumn(queryRunner, 'assignment', 'supportFiles'))
+    ) {
+      throw new Error(
+        'Database schema is not ready for support files. Run the AddAssignmentSupportFiles migration first.',
+      );
+    }
     const teacherId = await findTeacher(queryRunner, teacherEmail);
     const studentIds = await findStudents(queryRunner, studentEmails);
 
     if (dryRun) {
-      console.log('Python examples seed validation succeeded (dry run).');
+      console.log('Python module seed validation succeeded (dry run).');
       console.log(`Teacher: ${teacherEmail} (id=${teacherId})`);
       console.log(`Class: ${className}`);
       console.log(`Students to enroll: ${studentIds.length}`);
-      console.log(`Assignments/templates to upsert: ${PYTHON_EXAMPLES.length}`);
+      console.log(`Assignments/templates to upsert: ${examples.length}`);
       return;
     }
 
@@ -745,23 +833,30 @@ async function run(): Promise<void> {
       );
       await enrollUsers(queryRunner, classId, [teacherId, ...studentIds]);
 
-      for (const example of PYTHON_EXAMPLES) {
-        const templateId = await ensureTemplate(queryRunner, example);
-        await ensureAssignment({
+      for (const example of examples) {
+        const templateId = await ensureTemplate(queryRunner, example, classId);
+        const assignmentId = await ensureAssignment({
           queryRunner,
           example,
           classId,
           teacherId,
           templateId,
         });
+        if (example.answerKeyContent) {
+          await ensureAnswerKey(
+            queryRunner,
+            assignmentId,
+            example.answerKeyContent,
+          );
+        }
       }
 
       await queryRunner.commitTransaction();
-      console.log('Python example module seeded successfully.');
+      console.log('Python module seeded successfully.');
       console.log(`Class: ${className} (id=${classId})`);
       console.log(`Teacher: ${teacherEmail}`);
       console.log(`Students enrolled: ${studentIds.length}`);
-      console.log(`Assignments/templates upserted: ${PYTHON_EXAMPLES.length}`);
+      console.log(`Assignments/templates upserted: ${examples.length}`);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
@@ -773,7 +868,12 @@ async function run(): Promise<void> {
 }
 
 if (require.main === module) {
-  run().catch((error) => {
+  seedPythonModule({
+    examples: PYTHON_EXAMPLES,
+    defaultClassName: DEFAULT_CLASS_NAME,
+    defaultClassDescription: DEFAULT_CLASS_DESCRIPTION,
+    envPrefix: 'PYTHON_SEED',
+  }).catch((error) => {
     console.error('Python examples seed failed:', error);
     process.exit(1);
   });
