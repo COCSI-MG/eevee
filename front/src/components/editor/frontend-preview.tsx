@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { PREVIEW_STATUS, PreviewStatus } from "@/constants/frontend-preview";
 import { createPreviewSandbox, previewEntries, previewFiles } from "@/lib/frontend-preview/sandbox";
+import type { PreviewStrategy } from "@/lib/frontend-preview/types";
 import type { FileNode } from "@/types/shared";
 import { EditorPanelHeader } from "./editor-panel-header";
 import { PreviewNavigator } from "./preview-navigator";
@@ -21,7 +22,7 @@ import { useFrontendPreview } from "./use-frontend-preview";
 
 interface FrontendPreviewProps {
   tree: FileNode;
-  react: boolean;
+  strategy: PreviewStrategy;
   paused?: boolean;
   onClose?: () => void;
   blockContextMenu?: boolean;
@@ -138,7 +139,7 @@ function SandpackFrame({ setup, startRoute, onRetry, viewport } : SandpackFrameP
 
 export function FrontendPreview({
   tree,
-  react,
+  strategy,
   paused = false,
   onClose,
   blockContextMenu = false
@@ -146,7 +147,7 @@ export function FrontendPreview({
   const viewport = usePreviewViewport();
 
   const files = useMemo(() => previewFiles(tree), [tree]);
-  const entries = useMemo(() => previewEntries(files, react), [files, react]);
+  const entries = useMemo(() => previewEntries(files, strategy), [files, strategy]);
 
   const [selectedPath, setSelectedPath] = useState("");
 
@@ -168,7 +169,7 @@ export function FrontendPreview({
 
     try {
       return {
-        setup: createPreviewSandbox(entry, files, react, blockContextMenu)
+        setup: createPreviewSandbox(entry, files, strategy, blockContextMenu)
       };
     } catch (error) {
       return {
@@ -176,7 +177,7 @@ export function FrontendPreview({
       };
     }
 
-  }, [entry, files, react, paused, blockContextMenu]);
+  }, [entry, files, strategy, paused, blockContextMenu]);
 
   const inactiveStatus = paused
   ? PreviewStatus.Paused
