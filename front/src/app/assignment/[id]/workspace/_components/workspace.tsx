@@ -24,7 +24,7 @@ import { WorkspaceViewControls, WorkspaceViewMode, WorkspaceMobilePane } from ".
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
 import WorkspaceImportControl from "./workspace-import-control";
 import dynamic from "next/dynamic";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { resolveWorkerPreviewStrategy } from "@/lib/frontend-preview/strategy/resolve-worker-preview-strategy";
 import { previewEntries, previewFiles } from "@/lib/frontend-preview/sandbox";
 
 const FrontendPreview = dynamic(
@@ -65,13 +65,15 @@ export default function Workspace({
   const [isSplitView, setIsSplitView] = React.useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
   const [mobilePane, setMobilePane] = React.useState<WorkspaceMobilePane>(WorkspaceMobilePane.Code);
-  const isReactPreview = assignment.workerType === WorkerType.NODE_REACTJS_CYPRESS;
+  const workerPreviewStrategy = resolveWorkerPreviewStrategy(assignment.workerType);
+
   const canPreview = React.useMemo(
     () => previewEntries(
-      previewFiles(fileTreeData), isReactPreview
+      previewFiles(fileTreeData), workerPreviewStrategy
     ).length > 0,
-    [fileTreeData, isReactPreview]
+    [fileTreeData, workerPreviewStrategy]
   );
+
   const showPreview = isPreviewOpen && canPreview;
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
@@ -316,7 +318,7 @@ export default function Workspace({
               >
                 <FrontendPreview
                   tree={fileTreeData}
-                  react={isReactPreview}
+                  strategy={workerPreviewStrategy}
                   paused={Boolean(assignment.currentUserAlertStatus?.suspended)}
                   blockContextMenu={user.role === UserRole.STUDENT}
                   onClose={() => setIsPreviewOpen(false)}
