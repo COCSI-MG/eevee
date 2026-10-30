@@ -49,7 +49,7 @@ Os contratos identificam se o destino é uma tentativa ou uma prévia. Assim, o 
 
 ## 3. Preparação do Kubernetes Job
 
-O payload já contém arquivos da solução, testes, dependências, parâmetros, boilerplate e SQL inicial aplicáveis. A estratégia do executor transforma isso em um Job:
+O payload já contém arquivos da solução, arquivos de apoio da atividade (`supportFiles`, que sobrescrevem arquivos do estudante no mesmo caminho), testes, dependências, parâmetros, boilerplate e SQL inicial aplicáveis. A estratégia do executor transforma isso em um Job:
 
 1. O bootstrap escreve solução e testes no `emptyDir`;
 2. O contêiner principal monta esse volume;

@@ -124,6 +124,9 @@ export class Assignment {
   @Column({ type: 'text', nullable: true })
   initSqlScript?: string;
 
+  @Column({ type: 'jsonb', nullable: true })
+  supportFiles?: Record<string, string> | null;
+
   @Column({ nullable: true })
   boilerplateFilePath?: string;
 

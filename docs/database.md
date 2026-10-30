@@ -50,7 +50,7 @@ Registra o hash do token, expiração e `usedAt`. O token enviado ao usuário n�
 
 ### `Assignment`
 
-Representa a atividade: turma, criador opcional, título, descrição, máximo de tentativas, executor, boilerplate, SQL inicial e configuração opcional de questionário. Relaciona-se também ao gabarito e, no máximo, a uma prova.
+Representa a atividade: turma, criador opcional, título, descrição, máximo de tentativas, executor, boilerplate, SQL inicial, arquivos de apoio (`supportFiles`, JSONB no formato caminho-conteúdo, adicionados aos arquivos do estudante a cada execução e invisíveis no workspace) e configuração opcional de questionário. Relaciona-se também ao gabarito e, no máximo, a uma prova.
 
 ### `AnswerKey`
 

@@ -25,6 +25,14 @@ export class NoTestFilesGeneratedError extends Error {
   }
 }
 
+function withSupportFiles(
+  files: CreateWorkerDto['files'],
+  supportFiles: Assignment['supportFiles'],
+): CreateWorkerDto['files'] {
+  if (!supportFiles || Object.keys(supportFiles).length === 0) return files;
+  return { ...(files ?? {}), ...supportFiles };
+}
+
 @Injectable()
 export class SchedulingWorkerPreparationService {
   constructor(
@@ -47,6 +55,7 @@ export class SchedulingWorkerPreparationService {
       assignment.assignmentTemplates,
       {
         ...baseWorkerData,
+        files: withSupportFiles(baseWorkerData.files, assignment.supportFiles),
         initSqlScript: assignment.initSqlScript ?? baseWorkerData.initSqlScript,
       },
       buildTemplateVariablesModule(
