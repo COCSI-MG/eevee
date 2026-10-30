@@ -22,6 +22,13 @@
       "source": "tecnico-industrial-nao-graduacao/lista_exercicios_arquitetura_computadores.pdf",
       "workerType": "adhoc-review",
       "status": "needs-extraction"
+    },
+    {
+      "slug": "ciencia-de-dados",
+      "name": "Ciência de Dados com Python e pandas",
+      "source": "ciencia-de-dados/README.md",
+      "workerType": "python_default",
+      "status": "seeded"
     }
   ]
 }

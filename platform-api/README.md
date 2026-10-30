@@ -158,6 +158,44 @@ Configurações opcionais:
 - `PYTHON_SEED_STUDENT_EMAILS`: lista de alunos separada por vírgulas;
 - `PYTHON_SEED_DRY_RUN=true`: executa somente as verificações prévias.
 
+## Seed de exemplos de pandas
+
+O seed `seed:pandas-examples` usa o mesmo fluxo do seed de Python e cria a
+turma `Ciência de Dados com Python e pandas`, com nove atividades
+(`PD01` a `PD09`) baseadas nos dados de vendas de uma papelaria
+(`cefet-rj-classes/ciencia-de-dados`). São três análises para cada tabela
+(pedidos, itens e produtos), cada uma sobre um único DataFrame, com as funções
+básicas do pandas (`count`, `sum`, `mean`, `median`, `min`, `max`, `std`,
+`cov`, `corr`, `groupby`...).
+
+Os dados ficam em um arquivo de apoio, `src/dados.py`, com os dicionários
+`pedidos`, `itens` e `produtos` (amostra real de vendas); o `main` do
+aluno monta o DataFrame com `pd.DataFrame(...)`. O seed grava esse arquivo em `assignment.supportFiles`, e o
+servidor o adiciona aos arquivos do aluno a cada execução, sobrescrevendo
+qualquer arquivo com o mesmo caminho. O código do aluno e os testes fazem
+`from dados import ...`. O seed também cria o gabarito de cada atividade,
+oculto para os alunos.
+
+Antes do seed, aplique a migration `AddAssignmentSupportFiles`. A imagem do
+worker Python precisa ter o `pandas` instalado
+(`images/python-default/requirements.txt`). O botão "Testar" da tela de
+template não recebe o `dados.py`, porque não está ligado a uma atividade; use o
+"Executar" do gabarito da atividade para validar.
+
+As variáveis são as mesmas do seed de Python, com o prefixo `PANDAS_SEED_`:
+
+```bash
+export PANDAS_SEED_TEACHER_EMAIL='professor@cefet-rj.br'
+export PANDAS_SEED_STUDENT_EMAILS='aluno1@cefet-rj.br,aluno2@cefet-rj.br'
+
+PANDAS_SEED_DRY_RUN=true npm run seed:pandas-examples
+npm run seed:pandas-examples
+```
+
+Na imagem de produção, use `npm run seed:pandas-examples:prod`. Assim como no
+seed de Python, atividades e templates são encontrados pelo título: renomear um
+exercício cria uma atividade nova e mantém a antiga na turma.
+
 Para construir localmente a mesma imagem utilizada pelo worker:
 
 ```bash

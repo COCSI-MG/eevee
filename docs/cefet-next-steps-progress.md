@@ -14,6 +14,7 @@ O plano de transição ordenado está em `.github/prompts/cefet-enrollment-conte
 - Adicionados `ExecutionWorkerPayload.executionMode`, `CreateWorkerDto.executionMode` no runner e ramificação do worker Python para que execuções `adhoc` rodem `/app/src/app.py` diretamente em vez de invocar o pytest. O agendamento pula a preparação de teste/template para tarefas `adhoc` explícitas e preserva os arquivos enviados.
 - A autenticação atual do EEVEE é local/JWT. Não existe provedor Microsoft/Entra nem cliente Graph.
 - O seed de conteúdo Python existente é `platform-api/scripts/seed-python-examples.ts` e deve ser reutilizado como padrão para o importador.
+- Adicionado o módulo `cefet-rj-classes/ciencia-de-dados` (status `seeded` no catálogo): nove análises de pandas (`PD01` a `PD09`) sobre uma amostra real de vendas de uma papelaria, cadastradas por `platform-api/scripts/seed-pandas-examples.ts`, que reutiliza o seed de Python. Os dados chegam ao worker por `Assignment.supportFiles` (migration `1793232000000-AddAssignmentSupportFiles`), e o feedback de tentativas `python_default` passou a listar as falhas do pytest (`src/ai-report/pytest-report-parser.ts`).
 
 ## Bloqueio para a busca no Microsoft
 
