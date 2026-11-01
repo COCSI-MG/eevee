@@ -26,7 +26,7 @@
     {
       "slug": "ciencia-de-dados",
       "name": "Ciência de Dados com Python e pandas",
-      "source": "ciencia-de-dados/README.md",
+      "source": "../platform-api/scripts/seed-pandas-examples.ts",
       "workerType": "python_default",
       "status": "seeded"
     }

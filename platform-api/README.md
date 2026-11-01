@@ -162,8 +162,9 @@ Configurações opcionais:
 
 O seed `seed:pandas-examples` usa o mesmo fluxo do seed de Python e cria a
 turma `Ciência de Dados com Python e pandas`, com nove atividades
-(`PD01` a `PD09`) baseadas nos dados de vendas de uma papelaria
-(`cefet-rj-classes/ciencia-de-dados`). São três análises para cada tabela
+(`PD01` a `PD09`) baseadas numa amostra real de vendas de uma papelaria.
+Enunciados, testes, gabaritos e dados ficam todos em
+`scripts/seed-pandas-examples.ts`. São três análises para cada tabela
 (pedidos, itens e produtos), cada uma sobre um único DataFrame, com as funções
 básicas do pandas (`count`, `sum`, `mean`, `median`, `min`, `max`, `std`,
 `cov`, `corr`, `groupby`...).
@@ -175,6 +176,20 @@ servidor o adiciona aos arquivos do aluno a cada execução, sobrescrevendo
 qualquer arquivo com o mesmo caminho. O código do aluno e os testes fazem
 `from dados import ...`. O seed também cria o gabarito de cada atividade,
 oculto para os alunos.
+
+As tabelas se ligam por `itens.id_nfce → pedidos.id_nfce` e
+`itens.cEAN → produtos.cEAN`:
+
+- `pedidos` (uma venda por linha): `id_nfce`, `aberto_em`, `fechado_em`,
+  `pagamento`, `vr_total` e `cancelado`;
+- `itens` (os produtos de cada venda): `id_item`, `id_nfce`, `cProd`, `cEAN`,
+  `xProd`, `uCom`, `qCom`, `vUnCom` e `vDesc`;
+- `produtos` (cadastro): `id_produto`, `cProd`, `cEAN`, `xProd`, `uCom`,
+  `vUnCom`, `custo`, `qt_estoque`, `qt_minima` e `qt_maxima`.
+
+A amostra mantém de propósito problemas reais dos dados, porque aparecem nos
+exercícios: `vr_total` vazio e pedidos cancelados (PD01 a PD03), custo vazio e
+custo maior que o preço (PD08) e estoques negativos (PD09).
 
 Antes do seed, aplique a migration `AddAssignmentSupportFiles`. A imagem do
 worker Python precisa ter o `pandas` instalado
@@ -192,7 +207,9 @@ PANDAS_SEED_DRY_RUN=true npm run seed:pandas-examples
 npm run seed:pandas-examples
 ```
 
-Na imagem de produção, use `npm run seed:pandas-examples:prod`. Assim como no
+Para usar uma turma que já existe, informe o nome dela em
+`PANDAS_SEED_CLASS_NAME`. Na imagem de produção, use
+`npm run seed:pandas-examples:prod`. Assim como no
 seed de Python, atividades e templates são encontrados pelo título: renomear um
 exercício cria uma atividade nova e mantém a antiga na turma.
 
