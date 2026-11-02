@@ -549,97 +549,7 @@ def test_tabela_pequena():
   },
   {
     code: 'PD06',
-    title: 'PD06 - Relação entre preço e quantidade',
-    description: `## Contexto
-
-Uma papelaria registra os produtos de cada venda em uma tabela de itens, com um produto vendido por linha. Entre as colunas da tabela estão: \`id_item\`, \`id_nfce\` (pedido), \`xProd\` (nome do produto), \`qCom\` (quantidade), \`vUnCom\` (preço unitário) e \`vDesc\` (desconto).
-
-Na correção, \`main(df)\` recebe a tabela real da papelaria, com 25.992 linhas.
-
-## Objetivo
-
-Implemente no arquivo \`app.py\` a função \`main(df)\`, que recebe a tabela como um DataFrame do pandas e retorna um dicionário que mostra se os clientes compram mais unidades dos produtos baratos, com as chaves:
-
-- \`"covariancia"\`: covariância entre \`qCom\` e \`vUnCom\`;
-- \`"correlacao"\`: correlação entre \`qCom\` e \`vUnCom\` (de -1 a 1);
-- \`"quantidade_media_baratos"\`: média de \`qCom\` dos itens com \`vUnCom\` até 5 (inclusive);
-- \`"quantidade_media_caros"\`: média de \`qCom\` dos itens com \`vUnCom\` acima de 5.
-
-## Regras
-
-1. Arredonde tudo para 2 casas.
-2. Covariância e correlação negativas indicam que, quando o preço sobe, a quantidade tende a cair.
-
-## Exemplo
-
-Para esta tabela:
-
-| \`qCom\` | \`vUnCom\` |
-|---|---|
-| 10.0 | 1.0 |
-| 8.0 | 5.0 |
-| 1.0 | 20.0 |
-| 2.0 | 30.0 |
-
-a função deve retornar:
-
-\`\`\`python
-{'covariancia': -54.67,
- 'correlacao': -0.92,
- 'quantidade_media_baratos': 9.0,
- 'quantidade_media_caros': 1.5}
-\`\`\``,
-    maxAttempts: 10,
-    boilerplateContent: `
-# PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
-def main(df):
-    # Escreva sua solução aqui.
-`,
-    templateTitle: 'PD06 - Testes de relação entre preço e quantidade',
-    templateDescription:
-      'Testes do exercício PD06 - Relação entre preço e quantidade.',
-    testContent: `import pandas as pd
-
-from app import main
-
-DADOS = "/app/data/itens.csv"
-
-
-def resultado():
-    return main(pd.read_csv(DADOS))
-
-
-def test_retorna_um_dicionario():
-    assert isinstance(resultado(), dict), "main(df) deve retornar um dicionário."
-
-
-def test_covariancia():
-    assert resultado()["covariancia"] == -146.01, "covariancia: use df[\\"qCom\\"].cov(df[\\"vUnCom\\"])."
-
-
-def test_correlacao():
-    assert resultado()["correlacao"] == -0.05, "correlacao: use df[\\"qCom\\"].corr(df[\\"vUnCom\\"])."
-
-
-def test_quantidade_media_baratos():
-    assert resultado()["quantidade_media_baratos"] == 21.53, "quantidade_media_baratos: filtre vUnCom <= 5 e tire a média de qCom."
-
-
-def test_quantidade_media_caros():
-    assert resultado()["quantidade_media_caros"] == 2.37, "quantidade_media_caros: filtre vUnCom > 5 e tire a média de qCom."
-
-
-def test_tabela_pequena():
-    df = pd.DataFrame({
-        "qCom": [10.0, 8.0, 1.0, 2.0],
-        "vUnCom": [1.0, 5.0, 20.0, 30.0],
-    })
-    assert main(df) == {'covariancia': -54.67, 'correlacao': -0.92, 'quantidade_media_baratos': 9.0, 'quantidade_media_caros': 1.5}, "Com uma tabela pequena o resultado não confere. Refaça as contas à mão."
-`,
-  },
-  {
-    code: 'PD07',
-    title: 'PD07 - Análise de preços do cadastro',
+    title: 'PD06 - Análise de preços do cadastro',
     description: `## Contexto
 
 Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. Entre as colunas da tabela estão: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
@@ -691,9 +601,9 @@ a função deve retornar:
 def main(df):
     # Escreva sua solução aqui.
 `,
-    templateTitle: 'PD07 - Testes de análise de preços do cadastro',
+    templateTitle: 'PD06 - Testes de análise de preços do cadastro',
     templateDescription:
-      'Testes do exercício PD07 - Análise de preços do cadastro.',
+      'Testes do exercício PD06 - Análise de preços do cadastro.',
     testContent: `import pandas as pd
 
 from app import main
@@ -746,8 +656,8 @@ def test_tabela_pequena():
 `,
   },
   {
-    code: 'PD08',
-    title: 'PD08 - Margem de lucro dos produtos',
+    code: 'PD07',
+    title: 'PD07 - Margem de lucro dos produtos',
     description: `## Contexto
 
 Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. Entre as colunas da tabela estão: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
@@ -797,9 +707,9 @@ a função deve retornar:
 def main(df):
     # Escreva sua solução aqui.
 `,
-    templateTitle: 'PD08 - Testes de margem de lucro dos produtos',
+    templateTitle: 'PD07 - Testes de margem de lucro dos produtos',
     templateDescription:
-      'Testes do exercício PD08 - Margem de lucro dos produtos.',
+      'Testes do exercício PD07 - Margem de lucro dos produtos.',
     testContent: `import pandas as pd
 
 from app import main
@@ -849,8 +759,8 @@ def test_tabela_pequena():
 `,
   },
   {
-    code: 'PD09',
-    title: 'PD09 - Situação do estoque',
+    code: 'PD08',
+    title: 'PD08 - Situação do estoque',
     description: `## Contexto
 
 Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. Entre as colunas da tabela estão: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
@@ -900,8 +810,8 @@ a função deve retornar:
 def main(df):
     # Escreva sua solução aqui.
 `,
-    templateTitle: 'PD09 - Testes de situação do estoque',
-    templateDescription: 'Testes do exercício PD09 - Situação do estoque.',
+    templateTitle: 'PD08 - Testes de situação do estoque',
+    templateDescription: 'Testes do exercício PD08 - Situação do estoque.',
     testContent: `import pandas as pd
 
 from app import main

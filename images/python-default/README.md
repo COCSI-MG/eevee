@@ -10,7 +10,7 @@ Worker image for running Python assignments with pytest.
 - Test output includes the summary consumed by Assignment Runner.
 - JUnit results are persisted at `/app/test-results.xml`.
 - The papelaria datasets (`pedidos.csv`, `itens.csv` and `produtos.csv`) used
-  by the pandas assignments (PD01-PD09) are available under `/app/data`.
+  by the pandas assignments (PD01-PD08) are available under `/app/data`.
 
 ## Build and load
 
