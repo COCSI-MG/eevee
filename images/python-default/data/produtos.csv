@@ -1,0 +1,1769 @@
+id_produto,cProd,cEAN,xProd,uCom,vUnCom,custo,qt_estoque,qt_minima,qt_maxima
+2453,PERFURADOR 2 FUROS,000000024532,perfurador 2 furos,UN,17.9,12.0,-11.0,2.0,10.0
+2454,resma a4 chamex,000000024549,resma a4 chamex,UN,31.9,22.9,-650.0,,
+2455,contra-cheque pt.,000000024556,contra-cheque pt.,UN,44.9,2.0,-83.0,,
+2456,capa ,000000024563,capa,UN,6.0,3.0,-259.0,2.0,5.0
+2458,Grampo,000000024587,grampo pra grampeador cx c 1000,UN,3.5,8.0,-134.0,2.0,10.0
+2459,Grampo,000000024594,grampo pra grampeador cx c 5000,UN,7.5,3.0,-201.0,2.0,10.0
+2460,resma a4 report,000000024600,resma a4 report,UN,27.9,9.0,-7407.0,2.0,5.0
+2461,caneta bca,000000024617,caneta bca,UN,9.0,1.3,-669.0,2.0,5.0
+2462,parafuso,000000024624,parafuso,UN,5.5,1.4,-493.0,2.0,5.0
+2465,borracha tk faber,000000024655,borracha tk faber,UN,4.5,3.5,-239.0,2.0,5.0
+2466,resma oficio,000000024662,resma oficio,UN,36.9,24.9,-496.0,2.0,5.0
+2467,resma a3,000000024679,resma a3,UN,59.9,45.9,-291.0,2.0,5.0
+2468,cola 1 kg,000000024686,cola 1 kg,UN,20.0,15.9,-339.0,2.0,5.0
+2470,cola 500 gr,000000024709,cola 500 gr,UN,15.0,2.0,-373.0,2.0,5.0
+2471,enfeite natal,000000024716,enfeite natal,UN,9.9,12.0,-18.0,2.0,5.0
+2472,porta-retrato,000000024723,porta-retrato,UN,20.0,4.0,-42.0,2.0,5.0
+2473,cola madeira,000000024730,cola madeira,UN,6.9,4.9,-42.0,2.0,5.0
+2474,corretivo liquido bic,000000024747,corretivo liquido bic,UN,4.9,3.9,-30.0,10.0,200.0
+2475,corretivo liquido hero,000000024754,corretivo liquido hero,UN,2.5,2.5,-42.0,10.0,200.0
+2476,corretivo jocar,000000024761,corretivo jocar,UN,6.9,,-63.0,2.0,200.0
+2477,figura,000000024778,figura,UN,7.0,,-41.0,4.0,200.0
+2478,Corretivo Liquido,000000024785,corretivo liquido hero,UN,2.5,,9.0,4.0,200.0
+2479,lapis cx.,000000024792,lapis cx.,UN,55.0,,-22.0,10.0,200.0
+2480,caneta economica cx.,000000024808,caneta economica cx.,UN,45.0,1.4,-241.0,5.0,200.0
+2481,caneta bic,000000024815,caneta bic,UN,1.2,1.2,-996.0,5.0,200.0
+2482,caneta economica un,000000024822,caneta economica un,UN,1.0,,-144.0,1.0,200.0
+2483,caneta cx.,000000024839,caneta cx.,UN,87.0,,-90.0,1.0,200.0
+2484,fita corretiva faber,000000024846,fita corretiva faber,UN,12.9,8.5,-25.0,1.0,200.0
+2485,fita corretiva tilibra,000000024853,fita corretiva tilibra,UN,8.0,8.9,-88.0,1.0,200.0
+2486,fita silver tape ,000000024860,fita silver tape,UN,9.5,,-22.0,1.0,200.0
+2487,fita aramada,000000024877,fita aramada,UN,6.5,,-8.0,1.0,200.0
+2490,fita metaloide,000000024907,fita metaloide,UN,8.9,,-15.0,1.0,200.0
+2491,Fita,000000024914,suporte de fitas adesivas pequeno waleu,UN,25.9,,-4.0,1.0,200.0
+2492,burificador,000000024921,burificador,UN,3.0,,-8.0,1.0,200.0
+2493,aparelho barba un.,000000024938,aparelho barba un.,UN,2.0,,-3.0,1.0,200.0
+2494,pega baloes,000000024945,pega baloes,UN,5.9,,-11.0,1.0,200.0
+2495,folha arte,000000024952,folha arte,UN,5.0,,-16.0,1.0,200.0
+2496,Porta durex,000000024969,porta durex,UN,19.9,4.0,-12.0,2.0,5.0
+2498,plastico bolha pt.,000000024983,plastico bolha pt.,UN,140.0,7.0,-8.0,2.0,5.0
+2499,caneta hidrocor com 12,000000024990,,UN,15.9,4.0,-109.0,2.0,5.0
+2500,Compasso plastico valeu,000000025003,compasso plastico valeu,UN,7.9,7.9,-11.0,2.0,5.0
+2501,espanador,000000025010,espanador,UN,20.0,4.0,-37.0,2.0,5.0
+2502,compasso  ferro cis/valeul,000000025027,compasso ferro cis/valeu,UN,9.9,9.9,-11.0,2.0,5.0
+2503,cola ,000000025034,cola,UN,2.5,4.0,-149.0,2.0,5.0
+2504,caneta marca texto,000000025041,caneta marca texto,UN,3.0,4.0,-75.0,2.0,5.0
+2505,Porta caneta,000000025058,porta caneta,UN,12.9,4.0,-88.0,2.0,5.0
+2506,clips,000000025065,clips,UN,4.0,4.0,-154.0,2.0,5.0
+2507,blinder,000000025072,blinder,UN,3.4,1.0,-2.0,2.0,5.0
+2508,Clips 4/0,000000025089,clips 4/0,UN,5.5,5.5,-17.0,2.0,5.0
+2509,suporte veicular,000000025096,suporte veicular,UN,24.9,4.0,-11.0,2.0,5.0
+2511,cachepo,000000025119,cachepo,UN,3.5,2.5,-169.0,2.0,5.0
+2512,giz escolar colorido,000000025126,giz escolar colorido,UN,7.0,4.0,-49.0,2.0,5.0
+2513,giz escolar bco,000000025133,giz escolar bco,UN,6.0,4.0,-19.0,2.0,5.0
+2514,giz unidade,000000025140,giz unidade,UN,0.5,4.0,-10.0,2.0,5.0
+2516,gizinho,000000025164,gizinho,UN,1.5,1.5,3.0,2.0,5.0
+2517,Apagador de Madeira,000000025171,apagador de madeira,UN,3.9,4.0,2.0,2.0,5.0
+2518,Baralho,000000025188,baralho,UN,15.0,4.0,-59.0,2.0,5.0
+2519,Baralho Cuca Maluca,000000025195,baralho cuca maluca,UN,9.9,4.0,2.0,2.0,5.0
+2520,Dado,000000025201,dado,UN,2.0,4.0,34.0,2.0,5.0
+2521,Domino,000000025218,domino,UN,4.9,4.0,-1.0,2.0,5.0
+2522,porta objeto,000000025225,porta objeto,UN,34.9,4.0,-5.0,2.0,5.0
+2523,Porta Moeda,000000025232,porta moeda,UN,14.0,4.0,-12.0,2.0,5.0
+2524,Saco de Presente pt,000000025249,saco de presente pt,UN,34.9,4.0,-116.0,,
+2525,Saco de Presente un,000000025256,saco de presente un,UN,3.9,4.0,-135.0,,
+2526,saco lixo,000000025263,saco lixo,UN,7.9,4.0,-49.0,,
+2527,Saco de Presente 43x59,000000025270,saco de presente 43x59,UN,5.9,4.0,-80.0,,
+2528,bombon,000000025287,bombon,UN,2.0,4.0,-152.0,,
+2529,Saco adesivo,000000025294,saco adesivo,UN,6.9,4.0,-22.0,,
+2530,Saco de Presente 25x35,000000025300,saco de presente 25x35,UN,1.5,4.0,-174.0,,
+2531,Saco de Presente 20x30,000000025317,saco de presente 20x30,UN,5.9,4.0,-268.0,,
+2532,saco de lixo,000000025324,saco de lixo,UN,3.9,4.0,-18.0,,
+2533,saco pt.,000000025331,saco pt.,UN,34.9,49.9,-6.0,,
+2534,Pct Saco de Presente 20x30,000000025348,pct saco de presente 20x30,UN,9.9,4.0,-18.0,,
+2535,Saco de Presente 15x29,000000025355,saco de presente 15x29,UN,3.5,4.0,-8.0,,
+2536,Saco de Presente 25x35,000000025362,saco de presente 25x35,UN,29.9,4.0,-9.0,,
+2537,Saco de Presente 30x45,000000025379,saco de presente 30x45,UN,65.0,4.0,2.0,,
+2538,Saco de Presente 35x53,000000025386,saco de presente 35x53,UN,29.9,4.0,-1.0,,
+2539,calculadora,000000025393,calculadora,UN,28.9,4.0,-38.0,2.0,5.0
+2540,Calculadora VMP,000000025409,calculadora vmp,UN,22.0,4.0,-68.0,2.0,5.0
+2541,la,000000025416,la,UN,6.9,6.9,-12.0,2.0,5.0
+2542,Calculadora HOOPSON,000000025423,calculadora hoopson,UN,35.0,4.0,-38.0,2.0,5.0
+2543,Calculadora SHENG Grande,000000025430,calculadora sheng grande,UN,8.0,4.0,-13.0,2.0,5.0
+2544,Calculadora Cientifica ELGIN,000000025447,calculadora cientifica elgin,UN,20.0,4.0,-11.0,2.0,5.0
+2545,Carteira Masculina,000000025454,carteira masculina,UN,6.9,4.0,-8.0,2.0,5.0
+2546,Carteira Masculina,000000025461,carteira masculina,UN,7.0,4.0,3.0,2.0,5.0
+2547,Carteira Masculina,000000025478,carteira masculina,UN,19.9,4.0,-6.0,2.0,5.0
+2548,drident,000000025485,drident,UN,3.0,4.0,-94.85,2.0,5.0
+2549,Carteira Masculina,000000025492,carteira masculina,UN,5.9,4.0,2.0,2.0,5.0
+2550,Porta Niquel,000000025508,porta niquel,UN,4.9,4.0,3.0,2.0,5.0
+2551,trident,000000025515,trident,UN,3.0,4.0,-9.0,2.0,5.0
+2553,Carteira Feminina,000000025539,carteira feminina,UN,19.9,4.0,2.0,2.0,5.0
+2554,Carteira Feminina,000000025546,carteira feminina,UN,17.9,4.0,2.0,2.0,5.0
+2555,Necessaire,000000025553,necessaire,UN,6.9,4.0,3.0,2.0,5.0
+2556,Necessaire,000000025560,necessaire,UN,8.9,4.0,1.0,2.0,5.0
+2557,Necessaire,000000025577,necessaire,UN,12.9,4.0,1.0,2.0,5.0
+2558,caderneta 96 fls,000000025584,caderneta 96 fls,UN,3.5,2.6,-98.0,1.0,200.0
+2559,Necessaire,000000025591,necessaire,UN,14.9,4.0,1.0,2.0,5.0
+2560,caderneta 48 fls,000000025607,caderneta 48 fls,UN,2.5,2.0,-54.0,1.0,200.0
+2561,Necessaire,000000025614,necessaire,UN,25.0,4.0,-21.0,2.0,5.0
+2562,fita metrica,000000025621,fita metrica,UN,4.5,4.0,-6.0,2.0,5.0
+2563,retros de linha,000000025638,retros de linha,UN,3.5,4.0,186.0,2.0,5.0
+2564,caderneta 40 fls,000000025645,caderneta 40 fls,UN,1.0,1.0,114.0,1.0,200.0
+2565,saco elastico,000000025652,saco elastico,UN,3.0,4.0,-90.0,2.0,5.0
+2566,Caderneta,000000025669,caderneta pequena 40 fls tamoio,UN,1.5,,37.0,1.0,200.0
+2567,saco elastico medio ,000000025676,saco elastico medio,UN,4.9,4.0,-42.0,2.0,5.0
+2568,saco elastico 1/2 kg,000000025683,saco elastico 1/2 kg,UN,22.9,4.0,-34.0,2.0,5.0
+2569,Caderneta,000000025690,caderneta media 96 fls tilibra,UN,3.5,,6.0,1.0,200.0
+2570,agulha singer,000000025706,agulha singer,UN,13.5,4.0,63.0,2.0,5.0
+2571,agulha gr.,000000025713,agulha gr.,UN,2.0,4.0,4.0,2.0,5.0
+2572,Caderneta,000000025720,caderneta media retangular 75 fls tilibra,UN,25.0,,-69.0,1.0,200.0
+2573,post it,000000025737,post it,UN,6.9,,-35.0,1.0,200.0
+2574,agulha pq.,000000025744,agulha pq.,UN,0.5,4.0,13.0,2.0,5.0
+2575,Ziper 20cm,000000025751,ziper 20cm,UN,0.7,4.0,19.0,2.0,5.0
+2576,Stick Note,000000025768,post it pequeno retangular em tiras jia te,UN,4.9,,-27.0,1.0,200.0
+2577,Ziper 15cm,000000025775,ziper 15cm,UN,0.5,4.0,30.0,2.0,5.0
+2578,Ziper 12cm,000000025782,ziper 12cm,UN,0.5,4.0,28.0,2.0,5.0
+2579,Stick Note,000000025799,post it pequeno frutas jinxin,UN,6.9,,-28.0,1.0,200.0
+2580,Ziper 12cm COATS,000000025805,ziper 12cm coats,UN,1.4,4.0,9.0,2.0,5.0
+2581,bloco tamoio,000000025812,bloco tamoio,UN,15.9,10.0,-15.0,1.0,200.0
+2582,folha transparÃªncia,000000025829,folha transparãªncia,UN,2.0,4.0,-12.0,2.0,5.0
+2583,folha papel fotografico adesivo,000000025836,folha papel fotografico adesivo,UN,1.5,15.0,-272.0,2.0,5.0
+2584,bucha,000000025843,bucha,UN,2.0,9.0,-56.0,2.0,5.0
+2585,caneta kilometrica,000000025850,caneta kilometrica,UN,1.5,6.9,-103.0,2.0,5.0
+2586,Stick Note,000000025867,post it colorido cx c 700 fls,UN,14.9,,-9.0,1.0,200.0
+2587,Stick Note,000000025874,post it branco cx c 1000 fls,UN,9.9,,25.0,1.0,200.0
+2588,borracha refil caneta,000000025881,borracha refil caneta,UN,1.5,2.0,-112.0,2.0,5.0
+2589,lastex,000000025898,lastex,UN,2.0,1.0,-69.0,2.0,5.0
+2591,lapis borracha,000000025911,lapis borracha,UN,4.9,4.9,-97.0,2.0,5.0
+2592,borracha mercur clean,000000025928,borracha mercur clean,UN,2.5,1.6,-97.0,2.0,5.0
+2593,tela de pintura 35x27,000000025935,tela de pintura 35x27,UN,24.9,24.9,15.0,2.0,5.0
+2594,borracha ,000000025942,borracha,UN,2.0,4.0,11.0,2.0,5.0
+2595,borracha tilibra a41,000000025959,borracha tilibra a41,UN,2.0,1.3,-16.0,2.0,5.0
+2596,borraacha apontador faber,000000025966,borracha apontador faber,UN,8.5,6.9,-194.0,2.0,5.0
+2597,borracha ponteira,000000025973,borracha ponteira,UN,0.6,0.4,-15.0,2.0,5.0
+2598,barracha oval/triangular,000000025980,borracha oval/triangual,UN,3.5,3.5,-43.0,2.0,5.0
+2599,borracha tilibra a40,000000025997,borracha tilibra a40,UN,2.7,2.0,-84.0,2.0,5.0
+2600,borracha cis plast,000000026000,borracha cis plast,UN,2.5,3.0,-2.0,2.0,5.0
+2601,borracha compactor,000000026017,borracha compactor,UN,4.5,2.5,35.0,2.0,5.0
+2602,borracha mercur 60,000000026024,borracha mercur 60,UN,1.0,0.6,1.0,2.0,5.0
+2603,borracha 2 cores,000000026031,borracha 2 cores,UN,1.2,1.0,9.0,2.0,5.0
+2604,borracha tilibra b3,000000026048,borracha tilibra b3,UN,2.5,2.5,-5.0,2.0,5.0
+2605,alteracao de curriculo,000000026055,alteracao de curriculo,UN,5.0,4.0,-2.0,2.0,5.0
+2606,Teclado USB,000000026062,teclado usb,UN,39.9,,-60.0,3.0,5.0
+2607,Mouse otico USB,000000026079,mouse otico usb,UN,12.0,,-127.0,3.0,5.0
+2608,cola quente grossa,000000026086,cola quente grossa,UN,2.0,,-1190.0,3.0,5.0
+2609,cola quente fina,000000026093,cola quente fina,UN,1.0,,-920.0,3.0,5.0
+2610,lampada,000000026109,lampada,UN,10.0,,-61.0,3.0,5.0
+2611,capa de chuva,000000026116,capa de chuva,UN,9.9,,-40.0,3.0,5.0
+2612,pistola   gatte pq.,000000026123,pistola gatte pq.,UN,18.9,,-43.0,3.0,5.0
+2613,pistola rend colla pq,000000026130,pistola rend colla pq,UN,32.9,,-50.0,3.0,5.0
+2614,talao pedido ofÃ­cio,000000026147,talao pedido ofã­cio,UN,3.0,,-176.0,3.0,5.0
+2615,bingo cartela,000000026154,bingo cartela,UN,4.5,,-82.0,3.0,5.0
+2617,talao pedido 1/4 ofÃ­cio,000000026178,talao pedido 1/4 ofã­cio,UN,50.0,,-263.0,3.0,5.0
+2618,nota promissÃ³ria,000000026185,nota promissã³ria,UN,4.0,,11.0,3.0,5.0
+2619,apontador duplo leo/leo,000000026192,apontador duplo leo/leo,UN,3.5,2.0,-6.0,3.0,5.0
+2620,apontador simples faber,000000026208,apontador simples faber,UN,2.0,2.0,-26.0,3.0,5.0
+2622,sisal,000000026222,sisal,UN,1.0,4.9,-1768.0,3.0,5.0
+2623,apontador leo/leo,000000026239,apontador leo/leo,UN,1.0,1.5,-14.0,3.0,5.0
+2624,bloco postit,000000026246,bloco postit,UN,6.9,4.5,-55.0,1.0,200.0
+2625,apontador duplo valeu,000000026253,apontador duplo valeu,UN,2.0,2.5,30.0,3.0,5.0
+2626,apontador tilibra,000000026260,apontador tilibra,UN,5.5,3.5,-17.0,3.0,5.0
+2627,bloco anotacao,000000026277,bloco anotacao,UN,25.0,11.9,-41.0,1.0,200.0
+2628,apontador cis,000000026284,apontador cis,UN,2.0,2.0,16.0,3.0,5.0
+2629,bloco pq capa dura,000000026291,bloco pq capa dura,UN,5.9,,-73.0,1.0,200.0
+2630,apontador simples,000000026307,apontador simples,UN,1.0,1.0,-77.0,3.0,5.0
+2631,bloco ofÃ­cio 100fls,000000026314,bloco ofã­cio 100fls,UN,9.9,6.9,2.0,1.0,200.0
+2632,apontador compactor ferro,000000026321,apontador compactor ferro,UN,3.0,2.5,-7.0,3.0,5.0
+2634,bloco ofÃ­cio 50fls,000000026345,bloco ofã­cio 50fls,UN,4.0,3.9,-9.0,1.0,200.0
+2636,bloco mÃ©dio 100fls,000000026369,bloco mã©dio 100fls,UN,8.9,4.5,-42.0,1.0,200.0
+2638,bloco mÃ©dio 50fls,000000026383,bloco mã©dio 50fls,UN,2.5,2.9,-21.0,1.0,200.0
+2639,apontador pastel leo/leo,000000026390,apontador pastel leo/leo,UN,2.0,2.0,-10.0,3.0,5.0
+2640,bloco pqno 100 fls,000000026406,bloco pqno 100 fls,UN,3.5,2.5,-77.0,1.0,200.0
+2641,Tabela Periodica,000000026413,tabela periodica,UN,4.9,,39.0,3.0,5.0
+2642,plastico insulfilme,000000026420,plastico insulfime,UN,49.9,,-28.0,3.0,5.0
+2643,bloco pqno 50 fls,000000026437,bloco pqno 50 fls,UN,2.5,2.0,-115.0,1.0,200.0
+2644,Grampo Plastico,000000026444,grampo plastico,UN,10.0,,-13.0,3.0,5.0
+2645,Abracadeira Grande,000000026451,bracadeira grande,UN,4.0,,27.0,3.0,5.0
+2646,lacre pq.,000000026468,lacre pq.,UN,12.0,,-28.0,3.0,5.0
+2647,lacre,000000026475,lacre,UN,6.9,,5.0,3.0,5.0
+2648,bloco pqno,000000026482,bloco pqno,UN,1.6,0.5,-347.0,1.0,200.0
+2649,abridor,000000026499,abridor,UN,3.0,,-6.0,3.0,5.0
+2650,bloco a3,000000026505,bloco a3,UN,39.9,,20.0,1.0,200.0
+2651,lacre gr.,000000026512,lacre gr.,UN,5.9,,0.0,3.0,5.0
+2652,bloco a4,000000026529,bloco a4,UN,12.9,9.9,14.0,1.0,200.0
+2660,ficheiro,000000026604,ficheiro,UN,120.0,,6.0,1.0,200.0
+2661,toalha,000000026611,toalha,UN,16.0,,-23.0,1.0,200.0
+2662,Borracha,000000026628,borracha,UN,25.0,4.0,-1.0,2.0,5.0
+2663,envelope a4 pt,000000026635,envelope a4 pt,UN,0.6,0.4,-1289.0,2.0,5.0
+2668,envelope oficio,000000026680,envelope oficio,UN,0.8,4.0,-1004.0,2.0,5.0
+2669,envelope carta/convite,000000026697,envelope carta/convite,UN,0.5,4.0,-253.0,2.0,5.0
+2679,Fone de Ouvido,000000026796,fone de ouvido,UN,9.9,4.0,5.0,2.0,5.0
+2680,Fone de Ouvido,000000026802,fone de ouvido,UN,15.0,4.0,-1.0,2.0,5.0
+2681,Fone de Ouvido,000000026819,fone de ouvido,UN,20.0,4.0,-8.0,2.0,5.0
+2682,Fone de Ouvido,000000026826,fone de ouvido,UN,5.9,4.0,11.0,2.0,5.0
+2683,Fone de Ouvido,000000026833,fone de ouvido,UN,15.0,4.0,0.0,2.0,5.0
+2684,Fone de Ouvido,000000026840,fone de ouvido,UN,6.9,4.0,11.0,2.0,5.0
+2685,Fone de Ouvido,000000026857,fone de ouvido,UN,8.0,4.0,5.0,2.0,5.0
+2686,pendriver 16gb,000000026864,pendriver 16gb,UN,49.9,24.9,-186.0,2.0,5.0
+2687,lapiseira tecnica,000000026871,lapiseira tecnica,UN,9.9,7.9,-136.0,2.0,5.0
+2688,carimbo automatico,000000026888,carimbo automatico,UN,60.0,4.0,-71.0,2.0,5.0
+2689,lapis bic,000000026895,lapis bic,UN,1.2,5.9,-156.0,2.0,5.0
+2690,oleo singer,000000026901,oleo singer,UN,8.0,5.9,5.0,2.0,5.0
+2691,lapiseira ferro tilibra,000000026918,lapiseira ferro tilibra,UN,2.0,7.9,-26.0,2.0,5.0
+2692,funil,000000026925,funil,UN,4.0,7.9,-13.0,2.0,5.0
+2693,lapiseira compactor 2.0,000000026932,lapiseira compactor 2.0,UN,5.0,5.0,-15.0,2.0,5.0
+2694,lapis bic borracha,000000026949,lapis bic borracha,UN,1.7,4.9,-49.0,2.0,5.0
+2695,lapiseira compactor 07/09,000000026956,lapiseira compactor 07/09,UN,6.0,6.0,-1.0,2.0,5.0
+2696,lapiseira cis 2.0,000000026963,lapiseira cis 2.0,UN,6.0,6.0,-33.0,2.0,5.0
+2697,lapiseira pilot ,000000026970,lapiseira pilot,UN,5.0,9.9,0.0,2.0,5.0
+2698,lapiseira pastel 0.7,000000026987,lapiseira pastel 0.7,UN,7.9,7.9,-3.0,2.0,5.0
+2699,lapiseira cis 0.3,000000026994,lapiseira cis 0.3,UN,16.9,11.9,-10.0,2.0,5.0
+2700,lapiseira metallic colors,000000027007,lapiseira metallic colors,UN,9.0,9.0,-18.0,2.0,5.0
+2701,apontador compactor ferro,000000027014,apontador compactor ferro,UN,2.5,2.5,11.0,2.0,5.0
+2702,Pilot,000000027021,pilot,UN,4.5,4.0,48.0,2.0,5.0
+2703,refil qdo branco,000000027038,refil qdo branco,UN,7.0,4.9,-127.0,2.0,5.0
+2704,Marcador Quadro Branco Pilot,000000027045,marcador quadro branco,UN,16.9,4.0,-52.0,2.0,5.0
+2705,Marcador Quadro Branco,000000027052,marcador quadro branco,UN,4.0,4.0,-28.0,2.0,5.0
+2706,Marcador Quadro Branco,000000027069,marcador quadro branco,UN,5.0,4.0,-30.0,2.0,5.0
+2707,faixa,000000027076,faixa,UN,4.5,4.0,284.0,2.0,5.0
+2708,Apagador Quadro Branco,000000027083,apagador quadro branco,UN,10.0,4.0,-39.0,2.0,5.0
+2709,Limpador Quadro Branco,000000027090,limpador quadro branco,UN,14.9,4.0,-65.0,2.0,5.0
+2710,caneta qdo bco,000000027106,caneta qdo bco,UN,4.0,4.0,-304.0,2.0,5.0
+2711,Saco Plastico,000000027113,saco plastico,UN,0.5,4.0,-35.0,2.0,5.0
+2712,Saco Plastico,000000027120,saco plastico,UN,0.4,4.0,-271.0,2.0,5.0
+2713,plastico mt.,000000027137,plastico mt.,UN,16.0,4.0,-12.0,2.0,5.0
+2714,Saco Plastico,000000027144,saco plastico,UN,0.6,4.0,-3.0,2.0,5.0
+2715,Saco Plastico,000000027151,saco plastico,UN,1.0,4.0,-20.0,2.0,5.0
+2716,Pilot Color COMPACTOR,000000027168,pilot color compactor,UN,3.5,4.0,146.0,2.0,5.0
+2717,pilot color,000000027175,pilot color,UN,5.0,4.0,22.0,2.0,5.0
+2718,Aplicativo,000000027182,,UN,3.0,4.0,1.0,2.0,5.0
+2719,apontador ferro maped,000000027199,apontador ferro maped,UN,4.0,4.0,220.0,2.0,5.0
+2720,apontador vmp,000000027205,apontador vmp,UN,3.0,2.0,-46.0,2.0,5.0
+2721,grafite tilibra,000000027212,grafite tilibra,UN,4.0,4.0,64.0,2.0,5.0
+2722,grafite faber,000000027229,grafite faber,UN,6.9,4.9,90.0,2.0,5.0
+2723,grafite em po,000000027236,grafite em po,UN,4.9,2.5,10.0,2.0,5.0
+2725,apontador ferro valeu,000000027250,apontador ferro valeu,UN,2.9,1.5,33.0,2.0,5.0
+2726,lapis faber,000000027267,lapis faber,UN,1.7,1.5,-10.0,2.0,5.0
+2727,Fitilho,000000027274,fitilho,UN,3.5,4.0,29.0,2.0,5.0
+2728,Linha 10,000000027281,linha 10,UN,3.0,4.0,-24.0,2.0,5.0
+2729,Stick Note,000000027298,post it em cubos,UN,6.0,,5.0,1.0,200.0
+2730,bloco orÃ§amento,000000027304,bloco orã§amento,UN,4.9,,13.0,1.0,200.0
+2731,Trident,000000027311,chiclete,UN,2.5,,-4.0,1.0,200.0
+2732,fita dupla face 3m,000000027328,fita dupla face 3m,UN,14.9,,-57.0,1.0,200.0
+2733,gesso,000000027335,gesso,UN,4.0,4.0,-4.0,2.0,5.0
+2734,Pincel Redondo 18,000000027342,pincel redondo 18,UN,5.9,4.0,-34.0,2.0,5.0
+2735,Pincel Redondo 10,000000027359,pincel redondo 10,UN,3.7,4.0,-7.0,2.0,5.0
+2736,Pincel Redondo 4,000000027366,pincel redondo 4,UN,3.0,4.0,2.0,2.0,5.0
+2737,coador,000000027373,coador,UN,3.5,4.0,9.0,2.0,5.0
+2738,Pincel Redondo 6,000000027380,pincel redondo 6,UN,2.5,4.0,-12.0,2.0,5.0
+2739,Pincel Redondo 14,000000027397,pincel redondo 14,UN,2.5,4.0,7.0,2.0,5.0
+2740,Pincel Chato 10,000000027403,pincel chato 10,UN,4.9,4.0,-1.0,2.0,5.0
+2741,Pincel Chato 0,000000027410,pincel chato 0,UN,3.3,4.0,-1.0,2.0,5.0
+2742,Pincel Chato 14,000000027427,pincel chato 14,UN,4.9,4.0,-23.0,2.0,5.0
+2743,Pincel Chato 6,000000027434,pincel chato 6,UN,3.9,4.0,-6.0,2.0,5.0
+2744,Pincel Chato 4,000000027441,pincel chato 4,UN,3.9,4.0,5.0,2.0,5.0
+2745,remendo,000000027458,remendo,UN,6.0,4.0,5.0,2.0,5.0
+2746,Pincel Chato 2,000000027465,pincel chato 2,UN,2.5,4.0,6.0,2.0,5.0
+2747,Pincel Chato 6 TILIBRA,000000027472,pincel chato 6 tilibra,UN,3.6,4.0,7.0,2.0,5.0
+2748,folha impressao,000000027489,folha impressao,UN,0.16,4.0,-33.0,2.0,5.0
+2749,Pincel Chato 8,000000027496,pincel chato 8,UN,5.9,4.0,2.0,2.0,5.0
+2751,Pincel Chato 4 TILIBRA,000000027519,pincel chato 4 tilibra,UN,3.6,4.0,8.0,2.0,5.0
+2752,folha servicos presados,000000027526,folha servicos prestados,UN,25.0,4.0,-5.0,2.0,5.0
+2753,cabo,000000027533,cabo,UN,4.0,4.0,-19.0,2.0,5.0
+2754,resma 90 gr.,000000027540,resma 90 gr,UN,41.9,4.0,18.0,2.0,5.0
+2755,folha impressao cartao,000000027557,folha impressao adesivo,UN,3.0,4.0,1.0,2.0,5.0
+2756,mangueira jardim,000000027564,mangueira jardim,UN,3.9,42.9,-2.0,2.0,5.0
+2757,bala,000000027571,bala,UN,0.3,25.0,-34.0,2.0,5.0
+2761,serpentina,000000027618,serpentina,UN,6.0,4.0,0.0,2.0,5.0
+2762,Pincel Redondo 12,000000027625,pincel redondo 12,UN,5.9,4.0,7.0,2.0,5.0
+2763,Pincel Redondo 6 TILIBRA,000000027632,pincel redondo 6 tilibra,UN,3.2,4.0,6.0,2.0,5.0
+2764,"Pincel 12,7mm",000000027649,"pincel 12,7mm",UN,2.0,4.0,-4.0,2.0,5.0
+2765,Pincel 19mm,000000027656,pincel 19mm,UN,2.9,4.0,7.0,2.0,5.0
+2766,trincha,000000027663,trincha,UN,9.9,4.0,-9.0,2.0,5.0
+2767,8esquiro,000000027670,esquiro,UN,6.0,5.5,-6.0,1.0,200.0
+2768,folha impressao,000000027687,folha impressao cartao,UN,2.0,4.0,-65.0,2.0,5.0
+2769,luva,000000027694,luva,UN,4.9,4.9,11.0,2.0,5.0
+2770,Stick Note,000000027700,post it pequeno reciclado,UN,7.9,,-13.0,1.0,200.0
+2771,controle remoto,000000027717,controle remoto,UN,19.9,19.9,9.0,2.0,5.0
+2772,fio,000000027724,fio,UN,3.5,3.5,9.0,2.0,5.0
+2773,pano,000000027731,pano,UN,1.8,8.0,9.0,2.0,5.0
+2774,Pincel Chato 20 KIT,000000027748,pincel chato 20 kit,UN,7.9,4.0,-11.0,2.0,5.0
+2775,Pincel Chato 16 KIT,000000027755,pincel chato 16 kit,UN,7.5,4.0,4.0,2.0,5.0
+2776,torneira,000000027762,torneira,UN,4.0,4.0,5.0,2.0,5.0
+2777,"Pincel 25,4mm",000000027779,"pincel 25,4mm",UN,3.3,4.0,2.0,2.0,5.0
+2778,Pincel,000000027786,pincel,UN,6.9,4.0,9.0,2.0,5.0
+2779,Pincel Chato 10 TIGRE,000000027793,pincel chato 10 tigre,UN,3.4,4.0,4.0,2.0,5.0
+2780,bijour,000000027809,bijour,UN,8.0,4.0,3.0,2.0,5.0
+2781,Pincel Chato 8 TIGRE,000000027816,pincel chato 8 tigre,UN,3.0,4.0,5.0,2.0,5.0
+2782,Pincel Redondo 10 TILIBRA,000000027823,pincel redondo 10 tilibra,UN,3.5,4.0,3.0,2.0,5.0
+2783,Pincel Redondo 0 TILIBRA,000000027830,pincel redondo 0 tilibra,UN,2.6,4.0,4.0,2.0,5.0
+2784,Pincel Redondo 8 TILIBRA,000000027847,pincel redondo 8 tilibra,UN,3.4,4.0,8.0,2.0,5.0
+2785,PINCEL REDONDO N2 TILIBRA,000000027854,pincel redondo 2 tilibra,UN,9.9,4.0,6.0,2.0,5.0
+2786,pincel atomico,000000027861,pincel atomico,UN,6.5,5.0,-91.0,2.0,5.0
+2787,Pincel Redondo batedor,000000027878,pincel redondo batedor,UN,9.9,,-1.0,2.0,5.0
+2788,Rolo Espuma,000000027885,rolo espuma,UN,15.0,4.0,-1.0,2.0,5.0
+2789,pasta elastico ,000000027892,pasta elastico,UN,4.0,4.0,-379.0,2.0,5.0
+2790,pasta 2 cm,000000027908,pasta 2 cm,UN,5.5,4.0,-160.0,2.0,5.0
+2791,pasta 4cm,000000027915,pasta 4cm,UN,6.5,4.0,-154.0,2.0,5.0
+2792,Bloco,000000027922,bloco de anotacoes de bichos c 100 fls,UN,1.6,,55.0,1.0,200.0
+2793,"pasta 5,50cm",000000027939,"pasta 5,50cm",UN,7.5,4.0,-83.0,2.0,5.0
+2794,spray,000000027946,spray,UN,10.0,,1.0,1.0,200.0
+2795,pasta sanfonada a4 31d.,000000027953,pasta sanfonada a4 31d.,UN,62.0,4.0,-92.0,2.0,5.0
+2796,pasta sanfonada a4 12d.,000000027960,pasta sanfonada a4 12d.,UN,27.9,4.0,-98.0,2.0,5.0
+2797,pilha palito,000000027977,pilha palito,UN,6.9,5.5,-170.0,2.0,5.0
+2798,Bateria CR2025 Elgin,000000027984,bateria cr2025 elgin,UN,3.5,4.0,-55.0,2.0,5.0
+2800,Bateria CR2016 Elgin,000000028004,bateria cr2016 elgin,UN,14.9,4.0,-34.0,2.0,5.0
+2801,Bateria CR2450 MAXELL,000000028011,bateria cr2450 maxell,UN,9.9,4.0,-10.0,2.0,5.0
+2802,Placa ,000000028028,placa,UN,3.0,12.0,-2.0,2.0,5.0
+2803,Placa de Sinalizacao em pvc,000000028035,placa de sinalizacao pvc,UN,5.83,4.0,0.0,2.0,5.0
+2804,bola natal,000000028042,bola natal,UN,32.9,4.0,-19.0,2.0,5.0
+2805,MALETAPOLIONDA,000000028059,maleta polionda,UN,35.0,,-705.1,1.0,200.0
+2806,Caixa Arquivo Papelao Peq,000000028066,caixa arquivo papelao peq,UN,7.5,,-103.0,1.0,200.0
+2807,caixa arquivo,000000028073,caixa arquivo,UN,9.9,,-388.0,1.0,200.0
+2808,pasta sanfonada ofÃ­cio 12d.,000000028080,pasta sanfonada ofã­cio 12d.,UN,28.9,,-47.0,1.0,200.0
+2809,pasta sanfonada 1/2 ofÃ­cio 12d.,000000028097,pasta sanfonada 1/2 ofã­cio 12d.,UN,19.9,,-27.0,1.0,200.0
+2810,pasta c/trilho plÃ¡stica,000000028103,pasta c/trilho plã¡stica,UN,4.0,,-165.0,1.0,200.0
+2811,Mouse Pad,000000028110,mouse pad,UN,8.0,,-30.0,1.0,200.0
+2812,fantoche,000000028127,fantoche,UN,30.0,,-3.0,1.0,200.0
+2813,pasta catalogo 10sacos,000000028134,pasta catalogo 10sacos,UN,12.9,,-63.0,1.0,200.0
+2814,Indice,000000028141,indice telefonico meio oficio tilibra,UN,18.9,,14.0,1.0,200.0
+2815,pasta catalogo,000000028158,pasta catalogo,UN,17.9,,-60.0,1.0,200.0
+2816,pasta canaleta,000000028165,pasta canaleta,UN,3.8,,-106.0,1.0,200.0
+2817,cinto,000000028172,cinto,UN,12.0,,0.0,1.0,200.0
+2818,caneta bic cx.,000000028189,caneta bic cx.,UN,55.0,,-84.0,1.0,200.0
+2819,caderno brochura 96 fls,000000028196,caderno brochura 96 fls,UN,13.9,6.0,-1436.0,1.0,200.0
+2820,caderno 20 mat,000000028202,caderno 20 mat,UN,39.9,39.9,-349.0,1.0,200.0
+2821,caderno 1 materia,000000028219,caderno 1 materia,UN,10.0,,-126.0,1.0,200.0
+2822,Tela de pintura 24x30,000000028226,tela de pintura 24x30,UN,15.9,13.5,0.0,,
+2823,Tela de pintura 18x24,000000028233,tela de pintura 18x24,UN,12.9,4.0,-4.0,,
+2824,Tela de pintura 20x20,000000028240,tela de pintura 20x20,UN,9.9,4.0,-6.0,,
+2825,Tela de pintura 20x30,000000028257,tela de pintura 20x30,UN,13.9,4.0,-41.0,,
+2826,Tela de pintura 30x30,000000028264,tela de pintura 30x30,UN,20.9,4.0,-22.0,,
+2827,Tela de pintura 20x40,000000028271,tela de pintura 20x40,UN,17.9,4.0,-5.0,,
+2828,cola 250 gr,000000028288,cola 250 gr,UN,9.9,6.9,-7.0,,
+2829,cartao de presente,000000028295,cartao de presente,UN,10.0,3.0,-26.0,1.0,200.0
+2830,Indice,000000028301,cartao de presente medio,UN,7.0,,-13.0,1.0,200.0
+2831,Indice,000000028318,cartao de presente grande,UN,10.0,,-9.0,1.0,200.0
+2832,Indice,000000028325,cartao de presente gg,UN,13.0,,0.0,1.0,200.0
+2833,  cola bastao 9gr,000000028332,cola bastao 9gr,UN,9.9,4.0,-24.0,,
+2834,cola bastao brw 21gr.,000000028349,cola bastao brw 21gr.,UN,4.9,4.0,-68.0,,
+2836,cola bastao brw 36gr.,000000028363,calo bastao brw 36 gr.,UN,6.0,4.0,-54.0,,
+2837,Caneta luxo,000000028370,caneta luxo,UN,23.0,,-56.0,1.0,200.0
+2839,caneta retroprojetora,000000028394,caneta retroprojetora,UN,6.5,,-145.0,1.0,200.0
+2840,caneta fine faber-castel,000000028400,caneta fine faber-castel,UN,2.0,,-68.0,1.0,200.0
+2841,caneta pilot retroprojetora,000000028417,caneta pilot retroprojetora,UN,6.5,,-138.0,1.0,200.0
+2842,Tela de Pintura 30x40,000000028424,tela de pintura 30x40,UN,22.9,4.0,-9.0,,
+2843,caneta esferografica,000000028431,caneta esferografica,UN,1.7,,-83.0,1.0,200.0
+2844,Tela de Pintura 50x60,000000028448,tela de pintura 50x60,UN,47.9,4.0,-5.0,,
+2845,Quadro Negro 40x30,000000028455,quadro negro 40x30,UN,25.0,4.0,0.0,,
+2846, caneta brush,000000028462,caneta brush,UN,3.0,1.3,-58.0,1.0,200.0
+2847,caneta top col,000000028479,caneta top col,UN,1.7,2.0,-400.0,1.0,200.0
+2848,caneta crown,000000028486,caneta crown,UN,40.0,5.0,-28.0,1.0,200.0
+2849,Indice,000000028493,marcador de cd e dvd pilot,UN,4.5,,-8.0,1.0,200.0
+2850,contact 1/2 mt,000000028509,contact 1/2 mt,UN,2.95,,-49.0,1.0,200.0
+2851,caneta tecido,000000028516,caneta tecido,UN,8.5,5.9,-86.0,1.0,200.0
+2852,Indice,000000028523,marcador permanente ponta dupla acrilex,UN,6.0,,-65.0,1.0,200.0
+2853,caneta cis gel,000000028530,caneta cis gel,UN,12.5,3.9,-20.0,1.0,200.0
+2854,caneta cd brw,000000028547,caneta cd brw,UN,4.0,4.0,-35.0,1.0,200.0
+2855,Indice,000000028554,marcador de cd duo marker,UN,4.0,,0.0,1.0,200.0
+2856,Quadro Negro 60x40,000000028561,quadro negro 60x40,UN,30.9,4.0,2.0,,
+2857,Quadro Negro 80x60,000000028578,quadro negro 80x60,UN,49.9,4.0,-11.0,,
+2858,Quadro Negro 100x80,000000028585,quadro negro 100x80,UN,67.9,4.0,4.0,,
+2859,elÃ¡stico mt,000000028592,elã¡stico mt,UN,1.0,1.0,-7.0,1.0,200.0
+2860,Quadro Negro 120x90,000000028608,quadro negro 120x90,UN,87.9,4.0,4.0,,
+2861,carga caneta,000000028615,carga caneta,UN,3.0,,-57.0,1.0,200.0
+2862,Quadro Cortica 40x30,000000028622,quadro cortica 40x30,UN,29.9,4.0,0.0,,
+2863,Quadro Cortica 60x45,000000028639,quadro cortica 60x45,UN,38.0,4.0,-10.0,,
+2864,Quadro Cortica 100x70,000000028646,quadro cortica 100x70,UN,66.9,4.0,-5.0,,
+2865,caneta bic 4 cores,000000028653,caneta bic 4 cores,UN,10.0,,-372.0,1.0,200.0
+2866,Quadro Cortica 120x95,000000028660,quadro cortica 120x95,UN,79.9,4.0,3.0,,
+2867,Indice,000000028677,prendedor de cabelo pequeno,UN,1.5,,-7.0,1.0,200.0
+2868,Indice,000000028684,prendedor de cabelo grande,UN,2.0,,-10.0,1.0,200.0
+2869,Indice,000000028691,soquete trifil,UN,3.5,,1.0,1.0,200.0
+2870,placa isopor 05mm,000000028707,placa isopor 05mm,UN,2.5,4.0,-19.0,,
+2871,Indice,000000028714,meia calca bebe trifil,UN,8.9,,1.0,1.0,200.0
+2872,placa isopor 10mm,000000028721,placa isopor 10mm,UN,4.0,4.0,-78.0,,
+2873,Indice,000000028738,classica europeu trifil,UN,8.6,,1.0,1.0,200.0
+2874,placa isopor 15mm,000000028745,placa isopor 15mm,UN,5.0,4.0,-84.0,,
+2875,Indice,000000028752,xuxinha,UN,0.5,,1.0,1.0,200.0
+2876,placa isopor 20mm,000000028769,placa isopor 20mm,UN,7.0,4.0,-166.0,,
+2877,placa isopor 25mm,000000028776,placa isopor 25mm,UN,8.0,4.0,-38.0,,
+2878,placa isopor 30mm,000000028783,placa isopor 30mm,UN,10.0,4.0,-8.0,,
+2879,placa isopor 35mm,000000028790,placa isopor 35mm,UN,12.0,4.0,2.0,,
+2880,tinta tecido acrilex,000000028806,tinta de tecido acrilex,UN,5.9,,-123.0,1.0,200.0
+2881,placa isopor 40mm,000000028813,placa isopor 40mm,UN,13.0,4.0,-6.0,,
+2882,placa isopor 50mm,000000028820,placa isopor 50mm,UN,16.0,4.0,-68.0,,
+2883,Indice,0000000288388,colorset neon,UN,9.9,,-81.0,1.0,200.0
+2884,bolas de gas n 8,000000028844,bolas de gas n 8,UN,13.9,,-224.0,1.0,200.0
+2885,balao,000000028851,balao,UN,12.9,,-112.0,1.0,200.0
+2886,micanga,000000028868,micanga,UN,2.5,,-30.0,1.0,200.0
+2887,Bola de Isopor 15/20 mm,000000028875,bola de isopor 15/20 mm,UN,27.0,4.0,-19.0,,
+2888,balao pq.,000000028882,balao pq.,UN,8.0,,-89.0,1.0,200.0
+2889,Bola de Isopor 30 mm,000000028899,bola de isopor 30 mm,UN,0.4,4.0,-35.0,,
+2890,pulseira,000000028905,pulseira,UN,15.9,,-37.0,1.0,200.0
+2891,bola sabao,000000028912,bola sabao,UN,5.0,,-31.0,1.0,200.0
+2892,BALAO/BALAO/ BOLA/ BALOES DE/PARA FESTA - SAO ROQUE,000000028929,multi imagem,UN,24.9,,-28.0,1.0,200.0
+2893,Bola de Isopor 35 mm,000000028936,bola de isopor 35 mm,UN,0.5,4.0,-5.0,,
+2894,Bola de Isopor 40 mm,000000028943,bola de isopor 40 mm,UN,0.8,4.0,10.0,,
+2896,Bola de Isopor 50 mm,000000028967,bola de isopor 50 mm,UN,1.2,4.0,-4.0,,
+2897,Bola de Isopor 60 mm,000000028974,bola de isopor 60 mm,UN,1.6,4.0,9.0,,
+2898,copo descartavel 200ml,000000028981,copo descartavel 200ml,UN,7.5,,-214.0,1.0,200.0
+2899,Bola de Isopor 75 mm,000000028998,bola de isopor 75 mm,UN,2.0,4.0,10.0,,
+2900,canecatime,000000029001,caneca time,UN,39.9,,-38.0,1.0,200.0
+2901,Bola de Isopor 80 mm,000000029018,bola de isopor 80 mm,UN,2.3,4.0,10.0,,
+2902,Bola de Isopor 100 mm,000000029025,bola de isopor 100 mm,UN,4.8,4.0,3.0,,
+2903,Bola de Isopor 125 mm,000000029032,bola de isopor 125 mm,UN,9.9,4.0,-7.0,,
+2904,Bola de Isopor 150 mm,000000029049,bola de isopor 150 mm,UN,11.0,4.0,0.0,,
+2905,copo cafe,000000029056,copo cafe,UN,4.0,,-23.0,1.0,200.0
+2906,Bola de Isopor 200 mm,000000029063,bola de isopor 200 mm,UN,16.9,15.0,10.0,,
+2907,Bola de Isopor 250 mm,000000029070,bola de isopor 250 mm,UN,27.0,4.0,9.0,,
+2908,Bola de Isopor 300 mm,000000029087,bola de isopor 300 mm,UN,29.9,4.0,7.0,,
+2909,Quadro Branco 60x40,000000029094,quadro branco 60x40,UN,29.9,4.0,-1.0,,
+2910,Quadro Branco 70x50,000000029100,quadro branco 70x50,UN,39.9,4.0,3.0,,
+2911,Quadro Branco 90x60,000000029117,quadro branco 90x60,UN,49.9,4.0,3.0,,
+2912,Quadro Branco 100x80,000000029124,quadro branco 100x80,UN,89.9,4.0,3.0,,
+2913,Quadro expositor,000000029131,quadro expositor,UN,16.9,4.0,0.0,,
+2914,folha copia,000000029148,folha copia,UN,0.4,,-1179.0,10.0,200.0
+2915,difusor,000000029155,difusor,UN,15.0,,0.0,10.0,200.0
+2916,pacoca,000000029162,pacoca,UN,1.0,,-42.0,10.0,200.0
+2917,Lancheira diversas,000000029179,lancheira diversas,UN,49.9,,1.0,10.0,200.0
+2918,Fichario 4 Argolas,000000029186,fichario 4 argolas,UN,29.9,4.0,-7.0,2.0,5.0
+2919,Fichario masculino,000000029193,fichario masculino,UN,6.9,4.0,4.0,,
+2920,Fichario couro,000000029209,fichario couro,UN,90.0,4.0,-69.0,2.0,5.0
+2922,tnt rolo,000000029223,tnt rolo,UN,99.0,4.0,-28.0,2.0,5.0
+2923,Fichario 4 Argolas,000000029230,fichario 4 argolas,UN,24.9,4.0,-1.0,2.0,5.0
+2924,Fichario c/ ziper 4 Argolas,000000029247,fichario c/ ziper 4 argolas,UN,32.9,4.0,3.0,2.0,5.0
+2925,Fichario moranguinho,000000029254,fichario moranguinho,UN,64.0,4.0,-14.0,2.0,5.0
+2926,Fichario machines,000000029261,fichario machines,UN,19.9,4.0,2.0,2.0,5.0
+2927,Fichario Pop Girl,000000029278,fichario pop girl,UN,29.9,4.0,-3.0,2.0,5.0
+2928,pote de gliter,000000029285,pote de gliter,UN,2.0,4.0,-21.0,2.0,5.0
+2929,Fichario Ben 10,000000029292,fichario ben 10,UN,29.9,4.0,2.0,2.0,5.0
+2930,Fichario zip masculino,000000029308,fichario zip masculino,UN,90.0,4.0,-16.0,2.0,5.0
+2931,Fichario Carinho,000000029315,fichario carinho,UN,59.9,4.0,0.0,2.0,5.0
+2932,Fichario yes,000000029322,fichario yes,UN,24.9,4.0,2.0,2.0,5.0
+2933,Fichario Peq.,000000029339,preto,UN,17.9,4.0,-1.0,2.0,5.0
+2934,Fichario Peq.,000000029346,azul,UN,22.9,4.0,2.0,2.0,5.0
+2935,Fichario Peq.,000000029353,fichario peq.,UN,16.9,4.0,0.0,2.0,5.0
+2936,Corante Alimenticio,000000029360,azul,UN,3.9,4.0,-5.0,2.0,5.0
+2937,Forma de Cupcake Gde.,000000029377,forma de cupcake gde.,UN,4.0,4.0,0.0,2.0,5.0
+2938,Forma de Cupcake Peq.,000000029384,forma de cupcake peq.,UN,2.5,4.0,-12.0,2.0,5.0
+2943,caderno brochura gr 96 fls,000000029438,caderno brochura gr 96fls,UN,13.9,8.5,-665.0,1.0,200.0
+2944,caderno brochura gr 48 fls,000000029445,caderno brochura gr 48 fls,UN,10.0,6.0,-177.0,1.0,200.0
+2945,caderno caligrafia,000000029452,caderno caligrafia,UN,3.0,1.0,7.0,1.0,200.0
+2946,caderno 10 mat,000000029469,caderno 10 mat,UN,20.0,4.0,-36.0,1.0,200.0
+2947,caderno 1/2 brochura 48fls,000000029476,caderno 1/2 brochura 48 fls,UN,7.0,4.0,3.0,1.0,200.0
+2948,Indice,000000029483,franja plissada,UN,2.5,1.0,1.0,1.0,200.0
+2950,papel 90gr cx.,000000029506,papel 90gr cx.,UN,9.9,5.9,-16.0,1.0,200.0
+2951,doce,000000029513,doce,UN,3.0,1.0,-38.0,1.0,200.0
+2952,palito de dente,000000029520,palito de dente,UN,1.5,1.0,-7.0,1.0,200.0
+2953,sacos variados,000000029537,sacos variados,UN,66.5,1.0,-313.0,1.0,200.0
+2954,colher descartavel,000000029544,colher descartavel,UN,3.0,1.0,-13.0,1.0,200.0
+2955,papel almaco,000000029551,papel almaco,UN,0.3,1.0,-62.0,1.0,200.0
+2956,descascador,000000029568,descacador,UN,5.0,1.0,-15.0,1.0,200.0
+2957,plastico bolha mt,000000029575,plastico bolha mt,UN,2.5,1.0,-47.0,1.0,200.0
+2958,Indice,000000029582,garfo plastico regina pequeno,UN,4.0,1.0,-11.0,1.0,200.0
+2959,papel milimetrado a3 fl.,000000029599,papel milimetrado a3 fl,UN,1.0,1.0,-3.0,1.0,200.0
+2960,Indice,000000029605,vela brilhante regina,UN,4.5,1.0,-16.0,1.0,200.0
+2961,Indice,000000029612,vela numerica colorida grande regina,UN,3.0,1.0,-13.0,1.0,200.0
+2962,Indice,000000029629,vela regina com 24 unidades,UN,3.5,1.0,-17.0,1.0,200.0
+2965,GARFINHOS DE MADEIRA - REGINA,000000029650,garfinhos de madeira - regina,UN,3.9,1.0,2.0,2.0,5.0
+2967,PCT C/ 5 VELAS E  5 BRINQUEDOS - REGINA,000000029674,pct c/ 5 velas e 5 brinquedos - regina,UN,4.5,1.0,-12.0,2.0,5.0
+2968,prato descartavel,000000029681,prato descartavel,UN,3.0,1.0,-17.0,2.0,5.0
+2969,rabo rato,000000029698,rabo rato,UN,25.9,1.0,-20.0,2.0,5.0
+2970,folha copia  pb a4,000000029704,folha copia pb a4,UN,0.3,1.0,-41463.0,2.0,5.0
+2971,Materiais diversos,000000029711,materiais diversos,UN,27.2,1.0,-33.0,2.0,5.0
+2972,vela de aniversario regina comum,000000029728,indice,UN,3.5,1.0,-3.0,2.0,5.0
+2973,toalha de celopoli,000000029735,indice,UN,8.5,1.0,-4.0,2.0,5.0
+2974, tnt 1/2 mt.,000000029742,tnt 1/2 mt.,UN,1.75,1.0,-330.0,2.0,5.0
+2977,vareta pega balao,000000029773,indice,UN,4.0,1.0,-39.0,2.0,5.0
+2978,bic bold,000000029780,bic bold,UN,3.0,1.0,-1.0,2.0,5.0
+2979,mexedor de cafe ,000000029797,mexedor de cafe,UN,4.0,1.0,-8.0,2.0,5.0
+2980,fundo rendado,000000029803,indice,UN,2.2,1.0,1.0,2.0,5.0
+2986,CONVITE DIVERSOS 4,000000029865,convite diversos 4,UN,3.0,4.0,2.0,2.0,5.0
+2991,etiqueta validade,000000029919,etiqueta validade,UN,6.9,1.0,-257.0,2.0,5.0
+2992,etiqueta 39x20mm,000000029926,etiqueta 39x20mm,UN,6.0,1.0,-241.0,2.0,5.0
+2996,la,000000029964,verde,UN,6.9,,0.0,10.0,200.0
+2998,Lancheira diversas,000000029988,lancheira diversas,UN,42.9,,1.0,10.0,200.0
+2999,la,000000029995,la,UN,6.9,,1.0,10.0,200.0
+3000,escova,000000030007,escova,UN,2.8,,-4.0,10.0,200.0
+3001,lanca confete,000000030014,lanca confete,UN,15.0,,-9.0,10.0,200.0
+3002,Lancheira Monica,000000030021,lancheira monica,UN,49.9,,1.0,10.0,200.0
+3003,trento,000000030038,trento,UN,3.0,,-34.0,10.0,200.0
+3004,Lancheira diversas,000000030045,lancheira diversas,UN,69.9,,1.0,10.0,200.0
+3005,estilete largo cx.,000000030052,estilete largo cx.,UN,50.0,,-6.0,10.0,200.0
+3006,envelope cd pt,000000030069,envelope cd pt,UN,40.0,,-17.0,10.0,200.0
+3007,novelo de la,000000030076,novelo de la,UN,6.9,,-3.0,10.0,200.0
+3008,pasta catÃ¡logo 100s/preta,000000030083,pasta catã¡logo 100s/preta,UN,29.9,2.0,-50.0,2.0,5.0
+3009,pasta em L,000000030090,pasta em l,UN,1.3,2.0,-333.0,2.0,5.0
+3010, pasta catÃ¡logo 40s/plÃ¡stica,000000030106,pasta catã¡logo 40s/plã¡stica,UN,17.9,2.0,-92.0,2.0,5.0
+3011,pasta catÃ¡logo 10s/plÃ¡stica,000000030113,pasta catã¡logo 10s/plã¡stica,UN,16.9,,-118.0,10.0,200.0
+3012,pasta catÃ¡logo 30s/plÃ¡stica,000000030120,pasta catã¡logo 30s/plã¡stica,UN,15.9,,-293.0,10.0,200.0
+3013,pasta catÃ¡logo 1/2 ofÃ­cio,000000030137,pasta catã¡logo 1/2 ofã­cio,UN,8.9,,0.0,10.0,200.0
+3014,pasta c/ziper variadas,000000030144,pasta c/ziper variadas,UN,4.9,,-106.0,10.0,200.0
+3015, papel 40kg bco,000000030151,papel 40kg bco,UN,2.5,,-89.0,10.0,200.0
+3016,pasta  c/trilho papelÃ£o,000000030168,pasta c/ trilho papelã£o,UN,3.8,,-61.0,10.0,200.0
+3017,Capa Plastica p/ Alvara A7,000000030175,capa plastica p/ alvara a7,UN,3.9,,1.0,10.0,200.0
+3018,pasta suspensa papelÃ£o,000000030182,pasta suspensa papelã£o,UN,4.5,4.0,-8.0,2.0,5.0
+3019,pasta suspensa colorida,000000030199,pasta suspensa colorida,UN,6.9,4.0,-18.0,2.0,5.0
+3020,pasta suspensa pt. ,000000030205,pasta suspensa pt.,UN,45.0,4.0,-12.0,2.0,5.0
+3021,pasta c/botÃ£o,000000030212,pasta c/botã£o,UN,15.0,4.0,-13.0,2.0,5.0
+3022,pasta alvarÃ¡ pq,000000030229,pasta alvarã¡ pq,UN,5.0,4.0,4.0,2.0,5.0
+3023,pasta alvara a4,000000030236,pasta alvara a4,UN,20.0,4.0,1.0,2.0,5.0
+3024,pasta alvarÃ¡ ofÃ­cio,000000030243,pasta alvarã¡ ofã­cio,UN,8.9,4.0,0.0,2.0,5.0
+3025,pasta /protetor,000000030250,pasta /protetor,UN,16.9,4.0,0.0,2.0,5.0
+3026,saco/protetor,000000030267,saco/protetor,UN,3.0,4.0,-8.0,2.0,5.0
+3027,caderno 1 materia,000000030274,caderno 1 materia,UN,10.0,7.9,-158.0,1.0,200.0
+3029,caderno 10 materia,000000030298,caderno 10 materia,UN,20.0,12.9,-559.0,1.0,200.0
+3030,envelope carta,000000030304,envelope carta,UN,0.2,1.0,-155.0,1.0,200.0
+3031,Caderno,000000030311,caderno brochura horizontal 96fls,UN,3.0,1.0,5.0,1.0,200.0
+3032,Lista de preco pvc,000000030328,lista de preco pvc,UN,23.0,1.0,1.0,1.0,200.0
+3034,papel fotografico,000000030342,papel fotografico,UN,29.9,4.0,-69.0,2.0,5.0
+3035,Caderno,000000030359,caderno brochura vertical capa dura meio oficio carros,UN,8.0,1.0,1.0,1.0,200.0
+3036,Prato papelao redondo - N4,000000030366,prato papelao redondo - n4,UN,2.0,4.0,-28.0,2.0,5.0
+3037,Prato papelao redondo - N5,000000030373,prato papelao redondo - n5,UN,3.2,4.0,-7.0,2.0,5.0
+3038,Caderno,000000030380,caderno brochura horizontal capa dura meio oficio carros,UN,5.5,1.0,3.0,1.0,200.0
+3039,Prato papelao redondo - N6,000000030397,prato papelao redondo - n6,UN,4.0,4.0,0.0,2.0,5.0
+3040,Prato papelao redondo - N7,000000030403,prato papelao redondo - n7,UN,4.3,4.0,-3.0,2.0,5.0
+3041,Prato papelao redondo - N8,000000030410,prato papelao redondo - n8,UN,4.5,4.0,5.0,2.0,5.0
+3042,Prato papelao redondo - N9,000000030427,prato papelao redondo - n9,UN,4.6,4.0,5.0,2.0,5.0
+3043,Prato papelao redondo - N10,000000030434,prato papelao redondo - n10,UN,4.8,4.0,5.0,2.0,5.0
+3044,papel presente,000000030441,papel presente,UN,1.8,4.0,-28.0,2.0,5.0
+3045,Prato papelao retangular - N4,000000030458,prato papelao retangular - n4,UN,3.8,4.0,5.0,2.0,5.0
+3046,Prato papelao retangular - N5,000000030465,prato papelao retangular - n5,UN,3.5,4.0,-2.0,2.0,5.0
+3047,Prato papelao retangular - N6,000000030472,prato papelao retangular - n6,UN,4.5,4.0,4.0,2.0,5.0
+3048,Prato papelao retangular - N7,000000030489,prato papelao retangular - n7,UN,6.9,4.0,3.0,2.0,5.0
+3049,Baleiro de papelao,000000030496,baleiro de papelao,UN,8.9,4.0,5.0,2.0,5.0
+3050,topo de bolo,000000030502,topo de bolo,UN,5.0,4.0,3.0,2.0,5.0
+3051,Prato plastico 16 cm,000000030519,prato plastico 16 cm,UN,12.9,4.0,1.0,2.0,5.0
+3052,Papel de bala p/ festas,000000030526,papel de bala p/ festas,UN,2.0,4.0,-3.0,2.0,5.0
+3053,Bico de confeiteiro plastico,000000030533,bico de confeiteiro plastico,UN,5.0,4.0,3.0,2.0,5.0
+3054,Faca descartavel - regina,000000030540,faca descartavel - regina,UN,1.0,4.0,3.0,2.0,5.0
+3055,Saco p/ mini Hamburguer,000000030557,saco p/ mini hamburguer,UN,2.9,4.0,5.0,2.0,5.0
+3056,saco cesta,000000030564,saco cesta,UN,5.9,4.0,-11.0,2.0,5.0
+3057,Forminha p/ docinhos N4,000000030571,forminha p/ docinhos n4,UN,2.0,4.0,-11.0,2.0,5.0
+3058,Forminha p/ docinhos N05 e N03,000000030588,forminha p/ docinhos n05 e n03,UN,2.8,4.0,-25.0,2.0,5.0
+3059,"Forminha p/ docinhos N0, N02 e N6",000000030595,"forminha p/ docinhos n0, n02 e n6",UN,2.5,4.0,-2.0,2.0,5.0
+3060,Forminha p/ docinhos N 00,000000030601,forminha p/ docinhos n 00,UN,3.0,4.0,-7.0,2.0,5.0
+3061,Caderno,000000030618,caderno brochura capa dura meio oficio 96 fls guardioes,UN,12.0,1.0,-24.0,1.0,200.0
+3062,Dicionario,000000030625,lingua portuguesa vale das letras,UN,11.9,1.0,10.0,1.0,200.0
+3063,Dicionario,000000030632,lingua portuguesa silveira bueno,UN,39.9,1.0,16.0,1.0,200.0
+3064,Dicionario,000000030649,lingua portuguesa bicho esperto,UN,9.9,1.0,16.0,1.0,200.0
+3065,espelho,000000030656,espelho,UN,8.0,1.0,14.0,1.0,200.0
+3067,lapis 12 cores,000000030670,lapis 12 cores,UN,6.9,6.9,-21.0,1.0,200.0
+3068,lapis 24 cores valeu,000000030687,lapis 24 cores valeu,UN,12.9,12.9,-27.0,1.0,200.0
+3069,lapis preto,000000030694,lapis preto,UN,0.6,0.6,-6.0,1.0,200.0
+3070,Dicionario,000000030700,espanhol e portugues michaelis,UN,29.9,1.0,16.0,1.0,200.0
+3071,Dicionario,000000030717,ingles e portugues ciranda cultural,UN,9.9,1.0,14.0,1.0,200.0
+3072,antiferrugem,000000030724,antiferrugem,UN,10.0,1.0,14.0,1.0,200.0
+3073,lapis de cor cx,000000030731,lapis de cor cx,UN,6.9,19.9,-431.0,1.0,200.0
+3074,Dicionario,000000030748,espanhol e portugues melhoramentos,UN,11.9,1.0,14.0,1.0,200.0
+3075,Dicionario,000000030755,minigramatica,UN,20.0,1.0,14.0,1.0,200.0
+3076,lapis 12 cores mini famix,000000030762,lapis 12 cores mini famix,UN,4.9,3.5,6.0,1.0,200.0
+3077, papel cartao,000000030779,papel cartao,UN,2.0,0.5,-107.0,1.0,200.0
+3078,lapis 12 cores triangular norma,000000030786,lapis 12 cores triangular norma,UN,12.9,12.9,10.0,1.0,200.0
+3079,lapis 36 cores multi color,000000030793,lapis 36 cores cores multi color,UN,27.0,27.0,3.0,1.0,200.0
+3080,lapis 12 cores cis,000000030809,lapis 12 cores cis,UN,8.9,7.9,7.0,1.0,200.0
+3081,lapis 12 coes jumbo leo/leo,000000030816,lapis 12 cores jumbo leo/leo,UN,16.9,16.9,16.0,1.0,200.0
+3082,lapis 24 cores vmp,000000030823,lapis 24 cores vmp,UN,17.9,17.9,16.0,1.0,200.0
+3083,lapis 24 cores acrilex,000000030830,lapis 24 cores acrilex,UN,23.9,23.9,16.0,1.0,200.0
+3084,lapis 24 cores multi color,000000030847,lapis 24 cores multi color,UN,23.0,23.0,11.0,1.0,200.0
+3085,lapis 24 cores cis,000000030854,lapis 24 cores cis,UN,22.9,1.0,15.0,1.0,200.0
+3086,lapis 24 cores mercur,000000030861,lapis 24 cores mercur,UN,22.9,1.0,16.0,1.0,200.0
+3087,lapis 12 cores jumbo acrilex,000000030878,lapis 12 cores jumbo acrilex,UN,22.9,22.9,13.0,1.0,200.0
+3088,lapis12 cores jumbo cis,000000030885,lapis 12 cores jumbo cis,UN,22.0,1.0,7.0,1.0,200.0
+3089,lapis 12 cores faber,000000030892,lapis 12 cores faber,UN,19.9,19.9,-2.0,1.0,200.0
+3090,lapis 24 cores faber,000000030908,lapis 24 cores faber,UN,44.9,24.9,-2.0,1.0,200.0
+3091,lapis 36 cores faber,000000030915,lapis 36 cores faber,UN,60.0,44.9,-31.0,1.0,200.0
+3092,Tabuada,000000030922,tabuada do estudante,UN,1.0,1.0,14.0,1.0,200.0
+3093,canetinha hidrocor 12 cores,000000030939,canetinha hidrocor 12 cores,UN,15.9,24.9,-46.0,1.0,200.0
+3094,canetinha jumbo,000000030946,canetinha jumbo,UN,29.9,44.9,-26.0,1.0,200.0
+3095,canetinha 6 cores pastel comp.,000000030953,canetinha 6 cores pastel comp.,UN,14.9,12.9,-2.0,1.0,200.0
+3096,canetinha 24 cores  gigante  comp,000000030960,canetinha 24 cores gigante comp,UN,39.9,39.9,5.0,1.0,200.0
+3097,canetinha 6 cores valeu,000000030977,canetinha 6 cores valeu,UN,4.9,4.9,5.0,1.0,200.0
+3098,canetinha 6 cores cis,000000030984,canetinha 6 cores cis,UN,5.9,5.9,12.0,1.0,200.0
+3099,canetinha 12 cores cis,000000030991,canetinha 12 cores cis,UN,15.9,9.9,-5.0,1.0,200.0
+3100,canetinha 24 cores cis,000000031004,canetinha 24 cores cis,UN,17.9,16.9,8.0,1.0,200.0
+3101,canetinha neo-pen mÃ­rin 12 c. comp.,000000031011,canetinha neo-pen mã­rim 12 c.comp.,UN,10.0,10.0,12.0,1.0,200.0
+3102,canetinha big acrilex,000000031028,canetinha big acrilex,UN,16.9,16.9,16.0,1.0,200.0
+3103,giz de cera 12 cores,000000031035,giz de cera 12 cores,UN,4.5,1.0,1.0,1.0,200.0
+3104,canetinha compactor big color 12 cores,000000031042,canetinha compactor big color 12 cores,UN,22.9,22.9,7.0,1.0,200.0
+3105,big giz de cera 12 cores,000000031059,big giz de cera 12 cores,UN,10.0,1.0,-40.0,1.0,200.0
+3106,giz de cera estaca unidade,000000031066,giz de cera estaca unidade,UN,0.6,1.0,5.0,1.0,200.0
+3107,giz de cera estaca,000000031073,giz de cera estaca,UN,3.0,1.0,2.0,1.0,200.0
+3108,meu 1Âº gizinho cera 12 cores,000000031080,meu 1âº gizinho cera 12 cores,UN,14.9,1.0,13.0,1.0,200.0
+3109,giz de cera,000000031097,giz de cera 12 unidades acrilex,UN,2.5,1.0,-177.0,1.0,200.0
+3110,guache 500gr,000000031103,guache 500gr,UN,16.9,,-164.0,1.0,200.0
+3111,canetinha compactor 6 cores big,000000031110,canetinha compactor 6 cores big,UN,29.9,12.9,14.0,1.0,200.0
+3112,guache 12 cores,000000031127,guache 12 cores,UN,12.9,1.0,-2.0,1.0,200.0
+3113,aquarela,000000031134,aquarela acrilex,UN,14.9,1.0,14.0,1.0,200.0
+3114,aquarela,000000031141,aquarela molin,UN,17.9,1.0,12.0,1.0,200.0
+3115,Forminha Metalizada N4,000000031158,forminha metalizada n4,UN,2.3,4.0,0.0,2.0,5.0
+3116,Forminha Metalizada N05,000000031165,forminha metalizada n05,UN,2.3,4.0,-8.0,2.0,5.0
+3117,Forminha Metalizada N06,000000031172,forminha metalizada n06,UN,1.8,4.0,5.0,2.0,5.0
+3118,Saco Plastico fino c/ 4 furos UN,000000031189,saco plastico fino c/ 4 furos un,UN,0.25,4.0,1.0,2.0,5.0
+3119,Saco Plastico grosso c/ 4 furos UN,000000031196,saco plastico grosso c/ 4 furos un,UN,0.3,4.0,-264.0,2.0,5.0
+3120,Saco Plastico fino c/ 4 furos Pct c/100,000000031202,saco plastico fino c/ 4 furos pct c/100,UN,34.9,4.0,-14.0,2.0,5.0
+3122,esqueiro,000000031226,esqueiro,UN,3.9,5.5,-6.0,2.0,5.0
+3123,protetor documento,000000031233,protetor documento,UN,1.0,4.0,-45.0,2.0,5.0
+3124,Capa da junta,000000031240,capa da junta,UN,1.8,4.0,-9.0,2.0,5.0
+3125,capa alvarÃ¡,000000031257,capa alvarã¡,UN,8.9,4.0,1.0,2.0,5.0
+3126,carbono hectogrÃ¡fico cx.,000000031264,carbono hectogrã¡fico cx.,UN,90.0,1.0,1.0,1.0,200.0
+3127,carbono hectogrÃ¡fico un,000000031271,carbono hectogrã¡fico cx.,UN,1.0,1.0,13.0,1.0,200.0
+3128,carbono filme un.,000000031288,carbono filme un,UN,2.0,1.0,-222.0,1.0,200.0
+3129, carbono filme cx.,000000031295,carbono filme cx.,UN,99.0,1.0,10.0,1.0,200.0
+3130,celofane,000000031301,celofane,UN,2.5,1.0,-22.0,1.0,200.0
+3131,Celofani Liso cores,000000031318,celofani liso cores,UN,3.0,1.0,-17.0,1.0,200.0
+3132,Celofani Transparente,000000031325,celofani transparente,UN,3.0,1.0,-1.0,1.0,200.0
+3133,reguas 30cm flexivel,000000031332,reguas 30cm flexivel,UN,9.9,1.0,-30.0,1.0,200.0
+3134,luminaria,000000031349,luminaria,UN,35.0,6.0,-2.0,1.0,200.0
+3135,regua 40cm,000000031356,regua 40cm,UN,4.0,5.5,5.0,1.0,200.0
+3136,regua 50cm,000000031363,regua 50cm,UN,5.0,6.5,11.0,1.0,200.0
+3137,regua 60cm,000000031370,regua 60cm,UN,11.3,8.5,-14.0,1.0,200.0
+3138, regua excalimetro 30cm,000000031387,regua excalimetro 30cm,UN,25.9,25.9,0.0,1.0,200.0
+3139,regua excalimetro 20cm,000000031394,regua gexcalimetro 20cm,UN,15.9,15.9,16.0,1.0,200.0
+3140,regua 15cm,000000031400,regua 15cm,UN,1.0,1.0,8.0,1.0,200.0
+3141,Escalimetro Peq.,000000031417,escalimetro peq.,UN,15.9,1.0,15.0,1.0,200.0
+3142,Escalimetro Grd,000000031424,escalimetro grd,UN,25.9,1.0,10.0,1.0,200.0
+3143,Par de Esquadro,000000031431,par de esquadro,UN,5.9,1.0,11.0,1.0,200.0
+3144,regua conjunto,000000031448,regua conjunto,UN,5.0,5.0,9.0,1.0,200.0
+3145,regua mormografo,000000031455,regua mormografo,UN,5.9,1.0,10.0,1.0,200.0
+3146, regua geomÃ©trica,000000031462,regua geomã©trica,UN,3.0,3.0,11.0,1.0,200.0
+3147,Transferidor 360,000000031479,transferidor 360,UN,3.9,1.0,14.0,1.0,200.0
+3148,Transferidor 180,000000031486,transferidor 180,UN,3.9,1.0,10.0,1.0,200.0
+3149,Formas de Letras e numeros - Compactor 45 mm,000000031493,formas de letras e numeros - compactor 45 mm,UN,5.9,1.0,13.0,1.0,200.0
+3150,Formas de Letras e numeros - Compactor 25 mm,000000031509,formas de letras e numeros - compactor 25 mm,UN,22.9,1.0,14.0,1.0,200.0
+3151,Formas de Letras e numeros - Compactor 60 mm,000000031516,formas de letras e numeros - compactor 75 mm,UN,19.9,1.0,13.0,1.0,200.0
+3152,massageador,000000031523,massagador,UN,65.0,1.0,-2.0,2.0,5.0
+3153,argila,000000031530,argila,UN,7.9,1.0,-61.0,2.0,5.0
+3154,massa,000000031547,massa 150g,UN,13.9,1.0,-7.0,2.0,5.0
+3155,material dourado,000000031554,material dourado,UN,20.0,1.0,-62.0,2.0,5.0
+3156,massinha 6 cores,000000031561,massinha 6 cores,UN,4.5,2.9,-52.0,2.0,5.0
+3157,guache 250gr,000000031578,guache 250gr,UN,9.9,7.9,-149.0,2.0,5.0
+3158,massa,000000031585,kimeleka acrilex,UN,9.9,1.0,1.0,2.0,5.0
+3159,massa,000000031592,amoeba,UN,8.9,1.0,-27.0,2.0,5.0
+3160,Guardachuva,00000000310,,UN,20.0,1.0,-34.0,2.0,5.0
+3161,leque,000000031615,leque,UN,8.0,1.0,-322.0,2.0,5.0
+3162,caderno meia pauta,000000031622,caderno meia pauta,UN,14.9,,-96.0,2.0,5.0
+3163,caderno 16 materia,000000031639,caderno 16 materia,UN,29.9,1.0,-301.0,2.0,5.0
+3164,caderno 20 mat,000000031646,caderno 20 mat,UN,39.9,1.0,-307.0,2.0,5.0
+3165,caderno,000000031653,tabuada esperta,UN,7.9,1.0,-13.0,2.0,5.0
+3166,caderno,000000031660,atlas geografico escolar,UN,9.9,1.0,-1.0,2.0,5.0
+3167,caderno,000000031677,atlas geografico do estudante,UN,22.9,1.0,-202.0,2.0,5.0
+3168,pacoca,000000031684,pacoca,UN,0.8,0.8,-3.0,2.0,5.0
+3169,caderno desenho,000000031691,caderno desenho,UN,13.9,3.9,-31.0,2.0,5.0
+3170,caderno 1/2 ofÃ­cio 96 fls,000000031707,caderno 1/2 ofã­cio 96 fls,UN,6.9,6.9,-1.0,2.0,5.0
+3171,caderno 1/2 ofÃ­cio 200fls,000000031714,caderno 1/2 ofã­cio 200fls,UN,17.0,12.0,-26.0,2.0,5.0
+3172,Caderno,000000031721,caderno de musica,UN,12.9,1.0,-1.0,1.0,200.0
+3173,diÃ¡rio de classe,000000031738,diã¡rio de classe,UN,4.9,1.0,6.0,1.0,200.0
+3174,caderno,000000031745,caderno pequeno credeal sem arame,UN,6.9,1.0,0.0,2.0,5.0
+3175,caderno desenho 96fl,000000031752,caderno desenho 96fl,UN,17.9,1.0,-80.0,2.0,5.0
+3176,caderno de desenho,000000031769,caderno desenho,UN,15.9,1.0,-52.0,2.0,5.0
+3177,caderno,000000031776,caderno de calegrafia minecraft,UN,13.9,1.0,2.0,2.0,5.0
+3178,caneta bic dourada,000000031783,caneta bic dourada,UN,9.0,1.0,-53.0,2.0,5.0
+3179,caderno,000000031790,caderno de desenho pequeno silver tuning,UN,10.0,1.0,-12.0,2.0,5.0
+3181,etiqueta 50x30mm,000000031813,etiqueta 50x30mm,UN,7.9,1.0,-163.0,1.0,200.0
+3182,raquete ping pong,000000031820,raquete ping pong,UN,25.0,1.0,-13.0,1.0,200.0
+3183, aparelho barba duplo,000000031837,aparelho barba duplo,UN,4.0,1.0,14.0,1.0,200.0
+3184,fita durex pq,000000031844,fita durex pq,UN,1.5,1.0,-254.0,1.0,200.0
+3185,fita durex md,000000031851,fita durex md,UN,2.0,1.0,-726.0,1.0,200.0
+3186,fita durex comercial,000000031868,fita durex comercial,UN,3.0,1.0,-300.0,1.0,200.0
+3187,fita durex colorido,000000031875,fita durex colorido,UN,2.0,1.0,-117.0,1.0,200.0
+3188,Saco de Sacole,000000031882,saco de sacole,UN,4.0,1.0,-19.0,1.0,200.0
+3189,cola slime ,000000031899,cola slime,UN,10.0,1.0,-3.0,1.0,200.0
+3190,cola silicone 100gr,000000031905,cola silicone 100gr,UN,9.9,1.0,-37.0,1.0,200.0
+3191,Dure Poxi Peq,000000031912,dure poxi peq,UN,5.5,1.0,14.0,1.0,200.0
+3192,Dure Poxi Grd,000000031929,dure poxi grd,UN,8.9,1.0,16.0,1.0,200.0
+3193,Super Bond - GEL,000000031936,super bond - gel,UN,7.5,1.0,3.0,1.0,200.0
+3194,pintura a dedo,000000031943,pintura a dedo,UN,7.0,1.0,-24.0,1.0,200.0
+3195,tinta de carimbo,000000031950,tinta carimbo,UN,9.9,4.0,-49.0,1.0,200.0
+3198,Reabastecedor de Pincel Atomico - PILOT,000000031981,reabastecedor de pincel atomico - pilot,UN,11.9,1.0,-38.0,1.0,200.0
+3199,cola isopor 250 gr,000000031998,cola isopor 250 gr,UN,15.0,1.0,-8.0,1.0,200.0
+3200,tinta qdo bco,000000032001,tinta qdo bco,UN,55.0,6.9,-66.0,1.0,200.0
+3201,tinta radex,000000032018,tinta radex,UN,4.9,6.9,-13.0,1.0,200.0
+3202,cola colorida 250 gr,000000032025,cola colorida 250 gr,UN,9.9,1.0,-87.0,1.0,200.0
+3203,cola pano,000000032032,cola pano,UN,6.5,1.0,7.0,1.0,200.0
+3204,cola 793,000000032049,cola 793,UN,10.0,10.0,-28.0,1.0,200.0
+3205,cola bastao tilibra 36gr,000000032056,cola bastao tilibra 36gr,UN,12.9,1.0,-40.0,1.0,200.0
+3206,Cola Bastão 40g,000000032063,cola bastão 40g,UN,5.0,1.0,-5.0,1.0,200.0
+3207,cola bastÃ£o tilibra 8gr,000000032070,cola bastã£o tilibra 8gr,UN,2.0,1.0,14.0,1.0,200.0
+3208,cola 40gr,000000032087,cola 40gr,UN,3.5,1.0,-45.0,1.0,200.0
+3209,cola jeans acrilex,000000032094,cola jeans acrilex,UN,3.9,1.0,15.0,1.0,200.0
+3210,cola arte,000000032100,cola arte,UN,3.5,1.0,-6.0,1.0,200.0
+3211,cola eva/isopor 90gr,000000032117,cola eva/isopor 90gr,UN,9.9,1.0,-30.0,1.0,200.0
+3212,dardo,000000032124,dardo,UN,20.0,1.0,-5.0,1.0,200.0
+3213,cola max  90gr,000000032131,cola max 90 gr,UN,2.8,1.0,-15.0,1.0,200.0
+3214,cola vmp,000000032148,cola vmp,UN,7.9,1.0,-18.0,1.0,200.0
+3215,Cola Bastao - TILIBRA 21g,000000032155,cola bastao - tilibra 21g,UN,6.3,1.0,-5.0,1.0,200.0
+3216,Cola Bastao - TILIBRA 36g,000000032162,cola bastao - tilibra 36g,UN,12.9,1.0,-1.0,1.0,200.0
+3217,Lantejoula ,000000032179,lantejoula,UN,3.5,1.0,7.0,1.0,200.0
+3218,cola silicone hero,000000032186,cola silicone hero,UN,4.9,1.0,1.0,1.0,200.0
+3219,Cola colorida 6 cores,000000032193,cola colorida 6 cores,UN,14.9,,-1.0,1.0,200.0
+3220,Cola branca - 250 grs,000000032209,cola branca - 250 grs,UN,2.5,1.0,-1.0,1.0,200.0
+3221,cola silicone 60 gr,000000032216,cola silicone 60 gr,UN,6.9,1.0,-2.0,1.0,200.0
+3222,Cola branca -  CASCOLA 500G,000000032223,cola branca - cascola 500g,UN,24.9,1.0,1.0,1.0,200.0
+3223,Cola branca -  CASCOLA 1KG,000000032230,cola branca - cascola 1kg,UN,2.5,1.0,-3.0,1.0,200.0
+3224,Cola branca -  ACRILEX 1KG,000000032247,cola branca - acrilex 1kg,UN,20.0,1.0,-9.0,1.0,200.0
+3225,pilha pequena,000000032254,pilha pequena,UN,7.9,1.0,-67.0,1.0,200.0
+3226,pilha media,000000032261,pilha media,UN,9.9,1.0,-121.0,1.0,200.0
+3227,pilha gr.,000000032278,pilha gr.,UN,9.5,1.0,-17.0,1.0,200.0
+3228,pinca,000000032285,pinca,UN,1.0,1.0,-3.0,1.0,200.0
+3229,cracha,000000032292,cracha,UN,3.0,45.0,-450.0,1.0,200.0
+3230,CAPA P/ CADERNETA ESCOLAR,000000032308,capa p/ caderneta escolar,UN,3.0,1.0,2.0,1.0,200.0
+3231,CADERNETA ESCOLAR,000000032315,caderneta escolar,UN,2.0,1.0,16.0,1.0,200.0
+3232,IDENTIFICACAO DE PORTA,000000032322,identificacao de porta,UN,2.0,1.0,16.0,1.0,200.0
+3233,eva camuflada,000000032339,eva camuflada,UN,6.9,6.9,-220.0,1.0,200.0
+3234,BANDEIRINHA PLASTICO,000000032346,bandeirinha plastico,UN,6.0,1.0,-42.0,1.0,200.0
+3235,BANDEIRINHA PAPEL,000000032353,bandeirinha papel,UN,3.0,1.0,3.0,1.0,200.0
+3236,prancheta acrÃ­lica pq,000000032360,prancheta ã¡crã­lica pq,UN,19.9,7.9,-38.0,1.0,200.0
+3237, prancheta acrÃ­lica gr,000000032377,prancheta acrã­lica gr,UN,24.9,15.9,-163.0,1.0,200.0
+3238,prancheta elcatex,000000032384,prancheta elcatex,UN,7.9,3.9,-42.0,1.0,200.0
+3239,prancheta eucatex gr,000000032391,prancheta eucatex gr,UN,7.9,5.9,-77.0,1.0,200.0
+3240,lixa fl.,000000032407,lixa fl.,UN,2.5,1.0,11.0,1.0,200.0
+3241,CORDOES P/ CRACHA,000000032414,cordoes p/ cracha,UN,2.5,1.0,-38.0,1.0,200.0
+3242,CAPA P/ RIOCARD TIMES,000000032421,capa p/ riocard times,UN,5.0,1.0,16.0,1.0,200.0
+3243,CAPA P/ RIOCARD C/ CORDAO,000000032438,capa p/ riocard c/ cordao,UN,2.5,1.0,-20.0,1.0,200.0
+3244,bolsa,000000032445,bolsa,UN,70.0,4.0,31.0,2.0,5.0
+3247,plastico,000000032476,plastico,UN,16.0,1.0,-2.0,1.0,200.0
+3248,saco pipoca,000000032483,saco pipoca,UN,4.0,1.0,-27.0,1.0,200.0
+3249,saco,000000032490,saco plastico 15x30,UN,4.0,1.0,-4.0,1.0,200.0
+3250,folha,000000032506,celofane folha,UN,0.8,3.5,-218.0,1.0,200.0
+3251,saco,000000032513,pacote saco celofane 15x22,UN,13.9,1.0,-67.0,1.0,200.0
+3252,saco,000000032520,pacote saco celofane 20x30,UN,19.9,1.0,-24.0,1.0,200.0
+3253,saco,000000032537,pacote saco celofane 25x45,UN,29.9,1.0,-26.0,1.0,200.0
+3254,enfeite,000000032544,enfeite,UN,5.0,1.0,-7.0,1.0,200.0
+3255,caderno,000000032551,caderno de caligrafia mundo alegre,UN,5.9,1.0,5.0,1.0,200.0
+3256,caderno,000000032568,caderno,UN,8.9,1.0,-166.0,1.0,200.0
+3257,caderno,000000032575,cartilha de caligrafia,UN,6.9,1.0,5.0,1.0,200.0
+3258,caderno,000000032582,historinhas,UN,2.6,1.0,4.0,1.0,200.0
+3259,caderno,000000032599,caderno de colorir disney,UN,7.9,1.0,5.0,1.0,200.0
+3260,CAPA P/ RIOCARD S/ CORDAO,000000032605,capa p/ riocard s/ cordao,UN,1.0,1.0,15.0,1.0,200.0
+3261,CAPA P/ RIOCARD FECHADA,000000032612,capa p/ riocard fechada,UN,2.5,1.0,16.0,1.0,200.0
+3262,JACARe P/ CRACHA PLASTICO,000000032629,jacare p/ cracha plastico,UN,0.6,1.0,-118.0,1.0,200.0
+3263,JACARe P/ CRACHA METAL,000000032636,jacare p/ cracha metal,UN,2.0,1.0,-183.0,1.0,200.0
+3264,CAPA P/ DOCUMENTOS XG,000000032643,capa p/ documentos xg,UN,2.0,1.0,16.0,1.0,200.0
+3265,CAPA P/ DOCUMENTOS / IDENTIDADE/ HABILITACAO,000000032650,capa p/ documentos / identidade/ habilitacao,UN,1.0,1.0,-12.0,1.0,200.0
+3266,CAPA P/ DOCUMENTOS - G,000000032667,capa p/ documentos - g,UN,1.5,1.0,14.0,1.0,200.0
+3267,abaca,000000032674,abaco,UN,22.0,1.0,13.0,1.0,200.0
+3268,palito picole colorido,000000032681,palito picole colorido,UN,8.9,1.0,-10.0,1.0,200.0
+3269,palito picole madeira,000000032698,palito picole madeira,UN,6.9,1.0,-116.0,1.0,200.0
+3270,palito churrasco,000000032704,palito churrasco,UN,5.0,1.0,-10.0,1.0,200.0
+3271,agulha croche,000000032711,agulha croche,UN,4.0,1.0,13.0,1.0,200.0
+3272,FITA Fixa Pro,000000032728,300g,UN,39.9,1.0,2.0,1.0,200.0
+3273,fita embalagem ,7896603803796,fita embalagem .,UN,5.0,1.0,-2303.0,1.0,200.0
+3275,fita embalagem m,000000032759,fita embalagem m,UN,23.0,1.0,-1996.004,1.0,200.0
+3277,tinta pincel atÃ´mico pilot,000000032773,tinta pincel atã´mico pilot,UN,11.9,9.9,-124.0,1.0,200.0
+3278,jogo letras 20mm,000000032780,jogo letras 20mm,UN,27.9,1.0,-5.0,1.0,200.0
+3279,jogo letras 15mm,000000032797,jogo letras 15mm,UN,12.9,1.0,-6.0,1.0,200.0
+3280,cola c/gliter ,000000032803,cola c/gliter,UN,19.9,1.0,-2.0,1.0,200.0
+3281,cola colorida ,000000032810,cola colorida,UN,14.9,1.0,9.0,1.0,200.0
+3282,guache 15ml,000000032827,guache 15ml,UN,1.5,1.0,-54.0,1.0,200.0
+3283,CAPA P/ CD PAPEL,000000032834,capa p/ cd papel,UN,0.4,1.0,12.0,1.0,200.0
+3284,grafite pentel 03,000000032841,grafite pentel 03,UN,3.9,7.0,8.0,1.0,200.0
+3285,cola universal,000000032858,cola universal,UN,7.9,1.0,15.0,1.0,200.0
+3286,CAPA P/ CD PLASTICO REDONDA,000000032865,capa p/ cd plastico redonda,UN,2.0,1.0,16.0,1.0,200.0
+3287,CAPA P/ CD PLASTICO QUADRADA,000000032872,capa p/ cd plastico quadrada,UN,1.2,1.0,15.0,1.0,200.0
+3289,CD,000000032896,cd,UN,1.8,1.0,-10.0,1.0,200.0
+3290,DVD,000000032902,dvd,UN,2.0,1.0,-30.0,1.0,200.0
+3291,CORANTE P/ TECIDO,000000032919,corante p/ tecido,UN,4.5,1.0,9.0,1.0,200.0
+3292,CORANTE P/ TECIDO,000000032926,corante p/ tecido,UN,3.0,1.0,15.0,1.0,200.0
+3293,LIXA P/ UNHA GRD,000000032933,lixa p/ unha grd,UN,1.5,1.0,8.0,1.0,200.0
+3294,LIXA P/ UNHA PEQ,000000032940,lixa p/ unha peq,UN,1.0,1.0,10.0,1.0,200.0
+3295,cx elastico pq.,000000032957,cx elastico pq.,UN,1.0,1.0,4.0,1.0,200.0
+3296,CX 120 ELASTICOS - MAMUTH,000000032964,cx 120 elasticos - mamuth,UN,3.0,1.0,15.0,1.0,200.0
+3297,saco fantasia,000000032971,saco fantasia,UN,66.5,1.0,11.0,1.0,200.0
+3298,SACO ELASTICOS 300UN - MAMUTH,000000032988,saco elasticos 300un - mamuth,UN,14.9,1.0,12.0,1.0,200.0
+3299,SACO ELASTICOS 600UN - MAMUTH,000000032995,saco elasticos 600un - mamuth,UN,32.9,1.0,14.0,1.0,200.0
+3300,BATERIAS - ELGIN 2025/2032/2016 ...,000000033008,baterias - elgin 2025/2032/2016 ...,UN,6.0,1.0,-45.0,1.0,200.0
+3301,BATERIAS - ELGIN A7 MINI,000000033015,baterias - elgin a7 mini,UN,3.5,1.0,10.0,1.0,200.0
+3302,bateria lr41,000000033022,bateria duracel 9v,UN,1.5,1.0,-120.0,1.0,200.0
+3303,PLACAS DE SINALIZACAO 15X20,000000033039,placas de sinalizacao 15x20,UN,3.0,1.0,16.0,1.0,200.0
+3304,PLACAS DE SINALIZACAO 19X30,000000033046,placas de sinalizacao 19x30,UN,4.9,1.0,16.0,1.0,200.0
+3305,lamina barbear,000000033053,lamina barbear,UN,3.0,1.0,-6.0,1.0,200.0
+3306,Super Bond -,000000033060,super bond -,UN,3.0,1.0,-30.0,1.0,200.0
+3307,"CABO HDMI - 1,8M",000000033077,"cabo hdmi - 1,8m",UN,3.0,1.0,13.0,1.0,200.0
+3308,cabo de rede,000000033084,cabo de rede,UN,27.0,1.0,10.0,1.0,200.0
+3310,pilha duracell pq./palito,000000033107,pilha duracell pq./palito,UN,14.9,1.0,-82.0,1.0,200.0
+3311,SUPER BOND - APLICACAO PRECISA,000000033114,super bond - aplicacao precisa,UN,8.9,1.0,-8.0,1.0,200.0
+3312,cadeado pado,000000033121,cadeado pado,UN,20.0,1.0,-6.0,1.0,200.0
+3313,ALICATE MUNDIAL,000000033138,alicate mundial,UN,24.9,1.0,15.0,1.0,200.0
+3314,fita crepe 18mmx50mm,000000033145,fita crepe 18mmx50mm,UN,6.9,1.0,-41.0,1.0,200.0
+3315,fita crepe 18mmx10mm,000000033152,fita crepe 18mmx50mm,UN,2.9,1.0,-34.0,1.0,200.0
+3317,fita crepe 24mmx50mm,000000033176,fita crepe 24mmx50mm,UN,8.9,1.0,-164.0,1.0,200.0
+3318,fita crepe 48mmx50mm,000000033183,fita crepe 48mmx50mm,UN,16.9,1.0,-63.0,1.0,200.0
+3319,durepoxi,000000033190,durepoxi,UN,13.0,1.0,-6.0,1.0,200.0
+3320,Ã³leo singer,000000033206,ã³leo singer,UN,4.0,1.0,1.0,1.0,200.0
+3321,fita dupla face 12mmx10m,000000033213,fita dupla face 12mmx10m,UN,3.9,1.0,-68.0,1.0,200.0
+3322,ADAPTADOR DE TOMADAS,000000033220,adaptador de tomadas,UN,5.0,1.0,-8.0,1.0,200.0
+3323,tiara,000000033237,tiara,UN,7.0,1.0,12.0,1.0,200.0
+3324,UMEDECEDOR DE DEDOS -  CARBRINK,000000033244,umedecedor de dedos - carbrink,UN,1.5,1.0,16.0,1.0,200.0
+3325,UMEDECEDOR DE DEDOS -  CIS,000000033251,umedecedor de dedos - cis,UN,3.9,1.0,15.0,1.0,200.0
+3326,FITA ISOLANTE - PEQ,000000033268,fita isolante - peq,UN,3.5,1.0,0.0,1.0,200.0
+3327,FITA ISOLANTE - GRD,000000033275,fita isolante - grd,UN,4.0,1.0,-16.0,1.0,200.0
+3328,sacos grosso c/furos/s/furos,000000033282,sacos c/furos/s/furos,UN,34.9,1.0,-16.0,1.0,200.0
+3329,pasta plastica ,000000033299,pasta plastica,UN,3.0,1.0,-38.0,1.0,200.0
+3330,carteira,000000033305,carteira,UN,9.9,1.0,-1.0,2.0,5.0
+3331,carteira,000000033312,carteira,UN,19.9,1.0,-1.0,2.0,5.0
+3332,carteira,000000033329,carteira,UN,6.9,1.0,-1.0,2.0,5.0
+3333,carteira,000000033336,carteira,UN,7.9,1.0,-1.0,2.0,5.0
+3334,carteira,000000033343,carteira,UN,16.9,1.0,-1.0,2.0,5.0
+3335,carteira,000000033350,carteira,UN,14.9,1.0,-1.0,2.0,5.0
+3336,regua,000000033367,regua,UN,3.0,2.0,0.0,1.0,200.0
+3337,caderno,000000033374,caderno tilibra infantil capa dura,UN,14.9,1.0,-7.0,2.0,5.0
+3338,caderno,000000033381,caderno capa dura tilibra 96 folhas infantil,UN,15.9,1.0,-18.0,2.0,5.0
+3339,caderno,000000033398,caderno silver tuning race,UN,8.9,1.0,-1.0,2.0,5.0
+3340,marca texto brw,000000033404,marca texto brw,UN,5.5,4.4,-292.0,1.0,200.0
+3341,marca texto brw gel,000000033411,marca texto brw gel,UN,4.5,4.5,-105.0,1.0,200.0
+3342,marca texto cis mine,000000033428,marca texto cis mine,UN,9.0,2.0,-130.0,1.0,200.0
+3343,caderno,000000033435,caderno foroni infantil,UN,14.9,1.0,-1.0,2.0,5.0
+3344,marca texto faber super,000000033442,marca texto faber super,UN,9.9,6.9,-363.0,1.0,200.0
+3345,Marcador,000000033459,markador extra permanente,UN,5.0,1.0,-4.0,1.0,200.0
+3346,marca texto faber,000000033466,marca texto faber,UN,6.0,4.0,-62.0,1.0,200.0
+3347,caneta cis ultra fine,000000033473,caneta cis ultra fine,UN,3.0,1.0,-25.0,2.0,5.0
+3348,caneta gliter,000000033480,caneta gliter,UN,4.5,1.0,-5.0,2.0,5.0
+3349,marca texto stabilo,000000033497,marca texto stabilo,UN,7.5,7.5,-263.0,1.0,200.0
+3350,caneta apagavel,000000033503,caneta apagavel,UN,18.0,1.0,-94.0,2.0,5.0
+3351,caneta,000000033510,caneta futebol luxo,UN,16.0,1.0,-6.0,2.0,5.0
+3352,caneta,000000033527,caneta prateada e dourada luxo,UN,15.9,1.0,-5.0,2.0,5.0
+3353,marca texto compactor,000000033534,marca texto compactor,UN,4.0,3.5,-111.0,1.0,200.0
+3354,apontador ferro cis,000000033541,apontador ferro cis,UN,2.0,2.0,8.0,1.0,200.0
+3355,caneta,000000033558,caneta dupla laranjada luxo,UN,17.9,1.0,-11.0,2.0,5.0
+3356,apontador duplo cis,000000033565,apontador duplo cis,UN,2.0,1.0,14.0,1.0,200.0
+3357,chave,000000033572,chave,UN,11.9,1.0,-23.0,2.0,5.0
+3358,lapis desenho faber,000000033589,lapis desenho faber,UN,5.0,3.5,-92.0,1.0,200.0
+3359,caneta corretiva jocar 8ml,000000033596,caneta corretiva jocar 8ml,UN,2.5,1.0,-27.0,2.0,5.0
+3360,gliter,000000033602,gliter,UN,2.0,2.0,-26.0,1.0,200.0
+3361,caneta compactor 0.7,000000033619,caneta compactor 0.7,UN,2.0,1.0,-52.0,1.0,200.0
+3362,vela,000000033626,vela ornamentada,UN,8.4,1.0,-1.0,2.0,5.0
+3363,vela,000000033633,vela tomix ornamentada,UN,4.9,1.0,-2.0,2.0,5.0
+3364,vela,000000033640,vela vermelha dupla,UN,4.9,1.0,-1.0,2.0,5.0
+3365,pilha racarregavel,000000033657,pilha recarregavel,UN,34.9,1.0,-9.0,1.0,200.0
+3366,coroa,000000033664,coroa,UN,8.5,1.0,-21.0,2.0,5.0
+3367,linha cilicone,000000033671,linha cilicone,UN,7.5,1.0,-3.0,2.0,5.0
+3368,capa de chuva,000000033688,capa de chuva,UN,3.0,1.0,9.0,1.0,200.0
+3369,caneca,000000033695,caneca plastica,UN,12.0,1.0,-10.0,2.0,5.0
+3370,copo brigadeiro,000000033701,copo brigadeiro,UN,3.0,1.0,-19.0,2.0,5.0
+3371,Marcador,000000033718,marcadorwindow marker acrilex,UN,8.0,1.0,13.0,1.0,200.0
+3372,diario classe,000000033725,diario classe,UN,4.9,1.0,-55.0,2.0,5.0
+3373,caderno,000000033732,diario pequeno,UN,5.9,1.0,-5.0,2.0,5.0
+3374,caderno,000000033749,diario grande,UN,11.0,1.0,-7.0,2.0,5.0
+3375,caderno,000000033756,diario fechado coruja,UN,6.9,1.0,-1.0,2.0,5.0
+3376,fecho,000000033763,fecho,UN,4.0,1.0,-3.0,2.0,5.0
+3377,caderno,000000033770,diario fechado borboleta,UN,13.9,1.0,-1.0,2.0,5.0
+3378,caderno,000000033787,diario borboletao,UN,9.9,1.0,-2.0,2.0,5.0
+3379,caderno,000000033794,diario da flor,UN,9.9,1.0,-1.0,2.0,5.0
+3380,caderno,000000033800,diario grande princesa,UN,17.9,1.0,-2.0,2.0,5.0
+3381,tinta acrilica,000000033817,tinta acrilica,UN,5.9,3.9,-27.0,1.0,200.0
+3382,caneta hidrocor  grossa,000000033824,caneta hidrocor grossa,UN,29.9,1.0,-38.0,1.0,200.0
+3383,fita mÃ¡gica,000000033831,fita mã¡gica,UN,1.2,1.0,9.0,1.0,200.0
+3385,Caneta,000000033855,"paper mate 1,0mm",UN,1.5,1.0,-69.0,1.0,200.0
+3386,Caneta,000000033862,"paper mate colorida 1,0mm",UN,5.0,1.0,1.0,1.0,200.0
+3387,Caneta,000000033879,permanente,UN,5.0,1.0,-2.0,1.0,200.0
+3388,caneta pilot bps,000000033886,caneta pilot bps,UN,3.5,7.9,-15.0,1.0,200.0
+3389,bic cristal 1.6,000000500302,bic cristal 1.6,UN,3.0,2.9,-470.0,1.0,200.0
+3390,caneta pentonic,000000033909,caneta pentonic,UN,3.5,1.0,-47.0,1.0,200.0
+3391,caneta bic fine,000000033916,caneta bic fine,UN,3.0,1.4,-83.0,1.0,200.0
+3392,Caneta cis,000000033923,caneta cis,UN,1.6,1.0,-181.0,1.0,200.0
+3393,tinta pva,000000033930,tinta pva,UN,5.5,3.5,-31.0,1.0,200.0
+3394,Caneta,000000033947,laknock,UN,9.9,1.0,20.0,1.0,200.0
+3395,caneta pilot frixion,000000033954,caneta pilot frixion,UN,18.0,16.0,-55.0,1.0,200.0
+3396,1805,000000033961,compactor 0.7,UN,1.2,1.0,20.0,1.0,200.0
+3397,caneta retro faber,000000033978,caneta faber faber,UN,2.0,1.0,-74.0,1.0,200.0
+3398,caneta compactor jet lux,000000033985,caneta compactor jet lux,UN,2.5,2.5,15.0,1.0,200.0
+3399,caneta compactor 1.2,000000033992,caneta compactor 1.2,UN,70.0,1.0,-14.0,1.0,200.0
+3400,Caneta,000000034005,tilibra stilo tx,UN,2.5,1.0,21.0,1.0,200.0
+3401,caneta fineliner brw,000000034012,caneta fineliner brw,UN,3.0,1.0,12.0,1.0,200.0
+3402,Caneta,000000034029,vmp,UN,6.9,1.0,19.0,1.0,200.0
+3403,Caneta,000000034036,"newpen office 0,7",UN,2.6,1.0,18.0,1.0,200.0
+3404,lapis jumbo,000000034043,lapis jumbo,UN,1.7,1.5,,1.0,200.0
+3405,lapis norma,000000034050,lapis norma,UN,2.0,1.0,-242.0,1.0,200.0
+3406,lapis multicollor,000000034067,lapis multicollor,UN,0.6,0.6,-686.0,1.0,200.0
+3407,lapis faber c/esfera,000000034074,lapis faber c/esfera,UN,2.0,1.7,-2.0,1.0,200.0
+3408,lapis leo/leo borracha,000000034081,lapis leo/leo borracha,UN,0.5,0.6,-9.0,1.0,200.0
+3409,lapis tilibra/borracha,000000034098,lapis tilibra/borracha,UN,3.5,1.0,-38.0,1.0,200.0
+3410,lapis faber,000000034104,lapis faber,UN,4.5,1.0,-249.0,1.0,200.0
+3411,lapis leo/leo,000000034111,lapis leo/leo,UN,1.0,0.8,-88.0,1.0,200.0
+3412,lapis ecole,000000034128,lapis ecole,UN,1.2,1.2,2.0,1.0,200.0
+3413,lapis desenho/borracha,000000034135,lapis desenho/borracha,UN,2.5,1.5,-63.0,1.0,200.0
+3414,lapis tabuada,000000034142,lapis taabuada,UN,1.7,1.2,-27.0,1.0,200.0
+3415,lapis carpinteiro,000000034159,lapis carpinteiro,UN,3.5,2.5,12.0,1.0,200.0
+3416,agenda media,000000034166,agenda media,UN,35.0,1.0,-184.0,1.0,200.0
+3418,agenda pequena,000000034180,agenda pequena,UN,20.0,1.0,-53.0,1.0,200.0
+3419,Agenda,000000034197,tilibra capricho fantasia 2018,UN,22.4,1.0,11.0,1.0,200.0
+3420,Agenda,000000034203,tilibra cambridge planner 2018,UN,14.9,1.0,-2.0,1.0,200.0
+3421,Agendamento,000000034210,,UN,5.0,1.0,18.0,1.0,200.0
+3422,Agenda,000000034227,tilibra 160fls 2018,UN,20.0,1.0,2.0,1.0,200.0
+3423,Agenda,000000034234,tilibra napoli 2018,UN,16.0,1.0,20.0,1.0,200.0
+3424,Agenda,000000034241,tilibra napoli 2023,UN,19.9,1.0,9.0,1.0,200.0
+3426,Agenda,000000034265,tilibra torino 2018,UN,19.9,1.0,17.0,1.0,200.0
+3427,Agenda,000000034272,tilibra academie 96fls,UN,5.9,1.0,20.0,1.0,200.0
+3428,Agenda,000000034289,tilibra mais 2018,UN,15.9,1.0,21.0,1.0,200.0
+3429,Agenda,000000034296,tilibra pepper 2018,UN,9.9,1.0,19.0,1.0,200.0
+3430,Agenda,000000034302,tilibra cost pepper 2018,UN,9.9,1.0,21.0,1.0,200.0
+3431,Agenda,000000034319,tilibra spot 2018,UN,9.9,1.0,21.0,1.0,200.0
+3432,Agenda,000000034326,tilibra spot fem 2018,UN,9.9,1.0,21.0,1.0,200.0
+3433,Agenda,000000034333,marvio 2018 pequena,UN,14.9,1.0,18.0,1.0,200.0
+3434,arvore natalina,000000034340,arvore natalina,UN,22.9,1.0,12.0,1.0,200.0
+3435,Carregador,000000034357,para celular,UN,35.0,1.0,17.0,1.0,200.0
+3436,Cadeado,000000034364,pado 30mm,UN,22.0,1.0,14.0,1.0,200.0
+3437,Cadeado,000000034371,pado 25mm,UN,19.9,1.0,8.0,1.0,200.0
+3438,Cadeado,000000034388,pado 35mm,UN,26.9,1.0,20.0,1.0,200.0
+3439,Cadeado,000000034395,pado com segredo 25mm,UN,44.9,1.0,20.0,1.0,200.0
+3440,mousse mbtech,000000034401,mousse mbtech,UN,15.0,15.0,-10.0,1.0,200.0
+3441,discos autoadesivos,000000034418,discos autoadesivos,UN,1.5,3.9,-7.0,1.0,200.0
+3442,Discos Autoadesivos,000000034425,quadrado grande 100x100mm,UN,13.0,1.0,15.0,1.0,200.0
+3443,Discos Autoadesivos,000000034432,redondo pequeno 22mm,UN,5.0,1.0,19.0,1.0,200.0
+3444,trena,000000034449,trena,UN,10.0,1.0,-14.0,1.0,200.0
+3445,fita dupla face 18mmx30m,000000034456,fita dupla face 18mmx30m,UN,7.9,1.0,-27.0,1.0,200.0
+3446,fita dupla 48mmx30m,000000034463,fita dupla face 48x30m,UN,25.9,1.0,-26.0,1.0,200.0
+3447,Carregador,000000034470,para celular,UN,15.0,1.0,20.0,1.0,200.0
+3448,Bucha,000000034487,8mm,UN,3.0,1.0,16.0,1.0,200.0
+3449,Botao,000000034494,botoes para roupa,UN,7.0,1.0,14.0,1.0,200.0
+3450,fio de silicone,000000034500,,UN,5.5,1.0,19.0,1.0,200.0
+3451,Ventosa,000000034517,pequena,UN,2.0,1.0,20.0,1.0,200.0
+3452,protetor de porta,000000034524,protetor de porta,UN,12.0,1.0,18.0,1.0,200.0
+3453,Corda,000000034531,ancora,UN,8.0,1.0,-1.0,1.0,200.0
+3454,rolo de nylon,000000034548,rolo de nylon,UN,5.0,1.0,9.0,1.0,200.0
+3455,linha nylon 45,000000034555,bestfer,UN,10.0,1.0,-22.0,1.0,200.0
+3456,cola universal rend colla,000000034562,cola universal rend colla,UN,5.9,1.0,21.0,1.0,200.0
+3457,cola contato,000000034579,cola contato,UN,11.9,1.0,-34.0,1.0,200.0
+3458,Cadeado,000000034586,pado 40mm,UN,45.0,1.0,15.0,1.0,200.0
+3460,estalinho,000000034609,estalinho,UN,6.9,20.0,2.0,1.0,200.0
+3461,Cartao,000000034616,pp judzi,UN,3.5,4.0,-36.0,1.0,200.0
+3463,resma a3 Caixa,000000034630,resma a3 caixa,UN,295.0,22.9,-111.0,1.0,200.0
+3464,Caixa de presente,000000034647,retangular media,UN,8.9,1.0,-6.0,1.0,200.0
+3465,Caixa de presente,000000034654,retangular grande,UN,7.0,1.0,9.0,1.0,200.0
+3466,recarga,000000034661,recarga,UN,20.0,,-2929.0,1.0,200.0
+3467,elastico cabelo,000000034678,elastico cabelo,UN,3.0,1.0,-34.0,1.0,200.0
+3468,bejamin,000000034685,bejamin,UN,5.0,1.0,1.0,1.0,200.0
+3469,palha,000000034692,palha,UN,3.5,1.0,-16.0,1.0,200.0
+3470,Sacola,000000034708,boca de palhaco g,UN,8.0,1.0,11.0,1.0,200.0
+3471,Sacola,000000034715,termica,UN,30.0,1.0,11.0,1.0,200.0
+3472,Sacola,000000034722,com alca krafta m,UN,7.0,1.0,14.0,1.0,200.0
+3473,papel 90gr cx.,000000034739,papel 90gr cx.,UN,190.0,1.0,-7.0,1.0,200.0
+3474,Caixa de presente,000000034746,nova m,UN,5.0,1.0,3.0,1.0,200.0
+3475,caixa presente,000000034753,caixa presente,UN,8.0,2.5,-27.0,1.0,200.0
+3485,Fax,000000034852,rj,UN,2.5,1.0,16.0,1.0,200.0
+3486,Fax,000000034869,outro ddd,UN,4.0,1.0,15.0,1.0,200.0
+3487,Fax,000000034876,internacional,UN,11.0,1.0,16.0,1.0,200.0
+3497,lamina estilete larga,000000034975,lamina estilete larga,UN,50.0,1.0,-270.0,1.0,200.0
+3498,lamina estilete fina,000000034982,lamina estilete fina,UN,3.5,1.0,-39.0,1.0,200.0
+3499,almofada carimbo pq.,000000034999,almofada carimbo pq,UN,8.0,1.0,-11.0,1.0,200.0
+3500,almofada carimbo gr,000000035002,almofada carimbo gr.,UN,13.9,1.0,-5.0,1.0,200.0
+3501,tesoura brw zoo,000000035019,tesoura brw zoo,UN,10.0,1.0,-54.0,1.0,200.0
+3502,escolartesoura brw neon,000000035026,tesoura brw neon,UN,5.0,5.0,-52.0,1.0,200.0
+3503,tesoura escolar,000000035033,tesoura escolar,UN,5.0,1.0,-51.0,1.0,200.0
+3504,TESOURA ESCOLAR - CIS,000000035040,tesoura escolar - cis,UN,2.5,1.0,14.0,1.0,200.0
+3505,filtro de linha,000000035057,filtro de linha,UN,25.0,1.0,3.0,1.0,200.0
+3506,TESOURA ESCOLAR - VPM,000000035064,tesoura escolar - vpm,UN,4.1,1.0,10.0,1.0,200.0
+3507,TESOURA CORTE ESPECIAL,000000035071,tesoura corte especial,UN,10.5,1.0,-27.0,1.0,200.0
+3508,estilete pequeno,000000035088,estilete pequeno,UN,3.0,1.0,0.0,1.0,200.0
+3509,estilete grande,000000035095,estilete grande,UN,3.5,1.0,-53.0,1.0,200.0
+3510,barbante cru,000000035101,barbante cru,UN,3.0,1.0,-129.0,1.0,200.0
+3511,barbante colorido gr.,000000035118,barbante colorido gr,UN,6.9,1.0,-26.0,1.0,200.0
+3512,arco,000000035125,arco,UN,18.0,1.0,13.0,1.0,200.0
+3513,FICHA PAUTADA 3X5,000000035132,ficha pautada 3x5,UN,6.5,1.0,0.0,1.0,200.0
+3514,FICHA PAUTADA 5X8,000000035149,ficha pautada 5x8,UN,15.9,1.0,1.0,1.0,200.0
+3515,FICHA PAUTADA 6X9,000000035156,ficha pautada 6x9,UN,22.9,1.0,-8.0,1.0,200.0
+3516,cartao de ponto,000000035163,cartao de ponto,UN,19.9,1.0,-51.0,1.0,200.0
+3517,INDICE A-Z - 4X6,000000035170,indice a-z - 4x6,UN,9.9,1.0,16.0,1.0,200.0
+3518,INDICE A-Z - 5X8,000000035187,indice a-z - 5x8,UN,18.9,1.0,13.0,1.0,200.0
+3519,INDICE A-Z - 6X9,000000035194,indice a-z - 6x9,UN,17.9,1.0,16.0,1.0,200.0
+3520,envelope convite/colorido,000000035200,envelope convite/colorido,UN,0.4,1.0,-88.0,1.0,200.0
+3521,envelope carta coloorido,000000035217,envelope carta colorido,UN,0.6,1.0,-192.0,1.0,200.0
+3522,envelope comercial,000000035224,envelope comercial,UN,20.0,1.0,-101.0,1.0,200.0
+3523,envelope comercial/visor,000000035231,envelope comercial/visor,UN,0.3,1.0,-281.0,1.0,200.0
+3524,envelope 1/2 ofÃ­cio,000000035248,envelope 1/2 ofã­cio,UN,0.5,1.0,-343.0,1.0,200.0
+3525,livro ata 100fls,000000035255,livro ata 100fls,UN,29.9,1.0,-91.0,1.0,200.0
+3526,envelope carta pt.,000000035262,envelope carta pt.,UN,12.9,1.0,-18.0,1.0,200.0
+3530,livro ata 50 fls,000000035309,livro ata 50 fls,UN,17.9,1.0,-5.0,1.0,200.0
+3531,livro registro empregado,000000035316,livro registro empregado,UN,24.9,1.0,-29.0,1.0,200.0
+3532,livro de inspencao,000000035323,livro inspencao,UN,12.9,24.9,7.0,1.0,200.0
+3533,livro inspencao trabalho,000000035330,livro inspencao trabalho,UN,24.9,1.0,-3.0,1.0,200.0
+3534,livro cx pq.,000000035347,livro cx. pq.,UN,14.9,1.0,-42.0,1.0,200.0
+3535,livro cx.gr.capa dura,000000035354,livro cx.gr. capa dura,UN,39.9,1.0,-85.0,1.0,200.0
+3536,livro ata 200fls,000000035361,livro ata 200fls,UN,39.9,1.0,-57.0,1.0,200.0
+3537,livro cx.tamoio,000000035378,livro cx.tamoio,UN,15.0,1.0,-17.0,1.0,200.0
+3538,livro cx.gr.tilibra flexÃ­vel,000000035385,livro cx.gr.tilibra flexã­vel,UN,23.9,1.0,-39.0,1.0,200.0
+3540,  livro defesa consumidor,000000035408,livro defesa consumidor,UN,11.9,1.0,-20.0,1.0,200.0
+3541,livro termo de ocorrÃªncia,000000035415,livro termo de ocorrãªncia,UN,19.9,1.0,-1.0,1.0,200.0
+3542,livro de ponto tilibra ,000000035422,livro de ponto tilibra,UN,39.9,1.0,-11.0,1.0,200.0
+3543,envelope comercial pt,000000035439,envelope comercial pt,UN,20.0,4.0,-233.0,2.0,5.0
+3544,envelope comercial/visor pt,000000035446,envelope comercial/visor pt,UN,24.9,4.0,-271.0,2.0,5.0
+3545,envelope 1/2 ofÃ­cio pt,000000035453,envelope 1/2 ofã­cio pt,UN,44.9,4.0,-389.0,2.0,5.0
+3547,envelope a4 pt,000000035477,envelope a4 pt,UN,49.9,4.0,-1245.0,2.0,5.0
+3548,envelope ofÃ­cio pt,000000035484,envelope ofã­cio pt,UN,64.9,4.0,-520.0,2.0,5.0
+3549,envelope a3,000000035491,envelope a3,UN,1.5,4.0,-201.0,2.0,5.0
+3550,envelope extra-ofÃ­cio,000000035507,envelope extra-ofã­cio,UN,0.8,4.0,-111.0,2.0,5.0
+3552,comanda de jornal,000000035521,comanda de jornal,UN,1.2,4.0,-323.0,2.0,5.0
+3553,comanda pedido mesa,000000035538,comanda pedido mesa,UN,4.0,4.0,-19.0,2.0,5.0
+3554,rifa 50 nomes,000000035545,rifa 50 nomes,UN,1.0,4.0,-8.0,2.0,5.0
+3555,rifa 100 nomes,000000035552,rifa 100 nomes,UN,1.5,4.0,-17.0,2.0,5.0
+3556,rifa 25 nomes,000000035569,rifa 25 nomes,UN,0.8,4.0,-8.0,2.0,5.0
+3557,recibo rpa,000000035576,recibo rpa,UN,7.5,4.0,-39.0,2.0,5.0
+3558,"Bloco de pedido 1,2,3 via - Peq.",000000035583,"bloco de pedido 1,2,3 via - peq.",UN,50.0,4.0,-170.0,2.0,5.0
+3559,"Bloco de pedido 1,2,3 via - Grd",000000035590,"bloco de pedido 1,2,3 via - grd",UN,3.0,4.0,-16.0,2.0,5.0
+3560,vale s/canhoto 100fls,000000035606,vale s/canhoto 100fls,UN,4.0,,221.0,3.0,5.0
+3561,pasta em U,000000035613,pasta em u,UN,4.0,,228.0,3.0,5.0
+3562,nota neutra,000000035620,nota neutra,UN,50.0,,-31.0,3.0,5.0
+3563,Bloco de 2 via.,000000035637,bloco de 2 via.,UN,2.8,,203.0,3.0,5.0
+3564,Bloco de pedido medio,000000035644,bloco de pedido medio,UN,5.0,,247.0,3.0,5.0
+3565,Bloco de orcamento 1/4,000000035651,bloco de orcamento 1/4,UN,4.9,,259.0,3.0,5.0
+3566,carne inss,000000035668,carne inss,UN,4.5,,227.0,3.0,5.0
+3567,Bloco de cartela de bindo c/100,000000035675,bloco de cartela de bindo c/100,UN,4.5,,258.0,3.0,5.0
+3568,recibo sem canhoto,000000035682,recibo sem canhoto,UN,3.8,,136.0,3.0,5.0
+3569,comandas variadas,000000035699,comandas variadas,UN,2.8,,229.0,3.0,5.0
+3570,Copia de cheque - Amarela,000000035705,copia de cheque - amarela,UN,2.6,,260.0,3.0,5.0
+3571,recibo tÃ¡xi,000000035712,recibo tã¡xi,UN,2.0,,252.0,3.0,5.0
+3572,aÃ§Ã£o entre amigos,000000035729,aã§ã£o entre amigos,UN,3.5,,205.0,3.0,5.0
+3574,recibo aluguel,000000035743,recibo aluguel,UN,4.0,,177.0,3.0,5.0
+3575,recibo comercial,000000035750,recibo comercial,UN,4.0,,107.0,3.0,5.0
+3576,recibo condomÃ­nio,000000035767,recibo condomã­nio,UN,4.0,,77.0,3.0,5.0
+3577,talao de pedido 3 vias,000000035774,talao de pedido 3 vias,UN,3.0,,157.0,3.0,5.0
+3578,bloco  caixa entrada 50fls,000000035781,bloco caixa entrada 50fls,UN,2.5,,239.0,3.0,5.0
+3579, comanda 2 corpos,000000035798,comanda 2 corpos,UN,3.5,,178.0,3.0,5.0
+3580,caixa correspondencia,000000035804,caixa correspondencia,UN,45.0,,232.0,3.0,5.0
+3581,vale c/canhoto 50fls,000000035811,vale c/canhoto 50fls,UN,2.5,,164.0,3.0,5.0
+3582,vale c/canhoto 100fls,000000035828,vale c/canhoto 100fls,UN,4.0,,179.0,3.0,5.0
+3583,comanda 3 corpos,000000035835,comanda 3 corpos,UN,3.0,,184.0,3.0,5.0
+3584,BLOCO NUMERADO,000000035842,bloco numerado,UN,2.8,,241.0,3.0,5.0
+3585,ACAO ENTRE AMIGOS,000000035859,acao entre amigos,UN,3.5,,255.0,3.0,5.0
+3586,NOTA PROMISSoRIA,000000035866,nota promissoria,UN,3.5,,243.0,3.0,5.0
+3589,papel milimetrado,000000035897,papel milimetrado,UN,0.5,,203.0,3.0,5.0
+3590,papel quadriculado un.,000000035903,papel quadriculado un.,UN,0.25,,260.0,3.0,5.0
+3591,folha impressao,000000035910,folhaimpressao,UN,0.3,,-325.0,3.0,5.0
+3592,nota fiscal avulsa,000000035927,nota fiscal avulsa,UN,3.0,,260.0,3.0,5.0
+3593,carta correÃ§Ã£o un.,000000035934,carta correã§ã£o un.,UN,0.4,,260.0,3.0,5.0
+3594,contrato locaÃ§Ã£o un.,000000035941,contrato locaã§ã£o un.,UN,1.0,,259.0,3.0,5.0
+3595,CONTRA CHEQUE (UNIDADE),000000035958,contra cheque (unidade),UN,0.2,,260.0,3.0,5.0
+3596,folha ponto,000000035965,folha de ponto,UN,1.0,,248.0,3.0,5.0
+3597,mapas,000000035972,mapas,UN,1.5,,256.0,3.0,5.0
+3598,MAPA GRANDE,000000035989,mapa grande,UN,9.9,,260.0,3.0,5.0
+3599,crepom comum,000000035996,crepom comum,UN,2.2,,-152.0,3.0,5.0
+3600,crepom encerado,000000036009,crepom encerado,UN,3.5,2.2,-435.0,3.0,5.0
+3601,TNT estampado,000000036016,tnt estampado,UN,8.9,,135.0,3.0,5.0
+3602,livro de historia,000000036023,livro de historia,UN,7.0,,-197.0,3.0,5.0
+3603,papel 40 kg colorido,000000036030,papel 40 kg colorido,UN,3.5,,-716.0,3.0,5.0
+3604,eva comum,000000036047,eva comum,UN,2.9,2.2,-928.0,3.0,5.0
+3605,eva  gliter,000000036054,eva gliter,UN,6.9,,-293.0,3.0,5.0
+3606,papel corugado,000000036061,papel corugado,UN,4.9,2.9,209.0,3.0,5.0
+3607,cartolina comum,000000036078,cartolina comum,UN,1.5,0.9,-78.0,3.0,5.0
+3608,cartolina dupla face,000000036085,cartolina dupla face,UN,1.7,1.2,-917.0,3.0,5.0
+3609,cartolina fluorecente,000000036092,cartolina fluorecente,UN,1.7,1.7,215.0,3.0,5.0
+3610,cartolina fantasia,000000036108,cartolina fantasia,UN,2.3,,229.0,3.0,5.0
+3611,cartolina laminada,000000036115,cartolina laminada,UN,3.5,,90.0,3.0,5.0
+3612,papel laminado,000000036122,papel laminado,UN,2.2,,76.0,3.0,5.0
+3613,papel seda,000000036139,papel seda,UN,0.5,,-16.0,3.0,5.0
+3614,papel glacÃª,000000036146,papel glacãª,UN,1.8,,214.0,3.0,5.0
+3615,papel camurÃ§a,000000036153,papel camurã§a,UN,2.4,1.4,-21.0,3.0,5.0
+3616,PAPEL CORRUGADO,000000036160,papel corrugado,UN,3.9,,224.0,3.0,5.0
+3617,carbono tecido,000000036177,carbono tecido,UN,2.4,,254.0,3.0,5.0
+3618,PAPEL COLOR SET,000000036184,papel color set,UN,0.5,,234.0,3.0,5.0
+3619,papel cartÃ£o,000000036191,papel cartã£o,UN,40.0,1.4,-30.0,3.0,5.0
+3620,PAPEL NACARADO,000000036207,papel nacarado,UN,4.9,,259.0,3.0,5.0
+3621,PAPEL KRAFT,000000036214,papel kraft,UN,2.5,,202.0,3.0,5.0
+3622,PAPEL MANILHA,000000036221,papel manilha,UN,7.9,,259.0,3.0,5.0
+3623,cola instantÃ¢nea 793,000000036238,cola instantã¢nea 793,UN,10.0,9.9,113.0,3.0,5.0
+3624,caixa som,000000036245,caixa som,UN,75.0,,246.0,3.0,5.0
+3625,caixa box poliondra,000000036252,caixa box poliondra,UN,9.9,,171.0,3.0,5.0
+3626,tnt mt,000000036269,tnt mt,UN,3.5,,-853.5,3.0,5.0
+3627,folha  encadernaao,000000036276,folha encadernacao,UN,4.5,,-1187.0,3.0,5.0
+3628,folha plast pollassil,000000036283,folha plast pollassil,UN,3.0,,-371.0,3.0,5.0
+3629,folha plast pollassil a4,000000036290,folha plast pollassil a4,UN,4.0,,-960.0,3.0,5.0
+3630,folha plast pollasil ofÃ­cio,000000036306,folha plast pollassil ofã­cio,UN,4.5,,-154.0,3.0,5.0
+3631,folha copia color,000000036313,folha copia color,UN,2.0,,-890.0,3.0,5.0
+3632,folha encadernaÃ§Ã£o 300fls,000000036320,folhaencadernaã§ã£o 300fls,UN,6.0,,114.0,3.0,5.0
+3633,folha encadernaÃ§Ã£o 500fls,000000036337,folha encadenaã§ã£ol 500fls,UN,24.5,,241.0,3.0,5.0
+3634,folha plast pollassil,000000036344,folha plast pollassil,UN,3.0,,-50.0,3.0,5.0
+3635,folha plast pollassil a3,000000036351,folha plast pollassil a3,UN,10.0,,125.0,3.0,5.0
+3636,PAPEL MANTEIGA,000000036368,papel manteiga,UN,2.0,,-342.0,3.0,5.0
+3637,CARTOES POSTAIS,000000036375,cartoes postais,UN,9.0,,259.0,3.0,5.0
+3638,QUADRO BRANCO MAGIC BOARD 45X2M,000000036382,quadro branco magic board 45x2m,UN,34.9,,258.0,3.0,5.0
+3639,chaveiro zoot,000000036399,chaveiro zoot,UN,8.0,,236.0,3.0,5.0
+3640,PORTA MOEDAS DISNEY,000000036405,porta moedas disney,UN,5.9,,260.0,3.0,5.0
+3641,mascara,000000036412,mascara,UN,10.0,,247.0,3.0,5.0
+3642,chaveiro identificador,000000036429,chaveiro identificador,UN,1.5,,-45.0,3.0,5.0
+3643,PCT DE BICHOS P/ MAQUETES,000000036436,pct de bichos p/ maquetes,UN,4.9,,259.0,3.0,5.0
+3644,estilete profissional,000000036443,estilete profissional,UN,10.0,,212.0,3.0,5.0
+3645,diario de classe,000000036450,diario de classe,UN,6.9,,219.0,3.0,5.0
+3646,etiqueta rolo pq.,000000036467,etiqueta rolo pq.,UN,3.5,,36.0,3.0,5.0
+3647,etiqueta rolo mÃ©dio,000000036474,etiqueta rolo mã©dio,UN,5.0,,149.0,3.0,5.0
+3648,BOLINHA ANTI STRESS COMUM,000000036481,bolinha anti stress comum,UN,4.0,,260.0,3.0,5.0
+3649,BOLINHA ANTI STRESS - BOLAS DE ESPORTES,000000036498,bolinha anti stress - bolas de esportes,UN,2.5,,253.0,3.0,5.0
+3650,etiqueta p/etiquetador,000000036504,etiqueta p/etiquetadora,UN,17.5,,110.0,3.0,5.0
+3651,etiqueta escolar,000000036511,etiqueta escolar,UN,1.5,,223.0,3.0,5.0
+3652,TESOURA MUNDIAL/ INFANTIL,000000036528,tesoura mundial/ infantil,UN,15.0,,244.0,3.0,5.0
+3653,TESOURA ACRIMED,000000036535,tesoura acrimed,UN,19.9,,242.0,3.0,5.0
+3654,TESOURA TILIBRA 170MM,000000036542,tesoura tilibra 170mm,UN,10.0,,255.0,3.0,5.0
+3655,folha adesiva,000000036559,olha adesiva,UN,1.5,,240.0,3.0,5.0
+3656,TESOURA TILIBRA/TITANIUM 215MM,000000036566,tesoura tilibra/titanium 215mm,UN,11.0,,229.0,3.0,5.0
+3657,TESOURA TILIBRA/ CONFORT 255MM,000000036573,tesoura tilibra/ confort 255mm,UN,24.0,,256.0,3.0,5.0
+3658,,000000036580,,UN,14.9,,260.0,3.0,5.0
+3660,COADOR DE PANO,000000036603,coador de pano,UN,3.5,,250.0,3.0,5.0
+3661,eva pt,000000036610,eva pt,UN,25.0,,239.0,3.0,5.0
+3662,CORTADOR DE UNHA PEQUENO,000000036627,cortador de unha pequeno,UN,4.0,,253.0,3.0,5.0
+3663,BLOCO P/ GELADEIRA,000000036634,bloco p/ geladeira,UN,4.9,,259.0,3.0,5.0
+3664,carregador,000000036641,carregador,UN,35.0,,235.0,3.0,5.0
+3665,bandeira,000000036658,bandeira,UN,4.0,,212.0,3.0,5.0
+3666,FONES DE OUVIDO ESTeREO,000000036665,fones de ouvido estereo,UN,34.9,,260.0,3.0,5.0
+3667,folha ima,000000036672,folha de ima,UN,5.0,,246.0,3.0,5.0
+3668,resma cx.a4 report,000000036689,resma cx a4 report,UN,260.0,,-224.0,3.0,5.0
+3669,LETRAS EVA P,000000036696,letras eva p,UN,9.9,,260.0,3.0,5.0
+3670,RELoGIO INTERATIVO,000000036702,relogio interativo,UN,9.9,,260.0,3.0,5.0
+3671,CANETA P/ TABLET,000000036719,caneta p/ tablet,UN,4.9,,260.0,3.0,5.0
+3672,chips,000000036726,chips,UN,17.0,,-13.0,3.0,5.0
+3673,PIRANHA DE CABELO,000000036733,piranha de cabelo,UN,3.6,,258.0,3.0,5.0
+3674,PERCEVEJO TILIBRA,000000036740,percevejo tilibra,UN,4.9,,227.0,3.0,5.0
+3675,CAPA RIOCARD PERSONALIZADA,000000036757,capa riocard personalizada,UN,15.0,,260.0,3.0,5.0
+3676,pendriver multilezer,000000036764,pendriver multilezer,UN,29.9,,187.0,3.0,5.0
+3677,pendriver multilezer 32gb,000000036771,pendriver multileze 32gb,UN,49.9,,228.0,3.0,5.0
+3678,PENDRIVE ,000000036788,pendrive,UN,49.9,,237.0,3.0,5.0
+3679,PERCEVEJO DECORADO,000000036795,percevejo decorado,UN,5.0,,256.0,3.0,5.0
+3680,isqueiro bic gr,000000036801,isqueiro bic gr,UN,6.5,,228.0,3.0,5.0
+3681,isqueiro bic pq,000000036818,isqueiro bic pq,UN,5.0,,215.0,3.0,5.0
+3682,burifador,000000036825,burifador,UN,9.0,,240.0,3.0,5.0
+3683,carro diversos   ,000000036832,carro diversos,UN,30.0,,220.0,3.0,5.0
+3684,OLHINHOS C/ MOVIMENTO MINI,000000036849,olhinhos c/ movimento mini,UN,2.0,,260.0,3.0,5.0
+3685,OLHINHOS C/ MOVIMENTO PEQ,000000036856,olhinhos c/ movimento peq,UN,2.5,,260.0,3.0,5.0
+3686,OLHINHOS C/ MOVIMENTO MeD,000000036863,olhinhos c/ movimento med,UN,5.5,,260.0,3.0,5.0
+3687,OLHINHOS PLASTICO COMUM - G,000000036870,olhinhos plastico comum - g,UN,11.9,,260.0,3.0,5.0
+3688,CLIPS PLAST. COLORIDO 28MM,000000036887,clips plast. colorido 28mm,UN,0.2,,256.0,3.0,5.0
+3689,OLHINHOS PLASTICO COMUM - P,000000036894,olhinhos plastico comum - p,UN,9.9,,260.0,3.0,5.0
+3690,clips colorido,000000036900,clips colorido,UN,8.9,,251.0,3.0,5.0
+3691,CLIPS ACO COLORIDO 28MM,000000036917,clips aco colorido 28mm,UN,8.9,,236.0,3.0,5.0
+3692,papel almaco,000000036924,papel almaco,UN,0.3,,222.0,3.0,5.0
+3693,ALFINETE P/ MAPA,000000036931,alfinete p/ mapa,UN,6.5,,245.0,3.0,5.0
+3694,BOTOES MAGNeTICOS,000000036948,botoes magneticos,UN,6.9,,259.0,3.0,5.0
+3695,ALFINETES COLORIDO,000000036955,alfinetes colorido,UN,3.7,,248.0,3.0,5.0
+3696,pega rato,000000036962,pega ratp,UN,5.0,,235.0,3.0,5.0
+3697,PREGADOR COLORIDO DE FRUTAS,000000036979,pregador colorido de frutas,UN,3.0,,243.0,3.0,5.0
+3698,incenso,000000036986,incenso,UN,2.5,,254.0,3.0,5.0
+3699,PINCA MUNDIAL,000000036993,pinca mundial,UN,1.5,,260.0,3.0,5.0
+3700,PRENDEDOR DE PAPEL -VPM 32MM,000000037006,prendedor de papel -vpm 32mm,UN,22.9,,238.0,3.0,5.0
+3701,PRENDEDOR DE PAPEL -VPM 51MM,000000037013,prendedor de papel -vpm 51mm,UN,5.9,,257.0,3.0,5.0
+3702,PRENDEDOR DE PAPEL -VPM 19MM,000000037020,prendedor de papel -vpm 19mm,UN,11.5,,232.0,3.0,5.0
+3703,espiral,000000037037,espiral,UN,3.0,,236.0,3.0,5.0
+3704,PERCEVEJO LATONATO,000000037044,percevejo latonato,UN,3.7,,249.0,3.0,5.0
+3705,CLIPS GALVANIZADO EXTRA,000000037051,clips galvanizado extra,UN,4.5,,253.0,3.0,5.0
+3706,CLIPS 2/0 - 3/0 - ,000000037068,clips 2/0 - 3/0 -,UN,4.0,,-134.0,3.0,5.0
+3707,CLIPS 2/0 COLORIDO,000000037075,clips 2/0 colorido,UN,5.5,,251.0,3.0,5.0
+3708,CLIPS 6/0 - 7/0 - 8/0 -,000000037082,clips 6/0 - 7/0 - 8/0 -,UN,6.9,,219.0,3.0,5.0
+3709,COLCHETES 10,000000037099,colchetes 10,UN,6.9,,254.0,3.0,5.0
+3710,ALFINETE DE SEGURANCA No 2,000000037105,alfinete de seguranca no 2,UN,9.0,,245.0,3.0,5.0
+3711,ALFINETE DE SEGURANCA No 2 UNIDADE,000000037112,alfinete de seguranca no 2 unidade,UN,7.9,,251.0,3.0,5.0
+3712,ALFINETE DE SEGURANCA No 4,000000037129,alfinete de seguranca no 4,UN,12.9,,259.0,3.0,5.0
+3713,ALFINETE DE SEGURANCA No 4 UNIDADE,000000037136,alfinete de seguranca no 4 unidade,UN,3.0,,210.0,3.0,5.0
+3714,ALFINETE DE SEGURANCA No 5,000000037143,alfinete de seguranca no 5,UN,18.9,,259.0,3.0,5.0
+3715,ALFINETE DE SEGURANCA No 3,000000037150,alfinete de seguranca no 3,UN,12.9,,260.0,3.0,5.0
+3716,COLCHETES  No 4,000000037167,colchetes no 4,UN,6.0,,254.0,3.0,5.0
+3717,ALFINETE DE SEGURANCA No 00,000000037174,alfinete de seguranca no 00,UN,7.9,,250.0,3.0,5.0
+3718,ALFINETE DE SEGURANCA No 01,000000037181,alfinete de seguranca no 01,UN,8.9,,254.0,3.0,5.0
+3719,ALFINETE DE SEGURANCA No 000,000000037198,alfinete de seguranca no 000,UN,5.9,,254.0,3.0,5.0
+3720,ALFINETE NIQUELADO 20/24/26/28/29/30/32,000000037204,alfinete niquelado 20/24/26/28/29/30/32,UN,4.9,,257.0,3.0,5.0
+3721,pasta vai/vem,000000037211,pasta vai/vem,UN,6.9,,258.0,3.0,5.0
+3722,GRAMPO CX C/ 1.000,000000037228,grampo cx c/ 1.000,UN,5.9,,242.0,3.0,5.0
+3723,EXTRATOR DE GRAMPOS,000000037235,extrator de grampos,UN,3.0,,173.0,3.0,5.0
+3725,GRAMPOS C/ 1000 UN 26/6,000000037259,grampos c/ 1000 un 26/6,UN,8.5,,209.0,3.0,5.0
+3726,grampo trilho,000000037266,grampo trilho,UN,19.9,,247.0,3.0,5.0
+3727,GRAMPOS 23/10 CIS,000000037273,grampos 23/10 cis,UN,15.9,,219.0,3.0,5.0
+3728,ALFINETE DE SEGURANCA CX. PEQUENA No 0,000000037280,alfinete de seguranca cx. pequena no 0,UN,8.9,,257.0,3.0,5.0
+3729,ALFINETE DE SEGURANCA CX. PEQUENA No 0,000000037297,alfinete de seguranca cx. pequena no 0,UN,8.9,,258.0,3.0,5.0
+3730,ALFINETE DE SEGURANCA CX. PEQUENA No 00,000000037303,alfinete de seguranca cx. pequena no 00,UN,7.9,,260.0,3.0,5.0
+3731,ALFINETE DE SEGURANCA CX. PEQUENA No 000,000000037310,alfinete de seguranca cx. pequena no 000,UN,5.9,,258.0,3.0,5.0
+3732,ALFINETE DE SEGURANCA CX. PEQUENA No 01,000000037327,alfinete de seguranca cx. pequena no 01,UN,9.9,,258.0,3.0,5.0
+3733,GRAMPEADOR TILIBRA - G105,000000037334,grampeador tilibra - g105,UN,15.9,,155.0,3.0,5.0
+3734,GRAMPEADOR TILIBRA - G104,000000037341,grampeador tilibra - g104,UN,22.0,,223.0,3.0,5.0
+3735,PERFURADOR DE PAPEL - CIS 20 FLS,000000037358,perfurador de papel - cis 20 fls,UN,27.9,,253.0,3.0,5.0
+3736,PERFURADOR DE PAPEL - CIS 10 FLS,000000037365,perfurador de papel - cis 10 fls,UN,14.9,,-4.0,3.0,5.0
+3737,PERFURADOR DE PAPEL - EAGLE,000000037372,perfurador de papel - eagle,UN,22.9,,256.0,3.0,5.0
+3738,grampeador,000000037389,grampeador,UN,10.0,,236.0,3.0,5.0
+3739,GRAMPEADOR PROFISSIONAL,000000037396,grampeador profissional,UN,39.9,,248.0,3.0,5.0
+3740,PERFURADOR 4 FUROS,000000037402,perfurador 4 furos,UN,34.9,,259.0,3.0,5.0
+3741,GRAMPEADOR - G-007,000000037419,grampeador - g-007,UN,20.0,,249.0,3.0,5.0
+3742,GRAMPEADOR - G-2037,000000037426,grampeador - g-2037,UN,17.9,,247.0,3.0,5.0
+3743,GRAMPEADOR - G-2050,000000037433,grampeador - g-2050,UN,40.0,,253.0,3.0,5.0
+3744,GRAMPEADOR -  PLUS LINE / C8  - CIS,000000037440,grampeador - plus line / c8 - cis,UN,9.9,,249.0,3.0,5.0
+3745,furador de eva gr.,000000037457,furador de eva gr.,UN,25.0,,256.0,3.0,5.0
+3746,GRAMPEADOR -   C-26  - CIS-,000000037464,grampeador - c-26 - cis-,UN,97.0,,256.0,3.0,5.0
+3747,GRAMPEADOR -  A17 MAPED,000000037471,grampeador - a17 maped,UN,24.9,,256.0,3.0,5.0
+3748,GRAMPEADOR -  ACLASSE9917,000000037488,grampeador - aclasse9917,UN,9.9,,259.0,3.0,5.0
+3749,chapeu,000000037495,chapeu,UN,15.0,,213.0,3.0,5.0
+3750,etiqueta escolar c/desenho,000000037501,etiqueta escolar c/desenho,UN,2.9,,218.0,3.0,5.0
+3751,etiqueta presente un.,000000037518,etiqueta presente un.,UN,3.5,,201.0,3.0,5.0
+3752,etiqueta presente rolo/pt,000000037525,etiqueta presente rolo/pt,UN,11.0,,175.0,3.0,5.0
+3753,reforÃ§o fichÃ¡rio,000000037532,reforã§o fichã¡rio,UN,5.9,,247.0,3.0,5.0
+3754,ETIQUETA ESCOLAR,000000037549,etiqueta escolar,UN,1.0,,172.0,3.0,5.0
+3755,CLIPS P/ CONVITE,000000037556,clips p/ convite,UN,5.9,,254.0,3.0,5.0
+3756,chinelo,000000037563,chinelo,UN,27.0,,252.0,3.0,5.0
+3757,massinha 150gr,000000037570,massinha 150gr,UN,7.9,,208.0,3.0,5.0
+3758,,000000037587,,UN,29.9,,260.0,3.0,5.0
+3759,massinha 500gr,000000037594,massinha 500gr,UN,18.9,,30.0,3.0,5.0
+3760,massinha 12 cores,000000037600,massinha 12 cores,UN,8.0,,252.0,3.0,5.0
+3761,giz de cera faber,000000037617,giz de cera faber,UN,9.9,,258.0,3.0,5.0
+3762,CADERNO 10M - TILIBRA - RACING/BICHINHOS/,000000037624,caderno 10m - tilibra - racing/bichinhos/,UN,24.9,,253.0,3.0,5.0
+3763,CADERNO 10M - TILIBRA - PEPPER,000000037631,caderno 10m - tilibra - pepper,UN,12.9,,258.0,3.0,5.0
+3764,CADERNO 10M - TILIBRA - VERAO,000000037648,caderno 10m - tilibra - verao,UN,19.9,,255.0,3.0,5.0
+3765,CADERNO 10M - TILIBRA - T28,000000037655,caderno 10m - tilibra - t28,UN,19.9,,258.0,3.0,5.0
+3766,CADERNO 10M - TILIBRA - MAIS,000000037662,caderno 10m - tilibra - mais,UN,17.9,,260.0,3.0,5.0
+3767,CADERNO 10M - SD - PRETTY GIRLS/ PRECIOUS MOMENT,000000037679,caderno 10m - sd - pretty girls/ precious moment,UN,19.9,,260.0,3.0,5.0
+3768,CADERNO 10M - TILIBRA - PLUSH POISON,000000037686,caderno 10m - tilibra - plush poison,UN,24.9,,252.0,3.0,5.0
+3769,CADERNO 10M - TILIBRA - PEACE LOVE,000000037693,caderno 10m - tilibra - peace love,UN,17.9,,256.0,3.0,5.0
+3770,CADERNO 10M - TILIBRA - HI GIRLS,000000037709,caderno 10m - tilibra - hi girls,UN,19.9,,260.0,3.0,5.0
+3771,CADERNO 10M - SD - ELVIS,000000037716,caderno 10m - sd - elvis,UN,19.9,,260.0,3.0,5.0
+3772,CADERNO 10M - TILIBRA - FADA,000000037723,caderno 10m - tilibra - fada,UN,29.9,,259.0,3.0,5.0
+3773,CADERNO 10M - TILIBRA - JOLIE,000000037730,caderno 10m - tilibra - jolie,UN,32.9,,255.0,3.0,5.0
+3774,CADERNO 15M - KAJOMA - LOVE PEPA,000000037747,caderno 15m - kajoma - love pepa,UN,19.9,,259.0,3.0,5.0
+3775,CADERNO 16M - TILIBRA - VERAO/ MAIS,000000037754,caderno 16m - tilibra - verao/ mais,UN,27.9,,259.0,3.0,5.0
+3776,CADERNO 16M - JANDAIA,000000037761,caderno 16m - jandaia,UN,24.9,,260.0,3.0,5.0
+3777,CADERNO 20M - KAJOMA - PEACE LOVE,000000037778,caderno 20m - kajoma - peace love,UN,29.9,,257.0,3.0,5.0
+3778,CADERNO 20M - TILIBRA - MAIS / VERAO,000000037785,caderno 20m - tilibra - mais / verao,UN,39.9,,257.0,3.0,5.0
+3779,CADERNO 1M - TILIBRA - LOVE PINK,000000037792,caderno 1m - tilibra - love pink,UN,13.9,,260.0,3.0,5.0
+3780,CADERNO 1M - TILIBRA - BICHINHOS,000000037808,caderno 1m - tilibra - bichinhos,UN,14.9,,259.0,3.0,5.0
+3781,CADERNO 1M - TILIBRA - MAIS,000000037815,caderno 1m - tilibra - mais,UN,11.9,,260.0,3.0,5.0
+3782,CADERNO 1M - TILIBRA -  PEPPER,000000037822,caderno 1m - tilibra - pepper,UN,10.0,,257.0,3.0,5.0
+3783,CADERNO 1M - TILIBRA - EVER AFTER HIGH,000000037839,caderno 1m - tilibra - ever after high,UN,19.9,,260.0,3.0,5.0
+3784,CADERNO 1M - TILIBRA - HI GIRLS,000000037846,caderno 1m - tilibra - hi girls,UN,14.9,,260.0,3.0,5.0
+3785,CADERNO 1M - TILIBRA - ECO,000000037853,caderno 1m - tilibra - eco,UN,9.9,,258.0,3.0,5.0
+3786,CADERNO 1M - TILIBRA - RACING/HOTWEELS,000000037860,caderno 1m - tilibra - racing/hotweels,UN,12.9,,260.0,3.0,5.0
+3787,CADERNO 1M - TILIBRA - VERAO17,000000037877,caderno 1m - tilibra - verao17,UN,11.9,,260.0,3.0,5.0
+3788,CADERNO 1M - TILIBRA - MARVEL,000000037884,caderno 1m - tilibra - marvel,UN,14.9,,260.0,3.0,5.0
+3789,CADERNO 1M - TILIBRA - BEN10,000000037891,caderno 1m - tilibra - ben10,UN,15.9,,260.0,3.0,5.0
+3790,CADERNO 1M - KAJOMA - SOFT,000000037907,caderno 1m - kajoma - soft,UN,7.9,,260.0,3.0,5.0
+3791,caneta compactor,000000037914,,UN,5.0,,-192.0,1.0,200.0
+3792,CADERNO 1M - SD - MY PETS,000000037921,caderno 1m - sd - my pets,UN,14.9,,260.0,3.0,5.0
+3793,CADERNO 1M - JORDANA - SEXY ANGEL,000000037938,caderno 1m - jordana - sexy angel,UN,14.9,,259.0,3.0,5.0
+3794,CADERNO 1M - FORONI - JUDY,000000037945,caderno 1m - foroni - judy,UN,14.9,,260.0,3.0,5.0
+3795,MORDEDOR FISHER PRICE/ LEAO,000000037952,mordedor fisher price/ leao,UN,24.9,,260.0,3.0,5.0
+3796,CADERNO 1M - KAJOMA - SPORT CAPA FLEXAVEL,000000037969,caderno 1m - kajoma - sport capa flexavel,UN,5.9,,260.0,3.0,5.0
+3797,pega rato,000000037976,pega rato,UN,5.0,,260.0,3.0,5.0
+3798,MINI MOBILE - FISHER PRICE,000000037983,mini mobile - fisher price,UN,79.9,,260.0,3.0,5.0
+3799,CAMINHAO PEQUENO - DIVERSOS,000000037990,caminhao pequeno - diversos,UN,4.9,,260.0,3.0,5.0
+3800,CAMINHAO MeDIO - DIVERSOS,000000038003,caminhao medio - diversos,UN,6.9,,260.0,3.0,5.0
+3801,bijuteria,000000038010,bijuteria,UN,11.0,6.0,251.0,3.0,5.0
+3802,JOGO DE TABULEIRO - DAMA E TRILHA - PEQ,000000038027,jogo de tabuleiro - dama e trilha - peq,UN,15.0,,258.0,3.0,5.0
+3803,XILOFONE ELEFANTE,000000038034,xilofone elefante,UN,5.9,,260.0,3.0,5.0
+3804,espeto,000000038041,espeto,UN,4.9,,250.0,3.0,5.0
+3805,guarda-chuva gr,000000038058,guarda- chuva gr,UN,35.0,,249.0,3.0,5.0
+3806,BOLHA DE SABAO,000000038065,bolha de sabao,UN,2.5,,258.0,3.0,5.0
+3807,carimbo fantasia,000000038072,carimbo fantasia,UN,3.0,,245.0,3.0,5.0
+3808,MAMAFEROS INFLAVEL,000000038089,mamaferos inflavel,UN,3.9,,260.0,3.0,5.0
+3809,BOIA REDONDA - BICHINHOS,000000038096,boia redonda - bichinhos,UN,17.5,,260.0,3.0,5.0
+3810,BOIA REDONDA - COMUM,000000038102,boia redonda - comum,UN,11.7,,259.0,3.0,5.0
+3811,macarrao,000000038119,macarrao,UN,7.0,,236.0,3.0,5.0
+3812,BOIA REDONDA - ANGRY BIRDS,000000038126,boia redonda - angry birds,UN,14.9,,260.0,3.0,5.0
+3813,PIANO MUSICAL - MORANGO,000000038133,piano musical - morango,UN,6.9,,260.0,3.0,5.0
+3814,MINIATURA SKATE PARK,000000038140,miniatura skate park,UN,4.9,,260.0,3.0,5.0
+3815,guardanapo,000000038157,guardanapo,UN,2.5,,242.0,3.0,5.0
+3816,carro hot wells,000000038164,carro hot wells,UN,17.9,,197.0,3.0,5.0
+3817,MAQUINA FOTOGRAFICA MICKEY MOUSE,000000038171,maquina fotografica mickey mouse,UN,6.9,,258.0,3.0,5.0
+3818,caneca,000000038188,caneca,UN,15.0,,236.0,3.0,5.0
+3819,CANECA COM LATA DECORATIVA,000000038195,caneca com lata decorativa,UN,32.9,,243.0,3.0,5.0
+3820,cola pegamil 17gr,000000038201,cola pegamil 17gr,UN,8.9,,257.0,3.0,5.0
+3821,ALMOFADAS PERSONALIZADA TIPO 2,000000038218,almofadas personalizada tipo 2,UN,37.8,,260.0,3.0,5.0
+3822,ALMOFADAS PERSONALIZADA TIPO 3,000000038225,almofadas personalizada tipo 3,UN,49.9,,260.0,3.0,5.0
+3824,paete,000000038249,paete,UN,7.0,,247.0,3.0,5.0
+3825,CONJ. POTES,000000038256,conj. potes,UN,19.9,,254.0,3.0,5.0
+3826,GARRAFA ALUMANIO - CORUJA,000000038263,garrafa alumanio - coruja,UN,9.9,,255.0,3.0,5.0
+3827,garrafa termica,000000038270,garrafa termica,UN,45.0,45.0,235.0,3.0,5.0
+3828,GARRAFA TeRMICA TRADICIONAL,000000038287,garrafa termica tradicional,UN,10.9,,259.0,3.0,5.0
+3829,vidro alcool,000000038294,vidro alcool,UN,4.0,,247.0,3.0,5.0
+3830,CONJ. DE POTES P/ CONDIMENTOS,000000038300,conj. de potes p/ condimentos,UN,3.0,,259.0,3.0,5.0
+3832,livro de ponto tamoio,000000038324,livro de ponto tamoio,UN,30.0,,-3.0,1.0,200.0
+3833,GARRAFA DE PLASTICO - DIVERSAS,000000038331,garrafa de plastico - diversas,UN,3.0,,-1.0,1.0,200.0
+3834,RELoGIO DE PAREDE,000000038348,relogio de parede,UN,19.9,,2.0,1.0,200.0
+3835,taxa entrega,000000038355,taxa entrega,UN,5.0,,-118.0,1.0,200.0
+3836,PIAO 3 EM 1 - CARROS,000000038362,piao 3 em 1 - carros,UN,29.0,,-32.0,1.0,200.0
+3837,carimbo madeira 1linha,000000038379,carimbo madeira 1 linha,UN,25.0,,-21.0,1.0,200.0
+3838,COFRE CORUJAS,000000038386,cofre corujas,UN,9.9,,2.0,1.0,200.0
+3839,BANDEJA -BRANCA C/ DETALHES,000000038393,bandeja -branca c/ detalhes,UN,5.9,,-44.0,1.0,200.0
+3840,TABUA DE VIDRO,000000038409,tabua de vidro,UN,10.8,,2.0,1.0,200.0
+3841,TABUA DE PLASTICO,000000038416,tabua de plastico,UN,15.9,,2.0,1.0,200.0
+3842,BARALHO C/ LATA - IDEA,000000038423,baralho c/ lata - idea,UN,30.0,,-34.0,1.0,200.0
+3843,SUPORTE DE MESA P/ PANELA - MADEIRA,000000038430,suporte de mesa p/ panela - madeira,UN,20.0,,0.0,1.0,200.0
+3844,canetinha neo-pen 6 cores,000000038447,canetinha neo-pen 6 cores,UN,5.5,5.5,0.0,1.0,200.0
+3845,perfex,000000038454,perfex,UN,3.0,,-22.0,1.0,200.0
+3846,SUPORTE DE MESA EM BAMBU UNIDADE,000000038461,suporte de mesa em bambu unidade,UN,9.9,,0.0,1.0,200.0
+3847,BAMBU JAPONES CX,000000038478,bambu japones cx,UN,29.9,,2.0,1.0,200.0
+3848,BAMBU JAPONES UN,000000038485,bambu japones un,UN,5.9,,2.0,1.0,200.0
+3849,QUADRO DECORATIVO P/ COZINHA,000000038492,quadro decorativo p/ cozinha,UN,19.9,,2.0,1.0,200.0
+3850,peneira,000000038508,peneira,UN,2.5,,0.0,1.0,200.0
+3851,lapis,000000038515,lapis,UN,2.0,,-1.0,1.0,200.0
+3852,balas,000000038522,balas,UN,1.0,1.0,-8.0,1.0,200.0
+3853,PRATO TRIANGULAR P/ PIZZA,000000038539,prato triangular p/ pizza,UN,3.9,,2.0,1.0,200.0
+3854,SANDUICHEIRA,000000038546,sanduicheira,UN,4.9,,2.0,1.0,200.0
+3855, cola quente fina pt.,000000038553,cola quente fina pt.,UN,59.9,55.0,-30.0,1.0,200.0
+3856,dinheirinho,000000038560,dinheireiro,UN,4.5,,-1.0,1.0,200.0
+3857,ALBUM FOTOS - FLAMENGO,000000038577,album fotos - flamengo,UN,14.9,,2.0,1.0,200.0
+3858,CARRO DE PLASTICO - GRANDE,000000038584,carro de plastico - grande,UN,28.0,,-59.0,1.0,200.0
+3859,URSO - EU TE AMO,000000038591,urso - eu te amo,UN,69.9,,2.0,1.0,200.0
+3860,BETHOVEN,000000038607,bethoven,UN,45.8,,2.0,1.0,200.0
+3861,URSO LOVE,000000038614,urso love,UN,49.9,,2.0,1.0,200.0
+3862,LEAOZITO,000000038621,leaozito,UN,49.9,,2.0,1.0,200.0
+3863,FAASCA CAVALO,000000038638,faasca cavalo,UN,49.9,,2.0,1.0,200.0
+3864,URSINHO SONECA,000000038645,ursinho soneca,UN,54.9,,2.0,1.0,200.0
+3865,CENTOPEIA LEIA,000000038652,centopeia leia,UN,54.9,,2.0,1.0,200.0
+3866,DRAGOBERTO,000000038669,dragoberto,UN,39.9,,2.0,1.0,200.0
+3867,CAVALINHO PUPY,000000038676,cavalinho pupy,UN,44.9,,2.0,1.0,200.0
+3868,FANTINHO ELEFANTE,000000038683,fantinho elefante,UN,54.9,,2.0,1.0,200.0
+3869,boneca diversas,000000038690,boneca diversas,UN,55.0,,-874.0,1.0,200.0
+3870,BETONEIRA - TOY MIX,000000038706,betoneira - toy mix,UN,59.9,,2.0,1.0,200.0
+3871,pilha alfacell alcalina,000000038713,pilha alfacell alcalina,UN,5.9,,-40.0,1.0,200.0
+3872,coelho,000000038720,coelho,UN,10.0,,-2.0,1.0,200.0
+3873,folha papel pardo,000000038737,folha papel pardo,UN,1.8,,-448.0,1.0,200.0
+3874,bomba,000000038744,bomba,UN,12.0,,-2.0,1.0,200.0
+3875,displey,000000038751,displey,UN,20.0,,-8.0,1.0,200.0
+3876,TREM KID,000000038768,trem kid,UN,49.9,,2.0,1.0,200.0
+3877,ovo,000000038775,ovo,UN,3.5,,-2.0,1.0,200.0
+3878,jogo diverso,000000038782,jogo diverso,UN,20.0,,-52.0,1.0,200.0
+3879,quebra-cabeca,000000038799,quebra-cabeca,UN,20.0,,1.0,1.0,200.0
+3880,QUEBRA-CABECA - DIAMANTE 1.000PCS,000000038805,quebra-cabeca - diamante 1.000pcs,UN,69.9,,1.0,1.0,200.0
+3881,QUEBRA-CABECA - ROMERO BRITTO 150 PCS,000000038812,quebra-cabeca - romero britto 150 pcs,UN,19.9,,2.0,1.0,200.0
+3882,CUCA LEGAL,000000038829,cuca legal,UN,29.9,,2.0,1.0,200.0
+3883,XADREZ PLAST,000000038836,xadrez plast,UN,24.9,,2.0,1.0,200.0
+3884,avental escolar,000000038843,avental escolar,UN,16.9,,-32.0,1.0,200.0
+3885,jogo educativo,000000038850,jogo educativo,UN,39.9,,-6.0,1.0,200.0
+3886,JOGO DE MAGICA,000000038867,jogo de magica,UN,25.0,,1.0,1.0,200.0
+3887,JOGO DE LUDO/DAMA/TRILHA,000000038874,jogo de ludo/dama/trilha,UN,29.9,,-1.0,1.0,200.0
+3888,DOMINo DIVISAO - MADEIRA,000000038881,domino divisao - madeira,UN,30.0,,-3.0,1.0,200.0
+3889,ALFABETO SILABICO,000000038898,alfabeto silabico,UN,36.9,,2.0,1.0,200.0
+3890,BINGO XALINGO,000000038904,bingo xalingo,UN,39.9,,-5.0,1.0,200.0
+3891,APRENDENDO A HORA,000000038911,aprendendo a hora,UN,24.9,,2.0,1.0,200.0
+3892,CILADA,000000038928,cilada,UN,39.9,,2.0,1.0,200.0
+3893,BINGO - BIG BOY,000000038935,bingo - big boy,UN,27.9,,-6.0,1.0,200.0
+3894,GINA GIRAFA,000000038942,gina girafa,UN,44.9,,2.0,1.0,200.0
+3895,paÃ§oca,000000038959,paã§oca,UN,0.8,,-10.0,1.0,200.0
+3896,QUEBRA-CABECA - CIRCO,000000038966,quebra-cabeca - circo,UN,19.9,,2.0,1.0,200.0
+3897,giz liquido,000000038973,giz liquido,UN,14.9,,-22.0,1.0,200.0
+3898,serviço,000000038980,serviço,UN,3.0,,-24.0,1.0,200.0
+3899,MERCO TRUCK,000000038997,merco truck,UN,27.9,,2.0,1.0,200.0
+3900,MOBILE P/ CARRINHO,000000039000,mobile p/ carrinho,UN,29.9,,2.0,1.0,200.0
+3901,VAQUINHA JOLIE,000000039017,vaquinha jolie,UN,26.9,,2.0,1.0,200.0
+3902,LIGHT COOK TOP/ LITTLE COOK,000000039024,light cook top/ little cook,UN,27.9,,1.0,1.0,200.0
+3903,MINI TREM / BORBOLETA - FISHER PRICE,000000039031,mini trem / borboleta - fisher price,UN,49.9,,2.0,1.0,200.0
+3904,BABY DINHO,000000039048,baby dinho,UN,29.9,,1.0,1.0,200.0
+3906,pilha duracell media,000000039062,pilha duracell madia,UN,29.9,,-81.0,1.0,200.0
+3907,jacare,000000039079,jacare,UN,66.0,66.0,-5.0,1.0,200.0
+3908,eva grosso,000000039086,eva pt.,UN,5.9,,-11.0,1.0,200.0
+3909,molha dedo,000000039093,molha dedo,UN,3.0,,-42.0,1.0,200.0
+3910,MORDEDOR CAMINHAO,000000039109,mordedor caminhao,UN,29.9,,2.0,1.0,200.0
+3911,adereco cabelo,000000039116,adereco cabelo,UN,8.0,,1.0,1.0,200.0
+3912,MORDEDOR Pe/MAO,000000039123,mordedor pe/mao,UN,9.9,,0.0,1.0,200.0
+3913,MORDEDOR E CHOCALHO,000000039130,mordedor e chocalho,UN,4.0,,0.0,1.0,200.0
+3914,MORDEDOR ASTROS SORTIDOS,000000039147,mordedor astros sortidos,UN,11.9,,2.0,1.0,200.0
+3915,ELEFANTE - FISHER PRICE,000000039154,elefante - fisher price,UN,19.9,,2.0,1.0,200.0
+3916,MACAQUINHO BOOK - FISHER PRICE,000000039161,macaquinho book - fisher price,UN,44.9,,2.0,1.0,200.0
+3917,BABY BEE CHOCALHO,000000039178,baby bee chocalho,UN,15.0,,1.0,1.0,200.0
+3918,BABY BEE BICHINHOS,000000039185,baby bee bichinhos,UN,14.9,,2.0,1.0,200.0
+3919,BABY BEE DIVERTIDO FOR BABY,000000039192,baby bee divertido for baby,UN,17.5,,2.0,1.0,200.0
+3920,BABY CAR,000000039208,baby car,UN,39.9,,5.0,1.0,200.0
+3921,halls,000000039215,halls,UN,2.0,,-10.0,1.0,200.0
+3922,albun,000000039222,albun,UN,16.9,,-24.0,1.0,200.0
+3923,POTE DE BLOCO DE MONTAR,000000039239,pote de bloco de montar,UN,29.9,,4.0,1.0,200.0
+3924,CARTAS COPAG,000000039246,cartas copag,UN,18.9,,5.0,1.0,200.0
+3925,JOGO DOS CONTOS,000000039253,jogo dos contos,UN,20.0,,0.0,1.0,200.0
+3926,MORDEDOR DIVERTIDO,000000039260,mordedor divertido,UN,19.9,,5.0,1.0,200.0
+3927,MORDEDOR VAQUINHA - FISHER PRICE,000000039277,mordedor vaquinha - fisher price,UN,19.9,,5.0,1.0,200.0
+3928,BANHO LEGAL,000000039284,banho legal,UN,22.9,,5.0,1.0,200.0
+3929,MORDEDOR JACARe - FISHER PRICED,000000039291,mordedor jacare - fisher priced,UN,19.9,,5.0,1.0,200.0
+3930,contact transparente mt,000000039307,contact transparente mt,UN,5.9,5.9,-188.0,1.0,200.0
+3931,contact cores lisas mt,000000039314,contact cores lisas mt,UN,7.9,7.9,-213.0,1.0,200.0
+3932,contact estampado rolo,000000039321,contact estampado rolo,UN,70.0,75.0,-191.0,1.0,200.0
+3933,contact estampado mt,000000039338,contact estampado mt,UN,8.9,8.9,-174.5,1.0,200.0
+3934,PIMACO-INKJET+LASER 6085/6095/6083/6082/6093/6081/6097/6080,000000039345,pimaco-inkjet+laser 6085/6095/6083/6082/6093/6081/6097/6080,UN,19.9,,-17.0,1.0,200.0
+3937,rodo pia,000000039376,rodo pia,UN,3.0,,-5.0,1.0,200.0
+3942,PCT PAPEL VERGE 180GR/ 50 FLS,000000039420,pct papel verge 180gr/ 50 fls,UN,20.0,,-85.0,1.0,200.0
+3943,PCT PAPEL VERGE 120GR/ 50 FLS,000000039437,pct papel verge 120gr/ 40 fls,UN,16.9,,-4.0,1.0,200.0
+3944,PCT PAPEL VERGE C/20 FLS - PLUS BERILO,000000039444,pct papel verge c/20 fls - plus berilo,UN,15.0,,-1.0,1.0,200.0
+3945,PCT PAPEL COUCHE 210 GR C/ 50FLS,000000039451,pct papel couche 210 gr c/ 20fls,UN,39.9,,-5.0,1.0,200.0
+3946,PCT PAPEL OFFSET 180GR C/ 50FLS,000000039468,pct papel offset 180gr c/ 50fls,UN,20.0,,-28.0,1.0,200.0
+3947,papel canson 180gr,000000039475,papel canson 180gr,UN,39.8,,-22.0,1.0,200.0
+3948,PCT INKJET GLOSSY PHOTO PAPER 130GR,000000039482,pct inkjet glossy photo paper 130gr,UN,69.9,,2.0,1.0,200.0
+3949,UN INKJET GLOSSY PHOTO PAPER 130GR,000000039499,un inkjet glossy photo paper 130gr,UN,10.0,,0.0,1.0,200.0
+3950,PCT LASER GLOSSY PHOTO PAPER 160GR,000000039505,pct laser glossy photo paper 160gr,UN,35.0,,-2.0,1.0,200.0
+3951,UN LASER ,000000039512,un laser,UN,10.0,,1.0,1.0,200.0
+3952,REVISTAS/ LIVROS INFANTIS DIVERSOS,000000039529,revistas/ livros infantis diversos,UN,2.0,,-53.0,1.0,200.0
+3953,ATLAS DO ESTUDANTE,000000039536,atlas do estudante,UN,22.9,,2.0,1.0,200.0
+3954,ATLAS ESCOLAR,000000039543,atlas escolar,UN,9.9,,2.0,1.0,200.0
+3955,MINHAS PRIMEIRAS HISToRIAS,000000039550,minhas primeiras historias,UN,5.9,,0.0,1.0,200.0
+3956,CLASSICOS DIVERTIDOS,000000039567,classicos divertidos,UN,2.0,,2.0,1.0,200.0
+3957,PAPEL DE PRESENTE PEQ,000000039574,papel de presente peq,UN,1.0,,-42.0,1.0,200.0
+3958,PAPEL DE PRESENTE GRD,000000039581,papel de presente grd,UN,1.8,,-440.0,1.0,200.0
+3959,GARRAFA DE ALUMANIO - TIMES,000000039598,garrafa de alumanio - times,UN,34.9,,-4.0,10.0,200.0
+3960,caneca,000000039604,caneca,UN,39.9,,-16.0,10.0,200.0
+3961,cola super bonder,000000039611,cola super bonder,UN,9.0,,-14.0,10.0,200.0
+3962,boliche,000000039628,boliche,UN,35.0,,-8.0,10.0,200.0
+3963,massinha de biscuit,000000039635,massinha de biscuit,UN,5.0,,-10.0,10.0,200.0
+3964,papel crepon,000000039642,papel crepon,UN,2.2,,-317.0,1.0,200.0
+3965,QUARTINHO/COZINHA DA ANNE,000000039659,quartinho/cozinha da anne,UN,12.9,,2.0,1.0,200.0
+3966,papel crepon encerrado,000000039666,papel crepon encerrado,UN,3.5,,-65.0,1.0,200.0
+3967,balanca,000000039673,balanca,UN,26.9,,-89.0,1.0,200.0
+3968,copo ,000000039680,copo,UN,6.0,,-53.0,1.0,200.0
+3969,tinta tingir,000000039697,tinta tingir,UN,5.9,,-53.0,1.0,200.0
+3970,resma reciclado,000000039703,resma reciclado,UN,36.9,,-33.0,1.0,200.0
+3971,espelho,000000039710,brinquedo educativo,UN,5.0,,-23.0,1.0,200.0
+3972,pasta com alca a3,000000039727,pastacom alcaa3,UN,30.0,,-14.0,1.0,200.0
+3973,cesta,000000039734,cesta,UN,7.0,,-8.0,1.0,200.0
+3974,SUPERKOMBO CONCEPT CAR C/ 2 CARROS,000000039741,superkombo concept car c/ 2 carros,UN,49.9,,-26.0,1.0,200.0
+3975,maquiagem,000000039758,maquiagem,UN,35.0,,-4.0,1.0,200.0
+3976,SUPER MOTO R1000,000000039765,super moto r1000,UN,9.9,,2.0,1.0,200.0
+3977,guache 6 cores,000000039772,guache 6 cores,UN,7.5,,-19.0,1.0,200.0
+3978,TRUCK OFF ROAD - DISMAT,000000039789,truck off road - dismat,UN,39.9,,2.0,1.0,200.0
+3979,folha A3,000000039796,folha a3,UN,0.3,,-45.0,1.0,200.0
+3980,MAX HEROES,000000039802,max heroes,UN,19.9,,2.0,1.0,200.0
+3981,lampada emergencia,000000039819,lampada emergencia,UN,21.9,,-26.0,1.0,200.0
+3982,folha impressao coll,000000039826,folha impressao,UN,1.25,,-5961.0,1.0,200.0
+3983,ventosa,000000039833,ventosa,UN,8.5,,-2.0,1.0,200.0
+3984,STUDIO GIRL MIELLE,000000039840,studio girl mielle,UN,29.9,,2.0,1.0,200.0
+3985,gliter,000000039857,gliter,UN,2.0,1.2,-28.0,2.0,5.0
+3986,BOLA VINIL FROZEN,000000039864,bola vinil frozen,UN,9.9,4.0,-1.0,2.0,5.0
+3987,FALCON MONSTER COLLECTION - DISMAT,000000039871,falcon monster collection - dismat,UN,29.9,4.0,1.0,2.0,5.0
+3988,RACE RESGATE - DISMAT,000000039888,race resgate - dismat,UN,34.9,4.0,1.0,2.0,5.0
+3989,CADEIRINHA KIDVERTE,000000039895,cadeirinha kidverte,UN,54.9,4.0,1.0,2.0,5.0
+3990,MOTO TOOLS,000000039901,moto tools,UN,12.9,4.0,1.0,2.0,5.0
+3991,RACE 55- DISMAT,000000039918,race 55- dismat,UN,34.9,4.0,1.0,2.0,5.0
+3992,DINOSSAUROS FILHOTES,000000039925,dinossauros filhotes,UN,39.9,4.0,1.0,2.0,5.0
+3993,risque rabisque,000000039932,risque rabisque,UN,19.9,4.0,-1.0,2.0,5.0
+3994,BIG STAR FORMAS,000000039949,big star formas,UN,49.9,4.0,1.0,2.0,5.0
+3995,BUS CHAPIONS,000000039956,bus chapions,UN,20.9,4.0,1.0,2.0,5.0
+3996,mousse ped,000000039963,mousse ped,UN,8.0,4.0,-14.0,2.0,5.0
+3998,SKATE DIVERSOS,000000039987,skate diversos,UN,28.9,4.0,-2.0,2.0,5.0
+3999,despertador,000000039994,despertador,UN,44.9,4.0,-7.0,2.0,5.0
+4000,RELoGIO DESPERTADOR TIPO 2,000000040006,relogio despertador tipo 2,UN,9.9,4.0,1.0,2.0,5.0
+4001,PORTA RETRATO 2,000000040013,porta retrato 2,UN,19.9,4.0,-10.0,2.0,5.0
+4002,PORTA RETRATO 1,000000040020,porta retrato 1,UN,9.9,4.0,-10.0,2.0,5.0
+4003,PORTA RETRATO 3,000000040037,porta retrato 3,UN,12.0,4.0,-1.0,2.0,5.0
+4004,folha gravacao,000000500401,folha gravacao,UN,7.0,2.0,-23.0,2.0,5.0
+4006,GRAMPEADOR Cis,000000040068,medio,UN,12.0,1.0,255.0,3.0,5.0
+4007,folha copia pb a4,000000040075,folha copia pb a4,UN,0.25,,-110377.0,1.0,200.0
+4008,folha copia pb a4,000000040082,folha copia pb a4,UN,0.16,,-107064.0,1.0,200.0
+4009,folha copia pb a4,000000040099,folha copia pb a4,UN,0.14,,-90322.0,1.0,200.0
+4010,folha copia pb a4,000000040105,folha copia pb a4,UN,2.0,,-8715.0,1.0,200.0
+4011,folha copia ,000000040112,folha copia,UN,0.12,,7171.0,1.0,200.0
+4012,folha copia col a3,000000040129,folha copia col a3,UN,5.0,,8379.0,1.0,200.0
+4013,folha copia a3 col officesett,000000040136,folha copia a3 col officestt,UN,7.5,,8919.0,1.0,200.0
+4014,folha copia color,000009940150,folha copia color,UN,1.5,0.1,9467.0,1.0,200.0
+4015,folha copia a4 col,000000040150,folha copia a4 col,UN,1.5,0.1,7677.0,1.0,200.0
+4016,folha copia a4 col fotografico,000000040167,folha copia a4 col fotografico,UN,3.0,0.1,9941.0,1.0,200.0
+4017,folha copia pb,000000040174,folha copia pb,UN,1.5,0.12,9933.0,1.0,200.0
+4018,folha copia a4 pb amp/red,000000040181,folha copia a4 pb amp/red,UN,0.3,0.1,9529.0,1.0,200.0
+4019,folha acesso,000000040198,folha acesso,UN,0.5,0.1,2492.999,1.0,200.0
+4020,folha impressao,000000040204,folha impressao,UN,0.7,0.1,-1212.88,1.0,200.0
+4021,folha impressao,000000040211,folha impressao,UN,0.35,0.1,3474.0,1.0,200.0
+4022,velcro,000000040228,velcro,UN,1.75,22.9,,2.0,5.0
+4023,papel copimax cx,000000500203,papel copimax cx,UN,180.0,180.0,,2.0,5.0
+4024,resma colorido,000000040242,resma colorido,UN,35.9,32.9,,2.0,5.0
+4026,baton,000000040266,baton,UN,2.5,2.5,,2.0,5.0
+4027,caneta identificadora de dinheiro,000000040273,caneta dupla luxo,UN,12.0,1.0,-157.0,2.0,5.0
+4028,Bateria 23AE,000000040280,high voltage,UN,6.5,0.1,-50.0,2.0,200.0
+4030,pasta modelo 17,000000040303,pasta modelo 17,UN,75.0,4.0,-222.0,2.0,5.0
+4031,sacos finos c/ furos/s/ furos,000000040310,sacos finos c/furos/s/furos,UN,0.4,0.1,-84.0,1.0,200.0
+4032,FOlha,000000040327,acetato,UN,2.0,0.1,9440.0,1.0,200.0
+4033,"TESOURA ESCOLAR - VPM 16,5cm",000000040334,"tesoura escolar - vpm 16,5cm",UN,15.0,1.0,10.0,1.0,200.0
+4034,cola bastÃ£o tilibra 36gr,000000040341,cola bastã£o tilibra 36gr,UN,4.9,1.0,-7.0,1.0,200.0
+4035,folha digitacao,000000040358,folha digitacao,UN,5.0,1.0,-52.0,1.0,200.0
+4036,calendario,000000040365,calendario,UN,6.0,1.0,-36.0,1.0,200.0
+4037,bolinha sabao,000000040372,bolinha sabao,UN,2.5,1.0,-20.0,1.0,200.0
+4038,touca,000000040389,touca,UN,5.0,1.0,-11.0,1.0,200.0
+4039,brinquedo,000000040396,brinquedo,UN,25.0,1.0,-9.0,1.0,200.0
+4040,BRINQUEDO Argola,000000040402,montar construtores britadeira,UN,12.0,1.0,1.0,1.0,200.0
+4041,Calculadora,000000040419,calculadora cientifica,UN,23.9,4.0,12.0,2.0,5.0
+4042,Calculadora,000000040426,calculadora cientifica 12dig,UN,39.9,4.0,14.0,2.0,5.0
+4043,display,000000040433,display,UN,45.0,4.0,-6.0,2.0,5.0
+4044,Calculadora,000000040440,calculadora cientifica adeck,UN,34.9,4.0,15.0,2.0,5.0
+4045,Calculadora,000000040457,calculadora cientifica elgin,UN,37.0,4.0,14.0,2.0,5.0
+4046,estojo duplo,000000040464,estojo duplo,UN,34.9,4.0,-18.0,2.0,5.0
+4047,bejamin,000000040471,bejamin,UN,4.0,4.0,7.0,2.0,5.0
+4048,folha impressao,000000040488,folha impressao,UN,0.3,0.25,-12142.0,2.0,5.0
+4049,Ioio,000000040495,patrulha canina,UN,4.9,4.0,15.0,2.0,5.0
+4050,CARTAS,000000040501,jogo de cartas mico,UN,15.9,1.0,5.0,1.0,200.0
+4051,JOGO DE TABULEIRO,000000040518,cuca legal,UN,29.9,1.0,260.0,3.0,5.0
+4052,Papel,000000040525,"chumbo (embrulho) 10x9,8",UN,11.9,1.0,45.0,1.0,200.0
+4053,Papel,000000040532,"chumbo (embrulho) 12x11,8",UN,15.9,1.0,45.0,1.0,200.0
+4054,Papel,000000040549,"chumbo (embrulho) 8x7,8",UN,7.9,1.0,45.0,1.0,200.0
+4055,Papel,000000040556,transfer para sublimacao,UN,2.5,0.1,42.0,1.0,200.0
+4056,Sacola,000000040563,para presente decorada,UN,4.5,1.0,-75.0,1.0,200.0
+4057,TESOURA,000000040570,para unha 7cm,UN,14.9,1.0,258.0,3.0,5.0
+4058,TESOURA,000000040587,para unha 7cm para bordar,UN,20.0,1.0,259.0,3.0,5.0
+4059,TESOURA,000000040594,para unha 7cm reta para bordar,UN,14.9,1.0,260.0,3.0,5.0
+4060,TESOURA,000000040600,para unha 7cm reta para bordar,UN,14.9,1.0,260.0,3.0,5.0
+4061,cola pegamil 51gr,000000040617,cola pegamil 51gr,UN,18.9,1.0,252.0,3.0,5.0
+4062,transparencia,000000040624,a laser,UN,2.9,1.0,260.0,3.0,5.0
+4063,materiais diversos,000000040631,materiais diversos,UN,69.9,1.0,-5.0,1.0,200.0
+4064,Palito de Sorvete,000000040648,palito,UN,6.9,1.0,-7.0,2.0,5.0
+4065,papel corte,000000040655,papel corte,UN,25.5,,9281.5,1.0,200.0
+4066,Recibo comercial c/ canhoto,000000040662,recibo comercial c/ canhoto,UN,3.5,,170.0,3.0,5.0
+4067,CADEADO - PILLER,000000040679,cadeado - piller,UN,20.0,1.0,-9.0,1.0,200.0
+4068,folha impressao,000000040686,folha impressao,UN,0.18,0.1,-404.0,1.0,200.0
+4069,CONVITE DIVERSOS 1,000000040693,convite diversos 1,UN,2.9,4.0,3.0,2.0,5.0
+4070,CONVITE DIVERSOS 3,000000040709,convite diversos 3,UN,4.9,4.0,3.0,2.0,5.0
+4071,CONVITE DIVERSOS 2,000000040716,convite diversos 2,UN,3.9,4.0,3.0,2.0,5.0
+4073,chuchinha,000000040730,cchuchinha,UN,2.5,1.0,34.0,1.0,200.0
+4074,papel parana,000000040747,papel parana,UN,12.0,1.0,12.0,1.0,200.0
+4075,"fita fixa tudo 19mmx1,50m",000000040754,"fita fixa tudo 19mmx1,50m",UN,12.9,1.0,14.0,1.0,200.0
+4076,envelope pt.,000000040761,envelope pt.,UN,60.0,4.0,-13.0,2.0,5.0
+4077,envelope contra-cheque un.,000000040778,envelope contra-cheque un.,UN,0.4,4.0,-242.0,2.0,5.0
+4078,sacos c/furos/s/furos pt,000000040785,sacos c/furos/s/furos pt.,UN,8.0,1.0,2.0,1.0,200.0
+4079,pasta c/alÃ§a,000000040792,pasta c/alã§a,UN,16.9,1.0,2.0,1.0,200.0
+4080,BALAO/BALAO/ BOLA/ BALOES DE/PARA FESTA - REGINA,000000040808,balao/balao/ bola/ baloes de/para festa - regina,UN,6.9,,-20.0,1.0,200.0
+4081,faixa,000000040815,feliz aniversario,UN,7.9,4.0,-1.0,2.0,5.0
+4082,folha consulta consulta sps/serasa,000000040822,folha consulta spc/serasa,UN,25.0,1.0,-53.0,1.0,200.0
+4083,folha consulta serasa,000000040839,folha consulta serasa,UN,15.0,1.0,-23.0,1.0,200.0
+4085,folha consulta spc,000000040853,folha consulta spc,UN,15.0,1.0,-3.0,1.0,200.0
+4086,pilha duracell gr.,000000040860,pilha duracell gr.,UN,39.9,4.0,-107.0,2.0,5.0
+4088,bobina termica,000000040884,aloform,UN,6.0,4.0,-533.0,2.0,5.0
+4089,Folha,000000040891,arte,UN,8.0,0.5,9913.5,1.0,200.0
+4090,gorro natal,000000040907,gorro natal,UN,5.0,4.0,-4.0,2.0,5.0
+4091,papel pardo,000000040914,papel pardo,UN,2.0,,-564.0,3.0,5.0
+4092,PCT DE CANUDO,000000040921,com 100,UN,4.0,0.5,253.0,3.0,5.0
+4093,PENDRIVE 4GB,000000040938,pendrive 4gb,UN,25.9,,256.0,3.0,5.0
+4094,BATERIAS - E9v,000000040945,alfacell,UN,3.0,1.0,-16.0,1.0,200.0
+4095,fita durex 18mm x50m,000000040952,fita durex18mmx50m,UN,3.9,1.0,-477.0,1.0,200.0
+4096,Quadro Cortica 90x60,000000040969,quadro cortica 90x60,UN,39.9,4.0,-1.0,,
+4097,papel vegetal a4 fl.,000000040976,papel vegetal a4 fl.,UN,1.0,1.0,0.0,2.0,5.0
+4098,ficharÃ¡rio diversos gr.,000000040983,fichã¡rio diversos gr.,UN,80.0,4.0,-3.0,2.0,5.0
+4099,livro protocolo correspondencia  ,000000040990,livro protocolo correspondencia,UN,21.9,1.0,-93.0,1.0,200.0
+4100,carimbo madeira 2 linhas,000000041003,carimbo madeira 2 linhas,UN,25.0,1.0,-8.0,1.0,200.0
+4101,carimbo,000000041010,carimbo,UN,60.0,1.0,-24.0,1.0,200.0
+4102,BONECOS MAQUETE,000000041027,bonecos maquete,UN,4.0,,-3.0,1.0,200.0
+4103,ANIMAIS  MAQUETE,000000041034,animais maquete,UN,4.9,,,1.0,200.0
+4104,grama,000000041041,grama,UN,9.0,4.0,61.0,2.0,5.0
+4105,BOBINA DE CALCULADORA,000000041058,bobina de calculadora,UN,3.0,4.0,,2.0,5.0
+4106,FITILHO VERDE,000000041065,fitilho verde,UN,25.0,4.0,146.0,2.0,5.0
+4107,fita mÃ©trica cx,000000041072,fita mã©trica cx.,UN,3.5,1.0,14.0,1.0,200.0
+4108,Festao,000000041089,festao,UN,15.0,,-26.0,1.0,200.0
+4109,folha impressao,000000041096,folha impressao fotografico,UN,3.0,,-5127.0,1.0,200.0
+4110,lacre diversos,000000041102,lacre diversos,UN,22.0,,-9.0,3.0,5.0
+4111,meu 1Âº gizinho cera 12 CORES,000000041119,meu 1âº gizinho cera 12 cores,UN,43.9,43.9,-7.0,2.0,5.0
+4112,FITA,000000041126,fixa tudo 240g,UN,15.9,1.0,15.0,1.0,200.0
+4113,CADERNO DESENHO,000000041133,com ceda,UN,3.5,1.0,-2.0,2.0,5.0
+4114,caderno,000000041140,pacote papel vegetal canson com 20,UN,20.0,1.0,-2.0,2.0,5.0
+4115,cotonete,000000041157,cotonete,UN,2.0,,109.0,10.0,200.0
+4116,cola c/gliter acrilex,000000041164,cola c/gliter acrilex,UN,4.5,,-30.0,10.0,200.0
+4117,jogo letras 45 mm,000000041171,jogo letras 45mm,UN,18.9,,-48.0,10.0,200.0
+4118,cola colorida 6 cores,000000041188,cola colorida 6 cores,UN,14.9,1.0,5.0,1.0,200.0
+4119,fita corretiva brw,000000041195,fita corretiva brw,UN,10.0,5.9,99.0,10.0,200.0
+4120,fita corretiva cis,000000041201,fita corretiva cis,UN,15.0,,112.0,10.0,200.0
+4121,cola fina/pistola,000000041218,cola fina/pistola,UN,1.0,,116.0,10.0,200.0
+4122,GRAMPEADOR -  CIS,000000041225,grampeador - cis,UN,9.5,,248.0,3.0,5.0
+4123,canetinha 6 cores acrilex,000000041232,canetinha 6 cores acrilex,UN,13.9,4.9,15.0,1.0,200.0
+4124,LACO MAGICO,000000041249,grande,UN,1.0,,-22.0,1.0,200.0
+4125,LACO MAGICO,000000041256,gigante,UN,2.0,,-19.0,1.0,200.0
+4127,ETIQUETA,000000041270,natal,UN,5.9,,249.0,3.0,5.0
+4128,Saco de Presente 30x45,000000041287,saco de presente 30x45,UN,3.0,4.0,-8.0,,
+4130,cola bastao tilibra 21gr,000000041300,cola bastao tilibra 21gr,UN,3.5,,-9.0,3.0,5.0
+4131,cola grossa/pistola,000000041317,cola grossa/pistola,UN,2.0,0.5,-25.0,2.0,5.0
+4132,Folha para fichario peq,000000041324,folha para fichario peq,UN,3.4,4.0,5.0,2.0,5.0
+4133,folha de fichario gr,000000041331,folha de fichario gr,UN,26.9,1.0,-16.0,1.0,200.0
+4134,folha fichario gr,000000041348,folha fichario gr,UN,26.9,4.0,-82.0,2.0,5.0
+4135,24849,000000041355,bloco lembrete,UN,1.6,,-23.0,1.0,200.0
+4138,"fita fixa tudo 24mmx1,50m",000000041386,"fita fixa tudo 24mmx1,50",UN,13.9,4.0,0.0,2.0,5.0
+4140,Fita,000000041409,fixa tudo 300g,UN,5.9,,9957.0,1.0,200.0
+4143,16699,000000041430,cadeado piller 30mm,UN,17.0,1.0,-14.0,1.0,200.0
+4144,etiqueta pimaco pq.,000000041447,etiqueta pimaco pq.,UN,11.0,,9344.0,1.0,200.0
+4145,lapis vmp,000000041454,lapis vmp,UN,5.0,0.6,9281.0,1.0,200.0
+4147,chamequinho branco 100fls,000000041478,chamequinho branco 100fls,UN,7.0,6.5,-265.0,2.0,5.0
+4148,papel camurca,000000041485,papel camurca,UN,1.8,,9188.0,1.0,200.0
+4149,Calculadora,000000041492,calculadora,UN,9.9,4.0,10.0,2.0,5.0
+4150,quadro de aviso,000000041508,quadro de aviso,UN,16.9,1.0,6.0,1.0,200.0
+4151,caneta borracha,000000041515,caneta borracha,UN,5.9,,9342.0,1.0,200.0
+4152,bolas de encher zerinho,000000041522,bolas de encher zerinho,UN,5.0,1.0,-142.0,2.0,5.0
+4153,1810,000000041539,bolas regina,UN,29.9,,9674.0,1.0,200.0
+4154,carimbo cnpj,000000041546,carimbo cnpj,UN,45.0,1.0,-37.0,1.0,200.0
+4155,carimbo assinatura,000000041553,carimbo assinatura,UN,20.0,1.0,-33.0,1.0,200.0
+4156,jogo letras 25mm,000000041560,jogo letras 25mm,UN,14.9,4.0,-36.0,2.0,5.0
+4157,cola silicone 250gr,000000041577,cola silicone 250gr,UN,14.9,1.0,14.0,1.0,200.0
+4158,lapis borracha,000000041584,lapis borracha,UN,4.0,4.9,17.0,1.0,200.0
+4159,gliter,000000041591,gliter,UN,1.2,1.0,9.0,1.0,200.0
+4160,marca texto bic,000000041607,marca texto bic,UN,3.0,4.0,-127.0,1.0,200.0
+4161,lapiseira 05 brw,000000041614,lapiseira 07 brw,UN,5.9,1.5,13.0,1.0,200.0
+4163,jogo de letras 35mm,000000041638,jogo de letras 35mm,UN,19.9,4.0,-43.0,2.0,5.0
+4165,1813,000000041652,cola bca 250 gr,UN,3.5,6.9,11.0,2.0,5.0
+4166,1814,000000041669,cola bca 500 gr max,UN,15.0,8.9,14.0,2.0,5.0
+4167,FITA Fixa Pro,000000041676,456g,UN,6.5,1.0,12.0,1.0,200.0
+4168,1818,000000041683,caderno de caligrafia flexivel,UN,5.5,1.0,-5.0,1.0,200.0
+4171,collor sett,000000041713,collor sett,UN,10.0,1.0,-75.0,1.0,200.0
+4172,DVD,000000041720,regravavel,UN,4.0,1.0,15.0,1.0,200.0
+4175,carimbo redondo,000000041751,carimbo redondo,UN,25.0,1.0,10.0,1.0,200.0
+4177,Plastico,000000041775,para encapar,UN,5.5,4.0,1.0,2.0,5.0
+4178,Plasticap,000000041782,para encapar,UN,4.0,4.0,-40.0,2.0,5.0
+4183,20100,000000041836,folha carbono,UN,1.5,1.0,-564.0,2.0,5.0
+4185,20200,000000041850,diario classe,UN,3.8,3.8,-10.0,1.0,200.0
+4186,estojo,000000041867,estojo,UN,14.9,4.0,-23.0,2.0,5.0
+4187,lapis faber c/borracha,000000041874,lapis faber c/borracha,UN,2.0,1.4,-12.0,2.0,5.0
+4188,mousse,000000041881,mousse,UN,19.9,14.0,-59.0,2.0,5.0
+4189,Pena,000000041898,pena,UN,3.5,4.0,-15.0,2.0,5.0
+4190,la,000000041904,la,UN,6.9,,233.0,3.0,5.0
+4191,jogo de letras 60mm,000000041911,jogo de letras 60mm,UN,22.9,4.0,-66.0,2.0,5.0
+4192,jogo de letras 15mm,000000041928,jogo de letras 15mm,UN,13.9,4.0,-12.0,2.0,5.0
+4194,jogo de letras 20mm,000000041942,jogo de letras 20mm,UN,13.9,4.0,-14.0,2.0,5.0
+4196,jogo de letras 25mm,000000041966,jogo de letras 25mm,UN,14.9,4.0,-4.0,2.0,5.0
+4197,jogo de letras 45mm,000000041973,jogo de letras 45mm,UN,22.9,4.0,-13.0,2.0,5.0
+4198,gilete,000000041980,gilete,UN,3.0,4.0,-64.0,2.0,5.0
+4199,guarda-chuva,000000041997,guarda-chuva,UN,20.0,4.0,-6.0,2.0,5.0
+4200,resma 90g cx.,000000042000,resma 90g cx.,UN,200.0,,242.0,3.0,5.0
+4201,rifa 15 nomes,000000042017,rifa 15 nomes,UN,0.7,1.0,-23.0,1.0,200.0
+4202,diario,000000042024,diario,UN,4.9,4.0,-22.0,2.0,5.0
+4203,203030,000000042031,diario de classe,UN,4.9,4.9,-74.0,2.0,5.0
+4204,Pilot,000000042048,pilot cx 6 cores,UN,15.0,4.0,94.0,2.0,5.0
+4205,caneta qdo bco brw,000000042055,caneta qdo bco brw,UN,5.0,4.9,-12.0,1.0,200.0
+4206,203031,000000042062,pilot color 850,UN,3.5,3.5,-54.0,2.0,5.0
+4207,203033,000000042079,caderno desenho capa fl,UN,12.9,4.6,5.0,2.0,5.0
+4208,203034,000000042086,bloco a3 vmp,UN,16.9,,-5.0,1.0,200.0
+4210,Purpurina,000000042109,grande,UN,1.2,,-29.0,1.0,200.0
+4211,Etiqueta,000000042116,rolo n 6,UN,17.9,,-16.0,1.0,200.0
+4212,203043,000000042123,etiqueta rolo 7,UN,3.5,5.9,-18.0,2.0,5.0
+4213,Etiqueta,000000042130,rolo n 7,UN,0.25,,-7.0,1.0,200.0
+4217,Etiqueta,000000042178,rolo pequeno,UN,2.0,,-79.0,1.0,200.0
+4218,Etiqueta,000000042185,rolo grande,UN,4.8,,-10.0,1.0,200.0
+4219,203040,000000042192,lupa,UN,9.0,4.0,4.0,2.0,5.0
+4220,caderno meia pauta,000000042208,caderno meia pauta,UN,16.9,,-9.0,1.0,200.0
+4221,saco de presente pt.,000000042215,saco de presente pt.,UN,66.5,6.5,-12.0,,
+4222,xicara,000000042222,xicara,UN,25.0,5.9,-3.0,2.0,5.0
+4223,apostila,000000042239,apostila,UN,75.0,38.25,-309.0,2.0,5.0
+4224,Livro,000000042246,producao de texto - portugues,UN,126.0,5.9,-3.0,2.0,5.0
+4225,Livro,000000042253,um lugar para eduardo - paradidatico,UN,41.0,5.9,0.0,2.0,5.0
+4226,folha pollasil,000000042260,folha pollasil,UN,4.0,,-58.0,3.0,5.0
+4227,papel seda cores pt,000000042277,papel seda cores pt,UN,39.9,,249.0,3.0,5.0
+4228,cx  bobina termina,000000042284,cx bobina termica,UN,25.0,180.0,-131.0,2.0,5.0
+4229,saco elastico 1kg,000000042291,saco elastico 1kg,UN,44.9,3.0,-152.0,2.0,5.0
+4230,pilha duracell ,000000042307,pilha duracell,UN,24.9,5.5,-54.0,2.0,5.0
+4231,etiqueta pimaco gr,000000042314,etiqueta pimaco gr.,UN,19.9,13.9,-84.0,2.0,5.0
+4232,sacola,000000042321,sacola,UN,5.5,6.9,-27.0,2.0,5.0
+4233,cola isopor 40gr.,000000042338,cola isopor 40gr,UN,5.0,2.7,6.0,1.0,200.0
+4234,cola isopor 90 gr.,000000042345,cola isopor 90 gr.,UN,9.9,4.9,-47.0,2.0,5.0
+4235,cola silicone 40gr,000000042352,cola isopor 40gr,UN,0.6,2.5,0.0,2.0,5.0
+4236,cola silicone 90gr.,000000042369,cola silicone 90gr,UN,15.9,2.5,-3.0,2.0,5.0
+4237,folha copia a3 pb amp/red,000000042376,folha copia a3 pb amp/red,UN,3.0,,8391.0,1.0,200.0
+4238,caixa carregador,000000042383,caixa carregador,UN,20.0,1.0,-49.0,1.0,200.0
+4239,caneta qdo bco pilot,000000042390,caneta qdo bco pilot,UN,16.9,11.9,-392.0,2.0,5.0
+4240,pistola cis pq.,000000042406,pistola cis pq.,UN,19.9,4.0,-12.0,2.0,5.0
+4241,Saco Plastico pt sem furo,000000042413,saco plastico,UN,34.9,34.9,-6.0,2.0,5.0
+4242,caderno de desenho cp,000000042420,caderno de desenho cp,UN,9.5,1.0,-5.0,2.0,5.0
+4243,Caderno desenho cp flexivel,000000042437,caderno desenho cp flexivel,UN,7.9,4.0,8.0,2.0,5.0
+4244,caneta qdo bco compactor,000000042444,caneta qdo bco compactor,UN,8.0,8.0,-1.0,1.0,200.0
+4245,JOGO DE LETRA,000000042451,jogo de letra,UN,18.9,,243.0,3.0,5.0
+4246,pincel atÃ´nico,000000042468,pincel atã´nico,UN,6.0,,-94.0,1.0,200.0
+4247,Plastico Transparente,000000042475,metro,UN,16.0,4.0,-6.0,2.0,5.0
+4248,folha impressao col.,000000042482,folha impressao col,UN,1.5,,-7325.0,1.0,200.0
+4249,caneta corretiva brw 4ml,000000042499,caneta correiva brw 4ml,UN,4.0,,18.0,5.0,200.0
+4250,bolas cromada,000000042505,bolas cromada,UN,24.9,1.0,-33.0,2.0,5.0
+4251,"bolas de encher 6,50",000000042512,"bolas de encher 6,50",UN,8.0,4.0,-57.0,2.0,5.0
+4252,bolas de encher 8,000000042529,bolas de encher 8,UN,12.9,4.0,-273.0,2.0,5.0
+4253,bolas de futebol,000000042536,bolas de futebol,UN,32.0,14.9,-3.0,2.0,5.0
+4255,trio pia,000000042550,trio pia,UN,45.0,1.0,-41.0,2.0,5.0
+4256,par de cadaco,000000042567,par de cadaco,UN,2.5,2.5,-47.0,2.0,5.0
+4257,nota fiscal folha,000000042574,nota fiscal folha,UN,3.0,,10.0,3.0,5.0
+4258,Tela de pintura 16x22,000000042581,tela de pintura 16x22,UN,12.9,9.9,3.0,,
+4259,Linha naylon ,000000042598,linha naylon,UN,5.0,4.0,-18.0,2.0,5.0
+4260,Linha naylon 35mm,000000042604,linha naylon 35mm,UN,10.0,4.0,-36.0,2.0,5.0
+4262,Linha naylon 50mm,000000042628,linha naylon 50mm,UN,8.0,4.0,-60.0,2.0,5.0
+4263,kit Pascóa,000000042635,itens pascoa,UN,32.9,4.0,2.0,2.0,5.0
+4264,havaiana,000000042642,havaiana,UN,27.9,4.0,-28.0,2.0,5.0
+4265,livro de isnpencao trab.,000000042659,livro inspencao trab.,UN,19.9,4.0,1.0,2.0,5.0
+4266,LIVRO CAIXA - OFICIO,000000042666,capa dura,UN,23.9,1.0,-67.0,1.0,200.0
+4267,regua,000000042673,regua,UN,3.0,1.0,-34.0,2.0,5.0
+4268,refil pilot,000000042680,refil pilot,UN,3.0,4.0,-119.0,2.0,5.0
+4269,porta-durex gr,000000042697,porta-durex gr,UN,9.9,4.0,-12.0,2.0,5.0
+4270,pano,000000042703,pano,UN,2.0,4.0,-13.0,2.0,5.0
+4271,identificador de chaves,000000042710,identificador de chaves,UN,1.5,1.0,-823.0,2.0,5.0
+4272,fita banana 19mmx2m,000000042727,fita banana 19mmx2m,UN,8.9,1.0,8.0,1.0,200.0
+4273,folha copia color,000000042734,folha copia color,UN,3.5,,-179.0,3.0,5.0
+4274,Grampo triho,000000042741,grampo pra grampeador cx c 1000,UN,14.9,8.0,-9.0,2.0,10.0
+4275,Cone Linha Sol,000000042758,linha sol,UN,5.9,1.0,-13.0,1.0,200.0
+4277,fita cetim fina,000000042772,fio de cetim fina,UN,4.0,,-104.0,1.0,200.0
+4278,fita cetim media,000000042789,fita cetim media,UN,5.0,,-29.0,1.0,200.0
+4279,fita cetim N3,000000042796,fita cetim n3,UN,6.5,,2.0,1.0,200.0
+4280,fita cetim N5,000000042802,fita cetim n5,UN,9.5,,2.0,1.0,200.0
+4284,jogo de letras 75mm ,000000042840,jogo de letras 75mm,UN,29.9,4.0,-35.0,2.0,5.0
+4285,Relogio,000000042857,relogio,UN,29.9,1.0,5.0,1.0,200.0
+4286,Cola Branca maxi cola 500gr.,000000042864,cola branca maxi cola 500gr.,UN,8.9,1.0,-3.0,2.0,5.0
+4287,Cola Branca maxi cola 1 kg.,000000042871,cola branca maxi cola 1kg,UN,20.0,1.0,-8.0,2.0,5.0
+4289,contact liso rolo,000000042895,contact liso rolo,UN,60.0,55.0,-87.0,2.0,5.0
+4290,contact transparente rolo,000000042901,contact transparente rolo,UN,90.0,90.0,-190.0,2.0,5.0
+4291,laco,000000042918,laco gr,UN,8.9,4.0,,2.0,5.0
+4292,laco pq.,000000042925,laco gr.,UN,0.5,4.0,,2.0,5.0
+4293,laco,000000042932,laco,UN,3.9,4.0,,2.0,5.0
+4294,laco gg,000000042949,laco gg,UN,6.9,4.0,,2.0,5.0
+4295,FITA P/ EMBALAGEM / FITA ADESIVA/DUREX/TRANSP.,000000042956,marrom,UN,6.0,1.0,-1342.004,1.0,200.0
+4297,cartao de memoria 8gb,000000042970,cartao de memoria gb,UN,27.9,1.0,-457.004,1.0,200.0
+4299,cartao de memoria 16gb,000000042994,cartao de memoria 16gb,UN,39.9,1.0,-461.004,1.0,200.0
+4300,cartao de memoria 32gb,000000043007,cartao de memoria 128gb,UN,69.9,1.0,-462.004,1.0,200.0
+4301,Folha fichario,000000043014,folha fichario,UN,14.9,,8702.0,1.0,200.0
+4302,visor,000000043021,visor,UN,9.9,,8747.0,1.0,200.0
+4304,Folha corte,000000043045,folha corte,UN,10.0,,8633.0,1.0,200.0
+4305,estrelinha,000000043052,estrelinha,UN,2.0,4.0,-25.0,2.0,5.0
+4307,Folha scanner,000000043076,folha scanner,UN,0.5,4.0,-2079.0,2.0,5.0
+4308,Folha envio,000000043083,folha envio,UN,1.0,4.0,-71.0,2.0,5.0
+4309,pistola cis gr.,000000043090,pistola cis gr,UN,29.9,4.0,,2.0,5.0
+4310,caneta schneider,000000043106,caneta schneider,UN,18.0,,10.0,5.0,200.0
+4311,caneta schneider luxo,000000043113,caneta schneider luxo,UN,5.0,,3.0,5.0,200.0
+4312,folha emaill,000000043120,folha emaill,UN,1.0,,-29.0,5.0,200.0
+4313,sacos com furos,000000043137,sacos com furos,UN,30.0,1.0,-96.0,1.0,200.0
+4314,uno,000000043144,uno,UN,10.0,1.0,-8.0,1.0,200.0
+4315,cx  bobina termica,000000043151,cx bobina termica,UN,55.0,180.0,-129.0,2.0,5.0
+4317,grafite faber 2.0,000000043175,grafite faber 2.0,UN,5.5,2.8,109.0,2.0,5.0
+4318,204032,000000043182,livro reclamacao,UN,15.9,1.0,-2.0,1.0,200.0
+4319,cortina,000000043199,cortina,UN,15.0,,-16.0,,
+4320,folha cortica 2mm,000000043205,folha cortica 2mm,UN,13.9,4.0,-2.0,,
+4321,folha cortica 3mm,000000043212,folha cortica 3mm,UN,27.9,4.0,-11.0,,
+4322,Formas de Letras e numeros - Compactor 35 mm,000000043229,formas de letras e numeros - compactor 35 mm,UN,4.0,1.0,13.0,1.0,200.0
+4323,caneta compactor cx.,000000043236,caneta compactor cx.,UN,1.0,1.0,-2.0,1.0,200.0
+4324,fol. copia video aula,000000043243,fol.copia video aula,UN,35.0,4.0,29.0,2.0,5.0
+4325,Pisca-pisca,000000043250,led,UN,15.0,4.0,-38.0,2.0,5.0
+4326,durepox,000000043267,durepox,UN,7.5,4.0,-11.0,2.0,5.0
+4327,elastex,000000043274,elastex,UN,6.0,4.0,-20.0,2.0,5.0
+4328, folha copia a3 col amp/red,7898888990017,folha copia a3 col amp/red,UN,2.0,,-45377.0,1.0,200.0
+4329,Folha,000000043298,imantada,UN,7.5,0.1,8865.0,1.0,200.0
+4330,cola tek bonde,000002040394,cola tek bonde,UN,10.0,3.0,-107.0,,
+4331,Saco de Lixo 40 lt,000002040400,saco de lixo 40lt,UN,7.9,2.9,-38.0,,
+4332,PCT,000000500104,olhos,UN,6.0,11.9,-285.0,2.0,5.0
+4333,folha digitaÃ§Ã£o,000000204043,folha digitaã§ã£o,UN,3.0,5.0,-49.0,2.0,5.0
+4334,serpentina,000000204045,serpentina,UN,8.0,27.9,-4.0,2.0,5.0
+4335,Caneta  cx,000000204042,caneta cx,UN,90.0,1.0,-205.0,1.0,200.0
+4336,envelope cd,7898913194540,envelope cd,UN,0.5,27.9,,2.0,5.0
+4337,extensao,000001204045,extensao,UN,29.9,24.9,-56.0,2.0,5.0
+4338,Luva,000000204041,,UN,3.9,5.9,-3.0,,
+4339,FICHA PAUTADA 4x6,00000000351221,ficha pautada 4x6,UN,12.9,1.0,1.0,1.0,200.0
+4340,FITA METALOIDE 20MM,000000041078,fita,UN,7.9,1.0,-346.0,1.0,200.0
+4341,LIVRO ESCOLAR,000000500500,livro escolar,UN,67.0,1.0,-5.0,1.0,200.0
+4342,LIVRO ESCOLAR,000000500609,ingles,UN,110.7,1.0,0.0,1.0,200.0
+4343,chamequinho colorido 100fls,000000500708,chamequinho colorido 100fls,UN,8.0,1.0,-27.0,1.0,200.0
+4344,bambole,000000500807,bambole,UN,4.9,1.0,-47.0,1.0,200.0
+4345,LIVRO ESCOLAR,000000501101,colecao eu gosto mais integrado 5 ano,UN,137.0,1.0,-1.0,1.0,200.0
+4346,LIVRO ESCOLAR,000000501200,ingles playing english 5 ano,UN,103.0,1.0,1.0,1.0,200.0
+4347,LIVRO ESCOLAR,000000501309,ingles playing english 4 ano,UN,103.0,1.0,0.0,1.0,200.0
+4348,LIVRO ESCOLAR,000000501408,ingles playing english 3 ano,UN,99.0,1.0,1.0,1.0,200.0
+4349,LIVRO ESCOLAR,000000501507,ingles playing english 2 ano,UN,99.0,1.0,1.0,1.0,200.0
+4350,LIVRO ESCOLAR,000000501606,colecao eu gosto mais integrado 4 ano,UN,137.0,1.0,0.0,1.0,200.0
+4351,LIVRO ESCOLAR,000000501705,colecao eu gosto mais integrado 3 ano,UN,137.0,1.0,1.0,1.0,200.0
+4352,LIVRO ESCOLAR,000000501804,colecao eu gosto mais integrado 2 ano,UN,137.0,1.0,1.0,1.0,200.0
+4353,LIVRO ESCOLAR,000000501903,colecao eu gosto mais integrado 1 ano,UN,137.0,1.0,1.0,1.0,200.0
+4354,Pre-Vestibular,000000502108,pre-vestibular,UN,68.0,1.0,-381.0,1.0,200.0
+4355,Bateria DURACELL,000000042387,9v,UN,30.0,1.0,-18.0,1.0,200.0
+4356,SERPENTINA,000000028914,,UN,8.0,,-10.0,1.0,200.0
+4358,Gravacao de Cd,000000027183,,UN,2.0,4.0,-11.0,2.0,5.0
+4359,Pulseira,0000388892,festa,UN,14.9,,-238.0,1.0,200.0
+4361,Tela de Pintura 40x60,000000028449,tela de pintura 40x60,UN,36.9,4.0,,,
+4362,Paete,000000042551,,UN,7.0,1.0,-27.0,2.0,5.0
+4363,Livro,000000142243,colecao eu gosto 4 ano,UN,146.0,5.9,,2.0,5.0
+4364,Livro,000000242240,matematica,UN,168.0,5.9,,2.0,5.0
+4365,Livro,000000342247,porta aberta - historia,UN,163.0,5.9,,2.0,5.0
+4366,Livro,000000054225,porta aberta - geografia,UN,163.0,5.9,,2.0,5.0
+4367,Livro,000000042251,porta aberta - ciencias,UN,163.0,5.9,,2.0,5.0
+4368,Livro,000000042252,lingua inglesa,UN,151.0,5.9,,2.0,5.0
+4370,Livro,000000042254,oficina de negã³cios,UN,14.0,5.9,,2.0,5.0
+4371,Pre-Tecnico Regular,000000502107,pre-tecnico regular,UN,54.0,1.0,-363.0,1.0,200.0
+4372,Tela de pintura 35 x 27,000000028234,tela de pintura 35 x 27,UN,22.9,4.0,2.0,0.0,0.0
+4373,papel color sett,000000028834,papel color sett,UN,10.0,0.0,-62.0,1.0,200.0
+4374,caneta economic.,00000002461776,caneta economic,UN,1.7,0.5,-950.0,2.0,5.0
+4376,caneta economic cx.,0000000246177,caneta economic cx.,UN,45.0,1.3,-602.0,2.0,5.0
+4377,Quadro Cortica 70x50,00000004096900,quadro cortica 70x50,UN,44.9,4.0,-2.0,0.0,0.0
+4379,papel adesivo,000000039323,papel adesivo,UN,13.0,,-126.0,1.0,200.0
+4380,Bola de Isopor 90 mm,000000029019,bola de isopor 90 mm,UN,4.7,4.0,10.0,0.0,0.0
+4381,Bola de Isopor 175 mm,000000029029,bola de isopor 175 mm,UN,15.0,4.0,10.0,0.0,0.0
+4382,Transferencia de musica,000000040892,trans. musica,UN,1.0,0.5,9939.5,1.0,200.0
+4383,Bola de Isopor 350 mm,000000029089,bola de isopor 350 mm,UN,37.0,4.0,10.0,0.0,0.0
+4385,Bola de Isopor 350 mm,00000002908900,bola de isopor 350 mm,UN,27.0,4.0,8.0,0.0,0.0
+4386,Feltro,000000040953,feltro,UN,5.9,1.0,-463.0,1.0,200.0
+4387,fita cetim N9,000000042803,fita cetim n9,UN,11.0,0.0,4.0,1.0,200.0
+4388,ABRIDOR,000000038335,garrafa,UN,4.9,0.0,0.0,1.0,200.0
+4389,Papel almaco pt,000000031779,papel almaco pt,UN,99.0,0.5,-79.0,1.0,200.0
+4395,gancho autoadesivos,000000034419,gancho autoadesivos,UN,9.0,3.9,-5.0,1.0,200.0
+4398,Caixa de Som,00000000245412,caixa de som,UN,25.0,24.9,-639.0,,
+4400,Algodão,000000041159,algodão,UN,2.0,,109.0,10.0,200.0
+4401,lampada pisca pisca,000000026112,lampada pisca pisca,UN,12.9,,-61.0,3.0,5.0
+4404, papel 40kg colorido,00000003015111,papel 40kg colorido,UN,3.5,,-67.0,10.0,200.0
+4405,Lanterna,00000002484664,lanterna,UN,20.0,8.5,-21.0,1.0,200.0
+4406,Leque,00000003670202,leque,UN,6.0,,258.0,3.0,5.0
+4407,ralador,00000002914999,ralador,UN,12.0,,-1030.0,10.0,200.0

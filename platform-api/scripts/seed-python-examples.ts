@@ -695,18 +695,25 @@ async function ensureAssignment(options: {
   return assignmentId;
 }
 
-async function run(): Promise<void> {
-  const teacherEmail =
-    process.env.PYTHON_SEED_TEACHER_EMAIL?.trim() || 'admin@example.com';
-  const studentEmails = parseEmails(process.env.PYTHON_SEED_STUDENT_EMAILS);
-  const className =
-    process.env.PYTHON_SEED_CLASS_NAME?.trim() || DEFAULT_CLASS_NAME;
+export async function run({
+  examples = PYTHON_EXAMPLES,
+  defaultClassName = DEFAULT_CLASS_NAME,
+  defaultClassDescription = DEFAULT_CLASS_DESCRIPTION,
+  envPrefix = 'PYTHON_SEED',
+}: {
+  examples?: PythonExample[];
+  defaultClassName?: string;
+  defaultClassDescription?: string;
+  envPrefix?: string;
+} = {}): Promise<void> {
+  const env = (name: string) => process.env[`${envPrefix}_${name}`];
+  const teacherEmail = env('TEACHER_EMAIL')?.trim() || 'admin@example.com';
+  const studentEmails = parseEmails(env('STUDENT_EMAILS'));
+  const className = env('CLASS_NAME')?.trim() || defaultClassName;
   const classDescription =
-    process.env.PYTHON_SEED_CLASS_DESCRIPTION?.trim() ||
-    DEFAULT_CLASS_DESCRIPTION;
+    env('CLASS_DESCRIPTION')?.trim() || defaultClassDescription;
   const dryRun =
-    process.argv.includes('--dry-run') ||
-    parseBoolean(process.env.PYTHON_SEED_DRY_RUN);
+    process.argv.includes('--dry-run') || parseBoolean(env('DRY_RUN'));
 
   const dataSource = new DataSource({
     type: 'postgres',
@@ -732,7 +739,7 @@ async function run(): Promise<void> {
       console.log(`Teacher: ${teacherEmail} (id=${teacherId})`);
       console.log(`Class: ${className}`);
       console.log(`Students to enroll: ${studentIds.length}`);
-      console.log(`Assignments/templates to upsert: ${PYTHON_EXAMPLES.length}`);
+      console.log(`Assignments/templates to upsert: ${examples.length}`);
       return;
     }
 
@@ -745,7 +752,7 @@ async function run(): Promise<void> {
       );
       await enrollUsers(queryRunner, classId, [teacherId, ...studentIds]);
 
-      for (const example of PYTHON_EXAMPLES) {
+      for (const example of examples) {
         const templateId = await ensureTemplate(queryRunner, example);
         await ensureAssignment({
           queryRunner,
@@ -761,7 +768,7 @@ async function run(): Promise<void> {
       console.log(`Class: ${className} (id=${classId})`);
       console.log(`Teacher: ${teacherEmail}`);
       console.log(`Students enrolled: ${studentIds.length}`);
-      console.log(`Assignments/templates upserted: ${PYTHON_EXAMPLES.length}`);
+      console.log(`Assignments/templates upserted: ${examples.length}`);
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;
