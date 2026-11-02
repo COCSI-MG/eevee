@@ -6,7 +6,9 @@ const PANDAS_EXAMPLES: PythonExample[] = [
     title: 'PD01 - Resumo estatístico dos pedidos',
     description: `## Contexto
 
-Uma papelaria registra suas vendas em uma tabela de pedidos, com uma venda por linha. As colunas são: \`id_nfce\`, \`aberto_em\`, \`fechado_em\`, \`pagamento\`, \`vr_total\` (valor do pedido) e \`cancelado\`.
+Uma papelaria registra suas vendas em uma tabela de pedidos, com uma venda por linha. Entre as colunas da tabela estão: \`id_nfce\`, \`aberto_em\`, \`fechado_em\`, \`pagamento\`, \`vr_total\` (valor do pedido) e \`cancelado\`.
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 14.861 linhas.
 
 ## Objetivo
 
@@ -60,13 +62,11 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "vr_total": [53.8, 18.5, None, 144.4, None, 0.0, 21.9, 19.4, 4.8, 54.9, 9.7, 21.75],
-}
+DADOS = "/app/data/pedidos.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
@@ -74,19 +74,19 @@ def test_retorna_um_dicionario():
 
 
 def test_quantidade():
-    assert resultado()["quantidade"] == 10, "quantidade: use count(), que não conta os vazios."
+    assert resultado()["quantidade"] == 10492, "quantidade: use count(), que não conta os vazios."
 
 
 def test_total():
-    assert resultado()["total"] == 349.15, "total: use sum() e arredonde para 2 casas."
+    assert resultado()["total"] == 735983.78, "total: use sum() e arredonde para 2 casas."
 
 
 def test_media():
-    assert resultado()["media"] == 34.91, "media: use mean() e arredonde para 2 casas."
+    assert resultado()["media"] == 70.15, "media: use mean() e arredonde para 2 casas."
 
 
 def test_mediana():
-    assert resultado()["mediana"] == 20.57, "mediana: use median(), não mean()."
+    assert resultado()["mediana"] == 38.05, "mediana: use median(), não mean()."
 
 
 def test_minimo():
@@ -94,11 +94,11 @@ def test_minimo():
 
 
 def test_maximo():
-    assert resultado()["maximo"] == 144.4, "maximo: use max()."
+    assert resultado()["maximo"] == 8083.8, "maximo: use max()."
 
 
 def test_desvio_padrao():
-    assert resultado()["desvio_padrao"] == 42.63, "desvio_padrao: use std() do pandas e arredonde para 2 casas."
+    assert resultado()["desvio_padrao"] == 124.37, "desvio_padrao: use std() do pandas e arredonde para 2 casas."
 
 
 def test_tabela_pequena():
@@ -113,7 +113,9 @@ def test_tabela_pequena():
     title: 'PD02 - Análise das formas de pagamento',
     description: `## Contexto
 
-Uma papelaria registra suas vendas em uma tabela de pedidos, com uma venda por linha. As colunas são: \`id_nfce\`, \`aberto_em\`, \`fechado_em\`, \`pagamento\`, \`vr_total\` (valor do pedido) e \`cancelado\`.
+Uma papelaria registra suas vendas em uma tabela de pedidos, com uma venda por linha. Entre as colunas da tabela estão: \`id_nfce\`, \`aberto_em\`, \`fechado_em\`, \`pagamento\`, \`vr_total\` (valor do pedido) e \`cancelado\`.
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 14.861 linhas.
 
 ## Objetivo
 
@@ -163,39 +165,55 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "pagamento": ['Cartao de Debito', 'Dinheiro', 'Nao informado', 'Cartao de Credito', 'Nao informado', 'Cartao de Debito', 'Dinheiro', 'PIX', 'Cartao de Credito', 'PIX', 'Cartao de Debito', 'Dinheiro'],
-    "vr_total": [53.8, 18.5, None, 144.4, None, 0.0, 21.9, 19.4, 4.8, 54.9, 9.7, 21.75],
-    "cancelado": [False, False, False, False, False, True, False, False, False, False, False, False],
-}
+DADOS = "/app/data/pedidos.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
     assert isinstance(resultado(), dict), "main(df) deve retornar um dicionário."
 
 
+def test_cartao_de_debito():
+    assert resultado()["Cartao de Debito"] == {'pedidos': 3065, 'total': 277982.89, 'media': 90.7, 'percentual': 37.77}, "Cartao de Debito: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+
+
 def test_cartao_de_credito():
-    assert resultado()["Cartao de Credito"] == {'pedidos': 2, 'total': 149.2, 'media': 74.6, 'percentual': 42.73}, "Cartao de Credito: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+    assert resultado()["Cartao de Credito"] == {'pedidos': 2157, 'total': 225515.49, 'media': 104.55, 'percentual': 30.64}, "Cartao de Credito: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
 
 
 def test_pix():
-    assert resultado()["PIX"] == {'pedidos': 2, 'total': 74.3, 'media': 37.15, 'percentual': 21.28}, "PIX: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
-
-
-def test_cartao_de_debito():
-    assert resultado()["Cartao de Debito"] == {'pedidos': 2, 'total': 63.5, 'media': 31.75, 'percentual': 18.19}, "Cartao de Debito: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+    assert resultado()["PIX"] == {'pedidos': 1057, 'total': 118420.86, 'media': 112.03, 'percentual': 16.09}, "PIX: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
 
 
 def test_dinheiro():
-    assert resultado()["Dinheiro"] == {'pedidos': 3, 'total': 62.15, 'media': 20.72, 'percentual': 17.8}, "Dinheiro: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+    assert resultado()["Dinheiro"] == {'pedidos': 4120, 'total': 113931.24, 'media': 27.65, 'percentual': 15.48}, "Dinheiro: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+
+
+def test_vale_refeicao():
+    assert resultado()["Vale Refeicao"] == {'pedidos': 2, 'total': 68.4, 'media': 34.2, 'percentual': 0.01}, "Vale Refeicao: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+
+
+def test_cheque():
+    assert resultado()["Cheque"] == {'pedidos': 1, 'total': 35.0, 'media': 35.0, 'percentual': 0.0}, "Cheque: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+
+
+def test_credito_loja():
+    assert resultado()["Credito Loja"] == {'pedidos': 2, 'total': 18.9, 'media': 9.45, 'percentual': 0.0}, "Credito Loja: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+
+
+def test_outros():
+    assert resultado()["Outros"] == {'pedidos': 1, 'total': 7.0, 'media': 7.0, 'percentual': 0.0}, "Outros: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
+
+
+def test_vale_alimentacao():
+    assert resultado()["Vale Alimentacao"] == {'pedidos': 1, 'total': 4.0, 'media': 4.0, 'percentual': 0.0}, "Vale Alimentacao: filtre os cancelados e os sem valor, agrupe com groupby(\\"pagamento\\") e use size(), sum() e mean()."
 
 
 def test_ordem_do_maior_para_o_menor_total():
-    assert list(resultado()) == ['Cartao de Credito', 'PIX', 'Cartao de Debito', 'Dinheiro'], "As formas de pagamento devem vir da maior para a menor total."
+    assert list(resultado()) == ['Cartao de Debito', 'Cartao de Credito', 'PIX', 'Dinheiro', 'Vale Refeicao', 'Cheque', 'Credito Loja', 'Outros', 'Vale Alimentacao'], "As formas de pagamento devem vir da maior para a menor total."
 
 
 def test_tabela_pequena():
@@ -212,7 +230,9 @@ def test_tabela_pequena():
     title: 'PD03 - Qualidade dos dados dos pedidos',
     description: `## Contexto
 
-Uma papelaria registra suas vendas em uma tabela de pedidos, com uma venda por linha. As colunas são: \`id_nfce\`, \`aberto_em\`, \`fechado_em\`, \`pagamento\`, \`vr_total\` (valor do pedido) e \`cancelado\`.
+Uma papelaria registra suas vendas em uma tabela de pedidos, com uma venda por linha. Entre as colunas da tabela estão: \`id_nfce\`, \`aberto_em\`, \`fechado_em\`, \`pagamento\`, \`vr_total\` (valor do pedido) e \`cancelado\`.
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 14.861 linhas.
 
 ## Objetivo
 
@@ -264,16 +284,11 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "id_nfce": [20246, 20264, 20269, 20335, 20941, 21182, 24468, 24941, 29502, 29550, 33539, 33552],
-    "fechado_em": ['2023-01-02', '2023-01-04', None, '2023-01-09', None, '2023-03-15', '2024-01-03', '2024-02-24', '2025-05-05', '2025-05-08', '2026-05-16', '2026-05-18'],
-    "vr_total": [53.8, 18.5, None, 144.4, None, 0.0, 21.9, 19.4, 4.8, 54.9, 9.7, 21.75],
-    "cancelado": [False, False, False, False, False, True, False, False, False, False, False, False],
-}
+DADOS = "/app/data/pedidos.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
@@ -281,27 +296,27 @@ def test_retorna_um_dicionario():
 
 
 def test_pedidos():
-    assert resultado()["pedidos"] == 12, "pedidos: use len(df)."
+    assert resultado()["pedidos"] == 14861, "pedidos: use len(df)."
 
 
 def test_cancelados():
-    assert resultado()["cancelados"] == 1, "cancelados: some a coluna cancelado: cada True vale 1."
+    assert resultado()["cancelados"] == 86, "cancelados: some a coluna cancelado: cada True vale 1."
 
 
 def test_percentual_cancelados():
-    assert resultado()["percentual_cancelados"] == 8.33, "percentual_cancelados: divida cancelados por pedidos, multiplique por 100 e arredonde."
+    assert resultado()["percentual_cancelados"] == 0.58, "percentual_cancelados: divida cancelados por pedidos, multiplique por 100 e arredonde."
 
 
 def test_sem_valor():
-    assert resultado()["sem_valor"] == 2, "sem_valor: use isna().sum() em vr_total."
+    assert resultado()["sem_valor"] == 4369, "sem_valor: use isna().sum() em vr_total."
 
 
 def test_percentual_sem_valor():
-    assert resultado()["percentual_sem_valor"] == 16.67, "percentual_sem_valor: divida sem_valor por pedidos, multiplique por 100 e arredonde."
+    assert resultado()["percentual_sem_valor"] == 29.4, "percentual_sem_valor: divida sem_valor por pedidos, multiplique por 100 e arredonde."
 
 
 def test_sem_fechamento():
-    assert resultado()["sem_fechamento"] == 2, "sem_fechamento: use isna().sum() em fechado_em."
+    assert resultado()["sem_fechamento"] == 825, "sem_fechamento: use isna().sum() em fechado_em."
 
 
 def test_tabela_pequena():
@@ -319,7 +334,9 @@ def test_tabela_pequena():
     title: 'PD04 - Resumo das vendas dos itens',
     description: `## Contexto
 
-Uma papelaria registra os produtos de cada venda em uma tabela de itens, com um produto vendido por linha. As colunas são: \`id_item\`, \`id_nfce\` (pedido), \`xProd\` (nome do produto), \`qCom\` (quantidade), \`vUnCom\` (preço unitário) e \`vDesc\` (desconto).
+Uma papelaria registra os produtos de cada venda em uma tabela de itens, com um produto vendido por linha. Entre as colunas da tabela estão: \`id_item\`, \`id_nfce\` (pedido), \`xProd\` (nome do produto), \`qCom\` (quantidade), \`vUnCom\` (preço unitário) e \`vDesc\` (desconto).
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 25.992 linhas.
 
 ## Objetivo
 
@@ -374,17 +391,11 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "id_item": [32187, 32188, 32213, 32214, 32215, 32362, 32363, 33504, 33505, 34021, 34022, 40174, 40175, 41440, 41441, 41442, 49612, 49613, 49614, 49679, 49680, 56635, 56636, 56650, 56651],
-    "id_nfce": [20246, 20246, 20264, 20264, 20264, 20335, 20335, 20941, 20941, 21182, 21182, 24468, 24468, 24941, 24941, 24941, 29502, 29502, 29502, 29550, 29550, 33539, 33539, 33552, 33552],
-    "qCom": [2.0, 1.0, 1.0, 1.0, 1.0, 5.0, 1.0, 13.0, 12.0, 4.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 6.0, 1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 63.0, 10.0],
-    "vUnCom": [21.9, 10.0, 15.0, 3.0, 0.5, 19.9, 44.9, 1.5, 0.6, 10.0, 4.0, 2.0, 19.9, 12.9, 3.5, 3.0, 0.6, 0.5, 0.7, 50.0, 4.9, 1.7, 0.4, 0.25, 0.6],
-    "vDesc": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-}
+DADOS = "/app/data/itens.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
@@ -392,35 +403,35 @@ def test_retorna_um_dicionario():
 
 
 def test_itens():
-    assert resultado()["itens"] == 25, "itens: use len(df)."
+    assert resultado()["itens"] == 25992, "itens: use len(df)."
 
 
 def test_unidades():
-    assert resultado()["unidades"] == 152.0, "unidades: some a coluna qCom."
+    assert resultado()["unidades"] == 324821.51, "unidades: some a coluna qCom."
 
 
 def test_faturamento():
-    assert resultado()["faturamento"] == 423.85, "faturamento: calcule qCom * vUnCom - vDesc e some."
+    assert resultado()["faturamento"] == 816865.75, "faturamento: calcule qCom * vUnCom - vDesc e some."
 
 
 def test_valor_medio():
-    assert resultado()["valor_medio"] == 16.95, "valor_medio: use mean() na coluna calculada."
+    assert resultado()["valor_medio"] == 31.43, "valor_medio: use mean() na coluna calculada."
 
 
 def test_maior_item():
-    assert resultado()["maior_item"] == 99.5, "maior_item: use max() na coluna calculada."
+    assert resultado()["maior_item"] == 1000.0, "maior_item: use max() na coluna calculada."
 
 
 def test_menor_item():
-    assert resultado()["menor_item"] == 0.5, "menor_item: use min() na coluna calculada."
+    assert resultado()["menor_item"] == 0.0, "menor_item: use min() na coluna calculada."
 
 
 def test_pedidos():
-    assert resultado()["pedidos"] == 11, "pedidos: use nunique() em id_nfce."
+    assert resultado()["pedidos"] == 13543, "pedidos: use nunique() em id_nfce."
 
 
 def test_itens_por_pedido():
-    assert resultado()["itens_por_pedido"] == 2.27, "itens_por_pedido: divida itens por pedidos e arredonde."
+    assert resultado()["itens_por_pedido"] == 1.92, "itens_por_pedido: divida itens por pedidos e arredonde."
 
 
 def test_tabela_pequena():
@@ -439,7 +450,9 @@ def test_tabela_pequena():
     title: 'PD05 - Produtos mais e menos vendidos',
     description: `## Contexto
 
-Uma papelaria registra os produtos de cada venda em uma tabela de itens, com um produto vendido por linha. As colunas são: \`id_item\`, \`id_nfce\` (pedido), \`xProd\` (nome do produto), \`qCom\` (quantidade), \`vUnCom\` (preço unitário) e \`vDesc\` (desconto).
+Uma papelaria registra os produtos de cada venda em uma tabela de itens, com um produto vendido por linha. Entre as colunas da tabela estão: \`id_item\`, \`id_nfce\` (pedido), \`xProd\` (nome do produto), \`qCom\` (quantidade), \`vUnCom\` (preço unitário) e \`vDesc\` (desconto).
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 25.992 linhas.
 
 ## Objetivo
 
@@ -491,14 +504,11 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "xProd": ['resma a4 report', 'a3', 'porta-retrato', 'folha impressao', 'folha acesso', 'caderno 160 fls pro', 'lapis 24 cores faber', 'folha impressao', 'folha impressao', 'folha plast pollassil a3', 'folha plast pollassil a4', 'fita durex md', 'porta-durex gr', 'bolas de gas', 'folha impressao', 'folha impressao', 'folha impressao', 'folha acesso', 'envelope a4 pt', 'lamina estilete larga', 'grafite tilibra', 'cartolina dupla face', 'folha copia', 'folha copia pb a4', 'envelope a4 pt'],
-    "qCom": [2.0, 1.0, 1.0, 1.0, 1.0, 5.0, 1.0, 13.0, 12.0, 4.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 6.0, 1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 63.0, 10.0],
-}
+DADOS = "/app/data/itens.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
@@ -506,7 +516,7 @@ def test_retorna_um_dicionario():
 
 
 def test_produtos_distintos():
-    assert resultado()["produtos_distintos"] == 18, "produtos_distintos: use nunique() em xProd."
+    assert resultado()["produtos_distintos"] == 1426, "produtos_distintos: use nunique() em xProd."
 
 
 def test_mais_vendido():
@@ -514,11 +524,11 @@ def test_mais_vendido():
 
 
 def test_unidades_mais_vendido():
-    assert resultado()["unidades_mais_vendido"] == 63.0, "unidades_mais_vendido: use max() nas unidades agrupadas."
+    assert resultado()["unidades_mais_vendido"] == 153122.0, "unidades_mais_vendido: use max() nas unidades agrupadas."
 
 
 def test_menos_vendido():
-    assert resultado()["menos_vendido"] == 'a3', "menos_vendido: use idxmin() nas unidades agrupadas."
+    assert resultado()["menos_vendido"] == '300g', "menos_vendido: use idxmin() nas unidades agrupadas."
 
 
 def test_unidades_menos_vendido():
@@ -526,7 +536,7 @@ def test_unidades_menos_vendido():
 
 
 def test_media_por_produto():
-    assert resultado()["media_por_produto"] == 8.44, "media_por_produto: use mean() nas unidades agrupadas e arredonde."
+    assert resultado()["media_por_produto"] == 227.79, "media_por_produto: use mean() nas unidades agrupadas e arredonde."
 
 
 def test_tabela_pequena():
@@ -542,7 +552,9 @@ def test_tabela_pequena():
     title: 'PD06 - Relação entre preço e quantidade',
     description: `## Contexto
 
-Uma papelaria registra os produtos de cada venda em uma tabela de itens, com um produto vendido por linha. As colunas são: \`id_item\`, \`id_nfce\` (pedido), \`xProd\` (nome do produto), \`qCom\` (quantidade), \`vUnCom\` (preço unitário) e \`vDesc\` (desconto).
+Uma papelaria registra os produtos de cada venda em uma tabela de itens, com um produto vendido por linha. Entre as colunas da tabela estão: \`id_item\`, \`id_nfce\` (pedido), \`xProd\` (nome do produto), \`qCom\` (quantidade), \`vUnCom\` (preço unitário) e \`vDesc\` (desconto).
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 25.992 linhas.
 
 ## Objetivo
 
@@ -590,14 +602,11 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "qCom": [2.0, 1.0, 1.0, 1.0, 1.0, 5.0, 1.0, 13.0, 12.0, 4.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 6.0, 1.0, 1.0, 1.0, 1.0, 1.0, 20.0, 63.0, 10.0],
-    "vUnCom": [21.9, 10.0, 15.0, 3.0, 0.5, 19.9, 44.9, 1.5, 0.6, 10.0, 4.0, 2.0, 19.9, 12.9, 3.5, 3.0, 0.6, 0.5, 0.7, 50.0, 4.9, 1.7, 0.4, 0.25, 0.6],
-}
+DADOS = "/app/data/itens.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
@@ -605,19 +614,19 @@ def test_retorna_um_dicionario():
 
 
 def test_covariancia():
-    assert resultado()["covariancia"] == -41.18, "covariancia: use df[\\"qCom\\"].cov(df[\\"vUnCom\\"])."
+    assert resultado()["covariancia"] == -146.01, "covariancia: use df[\\"qCom\\"].cov(df[\\"vUnCom\\"])."
 
 
 def test_correlacao():
-    assert resultado()["correlacao"] == -0.24, "correlacao: use df[\\"qCom\\"].corr(df[\\"vUnCom\\"])."
+    assert resultado()["correlacao"] == -0.05, "correlacao: use df[\\"qCom\\"].corr(df[\\"vUnCom\\"])."
 
 
 def test_quantidade_media_baratos():
-    assert resultado()["quantidade_media_baratos"] == 8.44, "quantidade_media_baratos: filtre vUnCom <= 5 e tire a média de qCom."
+    assert resultado()["quantidade_media_baratos"] == 21.53, "quantidade_media_baratos: filtre vUnCom <= 5 e tire a média de qCom."
 
 
 def test_quantidade_media_caros():
-    assert resultado()["quantidade_media_caros"] == 1.89, "quantidade_media_caros: filtre vUnCom > 5 e tire a média de qCom."
+    assert resultado()["quantidade_media_caros"] == 2.37, "quantidade_media_caros: filtre vUnCom > 5 e tire a média de qCom."
 
 
 def test_tabela_pequena():
@@ -633,7 +642,9 @@ def test_tabela_pequena():
     title: 'PD07 - Análise de preços do cadastro',
     description: `## Contexto
 
-Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. As colunas são: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
+Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. Entre as colunas da tabela estão: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 1.768 linhas.
 
 ## Objetivo
 
@@ -687,14 +698,11 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "xProd": ['contra-cheque pt.', 'grampo pra grampeador cx c 1000', 'resma a4 report', 'porta-retrato', 'envelope a4 pt', 'grafite tilibra', 'bolas de gas n 8', 'folha copia', 'folha copia pb a4', 'caderno 10 materia', 'lapis 24 cores faber', 'fita durex md', 'lamina estilete larga', 'cartolina dupla face', 'folha plast pollassil a4', 'folha plast pollassil a3', 'folha impressao', 'folha acesso', 'folha impressao', 'folha impressao', 'folha impressao', 'folha impressao fotografico', 'folha pollasil', 'porta-durex gr'],
-    "vUnCom": [44.9, 3.5, 27.9, 20.0, 0.6, 4.0, 13.9, 0.4, 0.3, 20.0, 44.9, 2.0, 50.0, 1.7, 4.0, 10.0, 1.25, 0.5, 0.7, 0.3, 0.18, 3.0, 4.0, 9.9],
-}
+DADOS = "/app/data/produtos.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
@@ -702,31 +710,31 @@ def test_retorna_um_dicionario():
 
 
 def test_produtos():
-    assert resultado()["produtos"] == 24, "produtos: use count() em vUnCom."
+    assert resultado()["produtos"] == 1768, "produtos: use count() em vUnCom."
 
 
 def test_preco_medio():
-    assert resultado()["preco_medio"] == 11.16, "preco_medio: use mean() e arredonde."
+    assert resultado()["preco_medio"] == 15.53, "preco_medio: use mean() e arredonde."
 
 
 def test_preco_mediano():
-    assert resultado()["preco_mediano"] == 3.75, "preco_mediano: use median(), não mean()."
+    assert resultado()["preco_mediano"] == 7.9, "preco_mediano: use median(), não mean()."
 
 
 def test_desvio_padrao():
-    assert resultado()["desvio_padrao"] == 15.59, "desvio_padrao: use std() do pandas e arredonde."
+    assert resultado()["desvio_padrao"] == 22.96, "desvio_padrao: use std() do pandas e arredonde."
 
 
 def test_amplitude():
-    assert resultado()["amplitude"] == 49.82, "amplitude: subtraia o min() do max()."
+    assert resultado()["amplitude"] == 294.88, "amplitude: subtraia o min() do max()."
 
 
 def test_mais_barato():
-    assert resultado()["mais_barato"] == 'folha impressao', "mais_barato: use idxmin() para achar a linha e pegue o nome com df.loc[linha, \\"xProd\\"]."
+    assert resultado()["mais_barato"] == 'folha copia', "mais_barato: use idxmin() para achar a linha e pegue o nome com df.loc[linha, \\"xProd\\"]."
 
 
 def test_mais_caro():
-    assert resultado()["mais_caro"] == 'lamina estilete larga', "mais_caro: use idxmax() para achar a linha e pegue o nome com df.loc[linha, \\"xProd\\"]."
+    assert resultado()["mais_caro"] == 'resma a3 caixa', "mais_caro: use idxmax() para achar a linha e pegue o nome com df.loc[linha, \\"xProd\\"]."
 
 
 def test_tabela_pequena():
@@ -742,7 +750,9 @@ def test_tabela_pequena():
     title: 'PD08 - Margem de lucro dos produtos',
     description: `## Contexto
 
-Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. As colunas são: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
+Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. Entre as colunas da tabela estão: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 1.768 linhas.
 
 ## Objetivo
 
@@ -794,15 +804,11 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "xProd": ['contra-cheque pt.', 'grampo pra grampeador cx c 1000', 'resma a4 report', 'porta-retrato', 'envelope a4 pt', 'grafite tilibra', 'bolas de gas n 8', 'folha copia', 'folha copia pb a4', 'caderno 10 materia', 'lapis 24 cores faber', 'fita durex md', 'lamina estilete larga', 'cartolina dupla face', 'folha plast pollassil a4', 'folha plast pollassil a3', 'folha impressao', 'folha acesso', 'folha impressao', 'folha impressao', 'folha impressao', 'folha impressao fotografico', 'folha pollasil', 'porta-durex gr'],
-    "vUnCom": [44.9, 3.5, 27.9, 20.0, 0.6, 4.0, 13.9, 0.4, 0.3, 20.0, 44.9, 2.0, 50.0, 1.7, 4.0, 10.0, 1.25, 0.5, 0.7, 0.3, 0.18, 3.0, 4.0, 9.9],
-    "custo": [2.0, 8.0, 9.0, 4.0, 0.4, 4.0, None, None, 1.0, 12.9, 24.9, 1.0, 1.0, 1.2, None, None, None, 0.1, 0.1, 0.25, 0.1, None, None, 4.0],
-}
+DADOS = "/app/data/produtos.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
@@ -810,27 +816,27 @@ def test_retorna_um_dicionario():
 
 
 def test_com_custo():
-    assert resultado()["com_custo"] == 17, "com_custo: remova os sem custo com dropna(subset=[\\"custo\\"]) e conte as linhas."
+    assert resultado()["com_custo"] == 1178, "com_custo: remova os sem custo com dropna(subset=[\\"custo\\"]) e conte as linhas."
 
 
 def test_sem_custo():
-    assert resultado()["sem_custo"] == 7, "sem_custo: use isna().sum() em custo."
+    assert resultado()["sem_custo"] == 590, "sem_custo: use isna().sum() em custo."
 
 
 def test_margem_media():
-    assert resultado()["margem_media"] == 9.26, "margem_media: calcule vUnCom - custo só nos produtos com custo e use mean()."
+    assert resultado()["margem_media"] == 11.08, "margem_media: calcule vUnCom - custo só nos produtos com custo e use mean()."
 
 
 def test_maior_margem():
-    assert resultado()["maior_margem"] == 'lamina estilete larga', "maior_margem: use idxmax() na margem e pegue o nome com .loc."
+    assert resultado()["maior_margem"] == 'resma a3 caixa', "maior_margem: use idxmax() na margem e pegue o nome com .loc."
 
 
 def test_menor_margem():
-    assert resultado()["menor_margem"] == 'grampo pra grampeador cx c 1000', "menor_margem: use idxmin() na margem e pegue o nome com .loc."
+    assert resultado()["menor_margem"] == 'cx bobina termica', "menor_margem: use idxmin() na margem e pegue o nome com .loc."
 
 
 def test_com_prejuizo():
-    assert resultado()["com_prejuizo"] == 2, "com_prejuizo: conte as margens menores que 0."
+    assert resultado()["com_prejuizo"] == 177, "com_prejuizo: conte as margens menores que 0."
 
 
 def test_tabela_pequena():
@@ -847,7 +853,9 @@ def test_tabela_pequena():
     title: 'PD09 - Situação do estoque',
     description: `## Contexto
 
-Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. As colunas são: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
+Uma papelaria mantém o cadastro dos seus produtos em uma tabela, com um produto por linha. Entre as colunas da tabela estão: \`id_produto\`, \`xProd\` (nome do produto), \`vUnCom\` (preço de venda), \`custo\`, \`qt_estoque\`, \`qt_minima\` e \`qt_maxima\`.
+
+Na correção, \`main(df)\` recebe a tabela real da papelaria, com 1.768 linhas.
 
 ## Objetivo
 
@@ -898,16 +906,11 @@ def main(df):
 
 from app import main
 
-TABELA = {
-    "xProd": ['contra-cheque pt.', 'grampo pra grampeador cx c 1000', 'resma a4 report', 'porta-retrato', 'envelope a4 pt', 'grafite tilibra', 'bolas de gas n 8', 'folha copia', 'folha copia pb a4', 'caderno 10 materia', 'lapis 24 cores faber', 'fita durex md', 'lamina estilete larga', 'cartolina dupla face', 'folha plast pollassil a4', 'folha plast pollassil a3', 'folha impressao', 'folha acesso', 'folha impressao', 'folha impressao', 'folha impressao', 'folha impressao fotografico', 'folha pollasil', 'porta-durex gr'],
-    "qt_estoque": [-83.0, -134.0, -7407.0, -42.0, -1289.0, 64.0, -224.0, -1179.0, -41463.0, -559.0, -2.0, -726.0, -270.0, -917.0, -960.0, 125.0, -5961.0, 2492.999, -1212.88, -12142.0, -404.0, -5127.0, -58.0, -12.0],
-    "qt_minima": [None, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0, 10.0, 2.0, 1.0, 1.0, 1.0, 1.0, 3.0, 3.0, 3.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 3.0, 2.0],
-    "qt_maxima": [None, 10.0, 5.0, 5.0, 5.0, 5.0, 200.0, 200.0, 5.0, 200.0, 200.0, 200.0, 200.0, 5.0, 5.0, 5.0, 200.0, 200.0, 200.0, 5.0, 200.0, 200.0, 5.0, 5.0],
-}
+DADOS = "/app/data/produtos.csv"
 
 
 def resultado():
-    return main(pd.DataFrame(TABELA))
+    return main(pd.read_csv(DADOS))
 
 
 def test_retorna_um_dicionario():
@@ -915,19 +918,19 @@ def test_retorna_um_dicionario():
 
 
 def test_estoque_negativo():
-    assert resultado()["estoque_negativo"] == 21, "estoque_negativo: conte os estoques menores que 0."
+    assert resultado()["estoque_negativo"] == 944, "estoque_negativo: conte os estoques menores que 0."
 
 
 def test_abaixo_do_minimo():
-    assert resultado()["abaixo_do_minimo"] == 20, "abaixo_do_minimo: compare qt_estoque < qt_minima linha a linha e conte os True."
+    assert resultado()["abaixo_do_minimo"] == 961, "abaixo_do_minimo: compare qt_estoque < qt_minima linha a linha e conte os True."
 
 
 def test_acima_do_maximo():
-    assert resultado()["acima_do_maximo"] == 3, "acima_do_maximo: compare qt_estoque > qt_maxima linha a linha e conte os True."
+    assert resultado()["acima_do_maximo"] == 349, "acima_do_maximo: compare qt_estoque > qt_maxima linha a linha e conte os True."
 
 
 def test_menor_estoque():
-    assert resultado()["menor_estoque"] == -41463.0, "menor_estoque: use min() em qt_estoque."
+    assert resultado()["menor_estoque"] == -110377.0, "menor_estoque: use min() em qt_estoque."
 
 
 def test_produto_menor_estoque():
@@ -935,7 +938,7 @@ def test_produto_menor_estoque():
 
 
 def test_maior_estoque():
-    assert resultado()["maior_estoque"] == 2493.0, "maior_estoque: use max() em qt_estoque e arredonde."
+    assert resultado()["maior_estoque"] == 9957.0, "maior_estoque: use max() em qt_estoque e arredonde."
 
 
 def test_tabela_pequena():
