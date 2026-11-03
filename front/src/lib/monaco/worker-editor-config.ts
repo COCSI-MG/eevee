@@ -1,3 +1,4 @@
+import type { EditorFeatureId } from "./workspace/features/types";
 import { WorkerType } from "@/app/interface/scheduler-api/worker";
 import WORKER_SOURCE_MAP from "./worker-source-map.json";
 
@@ -28,8 +29,8 @@ export type MonacoCompilerPreset =
 export type ImportCompletionPolicy = "script" | "web" | "none";
 
 export interface WorkerEditorConfig extends WorkerLanguageConfig {
-  /** Enable browser-only Python parsing and lint for this worker. */
-  pythonIntellisense?: boolean;
+  /** Optional editor integrations selected by the workspace runtime. */
+  editorFeatures?: readonly EditorFeatureId[];
   /** Compiler option preset applied to TypeScript/JavaScript models. */
   compilerPreset: MonacoCompilerPreset | null;
   /** File categories exposed by the workspace import completion provider. */
@@ -66,6 +67,7 @@ const WORKER_EDITOR_CONFIG_REGISTRY: Record<WorkerType, WorkerEditorConfig> = {
     importCompletionPolicy: "script",
   },
   [WorkerType.NODE_NEXTJS_CYPRESS]: {
+    editorFeatures: ["jsx-editing"],
     editorLanguage: "typescript",
     fileExtension: ".tsx",
     defaultFileName: "page",
@@ -73,6 +75,7 @@ const WORKER_EDITOR_CONFIG_REGISTRY: Record<WorkerType, WorkerEditorConfig> = {
     importCompletionPolicy: "web",
   },
   [WorkerType.NODE_REACTJS_CYPRESS]: {
+    editorFeatures: ["jsx-editing"],
     editorLanguage: "typescript",
     fileExtension: ".tsx",
     defaultFileName: "App",
@@ -101,7 +104,7 @@ const WORKER_EDITOR_CONFIG_REGISTRY: Record<WorkerType, WorkerEditorConfig> = {
     importCompletionPolicy: "script",
   },
   [WorkerType.PYTHON_DEFAULT]: {
-    pythonIntellisense: true,
+    editorFeatures: ["python-intellisense"],
     editorLanguage: "python",
     fileExtension: ".py",
     defaultFileName: "app",

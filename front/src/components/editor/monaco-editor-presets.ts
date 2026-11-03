@@ -1,3 +1,5 @@
+import { workspaceEditorOptions } from "@/lib/monaco/workspace/features";
+import type { WorkerType } from "@/app/interface/scheduler-api/worker";
 import type { editor } from "monaco-editor";
 
 import type {
@@ -72,10 +74,12 @@ export function resolveMonacoEditorOptions(
   preset: MonacoEditorPreset,
   overrides: MonacoEditorOptionOverrides | undefined,
   readOnly: boolean,
+  workerType?: WorkerType | string
 ): editor.IStandaloneEditorConstructionOptions {
   return {
     ...BASE_EDITOR_OPTIONS,
     ...EDITOR_PRESET_OPTIONS[preset],
+    ...(preset === "workspace" ? workspaceEditorOptions(workerType) : {}),
     ...overrides,
     readOnly: preset === "read-only-preview" || readOnly,
   };
