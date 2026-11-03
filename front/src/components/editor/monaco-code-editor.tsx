@@ -3,13 +3,12 @@
 import dynamic from "next/dynamic";
 
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
-import { findWorkerEditorConfig } from "@/lib/monaco/worker-editor-config";
 import { resolveMonacoLanguage } from "@/lib/monaco/language";
 import {
   EEVEE_MONACO_THEME,
   registerEeveeMonacoTheme,
 } from "@/lib/monaco/theme";
-import { configureJsxWorker } from "@/lib/monaco/workspace/jsx-editing";
+import { prepareWorkspaceEditor } from "@/lib/monaco/workspace/features";
 import { workspaceModelPath } from "@/lib/monaco/workspace/models";
 
 import type { MonacoCodeEditorProps } from "./monaco-code-editor.types";
@@ -48,13 +47,12 @@ export function MonacoCodeEditor({
     path,
     workerType,
   });
-  const isWebEditing = preset === "workspace" && !!findWorkerEditorConfig(workerType)?.webEditing;
 
   const options = resolveMonacoEditorOptions(
     preset,
     optionOverrides,
     readOnly,
-    isWebEditing,
+    workerType
   );
   const handleMount = useMonacoEditorLifecycle({
     preset,
@@ -69,9 +67,7 @@ export function MonacoCodeEditor({
   const handleBeforeMount: BeforeMount = (monaco) => {
     registerEeveeMonacoTheme(monaco);
 
-    if (isWebEditing) {
-      configureJsxWorker(monaco);
-    }
+    if (preset === "workspace") prepareWorkspaceEditor(monaco, workerType);
   }
 
   return (
