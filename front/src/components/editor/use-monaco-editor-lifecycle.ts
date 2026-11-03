@@ -4,6 +4,7 @@ import type { editor } from "monaco-editor";
 import type { WorkerType } from "@/app/interface/scheduler-api/worker";
 import type { EditorActionGuardMode } from "@/constants/editor-action-guard";
 import { registerEditorActionGuard } from "@/hooks/user-actions/editor-action-guard";
+import { registerJsxEditing } from "@/lib/monaco/workspace/jsx-editing";
 import { registerWorkspaceRuntime } from "@/lib/monaco/workspace/runtime";
 import type { FileNode } from "@/types/shared";
 
@@ -50,6 +51,9 @@ export function useMonacoEditorLifecycle({
   actionGuardScope,
   onDidType,
 }: UseMonacoEditorLifecycleOptions): MonacoEditorMountHandler {
+  const workerTypeRef = React.useRef(workerType);
+  workerTypeRef.current = workerType;
+  const jsxCleanupRef = React.useRef<(() => void) | null>(null);
   const editorRef = React.useRef<editor.IStandaloneCodeEditor | null>(null);
   const runtimeRef = React.useRef<WorkspaceRuntime | null>(null);
   const actionCleanupRef = React.useRef<(() => void) | null>(null);
@@ -106,6 +110,7 @@ export function useMonacoEditorLifecycle({
       dragCleanupRef.current?.();
       contextMenuCleanupRef.current?.();
       typingCleanupRef.current?.();
+      jsxCleanupRef.current?.();
       runtimeRef.current?.dispose();
     },
     [],
@@ -115,6 +120,8 @@ export function useMonacoEditorLifecycle({
     editorRef.current = editorInstance;
 
     if (preset === "workspace") {
+      jsxCleanupRef.current?.();
+      jsxCleanupRef.current = registerJsxEditing(monaco, editorInstance, () => workerTypeRef.current);
       typingCleanupRef.current?.();
       const typingDisposable = editorInstance.onKeyDown((event) => {
         const keyboardEvent = event.browserEvent;
@@ -172,12 +179,14 @@ export function useMonacoEditorLifecycle({
       dragCleanupRef.current?.();
       contextMenuCleanupRef.current?.();
       typingCleanupRef.current?.();
+      jsxCleanupRef.current?.();
       runtimeRef.current?.dispose();
       editorRef.current = null;
       actionCleanupRef.current = null;
       dragCleanupRef.current = null;
       contextMenuCleanupRef.current = null;
       typingCleanupRef.current = null;
+      jsxCleanupRef.current = null;
       runtimeRef.current = null;
     });
   };

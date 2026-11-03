@@ -3,16 +3,20 @@
 import dynamic from "next/dynamic";
 
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
+import { findWorkerEditorConfig } from "@/lib/monaco/worker-editor-config";
 import { resolveMonacoLanguage } from "@/lib/monaco/language";
 import {
   EEVEE_MONACO_THEME,
   registerEeveeMonacoTheme,
 } from "@/lib/monaco/theme";
+import { configureJsxWorker } from "@/lib/monaco/workspace/jsx-editing";
 import { workspaceModelPath } from "@/lib/monaco/workspace/models";
 
 import type { MonacoCodeEditorProps } from "./monaco-code-editor.types";
 import { resolveMonacoEditorOptions } from "./monaco-editor-presets";
 import { useMonacoEditorLifecycle } from "./use-monaco-editor-lifecycle";
+
+import type { BeforeMount } from "@monaco-editor/react";
 
 export type {
   MonacoCodeEditorProps,
@@ -38,17 +42,19 @@ export function MonacoCodeEditor({
   readOnly = false,
   optionOverrides,
 }: MonacoCodeEditorProps) {
-  const effectivePath =
-    preset === "workspace" && path ? workspaceModelPath(path) : path;
+  const effectivePath = (preset === "workspace" && path) ? workspaceModelPath(path) : path;
   const effectiveLanguage = resolveMonacoLanguage({
     language,
     path,
     workerType,
   });
+  const isWebEditing = preset === "workspace" && !!findWorkerEditorConfig(workerType)?.webEditing;
+
   const options = resolveMonacoEditorOptions(
     preset,
     optionOverrides,
     readOnly,
+    isWebEditing,
   );
   const handleMount = useMonacoEditorLifecycle({
     preset,
@@ -59,6 +65,14 @@ export function MonacoCodeEditor({
     actionGuardScope,
     onDidType,
   });
+
+  const handleBeforeMount: BeforeMount = (monaco) => {
+    registerEeveeMonacoTheme(monaco);
+
+    if (isWebEditing) {
+      configureJsxWorker(monaco);
+    }
+  }
 
   return (
     <Editor
@@ -71,7 +85,7 @@ export function MonacoCodeEditor({
       keepCurrentModel={false}
       onChange={(nextValue) => onChange?.(nextValue ?? "")}
       onMount={handleMount}
-      beforeMount={registerEeveeMonacoTheme}
+      beforeMount={handleBeforeMount}
       className={className}
       options={options}
     />
