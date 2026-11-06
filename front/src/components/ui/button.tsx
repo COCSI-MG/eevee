@@ -41,12 +41,20 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, type, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    // Um <button> sem type vale como submit dentro de um <form> e salva o
+    // formulário em qualquer clique. Só o botão de salvar deve submeter, e os
+    // formulários do projeto já declaram type="submit" nele, então o padrão
+    // aqui é não submeter. Com asChild o type é repassado como veio, porque o
+    // filho pode não ser um <button>.
+    const resolvedType = asChild ? type : (type ?? "button")
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        type={resolvedType}
         {...props}
       />
     )
