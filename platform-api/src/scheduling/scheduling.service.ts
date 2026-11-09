@@ -33,11 +33,16 @@ import {
 import { Repository, In } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { ExecutionRequestService } from 'src/execution/execution-request.service';
-import { EXECUTION_COMMAND_QUEUE, ExecutionCommand } from '@eevee/execution-contracts';
+import { EXECUTION_COMMAND_QUEUE, ExecutionCommand, ExecutionSourceSnapshot } from '@eevee/execution-contracts';
 import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 import { ClassAccessService } from 'src/auth/class-access.service';
 import { UserRole } from 'src/user/user-role';
 import { JwtPayload } from 'src/auth/jwt.interface';
+import {
+  readAttemptSource,
+  storageScope,
+  validateStorageSnapshotReference,
+} from 'src/file-storage/source-storage';
 
 @Injectable()
 export class SchedulingService {
@@ -59,7 +64,30 @@ export class SchedulingService {
     private readonly classAccess: ClassAccessService
   ) {}
 
-  async createAndWait(createSchedulingDto: CreateSchedulingDto) {
+  private async resolveSourceSnapshot(dto: CreateSchedulingDto, kind: ExecutionSourceSnapshot['kind']) {
+    const answerKey = kind === 'answer-key';
+    if (!dto.sourceSnapshotId) {
+      if (answerKey) throw new BadRequestException('An answer-key snapshot is required');
+      return;
+    }
+    if (dto.files != null || dto.applicationFileContent != null) {
+      throw new BadRequestException('Supply a snapshot or inline code, never both');
+    }
+    await this.classAccess.assertAssignmentAccess(dto.assignmentId, answerKey);
+    const userId = this.requestContextService.getUser().userId;
+    dto.sourceSnapshot = await validateStorageSnapshotReference(
+      userId,
+      dto.assignmentId,
+      dto.sourceSnapshotId,
+      kind,
+    );
+    delete dto.sourceSnapshotId;
+  }
+
+  async createAndWait(
+    createSchedulingDto: CreateSchedulingDto,
+    kind: 'preview' | 'answer-key' = 'preview',
+  ) {
     await this.assignmentAlertService.assertCurrentUserNotSuspended(createSchedulingDto.assignmentId);
 
     const assignment = await this.assignmentService.findOne(
@@ -67,13 +95,15 @@ export class SchedulingService {
     );
 
     if (!assignment) throw new BadRequestException('Assignment not found');
+    await this.resolveSourceSnapshot(createSchedulingDto, kind);
     this.logger.debug({
       message: 'Assignment found',
       assignmentId: assignment.id,
     });
 
     this.logger.debug({
-      message: 'Running worker synchronously for preview',
+      message: 'Running worker synchronously',
+      kind,
       workerType: assignment.workerType,
     });
 
@@ -82,7 +112,7 @@ export class SchedulingService {
       baseWorkerData: {
         ...createSchedulingDto,
       },
-      jobName: `preview-assignment-${assignment.id}-${Date.now()}`,
+      jobName: `${kind}-assignment-${assignment.id}-${Date.now()}`,
     });
     if (!workerResult) {
       throw new BadRequestException('No test files available for execution.');
@@ -109,7 +139,7 @@ export class SchedulingService {
   async createSchedulingJobAsync(createSchedulingDto: CreateSchedulingDto) {
     this.logger.debug({
       message: 'Creating scheduling job asynchronously',
-      createSchedulingDto,
+      assignmentId: createSchedulingDto.assignmentId,
     });
 
     await this.assignmentAlertService.assertCurrentUserNotSuspended(createSchedulingDto.assignmentId);
@@ -144,11 +174,14 @@ export class SchedulingService {
       throw new BadRequestException('Max attempts reached');
     }
 
+    await this.resolveSourceSnapshot(createSchedulingDto, 'submission');
+
     this.logger.log('Sending scheduling job to BullMQ');
 
     const workerData = await this.schedulingWorkerPreparationService.prepare({
       assignment,
       baseWorkerData: plainToClass(CreateWorkerDto, {
+        sourceSnapshot: createSchedulingDto.sourceSnapshot,
         files: createSchedulingDto.files,
         applicationFileContent: createSchedulingDto.applicationFileContent,
       }),
@@ -164,6 +197,7 @@ export class SchedulingService {
       passes: 0,
       status: AttemptStatus.PENDING,
       receivedWork: createSchedulingDto.files ?? undefined,
+      sourceSnapshotId: createSchedulingDto.sourceSnapshot?.id,
     });
 
     const message: ExecutionCommand = {
@@ -190,6 +224,7 @@ export class SchedulingService {
     }
 
     const user = this.requestContextService.getUser();
+    await this.resolveSourceSnapshot(createSchedulingDto, 'preview');
 
     const existingPreviewRun =
       await this.schedulingPreviewRunRepository.findOne({
@@ -299,11 +334,18 @@ export class SchedulingService {
     }
     await this.classAccess.assertAssignmentAccess(originalAttempt.assignmentId, true);
 
-    if (!originalAttempt.receivedWork) {
+    if (!originalAttempt.sourceSnapshotId && !originalAttempt.receivedWork) {
       throw new BadRequestException(
         'Attempt does not have stored submission files for retry',
       );
     }
+    const sourceSnapshot: ExecutionSourceSnapshot | undefined = originalAttempt.sourceSnapshotId
+      ? {
+          scope: storageScope(originalAttempt.userId, originalAttempt.assignmentId),
+          id: originalAttempt.sourceSnapshotId,
+          kind: 'submission',
+        }
+      : undefined;
 
     const nextAttemptNumber = await this.attemptService.getNextAttemptNumber(
       originalAttempt.assignmentId,
@@ -320,14 +362,16 @@ export class SchedulingService {
         fails: 0,
         passes: 0,
         status: AttemptStatus.PENDING,
-        receivedWork: originalAttempt.receivedWork,
+        receivedWork: sourceSnapshot ? undefined : originalAttempt.receivedWork,
+        sourceSnapshotId: sourceSnapshot?.id,
       },
       originalAttempt.userId,
     );
 
     const workerData = plainToClass(CreateWorkerDto, {
-      files: originalAttempt.receivedWork,
-      applicationFileContent: '',
+      sourceSnapshot,
+      files: sourceSnapshot ? undefined : originalAttempt.receivedWork,
+      applicationFileContent: sourceSnapshot ? undefined : '',
     });
 
     const preparedWorkerData = await this.schedulingWorkerPreparationService.prepare({
@@ -393,7 +437,7 @@ export class SchedulingService {
     const refinedReport = await this.generateRefinedReport(
       attempt.report,
       attempt.assignment?.description ?? '',
-      attempt.receivedWork ?? undefined,
+      await readAttemptSource(attempt),
       attempt.assignment?.workerType,
     );
 

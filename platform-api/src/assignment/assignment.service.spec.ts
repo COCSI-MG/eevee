@@ -256,7 +256,7 @@ describe('AssignmentService', () => {
       expect(query.innerJoin).toHaveBeenCalledWith(
         'source.assignmentAttempts',
         'attempt',
-        'attempt.userId = :userId AND attempt.receivedWork IS NOT NULL',
+        'attempt.userId = :userId AND (attempt.receivedWork IS NOT NULL OR attempt.sourceSnapshotId IS NOT NULL)',
         { userId: 7 }
       );
       expect(query.andWhere).toHaveBeenCalledWith(
@@ -303,7 +303,10 @@ describe('AssignmentService', () => {
 
       expect(attemptRepository.findOne).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ assignmentId: 2, userId: 7 }),
+          where: [
+            expect.objectContaining({ assignmentId: 2, userId: 7, receivedWork: expect.anything() }),
+            expect.objectContaining({ assignmentId: 2, userId: 7, sourceSnapshotId: expect.anything() }),
+          ],
           order: { attempt: 'DESC' },
         }),
       );

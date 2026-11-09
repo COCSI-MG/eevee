@@ -3,14 +3,14 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
-import { AttemptAdminService } from "@/app/integration/scheduler-api/attempt";
-import { ExamService } from "@/app/integration/scheduler-api/exam";
+import { AssignmentService } from "@/app/integration/platform-api/assignment";
+import { AttemptAdminService } from "@/app/integration/platform-api/attempt";
+import { ExamService } from "@/app/integration/platform-api/exam";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { usePaginatedExamStudents } from "@/hooks/use-paginated-exam-students";
-import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
-import { ExamStudentGrades } from "@/app/interface/scheduler-api/exam-student-grades";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { AssignmentSummary } from "@/app/interface/platform-api/exam";
+import { ExamStudentGrades } from "@/app/interface/platform-api/exam-student-grades";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { toast } from "@/hooks/use-toast";
 
 interface UseExamDetailsDataParams {

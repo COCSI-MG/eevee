@@ -1,8 +1,8 @@
 "use client";
 
 import { createDefaultFileNode } from "@/app/assignment/worker-templates";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { Assignment } from "@/app/interface/platform-api/assignment";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { FileNode } from "@/types/shared";
 
 import {
@@ -11,7 +11,6 @@ import {
   DEFAULT_ASSIGNMENT_DESCRIPTION,
   DEFAULT_ASSIGNMENT_TITLE,
   FORMAT_ASSIGNMENT_README_CONTENT,
-  REACT_ASSIGNMENT_APP_PATH,
 } from "./constant";
 
 function buildAssignmentReadmeContent(assignment: Assignment): string {
@@ -55,18 +54,6 @@ function insertReadmeFileIfMissing(node: FileNode, content: string): FileNode {
   };
 }
 
-export function hasPath(node: FileNode, expectedPath: string): boolean {
-  if (node.path === expectedPath) {
-    return true;
-  }
-
-  if (!node.children?.length) {
-    return false;
-  }
-
-  return node.children.some((child) => hasPath(child, expectedPath));
-}
-
 export function findFirstFile(node: FileNode): FileNode | null {
   if (node.isFile) {
     return node;
@@ -88,18 +75,6 @@ export function findFirstFile(node: FileNode): FileNode | null {
 
 export function getAssignmentBoilerplate(assignment: Assignment): string {
   return assignment.boilerplateContent ?? assignment.boilerplate ?? "";
-}
-
-export function shouldRebuildWorkspaceTree(
-  assignment: Assignment,
-  fileTree: FileNode | null,
-): boolean {
-  return (
-    assignment.workerType === WorkerType.NODE_REACTJS_CYPRESS &&
-    (!fileTree ||
-      !fileTree.children?.length ||
-      !hasPath(fileTree, REACT_ASSIGNMENT_APP_PATH))
-  );
 }
 
 export function createInitialWorkspaceTree(assignment: Assignment): FileNode {

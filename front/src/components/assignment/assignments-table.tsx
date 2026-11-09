@@ -1,6 +1,6 @@
 "use client";
 
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import { AssignmentService } from "@/app/integration/platform-api/assignment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { BookOpenCheck } from "lucide-react";
@@ -20,7 +20,7 @@ import {
   ViewAssignmentAlertsComponent,
 } from "./activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { formatDateTime } from "@/utils/date";
 
 interface AssignmentsTableProps {

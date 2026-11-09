@@ -1,4 +1,4 @@
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 import { BookOpenCheck, CalendarClock, Code, CodeSquare } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useRouter } from "next/navigation";
 import { Route } from "@/app/routes";
@@ -27,7 +27,7 @@ import { formatScorePercentage } from "@/utils/score";
 import {
   AttemptStatus,
   PROCESSING_ATTEMPT_STATUSES,
-} from "@/app/interface/scheduler-api/assignment-attempt";
+} from "@/app/interface/platform-api/assignment-attempt";
 import {
   earliestDate,
   formatDateTime,

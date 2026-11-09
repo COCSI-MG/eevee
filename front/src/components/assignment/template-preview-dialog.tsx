@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Separator } from '../ui/separator';
 import { Code } from 'lucide-react';
-import { Template } from '@/app/interface/scheduler-api/template';
+import { Template } from '@/app/interface/platform-api/template';
 import { getWorkerLanguageConfig } from '@/lib/monaco/worker-editor-config';
 import { MonacoCodeEditor } from '@/components/editor/monaco-code-editor';
 

@@ -1,4 +1,4 @@
-import { UserRole } from "./interface/scheduler-api/user";
+import { UserRole } from "./interface/platform-api/user";
 
 export enum Route {
   Assignment = "assignment",

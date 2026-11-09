@@ -1,14 +1,14 @@
 "use client";
 
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { ClassesService } from "@/app/integration/platform-api/classes";
 import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
-} from "@/app/interface/scheduler-api/pagination";
+} from "@/app/interface/platform-api/pagination";
 import {
   Class,
   ClassStatusFilter
-} from "@/app/interface/scheduler-api/class";
+} from "@/app/interface/platform-api/class";
 import { useQuery } from "@tanstack/react-query";
 
 interface UsePaginatedClassesParams {

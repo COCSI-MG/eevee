@@ -8,6 +8,7 @@ on:
     paths:
       - "platform-api/**"
       - "packages/execution-contracts/**"
+      - "file-storage-api/**"
       - ".github/workflows/ci-platform-api.yaml"
 
 jobs:
@@ -27,6 +28,9 @@ jobs:
       - run: npm ci
       - name: Build execution contracts
         run: ./node_modules/.bin/tsc -p ../packages/execution-contracts/tsconfig.json
+      - name: Build the File Storage API test fixture
+        run: npm ci && npm run build:service
+        working-directory: file-storage-api
       - name: Tests
         run: npm test
       - name: Build

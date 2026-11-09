@@ -52,7 +52,7 @@ The codebase already has a clean, data-driven extension point per
 `WorkerType` for editor behavior — follow it instead of inventing a new
 mechanism:
 
-- [front/src/app/interface/scheduler-api/worker.ts](../../front/src/app/interface/scheduler-api/worker.ts) —
+- [front/src/app/interface/platform-api/worker.ts](../../front/src/app/interface/platform-api/worker.ts) —
   `WorkerType` enum. Only `PYTHON_DEFAULT` matters here.
 - [front/src/lib/monaco/worker-editor-config.ts](../../front/src/lib/monaco/worker-editor-config.ts) —
   `WORKER_EDITOR_CONFIG_REGISTRY`, one entry per `WorkerType` including

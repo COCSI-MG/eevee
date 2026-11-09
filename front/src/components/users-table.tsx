@@ -1,5 +1,5 @@
 "use client";
-import { User, UserRole } from "@/app/interface/scheduler-api/user";
+import { User, UserRole } from "@/app/interface/platform-api/user";
 
 import {
   Table,

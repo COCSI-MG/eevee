@@ -1,7 +1,7 @@
 "use client";
 
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { AuthSession } from "@/app/interface/scheduler-api/auth";
+import { Assignment } from "@/app/interface/platform-api/assignment";
+import { AuthSession } from "@/app/interface/platform-api/auth";
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { FileNode } from "@/types/shared";
 import React from "react";

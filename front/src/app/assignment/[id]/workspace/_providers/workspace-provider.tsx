@@ -1,17 +1,17 @@
 "use client";
 
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 import * as React from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AssignmentAlertService } from "@/app/integration/scheduler-api/assignment-alert";
+import { AssignmentAlertService } from "@/app/integration/platform-api/assignment-alert";
 import {
   AssignmentAlertStatus,
   AssignmentAlertType,
   RecordAssignmentAlertRequest
-} from "@/app/interface/scheduler-api/assignment-alert";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+} from "@/app/interface/platform-api/assignment-alert";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { usePreventUserActions } from "@/hooks/use-prevent-user-actions";
 import { SecurityViolationEvent } from "@/hooks/user-actions/types";
 import { FileNode, SelectedItem } from "@/types/shared";
@@ -22,7 +22,7 @@ import {
   createDefaultFileNode,
   DEFAULT_FILE_NODE,
 } from "@/app/assignment/worker-templates";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import {
   WORKSPACE_DRAG_AREA_SELECTOR,
   WORKSPACE_DRAG_MIME_TYPE,

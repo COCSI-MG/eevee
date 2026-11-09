@@ -1,5 +1,5 @@
 "use client";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -21,14 +21,23 @@ import {
 } from "@/app/assignment/[id]/workspace/_providers/workspace-provider";
 import { createInitialWorkspaceTree } from "@/app/assignment/[id]/workspace/_utils/workspace.utils";
 import { useWorkspaceFileEditor } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-file-editor";
-import { AnswerKeyService } from "@/app/integration/scheduler-api/answer-key";
+import { useWorkspaceSync } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-sync";
+import { flattenFileTreeToSchedulingFiles } from "@/app/assignment/[id]/workspace/_utils/workspace-scheduling.utils";
+import { treeFromStorageFiles } from "@/app/assignment/[id]/workspace/_utils/workspace-tree.utils";
+import { AnswerKeyService } from "@/app/integration/platform-api/answer-key";
+import {
+  downloadStorageWorkspace,
+  rememberStorageWorkspace,
+  saveAnswerKeyDraft,
+  type StorageWorkspace,
+} from "@/app/integration/file-storage-api/source-storage";
 import { useFetchAssignment } from "@/hooks/use-assignments";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import {
   AnswerKey,
   Assignment,
-} from "@/app/interface/scheduler-api/assignment";
+} from "@/app/interface/platform-api/assignment";
 import { FileNode } from "@/types/shared";
 import Loader from "@/components/loader";
 import QueryErrorState from "@/components/shared/query-error-state";
@@ -52,16 +61,20 @@ function isFileNodeTree(value: unknown): value is FileNode {
 
 interface AnswerKeyEditorProps {
   assignmentId: number;
+  userId: number;
   canManage: boolean;
   assignment: Assignment;
   answerKey?: AnswerKey;
+  draft?: StorageWorkspace;
 }
 
 function AnswerKeyEditor({
   assignmentId,
+  userId,
   canManage,
   assignment,
   answerKey,
+  draft,
 }: AnswerKeyEditorProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -70,11 +83,27 @@ function AnswerKeyEditor({
   const { explorerWidth, startResize } = useWorskpaceResizing();
   const [showExplorer, setShowExplorer] = React.useState(false);
   const [testDialogOpen, setTestDialogOpen] = React.useState(false);
+  const [draftEdited, setDraftEdited] = React.useState(false);
+  const markDraftEdited = React.useCallback(() => setDraftEdited(true), []);
   const { fileTreeData, selectedItem, selectItem, replaceFileTree } =
     useWorkspaceContext();
   const { activeFile, handleEditorChange, handleFileSelect } =
-    useWorkspaceFileEditor({ selectedItem, selectItem });
-  const answerKeyTest = useAnswerKeyTest();
+    useWorkspaceFileEditor({
+      selectedItem,
+      selectItem,
+      onTreeChange: markDraftEdited,
+    });
+  React.useEffect(() => {
+    if (draft) rememberStorageWorkspace(draft);
+  }, [draft]);
+  const draftSync = useWorkspaceSync(
+    assignmentId,
+    userId,
+    fileTreeData,
+    canManage && !!draft && draftEdited,
+    "answer-key",
+  );
+  const answerKeyTest = useAnswerKeyTest(userId);
 
   const handleRun = () => {
     answerKeyTest.reset();
@@ -83,10 +112,15 @@ function AnswerKeyEditor({
   };
 
   const saveMutation = useMutation({
-    mutationFn: () =>
-      answerKey
+    mutationFn: async () => {
+      await saveAnswerKeyDraft(
+        { assignmentId, files: flattenFileTreeToSchedulingFiles(fileTreeData) },
+        userId,
+      );
+      return answerKey
         ? AnswerKeyService.UpdateAnswerKey(assignmentId, fileTreeData)
-        : AnswerKeyService.CreateAnswerKey(assignmentId, fileTreeData),
+        : AnswerKeyService.CreateAnswerKey(assignmentId, fileTreeData);
+    },
     onSuccess: async () => {
       toast({
         title: answerKey ? "Gabarito atualizado" : "Gabarito criado",
@@ -111,8 +145,11 @@ function AnswerKeyEditor({
   });
 
   const handleTreeChange = React.useCallback(
-    (tree: FileNode) => replaceFileTree(tree),
-    [replaceFileTree],
+    (tree: FileNode) => {
+      replaceFileTree(tree);
+      markDraftEdited();
+    },
+    [markDraftEdited, replaceFileTree],
   );
 
   return (
@@ -142,6 +179,22 @@ function AnswerKeyEditor({
         </div>
 
         <div className="flex items-center gap-2">
+          {canManage && draftEdited && (
+            draftSync.status === "error" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={draftSync.retry}
+                title={draftSync.error}
+              >
+                Falha ao salvar rascunho · Tentar novamente
+              </Button>
+            ) : (
+              <span role="status" className="text-xs text-muted-foreground">
+                {draftSync.status === "saved" ? "Rascunho salvo" : "Salvando rascunho…"}
+              </span>
+            )
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -243,6 +296,19 @@ export default function AnswerKeyPage() {
     enabled: Number.isFinite(assignmentId) && Boolean(assignment),
     retry: false,
   });
+  const draftQuery = useQuery({
+    queryKey: ["answer-key-draft", user?.userId, assignmentId],
+    queryFn: () =>
+      downloadStorageWorkspace(assignmentId, {
+        draft: "answer-key",
+        userId: user!.userId,
+      }),
+    enabled: canManage && Boolean(assignment),
+    retry: false,
+    networkMode: "always",
+    staleTime: Infinity,
+    gcTime: 0,
+  });
 
   React.useEffect(() => {
     if (
@@ -253,8 +319,13 @@ export default function AnswerKeyPage() {
       router.replace("/classes");
   }, [answerKeyQuery.isError, assignment, canManage, router]);
 
-  if (!user || isLoadingAssignment || (assignment && answerKeyQuery.isLoading))
+  if (
+    !user ||
+    isLoadingAssignment ||
+    (assignment && (answerKeyQuery.isLoading || (canManage && draftQuery.isPending)))
+  ) {
     return <Loader />;
+  }
 
   if (!assignment || isAssignmentError) {
     return (
@@ -273,24 +344,42 @@ export default function AnswerKeyPage() {
   if (!canManage && (!assignment.answerKeyVisible || answerKeyQuery.isError)) {
     return null;
   }
+  if (canManage && draftQuery.isError) {
+    return (
+      <div className="p-6">
+        <QueryErrorState
+          title="Não foi possível carregar o rascunho do gabarito"
+          description={draftQuery.error.message}
+          onRetry={() => void draftQuery.refetch()}
+          retryLabel="Tentar novamente"
+          isRetrying={draftQuery.isFetching}
+        />
+      </div>
+    );
+  }
 
   const persistedTree = isFileNodeTree(answerKeyQuery.data?.content)
     ? answerKeyQuery.data.content
     : undefined;
 
-  const initialTree = persistedTree ?? createInitialWorkspaceTree(assignment);
+  const draft = canManage ? draftQuery.data : undefined;
+  const initialTree = draft && draft.revision > 0
+    ? treeFromStorageFiles(draft.files)
+    : persistedTree ?? createInitialWorkspaceTree(assignment);
 
   return (
     <WorkspaceProvider
-      key={answerKeyQuery.data?.id ?? "new-answer-key"}
+      key={`${user.userId}:${assignmentId}`}
       initialFileTree={initialTree}
       enableSecurityGuards={false}
     >
       <AnswerKeyEditor
         assignmentId={assignmentId}
+        userId={user.userId}
         canManage={canManage}
         assignment={assignment}
         answerKey={answerKeyQuery.data}
+        draft={draft}
       />
     </WorkspaceProvider>
   );

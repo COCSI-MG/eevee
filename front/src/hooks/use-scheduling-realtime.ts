@@ -5,7 +5,7 @@ import {
   getSchedulingSocket,
   SchedulingRealtimeEventName,
   SchedulingRealtimePayload,
-} from "@/app/integration/scheduler-api/realtime";
+} from "@/app/integration/platform-api/realtime";
 
 export function useSchedulingRealtimeEvent(
   event: SchedulingRealtimeEventName,

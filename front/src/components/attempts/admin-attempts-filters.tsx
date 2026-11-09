@@ -8,7 +8,7 @@ import {
 import {
   AdminAttemptAssignmentOption,
   AdminAttemptClassOption,
-} from "@/app/interface/scheduler-api/admin-attempt";
+} from "@/app/interface/platform-api/admin-attempt";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

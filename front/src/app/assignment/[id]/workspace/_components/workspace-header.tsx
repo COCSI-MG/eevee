@@ -28,7 +28,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../../../../../components/ui/dialog";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { MarkdownContent } from "@/components/shared/markdown-content";
 import { formatDateTime } from "@/utils/date";
 

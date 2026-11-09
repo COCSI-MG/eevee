@@ -1,11 +1,11 @@
 "use client";
 
-import { UsersService } from "@/app/integration/scheduler-api/user";
+import { UsersService } from "@/app/integration/platform-api/user";
 import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
-} from "@/app/interface/scheduler-api/pagination";
-import { User } from "@/app/interface/scheduler-api/user";
+} from "@/app/interface/platform-api/pagination";
+import { User } from "@/app/interface/platform-api/user";
 import { useQuery } from "@tanstack/react-query";
 
 interface UsePaginatedUsersParams {

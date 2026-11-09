@@ -1,7 +1,7 @@
 "use client";
 
 import { getFileTree } from "@/app/integration/filestash";
-import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
+import { SchedulingService } from "@/app/integration/platform-api/scheduling";
 import {
   buildSchedulingPayloadFromFileTree,
   createWorkspaceStorageKey,

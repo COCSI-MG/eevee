@@ -22,6 +22,13 @@ import { Throttle } from '@nestjs/throttler';
 export class SchedulingController {
   constructor(private readonly schedulingService: SchedulingService) {}
 
+  @Post('answer-key/run')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  runAnswerKey(@Body() dto: CreateSchedulingDto) {
+    return this.schedulingService.createAndWait(dto, 'answer-key');
+  }
+
   @Post()
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @Throttle({ default: { limit: 30, ttl: 60000 } })

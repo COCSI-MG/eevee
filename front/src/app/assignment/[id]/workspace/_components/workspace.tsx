@@ -1,15 +1,16 @@
 "use client";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 import React from "react";
+import { Cloud, CloudAlert, CloudUpload } from "lucide-react";
 import WorkspaceCodeEditor from "./workspace-code-editor";
 import WorkspaceExplorer from "./workspace-explorer";
 import { useWorkspaceContext } from "../_providers/workspace-provider";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { useWorkspaceFileEditor } from "../_hooks/use-workspace-file-editor";
 import { useWorkspaceTreeActions } from "../_hooks/use-workspace-tree-actions";
 import { useWorkspaceInitialization } from "../_hooks/use-workspace-initialization";
-import { AuthSession } from "@/app/interface/scheduler-api/auth";
+import { AuthSession } from "@/app/interface/platform-api/auth";
 import { useWorkspaceReset } from "../_hooks/use-workspace-reset";
 import { useWorskpaceResizing } from "@/hooks/use-workspace-resizing";
 import { FileNode, SelectedItem } from "@/types/shared";
@@ -19,9 +20,13 @@ import {
   rebaseMovedPath,
 } from "../_utils/workspace-tree.utils";
 import { useSaveFileTree } from "@/hooks/use-filestash";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EDITOR_ACTION_GUARD_MODE } from "@/constants/editor-action-guard";
+import { cn } from "@/lib/utils";
 import WorkspaceImportControl from "./workspace-import-control";
+import WorkspaceConflictDialog from "./workspace-conflict-dialog";
+import { useWorkspaceSync } from "../_hooks/use-workspace-sync";
 
 interface WorkspaceProps {
   assignment: Assignment;
@@ -54,13 +59,21 @@ export default function Workspace({
   const [secondarySelectedItem, setSecondarySelectedItem] =
     React.useState<SelectedItem | null>(null);
 
-  useWorkspaceInitialization({
+  const { isInitialized, conflict } = useWorkspaceInitialization({
     assignment,
     userId,
     setActiveFileContent,
     replaceFileTree,
     selectItem,
   });
+  const sourceSync = useWorkspaceSync(
+    assignment.id,
+    userId,
+    fileTreeData,
+    isInitialized,
+  );
+  const sourceSaved = sourceSync.status === "saved";
+  const SourceSyncIcon = sourceSaved ? Cloud : CloudUpload;
 
   const editorActionGuardMode = user.role === UserRole.ADMIN
     ? EDITOR_ACTION_GUARD_MODE.EXEMPT
@@ -212,6 +225,12 @@ export default function Workspace({
 
   return (
     <div className="flex flex-1 min-h-0">
+      {conflict && (
+        <WorkspaceConflictDialog
+          {...conflict}
+          actionGuardMode={editorActionGuardMode}
+        />
+      )}
       <div
         className="relative flex shrink-0 min-w-[150px] max-w-[400px] flex-col bg-card border-r border-border h-full min-h-0"
         style={{ width: explorerWidth }}
@@ -239,6 +258,34 @@ export default function Workspace({
 
       <div className="flex-1 flex flex-col min-w-0">
         <div className="flex items-center justify-end gap-2 border-b border-border px-2 py-1">
+          <div className="mr-auto" role="status">
+            {sourceSync.status === "error" ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                title={sourceSync.error}
+                onClick={sourceSync.retry}
+                className="h-auto gap-1.5 whitespace-normal rounded-full border border-destructive/40 bg-destructive/10 px-2.5 py-1 text-left font-semibold text-destructive hover:bg-destructive/20 hover:text-destructive"
+              >
+                <CloudAlert aria-hidden="true" />
+                Falha ao sincronizar · Tentar novamente
+              </Button>
+            ) : (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "gap-1.5 rounded-full py-1",
+                  sourceSaved
+                    ? "border-success/40 bg-success/10 text-success"
+                    : "border-border/50 bg-muted text-muted-foreground",
+                )}
+              >
+                <SourceSyncIcon aria-hidden="true" className="size-4 shrink-0" />
+                {sourceSaved ? "Salvo no servidor" : "Salvando no servidor…"}
+              </Badge>
+            )}
+          </div>
           {isSplitView && (
               <Button
                 variant="ghost"

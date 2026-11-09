@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, BellRing, Eye } from "lucide-react";
-import { AssignmentAlertService } from "@/app/integration/scheduler-api/assignment-alert";
-import type { AssignmentAlertUserSummary } from "@/app/interface/scheduler-api/assignment-alert";
+import { AssignmentAlertService } from "@/app/integration/platform-api/assignment-alert";
+import type { AssignmentAlertUserSummary } from "@/app/interface/platform-api/assignment-alert";
 import { AssignmentAlertHistoryDialog } from "@/app/admin/assignments/suspensions/[id]/_components/assignment-alert-history-dialog";
 import { formatDate } from "@/utils/date";
 import {

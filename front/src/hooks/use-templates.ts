@@ -1,5 +1,5 @@
-import { TemplatesService } from "@/app/integration/scheduler-api/templates";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { TemplatesService } from "@/app/integration/platform-api/templates";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { useQuery } from "@tanstack/react-query";
 
 const useTemplates = (workerType?: WorkerType, classId?: number) => {

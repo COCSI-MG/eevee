@@ -9,13 +9,14 @@ export class CreateAttemptDto extends OmitType(Attempt, [
   'assignment',
   'createdAt',
 ]) {
-  fails: number;
-  attempt: number;
-  isAcceptable: boolean;
-  score: number;
-  passes: number;
-  report: string;
-  assignmentId: number;
-  status: AttemptStatus;
+  fails!: number;
+  attempt!: number;
+  isAcceptable!: boolean;
+  score!: number;
+  passes!: number;
+  report!: string;
+  assignmentId!: number;
+  status!: AttemptStatus;
   receivedWork?: Record<string, string>;
+  sourceSnapshotId?: string | null;
 }

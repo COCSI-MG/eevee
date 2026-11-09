@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminUserAttemptSummary } from "@/app/interface/scheduler-api/admin-attempt";
+import { AdminUserAttemptSummary } from "@/app/interface/platform-api/admin-attempt";
 import {
   formatAdminAttemptScore,
   getAdminAttemptStatusBadge,

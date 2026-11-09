@@ -19,13 +19,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { ExamService } from "@/app/integration/scheduler-api/exam";
+import { ExamService } from "@/app/integration/platform-api/exam";
 import {
   CreateExamRequest,
   Exam,
   ExamDialogMode,
   UpdateExamRequest,
-} from "@/app/interface/scheduler-api/exam";
+} from "@/app/interface/platform-api/exam";
 import { isoToLocalDatetime } from "@/utils/date";
 
 const createExamSchema = Yup.object().shape({

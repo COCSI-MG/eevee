@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Page from "./page";
-import { Invitations } from "@/app/integration/scheduler-api/invitations";
+import { Invitations } from "@/app/integration/platform-api/invitations";
 
-jest.mock("@/app/integration/scheduler-api/invitations", () => ({
+jest.mock("@/app/integration/platform-api/invitations", () => ({
   Invitations: { inspect: jest.fn(), accept: jest.fn() },
   invitationError: () => "Convite inválido ou expirado.",
 }));

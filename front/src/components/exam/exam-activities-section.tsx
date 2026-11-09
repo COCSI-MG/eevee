@@ -1,9 +1,9 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
+import { AssignmentSummary } from "@/app/interface/platform-api/exam";
+import { Assignment } from "@/app/interface/platform-api/assignment";
+import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/platform-api/pagination";
 import ListSearch from "@/components/shared/list-search";
 import Pagination from "@/components/shared/pagination";
 import ExamAssignmentsTable from "@/components/exam/exam-activities-table";

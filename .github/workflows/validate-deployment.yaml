@@ -23,9 +23,12 @@ jobs:
       - run: npm ci
         working-directory: ${{ matrix.app }}
       - name: Build shared execution contracts
-        if: matrix.app != 'front'
         run: ./node_modules/.bin/tsc -p ../packages/execution-contracts/tsconfig.json
         working-directory: ${{ matrix.app }}
+      - name: Build the File Storage API test fixture
+        if: matrix.app != 'assignment-runner'
+        run: npm ci && npm run build:service
+        working-directory: file-storage-api
       - name: Unit tests
         run: npm test -- --runInBand
         working-directory: ${{ matrix.app }}

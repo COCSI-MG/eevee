@@ -8,6 +8,7 @@ import { CreateAttemptDto } from './dto/create-applicant-attempt.dto';
 import { Brackets, In, LessThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Attempt } from './entities/attempt.entity';
+import { readAttemptSource } from 'src/file-storage/source-storage';
 import { ClsService } from 'nestjs-cls';
 import { AttemptStatus } from './enums/attempt-status.enum';
 import { UpdateApplicantAttemptDto } from './dto/update-applicant-attempt.dto';
@@ -259,7 +260,10 @@ export class AttemptService {
       .addSelect('attempt.passes', 'passes')
       .addSelect('attempt.fails', 'fails')
       .addSelect('attempt.report', 'report')
-      .addSelect('attempt.receivedWork', 'receivedWork')
+      .addSelect(
+        '(attempt.sourceSnapshotId IS NOT NULL OR attempt.receivedWork IS NOT NULL)',
+        'hasSubmittedWork',
+      )
       .addSelect('attempt.createdAt', 'createdAt')
       .orderBy('attempt.createdAt', 'DESC')
       .addOrderBy('attempt.id', 'DESC')
@@ -273,6 +277,8 @@ export class AttemptService {
 
     const data = rows.map((row) => ({
       id: Number(row.id),
+      assignmentId,
+      userId,
       attempt: Number(row.attempt),
       status: row.status,
       isAcceptable: Boolean(row.isAcceptable),
@@ -280,7 +286,7 @@ export class AttemptService {
       passes: Number(row.passes),
       fails: Number(row.fails),
       report: row.report,
-      receivedWork: row.receivedWork ?? undefined,
+      hasSubmittedWork: row.hasSubmittedWork === true,
       createdAt: row.createdAt,
     }));
 
@@ -310,6 +316,7 @@ export class AttemptService {
         'attempt.passes AS attempt_passes',
         'attempt.fails AS attempt_fails',
         'attempt.receivedWork AS attempt_receivedWork',
+        'attempt.sourceSnapshotId AS attempt_source_snapshot_id',
         'attempt.report AS attempt_report',
         'attempt.createdAt AS attempt_createdAt',
         'user.id AS user_id',
@@ -322,16 +329,22 @@ export class AttemptService {
         'assignment.workerType AS assignment_workerType',
       ])
       .getRawOne()
-      .then((row) => {
+      .then(async (row) => {
         if (!row) return null;
 
+        const userId = Number(row.attempt_userid ?? row.attempt_userId);
+        const assignmentId = Number(row.attempt_assignmentid ?? row.attempt_assignmentId);
+        const receivedWork = await readAttemptSource({
+          userId,
+          assignmentId,
+          sourceSnapshotId: row.attempt_source_snapshot_id,
+          receivedWork: row.attempt_receivedwork ?? row.attempt_receivedWork,
+        });
         return {
           id: Number(row.attempt_id),
           attempt: Number(row.attempt_attempt),
-          userId: Number(row.attempt_userid ?? row.attempt_userId),
-          assignmentId: Number(
-            row.attempt_assignmentid ?? row.attempt_assignmentId,
-          ),
+          userId,
+          assignmentId,
           status: row.attempt_status,
           isAcceptable: Boolean(
             row.attempt_isacceptable ?? row.attempt_isAcceptable,
@@ -339,7 +352,8 @@ export class AttemptService {
           score: Number(row.attempt_score),
           passes: Number(row.attempt_passes),
           fails: Number(row.attempt_fails),
-          receivedWork: row.attempt_receivedwork ?? row.attempt_receivedWork,
+          receivedWork,
+          hasSubmittedWork: receivedWork !== undefined,
           report: row.attempt_report,
           createdAt: row.attempt_createdat ?? row.attempt_createdAt,
           user: {
@@ -356,6 +370,43 @@ export class AttemptService {
           },
         };
       });
+  }
+
+  async findSubmittedWorkForAdmin(
+    assignmentId: number,
+    userId: number,
+    attemptId: number,
+  ) {
+    await this.classAccess.assertAssignmentAccess(assignmentId, true);
+    const attempt = await this.attemptRepository.findOne({
+      where: { id: attemptId, assignmentId, userId },
+      relations: { assignment: true, user: true },
+      select: {
+        id: true,
+        assignmentId: true,
+        userId: true,
+        attempt: true,
+        createdAt: true,
+        receivedWork: true,
+        sourceSnapshotId: true,
+        user: { id: true, name: true, email: true },
+        assignment: { id: true, title: true, description: true, workerType: true },
+      },
+    });
+    const files = attempt && await readAttemptSource(attempt);
+    if (!attempt || !files) {
+      throw new NotFoundException('Submitted project not found');
+    }
+    return {
+      attemptId: attempt.id,
+      assignmentId: attempt.assignmentId,
+      userId: attempt.userId,
+      attempt: attempt.attempt,
+      createdAt: attempt.createdAt,
+      user: attempt.user,
+      assignment: attempt.assignment,
+      files,
+    };
   }
 
   findAllByAssignmentAndCurrentUser(assignmentId: number) {

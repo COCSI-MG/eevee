@@ -1,14 +1,14 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ClassesTable from './classes-table';
-import { ClassesService } from '@/app/integration/scheduler-api/classes';
-import { LearningActivities } from '@/app/integration/scheduler-api/learning-activity';
-import { ExamService } from '@/app/integration/scheduler-api/exam';
+import { ClassesService } from '@/app/integration/platform-api/classes';
+import { LearningActivities } from '@/app/integration/platform-api/learning-activity';
+import { ExamService } from '@/app/integration/platform-api/exam';
 
 jest.mock('@/hooks/use-auth-context', () => ({ useAuthContext: () => ({ user: { userId: 7 } }) }));
-jest.mock('@/app/integration/scheduler-api/classes', () => ({ ClassesService: { listClassesByUserId: jest.fn() } }));
-jest.mock('@/app/integration/scheduler-api/learning-activity', () => ({ LearningActivities: { list: jest.fn() } }));
-jest.mock('@/app/integration/scheduler-api/exam', () => ({ ExamService: { listByClass: jest.fn() } }));
+jest.mock('@/app/integration/platform-api/classes', () => ({ ClassesService: { listClassesByUserId: jest.fn() } }));
+jest.mock('@/app/integration/platform-api/learning-activity', () => ({ LearningActivities: { list: jest.fn() } }));
+jest.mock('@/app/integration/platform-api/exam', () => ({ ExamService: { listByClass: jest.fn() } }));
 const group = { id: 12, name: 'Arquitetura', description: '', assignments: [] };
 function show() {
   const cache = new QueryClient({ defaultOptions: { queries: { retry: false } } });

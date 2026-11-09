@@ -17,51 +17,54 @@ import { AttemptStatus } from '../enums/attempt-status.enum';
 ])
 export class Attempt {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  attempt: number;
+  attempt!: number;
 
   @ManyToOne(() => User, (attempt) => attempt.userAttempts)
-  user: User;
+  user!: User;
 
   @Column()
-  userId: number;
+  userId!: number;
 
   @ManyToOne(() => Assignment, (assignment) => assignment.assignmentAttempts)
-  assignment: Assignment;
+  assignment!: Assignment;
 
   @Column({
     type: 'enum',
     enum: AttemptStatus,
     default: AttemptStatus.PENDING,
   })
-  status: AttemptStatus;
+  status!: AttemptStatus;
 
   @Column()
-  assignmentId: number;
+  assignmentId!: number;
 
   @Column()
-  isAcceptable: boolean;
+  isAcceptable!: boolean;
 
   @Column('float', { nullable: false })
-  score: number;
+  score!: number;
 
   @Column()
-  passes: number;
+  passes!: number;
 
   @Column()
-  fails: number;
+  fails!: number;
 
   @Column('jsonb', { nullable: true })
   receivedWork?: Record<string, string>;
 
+  @Column({ type: 'varchar', length: 64, nullable: true })
+  sourceSnapshotId?: string | null;
+
   @Column()
-  report: string;
+  report!: string;
 
   @Column({ type: 'text', nullable: true })
   refinedReport?: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date;
+  createdAt!: Date;
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
-import { InterviewResponseService } from "@/app/integration/scheduler-api/interview-response";
-import { AssignmentInterviewQuestion } from "@/app/interface/scheduler-api/assignment";
+import { AssignmentService } from "@/app/integration/platform-api/assignment";
+import { InterviewResponseService } from "@/app/integration/platform-api/interview-response";
+import { AssignmentInterviewQuestion } from "@/app/interface/platform-api/assignment";
 import {
   InterviewPreferenceOption,
   InterviewResponsePayload,
-} from "@/app/interface/scheduler-api/interview-response";
+} from "@/app/interface/platform-api/interview-response";
 import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

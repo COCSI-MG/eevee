@@ -1,6 +1,6 @@
 "use client";
 
-import { SchedulingResponse } from "@/app/interface/scheduler-api/scheduling";
+import { SchedulingResponse } from "@/app/interface/platform-api/scheduling";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {

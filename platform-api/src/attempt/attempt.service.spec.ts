@@ -390,7 +390,7 @@ describe('AttemptService', () => {
           passes: '9',
           fails: '1',
           report: 'One test failed',
-          receivedWork: { 'src/index.ts': 'export const answer = 42;' },
+          hasSubmittedWork: true,
           createdAt: new Date('2026-04-18T10:00:00.000Z'),
         },
       ]);
@@ -406,6 +406,8 @@ describe('AttemptService', () => {
         data: [
           {
             id: 12,
+            assignmentId: 99,
+            userId: 7,
             attempt: 2,
             status: AttemptStatus.COMPLETED,
             isAcceptable: true,
@@ -413,7 +415,7 @@ describe('AttemptService', () => {
             passes: 9,
             fails: 1,
             report: 'One test failed',
-            receivedWork: { 'src/index.ts': 'export const answer = 42;' },
+            hasSubmittedWork: true,
             createdAt: new Date('2026-04-18T10:00:00.000Z')
           }
         ],
@@ -428,9 +430,13 @@ describe('AttemptService', () => {
         'attempt.userId = :userId',
         { userId: 7 },
       );
-      expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+      expect(queryBuilder.addSelect).not.toHaveBeenCalledWith(
         'attempt.receivedWork',
         'receivedWork',
+      );
+      expect(queryBuilder.addSelect).toHaveBeenCalledWith(
+        '(attempt.sourceSnapshotId IS NOT NULL OR attempt.receivedWork IS NOT NULL)',
+        'hasSubmittedWork',
       );
       expect(queryBuilder.addOrderBy).toHaveBeenCalledWith('attempt.id', 'DESC');
       expect(queryBuilder.skip).toHaveBeenCalledWith(5);

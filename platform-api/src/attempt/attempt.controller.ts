@@ -40,6 +40,16 @@ export class AttemptController {
     );
   }
 
+  @Get('admin/assignment/:assignmentId/user/:userId/attempt/:attemptId')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  findSubmittedWorkForAdmin(
+    @Param('assignmentId', ParseIntPipe) assignmentId: number,
+    @Param('userId', ParseIntPipe) userId: number,
+    @Param('attemptId', ParseIntPipe) attemptId: number,
+  ) {
+    return this.attemptService.findSubmittedWorkForAdmin(assignmentId, userId, attemptId);
+  }
+
   @Get(':id')
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   async findOneForAdmin(@Param('id', ParseIntPipe) id: number) {

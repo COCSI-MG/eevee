@@ -2,10 +2,8 @@
 
 ## Status
 
-This is a design harness only. No production code, image, Job manifest, or
-runtime configuration is enabled by this document. The implementation snippets
-are deliberately commented out so that a follow-up agent can apply and test
-them in an environment that can build Node and container images.
+This is the original design harness. See the [PostgreSQL worker guide](../../images/node/postgresql/README.md)
+for current build, test, and rollout instructions.
 
 ## Why the current design cannot work
 

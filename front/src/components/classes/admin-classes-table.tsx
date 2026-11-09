@@ -11,7 +11,7 @@ import {
 import { DropdownMenuItem } from "../ui/dropdown-menu";
 import TableActions from "../table/table-actions";
 import { cn } from "@/lib/utils";
-import { Class } from "@/app/interface/scheduler-api/class";
+import { Class } from "@/app/interface/platform-api/class";
 import { Route } from "@/app/routes";
 import Link from "next/link";
 import { ClipboardList, RotateCcw } from "lucide-react";

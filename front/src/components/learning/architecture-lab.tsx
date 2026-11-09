@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { PracticeTask } from "@/app/interface/scheduler-api/learning-activity";
+import { PracticeTask } from "@/app/interface/platform-api/learning-activity";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {

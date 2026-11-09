@@ -13,6 +13,7 @@ describe('AttemptController', () => {
   let attemptService: {
     findAllForAdmin: jest.Mock;
     findAllForAdminByAssignmentAndUser: jest.Mock;
+    findSubmittedWorkForAdmin: jest.Mock;
     findOneForAdmin: jest.Mock;
   };
 
@@ -20,6 +21,7 @@ describe('AttemptController', () => {
     attemptService = {
       findAllForAdmin: jest.fn(),
       findAllForAdminByAssignmentAndUser: jest.fn(),
+      findSubmittedWorkForAdmin: jest.fn(),
       findOneForAdmin: jest.fn(),
     };
 
@@ -57,6 +59,10 @@ describe('AttemptController', () => {
     expect(
       Reflect.getMetadata(ROLES_KEY, prototype.findAllForAdminByAssignmentAndUser),
     ).toEqual([UserRole.ADMIN, UserRole.TEACHER]);
+    expect(Reflect.getMetadata(ROLES_KEY, prototype.findSubmittedWorkForAdmin)).toEqual([
+      UserRole.ADMIN,
+      UserRole.TEACHER,
+    ]);
     expect(Reflect.getMetadata(ROLES_KEY, prototype.findOneForAdmin)).toEqual([
       UserRole.ADMIN,
       UserRole.TEACHER

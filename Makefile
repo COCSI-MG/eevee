@@ -11,6 +11,8 @@ VALUES       ?= infrastructure/helm/eevee/values.yaml
 DOCS_IMAGE ?= eevee-docs:local
 DOCS_PORT  ?= 8000
 
+SOURCE_STORAGE_PORT ?= 3320
+
 .DEFAULT_GOAL := help
 
 .PHONY: test-invitations
@@ -19,7 +21,7 @@ test-invitations:
 
 .PHONY: seed-classroom seed-classroom-preview check-classroom-seed
 
-.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front seed down prepare-workers migration-show migration-run deploy
+.PHONY: help setup up up-infra up-minikube up-docker up-platform-api up-assignment-runner up-front up-file-storage-api seed down prepare-workers migration-show migration-run deploy
 
 help:
 	@echo "EEVEE - comandos de desenvolvimento"
@@ -30,6 +32,7 @@ help:
 	@echo "  make up-platform-api       Inicia a Platform API"
 	@echo "  make up-assignment-runner  Inicia o Assignment Runner"
 	@echo "  make up-front              Inicia o frontend"
+	@echo "  make up-file-storage-api   Prepara o armazenamento no Minikube e abre o tunel local"
 	@echo "  make seed                  Cria os usuarios locais de demonstracao"
 	@echo "  make seed-classroom-preview Mostra as turmas e atividades a criar, sem gravar"
 	@echo "  make seed-classroom         Cria turmas, laboratorios e questionarios em rascunho"
@@ -44,13 +47,15 @@ help:
 
 setup:
 	cd packages/execution-contracts && npm ci && npm run build
+	cd file-storage-api && npm ci && npm run build
 	cd platform-api && npm ci
 	cd assignment-runner && npm ci
 	cd front && npm ci
 
 up: up-infra
 	@echo ""
-	@echo "Infraestrutura pronta. Abra tres terminais e execute:"
+	@echo "Infraestrutura pronta. Abra um terminal para cada servico:"
+	@echo "  make up-file-storage-api"
 	@echo "  make up-platform-api"
 	@echo "  make up-assignment-runner"
 	@echo "  make up-front"
@@ -76,6 +81,10 @@ up-assignment-runner:
 up-front:
 	@echo Starting front-end service
 	cd front && npm run dev
+
+up-file-storage-api:
+	cd file-storage-api && npm run build
+	node infrastructure/file-storage/start-local.cjs "$(SOURCE_STORAGE_PORT)"
 
 seed:
 	cd platform-api && npm run seed

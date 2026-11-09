@@ -7,6 +7,7 @@ eevee/
 ├── front/                    # interface Next.js
 ├── platform-api/             # API, domínio, persistência e realtime
 ├── assignment-runner/        # consumidor de execuções e orquestração Kubernetes
+├── file-storage-api/         # sincronização de arquivos, snapshots e backup
 ├── packages/
 │   └── execution-contracts/  # contratos compartilhados das filas
 ├── images/                   # imagens dos executores
@@ -26,7 +27,7 @@ front/src/
 └── providers/       # sessão e estado do workspace
 ```
 
-As telas administrativas ficam em `app/admin/`. O cliente HTTP e o Socket.IO ficam em `app/integration/scheduler-api/`. O workspace combina Monaco Editor, explorador de arquivos, validações no cliente e armazenamento IndexedDB.
+As telas administrativas ficam em `app/admin/`. Os clientes HTTP e Socket.IO da Platform API ficam em `app/integration/platform-api/`, com os tipos em `app/interface/platform-api/`. A sincronização de arquivos e snapshots fica em `app/integration/file-storage-api/`. O workspace combina Monaco Editor, explorador de arquivos, validações no cliente e armazenamento IndexedDB.
 
 ## `platform-api/`
 
@@ -46,9 +47,16 @@ Serviço NestJS sem API HTTP pública. Ele consome comandos e requisições de e
 
 As responsabilidades de orquestração Kubernetes e as estratégias de worker ficam neste componente, isoladas do domínio educacional da Platform API.
 
+## `file-storage-api/`
+
+O serviço HTTP valida os grants e grava rascunhos e snapshots no PVC. Em
+`file-storage-api/src/`, `server.ts` configura o processo, `http-api.ts` define
+as rotas, `store.ts` gerencia os arquivos e `backup.ts` implementa exportação e
+restauração. Veja o [guia de implantação](file-storage-rollout/SOURCE-STORAGE.md).
+
 ## `packages/execution-contracts/`
 
-Pacote TypeScript compartilhado pelos dois serviços. Define nomes de filas, comandos, requisições, resultados, estados e identificadores de destino (`attempt` ou `preview`). Deve ser compilado antes dos serviços que o consomem.
+Pacote TypeScript compartilhado pelos serviços. Define nomes de filas, comandos, requisições, resultados, referências a snapshots e identificadores de destino (`attempt` ou `preview`). Deve ser compilado antes dos serviços que o consomem.
 
 ## `images/`
 
@@ -58,4 +66,5 @@ Contém o bootstrap e as imagens para JavaScript, Node.js, NestJS, gRPC, Next.js
 
 - `docker-compose.yml`: PostgreSQL e Redis para desenvolvimento;
 - `helm/eevee/`: chart da aplicação;
+- `file-storage/`: inicialização e manifestos Minikube para armazenamento local e guia de backup;
 - arquivos de gateway, proxy de saída e políticas de rede usados na implantação.

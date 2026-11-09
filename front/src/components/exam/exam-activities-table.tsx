@@ -16,7 +16,7 @@ import {
   ViewAssignmentAlertsComponent
 } from "../assignment/activity-actions";
 import { Route as AppRoutes } from "@/app/routes";
-import { AssignmentSummary } from "@/app/interface/scheduler-api/exam";
+import { AssignmentSummary } from "@/app/interface/platform-api/exam";
 import { formatDateTime } from "@/utils/date";
 
 interface ExamAssignmentsTableProps {
