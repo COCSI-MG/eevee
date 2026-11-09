@@ -49,6 +49,13 @@ spec:
               value: {{ .Values.front.platformApiInternalUrl | quote }}
           resources:
             {{- toYaml .Values.front.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: {{ .Values.front.containerPort }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
       {{- include "eevee.imagePullSecrets" . | nindent 6 }}
       {{- include "eevee.nodeSelector" . | nindent 6 }}
 {{- end }}

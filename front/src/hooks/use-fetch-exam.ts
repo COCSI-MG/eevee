@@ -1,7 +1,7 @@
 "use client";
 
-import { ExamService } from "@/app/integration/scheduler-api/exam";
-import { ExamWithAssignments } from "@/app/interface/scheduler-api/exam";
+import { ExamService } from "@/app/integration/platform-api/exam";
+import { ExamWithAssignments } from "@/app/interface/platform-api/exam";
 import { useQuery } from "@tanstack/react-query";
 
 export const useFetchExam = (id: number) => {

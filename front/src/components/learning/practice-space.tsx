@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { PracticeConfig } from "@/app/interface/scheduler-api/learning-activity";
+import { PracticeConfig } from "@/app/interface/platform-api/learning-activity";
 import { Button } from "@/components/ui/button";
 import { SqlLab } from "./sql-lab";
 import { ArchitectureLab } from "./architecture-lab";

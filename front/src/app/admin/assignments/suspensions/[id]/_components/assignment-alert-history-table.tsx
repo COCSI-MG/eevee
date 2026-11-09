@@ -2,7 +2,7 @@ import { Archive } from "lucide-react";
 import {
   AssignmentAlertType,
   type AssignmentUserAlert,
-} from "@/app/interface/scheduler-api/assignment-alert";
+} from "@/app/interface/platform-api/assignment-alert";
 import {
   ALERT_LABELS,
   CLIPBOARD_ACTION_LABELS,

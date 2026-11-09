@@ -9,7 +9,7 @@ import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
-import { TemplatesService } from "@/app/integration/scheduler-api/templates";
+import { TemplatesService } from "@/app/integration/platform-api/templates";
 import {
   TEMPLATE_LIST_TEXT,
   TEMPLATE_LIST_TOAST_MESSAGES,

@@ -1,11 +1,11 @@
 "use client";
 
-import { TemplatesService } from "@/app/integration/scheduler-api/templates";
+import { TemplatesService } from "@/app/integration/platform-api/templates";
 import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
-} from "@/app/interface/scheduler-api/pagination";
-import { PaginatedTemplate } from "@/app/interface/scheduler-api/template";
+} from "@/app/interface/platform-api/pagination";
+import { PaginatedTemplate } from "@/app/interface/platform-api/template";
 import { useQuery } from "@tanstack/react-query";
 
 interface UsePaginatedTemplatesParams {

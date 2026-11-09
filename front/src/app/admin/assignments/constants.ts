@@ -1,4 +1,4 @@
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 
 export const DEFAULT_ASSIGNMENT_TEMPLATE = `// PLEASE DONT RENAME THIS FUNCTION, THE TEST MAY FAIL
 export function main() {

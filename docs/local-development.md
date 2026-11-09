@@ -84,6 +84,46 @@ make prepare-workers
 !!! note "Executor gRPC no ambiente local"
     O `images/Makefile` gera atualmente `worker-grpc-img:latest`, enquanto o Runner procura `worker-node-grpcjs-img:latest`. Para usar `node_grpcjs` nesse fluxo, inicie o Runner com `WORKER_IMAGE_NODE_GRPCJS=worker-grpc-img:latest` ou atribua uma tag compatível à imagem.
 
+### Iniciar a File Storage API
+
+Com o Minikube ativo e `platform-api/.env` criado, execute na raiz do projeto
+em um terminal separado, antes de iniciar a Platform API.
+
+```bash
+make up-file-storage-api
+```
+
+Use o mesmo comando no primeiro setup e nas próximas sessões. Ele prepara o
+namespace `eevee-dev-storage`, cria o PVC e o Secret quando necessário e
+preenche `EEVEE_STORAGE_URL` e `EEVEE_STORAGE_SIGNING_SECRET` se estiverem
+ausentes em `platform-api/.env`. O PVC e o Secret existentes são reutilizados.
+Se o código da File Storage API mudou, o comando atualiza o ConfigMap e
+reinicia o pod. Assim que o pod estiver pronto, o túnel abre em
+`http://127.0.0.1:3320`.
+
+Deixe esse terminal aberto durante o desenvolvimento. Ctrl+C fecha o túnel.
+Para usar outra porta, passe `SOURCE_STORAGE_PORT=<porta>` ao `make` e ajuste
+`EEVEE_STORAGE_URL` caso já esteja definida. Ajuste também
+`EEVEE_STORAGE_PUBLIC_URL` se ela apontar para a porta anterior.
+O serviço permite `http://localhost:3000` e `http://127.0.0.1:3000` por padrão.
+Para outra origem, defina `STORAGE_ALLOWED_ORIGINS` no Deployment e configure a
+origem da API conforme necessário. No editor, **Salvo no servidor** confirma que
+o código chegou ao volume.
+
+### Executar avaliações por referência
+
+Execute `make migration-run` com a configuração do banco local atualizada.
+
+`make prepare-workers` carrega as imagens no Minikube, incluindo o bootstrap.
+Copie `assignment-runner/.env.example` para `assignment-runner/.env` e
+preencha `EEVEE_STORAGE_SIGNING_SECRET` com o valor
+de `platform-api/.env`. Os pods acessam a File Storage API pelo endereço
+`EEVEE_WORKER_STORAGE_URL`, enquanto a Platform API local usa a porta 3320 do
+túnel.
+
+Confira se o contexto ativo é o Minikube com `kubectl config current-context`.
+Reinicie o runner após alterar o `.env` ou atualizar o contexto.
+
 Depois, em três terminais:
 
 === "Platform API"

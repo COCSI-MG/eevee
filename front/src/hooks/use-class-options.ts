@@ -1,6 +1,6 @@
 "use client";
 
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { ClassesService } from "@/app/integration/platform-api/classes";
 import { useQuery } from "@tanstack/react-query";
 
 export function useClassOptions() {

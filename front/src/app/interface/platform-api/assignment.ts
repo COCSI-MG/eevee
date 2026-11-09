@@ -1,0 +1,180 @@
+import { FileNode } from "@/types/shared";
+import { AssignmentAttempt } from "./assignment-attempt";
+import { AssignmentParam } from "./assignment-param";
+import {
+  AssignmentAlertPolicy,
+  AssignmentAlertStatus
+} from "./assignment-alert";
+import { Class } from "./class";
+import { Template } from "./template";
+import type { Exam } from "./exam";
+
+export interface AssignmentTemplateParam {
+  templateParamId: number;
+  value: string;
+}
+
+export interface WorkerDefinition {
+  files:
+    | (Pick<FileNode, "id" | "children" | "content"> &
+        { type: "file" | "folder" }[])
+    | null;
+  startCommands: string[];
+  testCommands: string[];
+  dependencies: string[];
+}
+
+export interface AssignmentTemplate {
+  id: number;
+  assignmentId: number;
+  templateId: number;
+  template: Template;
+  weight?: number | null;
+}
+
+export type AssignmentInterviewQuestionType = "likert_1_5" | "short_text";
+
+export interface AssignmentInterviewQuestion {
+  key: string;
+  label: string;
+  type: AssignmentInterviewQuestionType;
+}
+
+export interface AssignmentInterviewConfig {
+  questions: AssignmentInterviewQuestion[];
+}
+
+export interface AnswerKey {
+  id: number;
+  assignmentId: number;
+  content: FileNode;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Assignment {
+  id: number;
+  classId: number;
+  title: string;
+  description: string;
+  /** Source-of-truth starter code returned by backend. */
+  boilerplateContent?: string;
+  /** Preferred name for the teacher-provided starter code shown in the student workspace. */
+  boilerplate?: string;
+  /** Backward-compatible alias (legacy name used by older frontend code). */
+  validationScript?: string;
+  /** SQL script to initialize the database for PostgreSQL-backed workers. */
+  initSqlScript?: string;
+  maxAttempts: number;
+  startDate?: string | null;
+  dueDate?: string | null;
+  allowCopyPaste?: boolean;
+  workerType: string;
+  workerDefinition: WorkerDefinition;
+  assignmentAttempts: AssignmentAttempt[];
+  class: Class;
+  assignmentTemplates: AssignmentTemplate[];
+  assignmentParams: AssignmentParam[];
+  alertPolicy: AssignmentAlertPolicy;
+  currentUserAlertStatus?: AssignmentAlertStatus;
+  interviewConfig?: AssignmentInterviewConfig;
+  answerKeyId?: number | null;
+  answerKeyVisible: boolean;
+  allowProjectImport?: boolean;
+  score?: number;
+  examAssignment?: {
+    exam?: Pick<Exam, "startDate" | "dueDate">;
+  };
+}
+
+export interface ClassAssignmentAttemptSummary {
+  status: string;
+  score: number;
+  isAcceptable: boolean;
+}
+
+export interface ClassAssignmentSummary {
+  id: number;
+  title: string;
+  description: string;
+  startDate: string | null;
+  dueDate: string | null;
+  answerKeyId: number | null;
+  answerKeyVisible: boolean;
+  currentUserAlertStatus?: Pick<AssignmentAlertStatus, "suspended">;
+  lastAttempt: ClassAssignmentAttemptSummary | null;
+  hasAcceptedAttempt: boolean;
+}
+export type AdminAssignmentListItem = Pick<Assignment,
+  "id" |
+  "title" |
+  "description" |
+  "workerType" |
+  "startDate" |
+  "dueDate"
+> & {
+  class: Pick<Class, "name">;
+};
+
+export interface AssignmentImportSource {
+  id: number;
+  title: string;
+  submittedAt: string;
+}
+
+export interface AssignmentImportProject extends AssignmentImportSource {
+  files: Record<string, string>;
+}
+
+export interface CreateAssignmentRequest {
+  classId: number;
+  title: string;
+  description: string;
+  boilerplateContent?: string;
+  boilerplate?: string;
+  validationScript?: string;
+  initSqlScript?: string;
+  templates:
+    | {
+        templateId: number;
+        params: AssignmentTemplateParam[];
+        weight?: number;
+      }[]
+    | null;
+  maxAttempts: number;
+  startDate?: string | null;
+  dueDate?: string | null;
+  allowCopyPaste?: boolean;
+  workerType: string;
+  workerDefinition: WorkerDefinition;
+  answerKeyVisible?: boolean;
+  allowProjectImport?: boolean;
+  alertPolicy?: AssignmentAlertPolicy;
+}
+
+export interface UpdateAssignmentRequest {
+  id: number;
+  classId: number;
+  title: string;
+  description: string;
+  boilerplateContent?: string;
+  boilerplate?: string;
+  validationScript?: string;
+  initSqlScript?: string;
+  maxAttempts: number;
+  startDate?: string | null;
+  dueDate?: string | null;
+  allowCopyPaste?: boolean;
+  workerType: string;
+  templates: {
+    templateId: number;
+    params: {
+      templateParamId: number;
+      value: string;
+    }[];
+    weight?: number;
+  }[];
+  answerKeyVisible?: boolean;
+  allowProjectImport?: boolean;
+  alertPolicy?: AssignmentAlertPolicy;
+}

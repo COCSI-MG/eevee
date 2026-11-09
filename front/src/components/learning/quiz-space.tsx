@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { LearningActivity } from "@/app/interface/scheduler-api/learning-activity";
+import { LearningActivity } from "@/app/interface/platform-api/learning-activity";
 import {
   LearningActivities,
   learningError,
-} from "@/app/integration/scheduler-api/learning-activity";
+} from "@/app/integration/platform-api/learning-activity";
 import { Button } from "@/components/ui/button";
 export function QuizSpace({
   activity,

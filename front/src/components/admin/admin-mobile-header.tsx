@@ -12,7 +12,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { ADMIN_ROUTES } from "@/app/admin/constants";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 export function AdminMobileHeader() {
   const pathname = usePathname();

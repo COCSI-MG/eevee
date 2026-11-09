@@ -1,4 +1,4 @@
-import { Template } from "@/app/interface/scheduler-api/template";
+import { Template } from "@/app/interface/platform-api/template";
 import { Check, Settings, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";

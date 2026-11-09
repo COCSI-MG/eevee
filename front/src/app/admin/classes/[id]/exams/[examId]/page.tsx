@@ -8,7 +8,7 @@ import { AxiosError } from "axios";
 import { useFetchExam } from "@/hooks/use-fetch-exam";
 import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { useExamDetailsData } from "@/hooks/use-exam-details-data";
-import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
+import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/platform-api/pagination";
 import Loader from "@/components/loader";
 import QueryErrorState from "@/components/shared/query-error-state";
 import ExamDetailsHeader from "@/components/exam/exam-details-header";
@@ -16,7 +16,7 @@ import ExamInfoCard from "@/components/exam/exam-info-card";
 import ExamActivitiesSection from "@/components/exam/exam-activities-section";
 import ExamStudentsSection from "@/components/exam/exam-students-section";
 import { Button } from "@/components/ui/button";
-import { ExamView } from "@/app/interface/scheduler-api/exam";
+import { ExamView } from "@/app/interface/platform-api/exam";
 import { QueryParam } from "@/types/pagination";
 import { normalizeString } from "@/utils/string";
 

@@ -1,20 +1,14 @@
 import { zipSync } from "fflate";
 
-const encoder = new TextEncoder();
-
 export function createZip(files: Record<string, string>): Blob {
-  const entries: Record<string, Uint8Array> = {}
-
+  const encoder = new TextEncoder();
+  const entries: Record<string, Uint8Array> = Object.create(null);
   for (const [rawPath, content] of Object.entries(files)) {
-    const path = rawPath.replaceAll("\\", "/").replace(/^\/+/, "")
-    const parts = path.split("/")
-
-    if (!path || parts.some((part) => !part || part === "." || part === "..")) {
-      continue
+    const path = rawPath.replaceAll("\\", "/").replace(/^\/+/, "");
+    if (path.includes(":") || path.split("/").some((part) => !part || part === "." || part === "..")) {
+      continue;
     }
-
-    entries[path] = encoder.encode(content)
+    entries[path] = encoder.encode(content);
   }
-
-  return new Blob([zipSync(entries)], { type: "application/zip" })
+  return new Blob([zipSync(entries)], { type: "application/zip" });
 }

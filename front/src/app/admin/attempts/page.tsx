@@ -11,7 +11,7 @@ import {
   ADMIN_ATTEMPTS_SEARCH_DEBOUNCE_MS,
   ADMIN_ATTEMPTS_TEXT,
 } from "@/app/admin/attempts/constants";
-import type { AdminUserAttemptSummary } from "@/app/interface/scheduler-api/admin-attempt";
+import type { AdminUserAttemptSummary } from "@/app/interface/platform-api/admin-attempt";
 import AdminAttemptsFilters from "@/components/attempts/admin-attempts-filters";
 import AdminAttemptsTable from "@/components/attempts/admin-attempts-table";
 import AdminUserAttemptsDialog from "@/components/attempts/admin-user-attempts-dialog";

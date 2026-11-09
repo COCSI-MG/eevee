@@ -1,12 +1,12 @@
 "use client";
 
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { AuthService } from "../integration/scheduler-api/auth-service";
-import { renewSession } from "../integration/scheduler-api/client";
-import { AuthSession } from "../interface/scheduler-api/auth";
+import { AuthService } from "../integration/platform-api/auth-service";
+import { renewSession } from "../integration/platform-api/client";
+import { AuthSession } from "../interface/platform-api/auth";
 import { getDefaultRouteForRole } from "../routes";
 
 const AUTH_ROUTES = new Set(["/login", "/register"]);

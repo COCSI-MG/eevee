@@ -32,6 +32,40 @@ export function getPathDepth(path: string): number {
   return path.split("/").filter(Boolean).length;
 }
 
+export function treeFromStorageFiles(files: Record<string, string>): FileNode {
+  const root: FileNode = {
+    id: "root",
+    path: "",
+    isFile: false,
+    isSelectable: false,
+    children: [],
+  };
+  for (const [path, content] of Object.entries(files).sort(([a], [b]) =>
+    a.localeCompare(b),
+  )) {
+    let node = root;
+    const parts = path.split("/");
+    parts.forEach((part, index) => {
+      const isFile = index === parts.length - 1;
+      const nextPath = node.path ? `${node.path}/${part}` : part;
+      let child = node.children?.find((candidate) => candidate.id === part);
+      if (!child) {
+        child = {
+          id: part,
+          path: nextPath,
+          isFile,
+          isSelectable: isFile,
+          children: isFile ? undefined : [],
+        };
+        node.children = [...(node.children ?? []), child];
+      }
+      if (isFile) child.content = content;
+      node = child;
+    });
+  }
+  return root;
+}
+
 export function getParentPath(path: string): string {
   const parts = path.split("/").filter(Boolean);
   return parts.slice(0, -1).join("/");

@@ -28,8 +28,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useTemplateTest } from "@/hooks/use-template-test";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import { TemplateParamType } from "@/app/interface/scheduler-api/template";
+import { WorkerType } from "@/app/interface/platform-api/worker";
+import { TemplateParamType } from "@/app/interface/platform-api/template";
 import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
 import { Tooltip } from "../ui/tooltip";
 import { getWorkerLanguageConfig } from "@/lib/monaco/worker-editor-config";

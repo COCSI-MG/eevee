@@ -1,4 +1,4 @@
-import { ClassPerformance } from "@/app/interface/scheduler-api/class-performance";
+import { ClassPerformance } from "@/app/interface/platform-api/class-performance";
 import {
   Table,
   TableBody,

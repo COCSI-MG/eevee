@@ -1,6 +1,6 @@
 "use client";
 
-import FileSaverService from "@/app/integration/scheduler-api/file-saver";
+import FileSaverService from "@/app/integration/platform-api/file-saver";
 import { useWorkspaceContext } from "@/app/assignment/[id]/workspace/_providers/workspace-provider";
 import { useFetchFileContent } from "@/hooks/use-filestash";
 import { useMutation } from "@tanstack/react-query";

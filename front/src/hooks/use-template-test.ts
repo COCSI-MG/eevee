@@ -1,5 +1,5 @@
-import { TemplatesService } from "@/app/integration/scheduler-api/templates";
-import { TestTemplateRequest } from "@/app/interface/scheduler-api/template";
+import { TemplatesService } from "@/app/integration/platform-api/templates";
+import { TestTemplateRequest } from "@/app/interface/platform-api/template";
 import { useMutation } from "@tanstack/react-query";
 
 export function useTemplateTest() {

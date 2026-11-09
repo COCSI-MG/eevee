@@ -1,6 +1,6 @@
 "use client";
 
-import { AttemptAdminService } from "@/app/integration/scheduler-api/attempt";
+import { AttemptAdminService } from "@/app/integration/platform-api/attempt";
 import { useQuery } from "@tanstack/react-query";
 
 interface UseAdminAttemptsParams {

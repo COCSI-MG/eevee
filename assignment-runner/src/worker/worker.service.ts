@@ -24,6 +24,7 @@ import { NodeTeraormJestStrategy } from './strategies/node-teraorm-jest.strategy
 import { PythonDefaultStrategy } from './strategies/python-default.strategy';
 import { WorkerExecutionStrategy } from './strategies/worker-execution-strategy';
 import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
+import { workerSourceAccess } from './source-snapshot';
 
 @Injectable()
 export class WorkerService {
@@ -110,6 +111,9 @@ export class WorkerService {
     createWorkerData: CreateWorkerDto,
   ): Promise<WorkerResponse> {
     const strategy = this.getStrategy(workerType);
+    const snapshot = createWorkerData.sourceSnapshot;
+    if (snapshot && (createWorkerData.files != null || createWorkerData.applicationFileContent != null))
+      throw new Error('Worker payload cannot contain inline and snapshot source');
 
     const { imageName, srcPath, testPath } = strategy.workerConfig;
 
@@ -120,6 +124,7 @@ export class WorkerService {
 
     const definitionWithPaths = {
       ...workerPayload,
+      ...(snapshot ? { sourceSnapshot: workerSourceAccess(snapshot) } : {}),
       srcPath: workerPayload.srcPath || srcPath,
       testPath: workerPayload.testPath || testPath,
     };
@@ -129,9 +134,7 @@ export class WorkerService {
       definitionWithPaths.testPath,
     );
 
-    this.logger.debug(
-      `Creating worker with jobName: ${jobName} and definition: ${JSON.stringify(definitionWithPaths)}`,
-    );
+    this.logger.debug(`Creating worker ${jobName} for ${workerType}`);
 
     const serializedDefinition = JSON.stringify(definitionWithPaths);
     const encodedDefinition =
@@ -148,10 +151,6 @@ export class WorkerService {
     } else {
       jobOptions = this.buildDefaultJobOptions(sharedMounts, encodedDefinition);
     }
-
-    this.logger.debug(
-      `Job options for worker ${jobName}: ${JSON.stringify(jobOptions)}`,
-    );
 
     const jobCommand = strategy.buildExecutionJobCommand(createWorkerData);
 

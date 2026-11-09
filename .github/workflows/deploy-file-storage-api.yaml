@@ -1,0 +1,81 @@
+name: Deploy File Storage API
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "file-storage-api/**"
+      - "packages/execution-contracts/**"
+      - ".github/actions/remote-kubectl/**"
+      - ".github/workflows/deploy-file-storage-api.yaml"
+
+env:
+  REGISTRY: ghcr.io
+  FILE_STORAGE_API_IMAGE: "${{ vars.FILE_STORAGE_API_IMAGE || 'cocsi-mg/eevee-file-storage-api' }}"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test the storage service
+        run: npm ci && npm test
+        working-directory: file-storage-api
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish the storage image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./file-storage-api/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.FILE_STORAGE_API_IMAGE }}:latest
+            ${{ env.REGISTRY }}/${{ env.FILE_STORAGE_API_IMAGE }}:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    concurrency:
+      group: eevee-production-deploy
+      cancel-in-progress: false
+      queue: max
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Roll out the File Storage API image
+        uses: ./.github/actions/remote-kubectl
+        with:
+          host: "${{ vars.INPUT_HOST }}"
+          username: "${{ vars.INPUT_USER }}"
+          port: "${{ vars.INPUT_PORT || '22' }}"
+          private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          private-key-passphrase: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY_PASSPHRASE }}
+          known-hosts: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+          script: |
+            set -euo pipefail
+            NAMESPACE=eevee-cefetrj
+            DEPLOYMENT=deployment/source-storage
+            IMAGE='${{ env.REGISTRY }}/${{ env.FILE_STORAGE_API_IMAGE }}:${{ github.sha }}'
+            deployment=$(kubectl -n "$NAMESPACE" get "$DEPLOYMENT" --ignore-not-found -o name)
+            if [[ -z "$deployment" ]]; then
+              echo "Published $IMAGE. The first Helm rollout provisions $DEPLOYMENT."
+              exit 0
+            fi
+            kubectl -n "$NAMESPACE" set image "$DEPLOYMENT" "source-storage=$IMAGE"
+            if ! kubectl -n "$NAMESPACE" rollout status "$DEPLOYMENT" --timeout=5m; then
+              kubectl -n "$NAMESPACE" describe "$DEPLOYMENT"
+              kubectl -n "$NAMESPACE" get pods -l app=source-storage -o wide
+              exit 1
+            fi

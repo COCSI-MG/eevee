@@ -1,6 +1,6 @@
 "use client";
 
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import { AssignmentService } from "@/app/integration/platform-api/assignment";
 import { useQuery } from "@tanstack/react-query";
 
 export function useAdminAttemptAssignmentOptions(classId?: number) {

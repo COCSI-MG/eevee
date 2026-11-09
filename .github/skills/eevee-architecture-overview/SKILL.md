@@ -6,20 +6,19 @@ description: "Orient in the EEVEE codebase: service boundaries, local dev setup,
 # EEVEE Architecture Overview
 
 EEVEE (Educational Exercises and Video-based E-learning Environment) is a
-microservices repo. Do not trust `.github/copilot-instructions.md` blindly —
-it describes an older `scheduler-api` / `code-evaluator-engine` split; the
-current split is:
+microservices repo with the following components.
 
 - **`front/`** (Next.js 15) — student/teacher web UI.
 - **`platform-api/`** (NestJS) — public API: users, classes, assignments,
   attempts, templates, realtime, GitHub file-saver sync, AI reports. Owns
-  `scheduling`, `worker`, and `kubernetes` submodules for the platform-facing
-  side of job orchestration (`platform-api/src/worker`,
-  `platform-api/src/kubernetes`, `platform-api/src/scheduling`).
+  `platform-api/src/scheduling` for execution requests and
+  `platform-api/src/worker` for platform-facing worker types.
 - **`assignment-runner/`** — the actual Kubernetes execution side. Has its own
   `src/worker/strategies/*` (one strategy class per worker type) and
   `src/kubernetes/kubernetes.service.ts` (Job/Pod lifecycle against the
   cluster). See the [worker-execution-strategies skill](../worker-execution-strategies/SKILL.md).
+- **`file-storage-api/`** — HTTP service for workspace files and execution
+  snapshots. See the [service guide](../../../file-storage-api/README.md).
 - **`images/`** — container images executed as Kubernetes Jobs:
   `images/node/{node-default,node-teraorm,nest.js,next.js-cypress,grpc,reactjs-cypress}`,
   `images/python-default/`, `images/javascript-default/`,
@@ -34,28 +33,8 @@ results flow back through BullMQ.
 
 ## Local bring-up order
 
-```bash
-# 1. Kubernetes & worker images
-minikube start --driver=docker
-cd images/node/node-default && docker build . -t worker-node-default-img:latest
-minikube image load worker-node-default-img:latest
-# repeat per worker type used in the task
-
-# 2. Core services
-cd infrastructure && docker compose up -d   # Redis, PostgreSQL
-
-# 3. platform-api
-cd platform-api && npm install && npm run start:dev
-
-# 4. assignment-runner
-cd assignment-runner && npm install && npm run start:dev
-
-# 5. Frontend
-cd front && npm install && npm run dev
-```
-
-`make up`, `make up-scheduler`, `make up-front` (see root `Makefile`) wrap
-common subsets of this.
+Use the [local development guide](../../../docs/local-development.md) to
+configure and start the infrastructure and services from the repository root.
 
 ## Gotchas
 
@@ -72,4 +51,4 @@ common subsets of this.
 - Adding/changing a worker type → [worker-execution-strategies](../worker-execution-strategies/SKILL.md)
 - Kubernetes Job/Pod shape, volumes, init containers → [kubernetes-job-orchestration](../kubernetes-job-orchestration/SKILL.md)
 - NestJS module conventions in `platform-api` → [platform-api-conventions](../platform-api-conventions/SKILL.md)
-- The in-progress PostgreSQL-worker redesign → [postgresql-worker-harness spec](../../specs/postgresql-worker-harness.md)
+- Building and validating database workers → [PostgreSQL worker guide](../../../images/node/postgresql/README.md)
