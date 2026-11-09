@@ -2,7 +2,7 @@ import type { ClipboardAction } from "@/constants/clipboard-action";
 import type {
   AssignmentAlertDetails,
   AssignmentAlertType,
-} from "@/app/interface/scheduler-api/assignment-alert";
+} from "@/app/interface/platform-api/assignment-alert";
 
 export type { ClipboardAction } from "@/constants/clipboard-action";
 

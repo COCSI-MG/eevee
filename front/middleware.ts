@@ -1,4 +1,4 @@
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 import { NextRequest, NextResponse } from 'next/server';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;

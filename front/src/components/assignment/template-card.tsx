@@ -10,7 +10,7 @@ import {
 } from "../ui/card";
 import { Route } from "@/app/routes";
 import { useTemplates } from "@/hooks/use-templates";
-import { Template } from "@/app/interface/scheduler-api/template";
+import { Template } from "@/app/interface/platform-api/template";
 import { Badge } from "../ui/badge";
 import React from "react";
 import { toast } from "@/hooks/use-toast";
@@ -20,7 +20,7 @@ import SelectedTemplates from "./selected-templates";
 import TemplateConfigDialog from "./template-config-dialog";
 import { SelectedTemplate } from "@/types/shared";
 import { ScrollArea } from "@radix-ui/react-scroll-area";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { Tooltip } from "../ui/tooltip";
 import QueryErrorState from "@/components/shared/query-error-state";
 

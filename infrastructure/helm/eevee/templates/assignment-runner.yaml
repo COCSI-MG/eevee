@@ -69,6 +69,13 @@ spec:
           image: "{{ .Values.assignmentRunner.image.repository }}:{{ .Values.assignmentRunner.image.tag }}"
           imagePullPolicy: {{ .Values.assignmentRunner.image.pullPolicy }}
           env:
+            - name: EEVEE_WORKER_STORAGE_URL
+              value: "http://source-storage:3020"
+            - name: EEVEE_STORAGE_SIGNING_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default .Values.secrets.name .Values.sourceStorage.secretName }}
+                  key: {{ .Values.sourceStorage.secretKey }}
             - name: K8S_NODE_DIAGNOSTICS_ENABLED
               value: {{ .Values.assignmentRunner.nodeEligibility.enabled | quote }}
             - name: K8S_NODE_REPORT_CONFIGMAP

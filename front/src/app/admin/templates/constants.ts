@@ -1,5 +1,5 @@
-import { TemplateParamType } from "@/app/interface/scheduler-api/template";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { TemplateParamType } from "@/app/interface/platform-api/template";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 
 export const TEMPLATE_FORM_VALIDATION_TITLE_REQUIRED = "O título é obrigatório";
 export const TEMPLATE_FORM_VALIDATION_DESCRIPTION_REQUIRED =

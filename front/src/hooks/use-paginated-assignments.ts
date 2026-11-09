@@ -1,11 +1,11 @@
 "use client";
 
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
+import { AssignmentService } from "@/app/integration/platform-api/assignment";
 import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
-} from "@/app/interface/scheduler-api/pagination";
-import { AdminAssignmentListItem } from "@/app/interface/scheduler-api/assignment";
+} from "@/app/interface/platform-api/pagination";
+import { AdminAssignmentListItem } from "@/app/interface/platform-api/assignment";
 import { useQuery } from "@tanstack/react-query";
 
 interface UsePaginatedAssignmentsParams {

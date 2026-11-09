@@ -12,7 +12,7 @@ import {
 import { DropdownMenuItem } from "../ui/dropdown-menu";
 import TableActions from "../table/table-actions";
 import { cn } from "@/lib/utils";
-import { Exam } from "@/app/interface/scheduler-api/exam";
+import { Exam } from "@/app/interface/platform-api/exam";
 import { Pencil, Eye } from "lucide-react";
 import { formatDateTime } from "@/utils/date";
 

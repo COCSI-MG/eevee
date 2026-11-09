@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { AssignmentService } from "@/app/integration/platform-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { toast } from "@/hooks/use-toast";
 import { Route } from "@/app/routes";
 import { SelectedTemplate } from "@/types/shared";
-import { TemplateParam } from "@/app/interface/scheduler-api/template";
+import { TemplateParam } from "@/app/interface/platform-api/template";
 
 type UpsertError = { message: string } | null;
 

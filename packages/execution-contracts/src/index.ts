@@ -4,8 +4,15 @@ export const EXECUTION_REQUEST_QUEUE = 'execution-requests';
 
 export type ExecutionLifecycleStatus = 'running' | 'completed' | 'failed';
 
+export interface ExecutionSourceSnapshot {
+  scope: string;
+  id: string;
+  kind: 'preview' | 'submission' | 'answer-key';
+}
+
 export interface ExecutionWorkerPayload {
   executionMode?: 'graded' | 'adhoc';
+  sourceSnapshot?: ExecutionSourceSnapshot;
   applicationFileContent?: string;
   files?: Record<string, string> | null;
   testFilesContent?: string[];

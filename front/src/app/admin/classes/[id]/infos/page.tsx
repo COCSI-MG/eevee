@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
-import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { ClassesService } from "@/app/integration/platform-api/classes";
+import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/platform-api/pagination";
+import { UserRole } from "@/app/interface/platform-api/user";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/loader";

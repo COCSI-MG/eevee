@@ -5,10 +5,17 @@ import {
   IsOptional,
   IsString,
   Min,
+  Matches,
 } from 'class-validator';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 
 export class CreateSchedulingDto extends CreateWorkerDto {
+  @ApiProperty({ required: false, description: 'Immutable source snapshot ID for this execution' })
+  @IsOptional()
+  @IsString()
+  @Matches(/^[a-f0-9]{64}$/)
+  sourceSnapshotId?: string;
+
   @ApiProperty()
   @IsNumber()
   @Min(1, { message: 'assignmentId must be greater than zero' })

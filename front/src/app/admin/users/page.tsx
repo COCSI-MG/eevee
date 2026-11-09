@@ -9,7 +9,7 @@ import { usePaginatedSearch } from "@/hooks/use-paginated-search";
 import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import Loader from "@/components/loader";
-import { UsersService } from "@/app/integration/scheduler-api/user";
+import { UsersService } from "@/app/integration/platform-api/user";
 import QueryErrorState from "@/components/shared/query-error-state";
 import ListSearch from "@/components/shared/list-search";
 import Pagination from "@/components/shared/pagination";

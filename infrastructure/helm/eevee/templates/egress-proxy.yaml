@@ -101,7 +101,7 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
-    # Only allow talking to the namespace-local egress proxy.
+    # Use the namespace-local proxy for external access.
     - to:
         - podSelector:
             matchLabels:
@@ -109,6 +109,13 @@ spec:
       ports:
         - protocol: TCP
           port: {{ .Values.egressProxy.port }}
+    - to:
+        - podSelector:
+            matchLabels:
+              app: source-storage
+      ports:
+        - protocol: TCP
+          port: 3020
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

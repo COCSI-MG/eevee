@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
-import { LoginService } from '../integration/scheduler-api/login-service';
+import { LoginService } from '../integration/platform-api/login-service';
 import { useAuthContext } from '@/hooks/use-auth-context';
 
 export default function Login() {

@@ -2,7 +2,7 @@ import { FileNode } from "./shared";
 
 /**
  * Schema simplificado do IndexedDB
- * 
+ *
  * Estratégia: 1 Assignment = 1 Entry
  * Chave: "assignment-{assignmentId}-user-{userId}"
  * Valor: Árvore completa de FileNode[]
@@ -15,6 +15,8 @@ export type FileStashSchema = {
       assignmentId: number;
       userId: number;
       fileTree: FileNode; // Árvore completa de arquivos/pastas
+      generation?: string; // New identity after deletion/recreation; protects against ABA.
+      revision?: number; // Incremented atomically; missing legacy values start at zero.
       updatedAt: string; // Última atualização
     };
   };
@@ -23,9 +25,9 @@ export type FileStashSchema = {
 /**
  * Helper type para o valor armazenado no IndexedDB
  */
-export type FileStashValue = FileStashSchema['assignments']['value'];
+export type FileStashValue = FileStashSchema["assignments"]["value"];
 
 /**
  * Helper type para a chave do IndexedDB
  */
-export type FileStashKey = FileStashSchema['assignments']['key'];
+export type FileStashKey = FileStashSchema["assignments"]["key"];

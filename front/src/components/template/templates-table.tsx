@@ -11,7 +11,7 @@ import {
 import { Route } from "@/app/routes";
 import TableActions from "../table/table-actions";
 import React from "react";
-import { PaginatedTemplate } from "@/app/interface/scheduler-api/template";
+import { PaginatedTemplate } from "@/app/interface/platform-api/template";
 import {
   TEMPLATE_TABLE_TEXT,
   WorkerTypeLabelMap,

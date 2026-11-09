@@ -1,4 +1,4 @@
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { normalizeString } from "@/utils/string";
 import { findWorkerEditorConfig } from "./worker-editor-config";
 

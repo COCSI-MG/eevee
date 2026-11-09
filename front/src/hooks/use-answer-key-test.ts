@@ -1,6 +1,6 @@
-import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { TestTemplateResponse } from "@/app/interface/scheduler-api/template";
+import { SchedulingService } from "@/app/integration/platform-api/scheduling";
+import { Assignment } from "@/app/interface/platform-api/assignment";
+import { TestTemplateResponse } from "@/app/interface/platform-api/template";
 import { FileNode } from "@/types/shared";
 import { buildSchedulingPayloadFromFileTree } from "@/app/assignment/[id]/workspace/_utils/workspace-scheduling.utils";
 import { runWorkspacePreflight } from "@/app/assignment/[id]/workspace/_utils/workspace-preflight.utils";
@@ -15,9 +15,9 @@ interface AnswerKeyTestInput {
   fileTree: FileNode;
 }
 
-export function useAnswerKeyTest() {
+export function useAnswerKeyTest(userId: number) {
   return useMutation({
-    mutationKey: ["answerKeyTest", "preview"],
+    mutationKey: ["answerKeyTest"],
     mutationFn: async ({ assignment, fileTree }: AnswerKeyTestInput) => {
       const templates = assignment.assignmentTemplates ?? [];
 
@@ -45,7 +45,7 @@ export function useAnswerKeyTest() {
         );
       }
 
-      const result = await SchedulingService.createScheduling(payload);
+      const result = await SchedulingService.runAnswerKey(payload, userId);
 
       return {
         passes: result.passes,

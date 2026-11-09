@@ -3,9 +3,9 @@
 import { AssignmentFormProps } from "../../../app/admin/assignments/interface";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { WorkerDefaultTemplateMap } from "@/app/admin/assignments/constants";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,7 +31,7 @@ import { AssignmentInitSqlForm } from "./assignment-init-sql-form";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { isoToLocalDatetime } from "@/utils/date";
 import { ASSIGNMENT_FORM_TEXT } from "./constants";
-import { AssignmentAlertType } from "@/app/interface/scheduler-api/assignment-alert";
+import { AssignmentAlertType } from "@/app/interface/platform-api/assignment-alert";
 import { assignmentAlertPolicyValidationSchema } from "./assignment-alert-policy-validation";
 
 const validationSchema = Yup.object({

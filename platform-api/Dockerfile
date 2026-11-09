@@ -16,8 +16,8 @@ FROM node:24-alpine AS platform-api
 
 WORKDIR /usr/app
 
-RUN addgroup -S nodejs && \
-    adduser -S eevee -G nodejs
+RUN addgroup -S -g 1001 nodejs && \
+    adduser -S -u 1001 eevee -G nodejs
 
 COPY packages/execution-contracts ./packages/execution-contracts
 COPY platform-api/package*.json ./platform-api/

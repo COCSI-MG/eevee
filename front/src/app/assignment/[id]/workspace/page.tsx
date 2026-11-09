@@ -1,5 +1,5 @@
 "use client";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 import WorkspaceHeader from "@/app/assignment/[id]/workspace/_components/workspace-header";
 import WorkspaceHeaderActions from "@/app/assignment/[id]/workspace/_components/workspace-header-actions";
@@ -15,7 +15,7 @@ import { Route } from "@/app/routes";
 import { useFetchAssignment } from "@/hooks/use-assignments";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { toast } from "@/hooks/use-toast";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { isAxiosError } from "axios";
 import { useParams, useRouter } from "next/navigation";

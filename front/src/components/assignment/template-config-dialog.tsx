@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { Badge } from "../ui/badge";
-import { Template, TemplateParamType } from "@/app/interface/scheduler-api/template";
+import { Template, TemplateParamType } from "@/app/interface/platform-api/template";
 import { Tooltip } from "../ui/tooltip";
 import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
 

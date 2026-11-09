@@ -8,11 +8,11 @@ import {
   LearningActivityKind,
   PracticeTask,
   QuizQuestion,
-} from "@/app/interface/scheduler-api/learning-activity";
+} from "@/app/interface/platform-api/learning-activity";
 import {
   LearningActivities,
   learningError,
-} from "@/app/integration/scheduler-api/learning-activity";
+} from "@/app/integration/platform-api/learning-activity";
 import { architecturePractice, sqlPractice } from "@/lib/practice/presets";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

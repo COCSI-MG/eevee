@@ -18,7 +18,7 @@ import {
 } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { useAttemptFeedback } from "@/hooks/use-attempt-feedback";
-import { AssignmentAttempt } from "@/app/interface/scheduler-api/assignment-attempt";
+import { AssignmentAttempt } from "@/app/interface/platform-api/assignment-attempt";
 import { formatScorePercentage } from "@/utils/score";
 
 function AttemptFeedbackDialog({ attempt }: { attempt: AssignmentAttempt }) {

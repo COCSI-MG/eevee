@@ -1,4 +1,4 @@
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import WORKER_SOURCE_MAP from "./worker-source-map.json";
 
 export interface WorkerLanguageConfig {

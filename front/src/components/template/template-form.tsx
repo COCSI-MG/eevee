@@ -11,11 +11,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   CreateTemplateRequest as UpsertTemplateRequest,
   TemplateParamType,
-} from "@/app/interface/scheduler-api/template";
-import { TemplatesService } from "@/app/integration/scheduler-api/templates";
+} from "@/app/interface/platform-api/template";
+import { TemplatesService } from "@/app/integration/platform-api/templates";
 import { toast } from "@/hooks/use-toast";
 import { useParams, useRouter } from "next/navigation";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { AxiosError } from "axios";
@@ -43,9 +43,9 @@ import { Tooltip } from "../ui/tooltip";
 import { TemplateTestDialog } from "./template-test-dialog";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { ClassesService } from "@/app/integration/platform-api/classes";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 const upsertTemplateSchema = Yup.object().shape({
   title: Yup.string()

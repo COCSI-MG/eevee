@@ -1,10 +1,10 @@
 "use client";
 
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
-import { Class } from "@/app/interface/scheduler-api/class";
-import { ExamService } from "@/app/integration/scheduler-api/exam";
-import { LearningActivities } from "@/app/integration/scheduler-api/learning-activity";
-import { LearningActivityKind } from "@/app/interface/scheduler-api/learning-activity";
+import { ClassesService } from "@/app/integration/platform-api/classes";
+import { Class } from "@/app/interface/platform-api/class";
+import { ExamService } from "@/app/integration/platform-api/exam";
+import { LearningActivities } from "@/app/integration/platform-api/learning-activity";
+import { LearningActivityKind } from "@/app/interface/platform-api/learning-activity";
 import {
   Card,
   CardContent,

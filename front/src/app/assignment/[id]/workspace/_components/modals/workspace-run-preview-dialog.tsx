@@ -1,6 +1,6 @@
 "use client";
 
-import type { SchedulingResponse } from "@/app/interface/scheduler-api/scheduling";
+import type { SchedulingResponse } from "@/app/interface/platform-api/scheduling";
 import { Loader2, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -143,7 +143,7 @@ export function WorkspaceRunPreviewDialog({
   const scoreValue = getScoreValue(result?.score);
 
   const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) {
+    if (!nextOpen && !cancelling) {
       onClose();
     }
   };

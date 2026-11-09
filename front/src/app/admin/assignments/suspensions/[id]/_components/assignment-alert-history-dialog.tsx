@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AssignmentAlertService } from "@/app/integration/scheduler-api/assignment-alert";
+import { AssignmentAlertService } from "@/app/integration/platform-api/assignment-alert";
 import {
   type AssignmentAlertUserSummary,
   type AssignmentUserAlert,
-} from "@/app/interface/scheduler-api/assignment-alert";
+} from "@/app/interface/platform-api/assignment-alert";
 import {
   ALERT_LABELS,
   HISTORY_STATUS,
