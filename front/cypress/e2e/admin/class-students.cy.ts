@@ -67,10 +67,6 @@ describe("Class students", () => {
       cy.contains(klass.name).should("be.visible");
     });
 
-    // O X de remover aluno fica dentro do <form> e o componente Button não
-    // define type, então ele vale como submit: o clique salva a turma na hora,
-    // sem passar pelo "Salvar Alterações". Se isso for corrigido, este teste
-    // passa a precisar do clique em salvar.
     it("removes a student from the class", () => {
       cy.log("Enroll a second student so the class keeps one after the removal");
       cy.then(() => cy.enrollStudents(klass, [enrolled.id, seeded.id]));
@@ -84,7 +80,13 @@ describe("Class students", () => {
         .find("button")
         .click();
 
-      cy.log("Check the class was saved without the removed student");
+      cy.log("Check the removal waits for the save instead of submitting");
+      cy.contains("Usuários Selecionados (1)").should("be.visible");
+      cy.get("@updateClassRequest.all").should("have.length", 0);
+      cy.location("pathname").should("eq", `/admin/classes/${klass.id}`);
+
+      cy.log("Save the changes");
+      cy.contains("button", "Salvar Alterações").click();
       cy.wait("@updateClassRequest")
         .its("request.body.students")
         .should("deep.equal", [enrolled.id]);
