@@ -2,8 +2,16 @@
 
 ## Status
 
-This is the original design harness. See the [PostgreSQL worker guide](../../images/node/postgresql/README.md)
-for current build, test, and rollout instructions.
+Update, 2026-10-12: the single-container PostgreSQL lifecycle, resource limits
+and Job deadline/TTL are now present in the repository. The text below records
+the original design, not the current implementation status. Operational node
+eligibility, control-plane validation and latency follow the incremental
+[operational harness](./eevee-operational-harness.md). Container/image execution
+of the PostgreSQL worker remains a separate acceptance test; the API database
+integration tests do not validate that worker lifecycle.
+
+See the [PostgreSQL worker guide](../../images/node/postgresql/README.md)
+for current build, test and rollout instructions.
 
 ## Why the current design cannot work
 

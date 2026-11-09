@@ -3,9 +3,16 @@ import { AppModule } from './app.module';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { startProcessMetrics } from './diagnostics/process-metrics';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  if (process.env.EEVEE_METRICS_PORT) {
+    const metrics = startProcessMetrics(Number(process.env.EEVEE_METRICS_PORT), process.env.EEVEE_METRICS_TOKEN || '');
+    await metrics.ready;
+    app.use(metrics.middleware);
+    app.getHttpServer().once('close', metrics.close);
+  }
 
   const configuredOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? '')
     .split(',')

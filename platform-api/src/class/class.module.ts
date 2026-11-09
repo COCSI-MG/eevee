@@ -8,11 +8,24 @@ import { ClassService } from './class.service';
 import { User } from 'src/user/entities/user.entity';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { ClassPerformanceController } from './class-performance.controller';
+import { ClassPerformanceService } from './class-performance.service';
+import { Assignment } from 'src/assignment/entities/assignment.entity';
+import { UserClass } from 'src/user-class/entities/user-class.entity';
 
 @Module({
-  controllers: [ClassController],
-  providers: [ClassService, JwtAuthGuard, RolesGuard],
-  imports: [TypeOrmModule.forFeature([Class, User]), UserClassModule, RequestContextModule],
+  controllers: [ClassController, ClassPerformanceController],
+  providers: [ClassService, ClassPerformanceService, JwtAuthGuard, RolesGuard],
+  imports: [
+    TypeOrmModule.forFeature([
+      Class,
+      User,
+      Assignment,
+      UserClass
+    ]),
+    UserClassModule,
+    RequestContextModule
+  ],
   exports: [ClassService],
 })
 export class ClassModule {}

@@ -58,7 +58,7 @@ export function useWorkspacePreview({
   const {
     data: previewRun,
     isError: isPreviewRunError,
-    isFetching: isPreviewFetching,
+    isLoading: isLoadingPreviewRun,
   } = useQuery({
     queryKey: ["preview-run", previewRunId],
     queryFn: () => SchedulingService.getPreviewRun(previewRunId!),
@@ -95,7 +95,6 @@ export function useWorkspacePreview({
 
     if (isActivePreviewRunStatus(previewRun.status)) {
       window.localStorage.setItem(previewStorageKey, String(previewRun.id));
-      setPreviewOpen(true);
       return;
     }
 
@@ -155,8 +154,9 @@ export function useWorkspacePreview({
     },
     onError: (error) => {
       console.error("Error starting preview run", error);
+      setPreviewOpen(false);
       toast({
-        title: "Falha na validação antes do run",
+        title: "Não foi possível iniciar a execução",
         description:
           error instanceof Error
             ? error.message
@@ -176,6 +176,7 @@ export function useWorkspacePreview({
   const { mutateAsync: cancelPreviewRun, isPending: isCancellingPreviewRun } =
     useMutation({
       mutationKey: ["cancel-preview-run"],
+      networkMode: "always",
       mutationFn: async (runId: number) =>
         SchedulingService.cancelPreviewRun(runId),
     });
@@ -192,7 +193,7 @@ export function useWorkspacePreview({
 
   const previewLoading =
     isStartingPreviewRun ||
-    isPreviewFetching ||
+    isLoadingPreviewRun ||
     (previewRun ? isActivePreviewRunStatus(previewRun.status) : false);
 
   const closePreview = React.useCallback(async () => {
@@ -205,8 +206,10 @@ export function useWorkspacePreview({
         await cancelPreviewRun(previewRunId);
       } catch (error) {
         console.error("Error cancelling preview run", error);
+        setPreviewOpen(false);
         toast({
-          title: "Ocorreu um erro ao cancelar o run",
+          title: "Não foi possível cancelar a execução",
+          description: "A execução pode continuar em segundo plano.",
           variant: "destructive",
         });
         return;

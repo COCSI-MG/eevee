@@ -47,7 +47,6 @@ interface WorkspaceContextType {
   fileTreeData: FileNode;
   workerType?: WorkerType | string;
   clipboardScope: string;
-  securityPaused: boolean;
   securityAgreementAccepted: boolean;
   registerTypedText: (text: string) => void;
   acceptSecurityAgreement: () => void;
@@ -129,8 +128,10 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const params = useParams();
   const queryClient = useQueryClient();
   const { user } = useAuthContext();
+  const isSecurityExempt = user?.role === UserRole.ADMIN || user?.role === UserRole.TEACHER;
   const currentUserId = user?.userId ?? 0;
   const assignmentId = Number(params.id);
+  const isViewingAnotherUser = Boolean(params.userId);
   const workspaceInstanceId = React.useId();
   const clipboardScope = `assignment:${assignmentId}:workspace:${workspaceInstanceId}`;
 
@@ -141,7 +142,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     queryFn: () => AssignmentAlertService.getMyStatus(assignmentId),
     enabled: Boolean(
       user?.userId &&
-        user.role !== UserRole.ADMIN &&
+        !isSecurityExempt &&
         Number.isInteger(assignmentId) &&
         assignmentId > 0
     ),
@@ -153,12 +154,12 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   const isUserSuspended = Boolean(assignmentData?.currentUserAlertStatus?.suspended);
   const shouldPreventUserActions = Boolean(
     enableSecurityGuards && user?.userId &&
-    user.role !== UserRole.ADMIN && assignmentData &&
+    !isSecurityExempt && assignmentData &&
     securityAgreementAccepted && !isUserSuspended
   );
   const [securityWarning, setSecurityWarning] = React.useState<SecurityWarning | null>(null);
-  const [securityPaused, setSecurityPaused] = React.useState(false);
   const typingTimestamps = React.useRef<number[]>([]);
+  const typingWarningOpen = React.useRef(false);
   const inFlightEventIds = React.useRef(new Set<string>());
   const retryTimers = React.useRef(new Set<number>());
 
@@ -203,13 +204,20 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   }, []);
 
   React.useEffect(() => {
-    initStash().catch((error) => {
-      console.error("Error initializing Filestash:", error);
-    });
-  }, []);
+    if (isViewingAnotherUser) return;
+
+    const initializeStashFn = async () => {
+      try {
+        await initStash();
+      } catch (err) {
+        console.error("Error initializing Filestash:", err);
+      }
+    };
+    initializeStashFn();
+  }, [isViewingAnotherUser]);
 
   React.useEffect(() => {
-    if (!assignmentData?.alertPolicy || user?.role === UserRole.ADMIN) return;
+    if (!assignmentData?.alertPolicy || isSecurityExempt) return;
 
     const version = assignmentData.alertPolicy.version ?? 1;
 
@@ -220,7 +228,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     assignmentData?.alertPolicy,
     assignmentId,
     currentUserId,
-    user?.role
+    isSecurityExempt
   ]);
 
   React.useEffect(
@@ -254,7 +262,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   React.useEffect(() => {
     const status = statusQuery.data;
-    if (!status) return;
+    if (isSecurityExempt || !status) return;
 
     const shouldReloadAssignment =
       !status.suspended &&
@@ -269,6 +277,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     }
   }, [
     assignmentData,
+    isSecurityExempt,
     refetchAssignment,
     statusQuery.data,
     updateAssignmentStatus,
@@ -277,7 +286,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   React.useEffect(() => {
     if (
       !user?.userId ||
-      user.role === UserRole.ADMIN ||
+      isSecurityExempt ||
       statusQuery.data?.suspended
     ) {
       return;
@@ -288,11 +297,11 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     }, 15000);
 
     return () => window.clearInterval(timer);
-  }, [refetchAssignment, statusQuery.data?.suspended, user?.role, user?.userId]);
+  }, [isSecurityExempt, refetchAssignment, statusQuery.data?.suspended, user?.userId]);
 
   const sendPendingAlert = React.useCallback(
     async (payload: RecordAssignmentAlertRequest, retryAttempt = 0) => {
-      if (inFlightEventIds.current.has(payload.eventId)) return;
+      if (!shouldPreventUserActions || inFlightEventIds.current.has(payload.eventId)) return;
 
       inFlightEventIds.current.add(payload.eventId);
 
@@ -325,7 +334,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
         inFlightEventIds.current.delete(payload.eventId);
       }
     },
-    [assignmentId, removePendingAlert, updateAssignmentStatus],
+    [assignmentId, removePendingAlert, shouldPreventUserActions, updateAssignmentStatus],
   );
 
   React.useEffect(() => {
@@ -335,23 +344,29 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     });
   }, [assignmentId, currentUserId, sendPendingAlert, shouldPreventUserActions]);
 
-  React.useEffect(
-    () => () => {
-      retryTimers.current.forEach((timer) => window.clearTimeout(timer));
-      retryTimers.current.clear();
-    },
-  );
+  React.useEffect(() => {
+    const timers = retryTimers.current;
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      timers.clear();
+    };
+  }, [shouldPreventUserActions]);
 
   const handleSecurityViolation = React.useCallback(
     (event: SecurityViolationEvent) => {
+      if (!shouldPreventUserActions) return;
+
+      if (event.type === AssignmentAlertType.TypingRate) {
+        if (typingWarningOpen.current) return;
+
+        typingWarningOpen.current = true;
+      }
+
       const punitive = Boolean(assignmentData?.alertPolicy?.punitiveTypes?.includes(event.type));
       const eventId = punitive ? crypto.randomUUID() : undefined;
 
       setSecurityWarning({ eventId, event, punitive, pending: punitive });
-      if (event.type === AssignmentAlertType.TypingRate) {
-        setSecurityPaused(true);
-      }
-
       if (!punitive || !eventId) return;
 
       const payload: RecordAssignmentAlertRequest = {
@@ -374,7 +389,8 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
       assignmentData?.alertPolicy?.punitiveTypes,
       assignmentId,
       currentUserId,
-      sendPendingAlert
+      sendPendingAlert,
+      shouldPreventUserActions
     ],
   );
 
@@ -396,7 +412,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
 
   const registerTypedText = React.useCallback(
     (text: string) => {
-      if (!shouldPreventUserActions || securityPaused || !text) return;
+      if (!shouldPreventUserActions || typingWarningOpen.current || !text) return;
 
       const now = performance.now();
       const recent = typingTimestamps.current.filter((timestamp) => now - timestamp <= 1000);
@@ -420,8 +436,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     [
       assignmentData?.alertPolicy?.typingCharactersPerSecondLimit,
       handleSecurityViolation,
-      securityPaused,
-      shouldPreventUserActions,
+      shouldPreventUserActions
     ],
   );
 
@@ -437,11 +452,12 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   });
 
   const acknowledgeWarning = () => {
-    if (securityWarning?.event.type === AssignmentAlertType.TypingRate) {
+    if (typingWarningOpen.current) {
       typingTimestamps.current = []
-      setSecurityPaused(false)
+      typingWarningOpen.current = false
     }
-    setSecurityWarning(null);
+
+    setSecurityWarning(null)
   };
 
   const value: WorkspaceContextType = {
@@ -449,8 +465,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
     fileTreeData: treeData,
     workerType: workerType ?? assignmentData?.workerType,
     clipboardScope,
-    securityPaused,
-    securityAgreementAccepted,
+    securityAgreementAccepted: isSecurityExempt || securityAgreementAccepted,
     registerTypedText,
     acceptSecurityAgreement,
     selectItem,
@@ -463,7 +478,7 @@ export const WorkspaceProvider: React.FC<WorkspaceProviderProps> = ({
   return (
     <WorkspaceContext.Provider value={value}>
       {children}
-      <AlertDialog open={Boolean(securityWarning)}>
+      <AlertDialog open={!isSecurityExempt && Boolean(securityWarning)}>
         <AlertDialogContent
           onEscapeKeyDown={(event) => event.preventDefault()}
         >

@@ -175,6 +175,7 @@ describe('SchedulingService', () => {
       files: { 'index.ts': 'console.log(1);' },
     });
 
+    expect(assignmentService.findOne).toHaveBeenCalledWith(10, false);
     expect(schedulingWorkerPreparationService.prepare).toHaveBeenCalled();
     expect(executionRequestService.execute).toHaveBeenCalled();
     expect(attemptService.create).not.toHaveBeenCalled();
@@ -228,6 +229,7 @@ describe('SchedulingService', () => {
       files: { 'src/index.ts': 'content' },
     });
 
+    expect(assignmentService.findOne).toHaveBeenCalledWith(10, false);
     expect(attemptService.create).toHaveBeenCalledWith(
       expect.objectContaining({
         assignmentId: 10,

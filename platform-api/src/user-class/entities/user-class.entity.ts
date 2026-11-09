@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 
 @Entity()
+@Index('IDX_user_class_class_user', { synchronize: false })
 @Index(['userId', 'classId'], { unique: true })
 export class UserClass {
   @PrimaryGeneratedColumn()

@@ -14,7 +14,6 @@ export default function ClassesAssignments() {
 
   const { data, isError, isFetching } = useQuery({
     queryKey: ["assignments", id],
-    refetchInterval: 5000,
     initialData: [],
     queryFn: ({ queryKey }) =>
       AssignmentService.GetAssignmentsByClassId(Number(queryKey[1])),

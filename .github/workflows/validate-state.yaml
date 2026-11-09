@@ -1,0 +1,42 @@
+name: EEVEE operational state
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: eevee-operational-state
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate and track incidents
+        env:
+          EEVEE_ENVIRONMENT: production
+          EEVEE_FRONT_URL: ${{ vars.EEVEE_FRONT_URL }}
+          EEVEE_API_URL: ${{ vars.EEVEE_API_URL }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          : "${EEVEE_FRONT_URL:?Configure repository variable EEVEE_FRONT_URL}"
+          : "${EEVEE_API_URL:?Configure repository variable EEVEE_API_URL (API root health endpoint)}"
+          node scripts/validate-state.mjs --sync-github
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f .eevee-state/latest.md ]; then
+            cat .eevee-state/latest.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eevee-state-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .eevee-state/
+          retention-days: 90
+          if-no-files-found: warn

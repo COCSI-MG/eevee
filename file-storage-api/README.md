@@ -12,6 +12,18 @@ service, provisions local storage when needed, and opens the port-forward
 after the service is ready.
 See the [local development guide](../docs/local-development.md#iniciar-a-file-storage-api).
 
+For standalone testing on Linux with Node.js 22, copy [`.env.example`](./.env.example)
+to `.env` and set `EEVEE_STORAGE_SIGNING_SECRET`. Run these commands from the
+service directory.
+
+```bash
+npm ci
+npm run build
+node --env-file=.env dist/server.js
+```
+
+This uses a local directory. Use the Minikube setup above to test with the PVC.
+
 ## HTTP API
 
 Platform API issues browser grants through

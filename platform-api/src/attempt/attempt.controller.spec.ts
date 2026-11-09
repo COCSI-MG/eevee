@@ -101,4 +101,12 @@ describe('AttemptController', () => {
       NotFoundException,
     );
   });
+
+  it('delegates submitted work lookup to the service', async () => {
+    const work = { attemptId: 4, assignmentId: 8, userId: 12, files: { 'main.ts': 'code' } };
+    attemptService.findSubmittedWorkForAdmin.mockResolvedValue(work);
+
+    await expect(controller.findSubmittedWorkForAdmin(8, 12, 4)).resolves.toEqual(work);
+    expect(attemptService.findSubmittedWorkForAdmin).toHaveBeenCalledWith(8, 12, 4);
+  });
 });

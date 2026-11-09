@@ -1,25 +1,9 @@
 "use client";
 
 import React from "react";
+import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Code,
-  Info,
-  Play,
-  Save,
-  Loader2,
-  SendHorizonal,
-  RotateCcw,
-} from "lucide-react";
+import { Code, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -34,43 +18,17 @@ import { formatDateTime } from "@/utils/date";
 
 interface WorkspaceHeaderProps {
   assignment: Pick<Assignment, "title" | "description" | "startDate" | "dueDate">;
-  onRunClick: () => void;
-  onSubmitClick: () => void;
-  onSaveClick: () => void;
-  onClearClick: () => void | Promise<void>;
-  isRunningSync?: boolean;
-  isSubmittingCorrection?: boolean;
-  isSaving?: boolean;
-  isClearing?: boolean;
-  canClear?: boolean;
-  isSubmissionClosed?: boolean;
+  actions: ReactNode;
 }
 
 const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
   assignment,
-  onRunClick,
-  onSubmitClick,
-  onSaveClick,
-  onClearClick,
-  isRunningSync = false,
-  isSubmittingCorrection = false,
-  isSaving = false,
-  isClearing = false,
-  canClear = true,
-  isSubmissionClosed = false,
+  actions
 }) => {
   const { back } = useRouter();
-  const [isClearDialogOpen, setIsClearDialogOpen] = React.useState(false);
-  const isActionDisabled =
-    isSaving || isRunningSync || isSubmittingCorrection || isClearing;
-
-  const handleClearClick = async () => {
-    await Promise.resolve(onClearClick());
-    setIsClearDialogOpen(false);
-  };
 
   return (
-    <header className="flex items-center justify-between p-3 border-b border-border">
+    <header className="flex shrink-0 flex-wrap items-center justify-between gap-2 p-3 border-b border-border">
       <div className="flex items-center gap-4">
         <div
           className="flex items-center space-x-2 cursor-pointer"
@@ -92,133 +50,38 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
               </span>
             </button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[70vh]">
-            <DialogHeader>
+          <DialogContent className="flex max-h-[90dvh] w-[calc(100%-2rem)] max-w-6xl flex-col overflow-hidden">
+            <DialogHeader className="shrink-0">
               <DialogTitle className="text-2xl font-semibold text-foreground">
                 {assignment?.title}
               </DialogTitle>
             </DialogHeader>
-            <div className="mt-6 space-y-4">
-              <div className="p-6 bg-card/50 rounded-lg border border-border max-h-96 overflow-y-auto">
-                <MarkdownContent
-                  className="text-base"
-                  content={assignment?.description || "Nenhuma descrição fornecida."}
-                />
-                {(assignment.startDate || assignment.dueDate) && (
-                  <div className="mt-4 space-y-1 text-sm text-slate-400">
-                    {assignment.startDate && (
-                      <p>Início: {formatDateTime(assignment.startDate)}</p>
-                    )}
-                    {assignment.dueDate && (
-                      <p>Entrega: {formatDateTime(assignment.dueDate)}</p>
-                    )}
-                  </div>
-                )}
-              </div>
+            <div className="min-h-0 min-w-0 overflow-y-auto rounded-lg border border-border bg-card/50 p-4 sm:p-6">
+              <MarkdownContent
+                className="text-base"
+                content={assignment?.description || "Nenhuma descrição fornecida."}
+              />
+              {(assignment.startDate || assignment.dueDate) && (
+                <div className="mt-4 space-y-1 text-sm text-slate-400">
+                  {assignment.startDate && (
+                    <p>Início: {formatDateTime(assignment.startDate)}</p>
+                  )}
+                  {assignment.dueDate && (
+                    <p>Entrega: {formatDateTime(assignment.dueDate)}</p>
+                  )}
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="flex items-center">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-0">
         <Button variant="ghost" size="sm" onClick={() => back()}>
           Voltar
         </Button>
 
-        <div className="flex items-center gap-2 ml-4">
-          <AlertDialog
-            open={isClearDialogOpen}
-            onOpenChange={setIsClearDialogOpen}
-          >
-            <Button
-              size={"sm"}
-              variant={"outline"}
-              onClick={() => setIsClearDialogOpen(true)}
-              disabled={isActionDisabled || !canClear}
-            >
-              {isClearing ? (
-                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-              ) : (
-                <RotateCcw className="w-4 h-4 mr-1" />
-              )}
-              {isClearing ? "Limpando..." : "Limpar"}
-            </Button>
-
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Limpar workspace?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Você vai perder todo conteúdo do trabalho até aqui. O
-                  workspace será recriado com o boilerplate inicial da
-                  atividade.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isClearing}>
-                  Cancelar
-                </AlertDialogCancel>
-                <Button
-                  variant={"destructive"}
-                  onClick={() => void handleClearClick()}
-                  disabled={isClearing}
-                >
-                  {isClearing ? (
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  ) : (
-                    <RotateCcw className="w-4 h-4 mr-1" />
-                  )}
-                  Confirmar limpeza
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-
-          <Button
-            size={"sm"}
-            className="bg-success hover:bg-success/90 text-success-foreground"
-            onClick={onRunClick}
-            disabled={isActionDisabled}
-          >
-            {isRunningSync ? (
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-            ) : (
-              <Play className="w-4 h-4 mr-1" />
-            )}
-            {isRunningSync ? "Executando..." : "Executar"}
-          </Button>
-
-          <Button
-            size={"sm"}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            onClick={onSubmitClick}
-            disabled={isActionDisabled || isSubmissionClosed}
-          >
-            {isSubmittingCorrection ? (
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-            ) : (
-              <SendHorizonal className="w-4 h-4 mr-1" />
-            )}
-            {isSubmittingCorrection
-              ? "Enviando..."
-              : isSubmissionClosed
-                ? "Prazo encerrado"
-                : "Enviar para Correção"}
-          </Button>
-
-          <Button
-            size={"sm"}
-            variant={"outline"}
-            onClick={onSaveClick}
-            disabled={isSaving || isRunningSync || isSubmittingCorrection}
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-1" />
-            )}
-            {isSaving ? "Salvando..." : "Salvar"}
-          </Button>
-        </div>
+        {actions}
       </div>
     </header>
   );

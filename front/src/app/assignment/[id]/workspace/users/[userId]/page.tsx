@@ -9,6 +9,7 @@ import Loader from "@/components/loader";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { createZip } from "@/utils/create-zip";
+import WorkspaceHeader from "../../_components/workspace-header";
 import WorkspaceReadonlyExplorer from "../../_components/workspace-readonly-explorer";
 import WorkspaceShell from "../../_components/workspace-shell";
 import { useWorkspaceFileEditor } from "../../_hooks/use-workspace-file-editor";
@@ -102,14 +103,14 @@ export default function SubmittedWorkPage() {
 
   return (
     <div className="flex h-screen min-h-0 flex-col text-foreground">
-      <header className="flex items-center gap-4 border-b border-border px-4 py-3">
-        <Button variant="outline" onClick={() => router.back()}>Voltar</Button>
-        <div className="mr-auto">
-          <h1 className="font-semibold">{data.assignment.title}</h1>
-          <p className="text-sm text-muted-foreground">{data.user.name} · Tentativa #{data.attempt}</p>
-        </div>
-        <Button variant="outline" onClick={download}>Baixar código</Button>
-      </header>
+      <WorkspaceHeader
+        assignment={data.assignment}
+        actions={<Button size="sm" variant="outline" onClick={download}>Baixar código</Button>}
+      />
+      <div className="shrink-0 border-b border-border px-4 py-2">
+        <h1 className="font-semibold">{data.assignment.title}</h1>
+        <p className="text-sm text-muted-foreground">{data.user.name} · Tentativa #{data.attempt}</p>
+      </div>
       <WorkspaceProvider
         key={`${assignmentId}:${userId}:${attemptId}`}
         initialFileTree={tree}

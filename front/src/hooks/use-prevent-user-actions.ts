@@ -35,19 +35,6 @@ interface UsePreventUserActionsOptions {
   onSecurityViolation?: (event: SecurityViolationEvent) => Promise<void> | void;
 }
 
-const focusBlur = (
-  handleBlur: (event: FocusEvent) => void,
-  handleFocus: (event: FocusEvent) => void
-) => {
-  window.addEventListener("blur", handleBlur);
-  window.addEventListener("focus", handleFocus);
-
-  return () => {
-    window.removeEventListener("blur", handleBlur);
-    window.removeEventListener("focus", handleFocus);
-  };
-};
-
 export function usePreventUserActions({
   enabled = true,
   allowedDragAreaSelector,
@@ -89,8 +76,9 @@ export function usePreventUserActions({
 
   useEffect(() => {
     if (!enabled) return;
+    let pendingFocusCheck: number | undefined;
 
-    const handleBlur = () => {
+    const reportFocusLoss = () => {
       if (focusLossEpisode.current) return;
 
       focusLossEpisode.current = true;
@@ -99,11 +87,51 @@ export function usePreventUserActions({
       });
     };
 
+    const checkFocus = () => {
+      const isHidden = document.visibilityState === "hidden";
+      const hasFocus = document.hasFocus();
+      const isPreviewFocused = document.activeElement?.matches(
+        "iframe[data-eevee-frontend-preview]"
+      );
+
+      if (isHidden || !hasFocus) {
+        reportFocusLoss();
+      } else if (isPreviewFocused) {
+        focusLossEpisode.current = false;
+      }
+    };
+
+    const handleBlur = () => {
+      window.clearTimeout(pendingFocusCheck);
+      pendingFocusCheck = window.setTimeout(checkFocus, 100);
+    };
+
     const handleFocus = () => {
+      window.clearTimeout(pendingFocusCheck);
       focusLossEpisode.current = false;
     };
 
-    return focusBlur(handleBlur, handleFocus)
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") reportFocusLoss();
+      else if (document.hasFocus()) handleFocus();
+    };
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    const interval = window.setInterval(() => {
+      if (document.activeElement?.matches("iframe[data-eevee-frontend-preview]")) checkFocus();
+    }, 500);
+
+    return () => {
+      window.clearTimeout(pendingFocusCheck);
+      window.clearInterval(interval);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      focusLossEpisode.current = false;
+    };
   }, [enabled, onSecurityViolation]);
 
   useContextMenuGuard({

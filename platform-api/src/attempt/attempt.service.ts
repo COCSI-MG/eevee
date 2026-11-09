@@ -277,8 +277,8 @@ export class AttemptService {
 
     const data = rows.map((row) => ({
       id: Number(row.id),
-      assignmentId,
       userId,
+      assignmentId,
       attempt: Number(row.attempt),
       status: row.status,
       isAcceptable: Boolean(row.isAcceptable),

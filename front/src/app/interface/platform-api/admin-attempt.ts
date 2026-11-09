@@ -57,6 +57,8 @@ export interface AdminUserAttemptSummary {
   >;
 }
 
+export type AdminAttemptListItem = Omit<AdminAttempt, "report" | "receivedWork">;
+
 export interface AdminAttemptsListResponse {
   data: AdminUserAttemptSummary[];
   meta: {

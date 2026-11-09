@@ -114,13 +114,15 @@ o código chegou ao volume.
 
 Execute `make migration-run` com a configuração do banco local atualizada.
 
-`make prepare-workers` já carrega o bootstrap no Minikube.
-No terminal do Assignment Runner, defina `EEVEE_WORKER_STORAGE_URL` como
-`http://source-storage.eevee-dev-storage:3020` e
-`EEVEE_STORAGE_SIGNING_SECRET` com a chave de `platform-api/.env`. O endereço
-do runner é usado pelos pods, enquanto a API local usa a porta 3320 do túnel.
-Se o runner já estiver em execução, reinicie-o após atualizar a imagem e
-configurar as variáveis.
+`make prepare-workers` carrega as imagens no Minikube, incluindo o bootstrap.
+Copie `assignment-runner/.env.example` para `assignment-runner/.env` e
+preencha `EEVEE_STORAGE_SIGNING_SECRET` com o valor
+de `platform-api/.env`. Os pods acessam a File Storage API pelo endereço
+`EEVEE_WORKER_STORAGE_URL`, enquanto a Platform API local usa a porta 3320 do
+túnel.
+
+Confira se o contexto ativo é o Minikube com `kubectl config current-context`.
+Reinicie o runner após alterar o `.env` ou atualizar o contexto.
 
 Depois, em três terminais:
 

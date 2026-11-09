@@ -42,7 +42,8 @@ export class SchedulingService {
 
   static async cancelPreviewRun(previewRunId: number) {
     const response = await axiosClientWithAuth.delete<SchedulingPreviewRun>(
-      `/scheduling/preview/${previewRunId}`
+      `/scheduling/preview/${previewRunId}`,
+      { timeout: 15_000 },
     );
     return response.data;
   }

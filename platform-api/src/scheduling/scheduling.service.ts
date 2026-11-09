@@ -33,7 +33,11 @@ import {
 import { Repository, In } from 'typeorm';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { ExecutionRequestService } from 'src/execution/execution-request.service';
-import { EXECUTION_COMMAND_QUEUE, ExecutionCommand, ExecutionSourceSnapshot } from '@eevee/execution-contracts';
+import {
+  EXECUTION_COMMAND_QUEUE,
+  ExecutionCommand,
+  ExecutionSourceSnapshot,
+} from '@eevee/execution-contracts';
 import { AssignmentAlertService } from 'src/assignment-alert/assignment-alert.service';
 import { ClassAccessService } from 'src/auth/class-access.service';
 import { UserRole } from 'src/user/user-role';
@@ -58,10 +62,11 @@ export class SchedulingService {
     private readonly aiReportService: AiReportService,
     @InjectRepository(SchedulingPreviewRun)
     private readonly schedulingPreviewRunRepository: Repository<SchedulingPreviewRun>,
-    @InjectQueue(EXECUTION_COMMAND_QUEUE) private readonly evaluationQueue: Queue,
+    @InjectQueue(EXECUTION_COMMAND_QUEUE)
+    private readonly evaluationQueue: Queue,
     @InjectQueue('ai-report-queue') private readonly aiReportQueue: Queue,
     private readonly assignmentAlertService: AssignmentAlertService,
-    private readonly classAccess: ClassAccessService
+    private readonly classAccess: ClassAccessService,
   ) {}
 
   private async resolveSourceSnapshot(dto: CreateSchedulingDto, kind: ExecutionSourceSnapshot['kind']) {
@@ -92,6 +97,7 @@ export class SchedulingService {
 
     const assignment = await this.assignmentService.findOne(
       createSchedulingDto.assignmentId,
+      false,
     );
 
     if (!assignment) throw new BadRequestException('Assignment not found');
@@ -142,9 +148,12 @@ export class SchedulingService {
       assignmentId: createSchedulingDto.assignmentId,
     });
 
-    await this.assignmentAlertService.assertCurrentUserNotSuspended(createSchedulingDto.assignmentId);
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(
+      createSchedulingDto.assignmentId,
+    );
     const assignment = await this.assignmentService.findOne(
       createSchedulingDto.assignmentId,
+      false,
     );
     if (!assignment) throw new BadRequestException('Assignment not found');
 
@@ -215,9 +224,14 @@ export class SchedulingService {
   }
 
   async createPreviewRun(createSchedulingDto: CreateSchedulingDto) {
-    await this.assignmentAlertService.assertCurrentUserNotSuspended(createSchedulingDto.assignmentId);
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(
+      createSchedulingDto.assignmentId,
+    );
 
-    const assignment = await this.assignmentService.findOne(createSchedulingDto.assignmentId);
+    const assignment = await this.assignmentService.findOne(
+      createSchedulingDto.assignmentId,
+      false,
+    );
 
     if (!assignment) {
       throw new BadRequestException('Assignment not found');
@@ -265,7 +279,9 @@ export class SchedulingService {
         workerData,
       };
 
-      await this.schedulingPreviewRunRepository.update(previewRun.id, { jobName });
+      await this.schedulingPreviewRunRepository.update(previewRun.id, {
+        jobName,
+      });
       await this.evaluationQueue.add('evaluate-code', message);
     } catch (error) {
       await this.schedulingPreviewRunRepository.update(previewRun.id, {
@@ -294,7 +310,9 @@ export class SchedulingService {
     });
 
     if (previewRun) {
-      await this.assignmentAlertService.assertCurrentUserNotSuspended(previewRun.assignmentId);
+      await this.assignmentAlertService.assertCurrentUserNotSuspended(
+        previewRun.assignmentId,
+      );
     }
     return previewRun;
   }
@@ -332,7 +350,10 @@ export class SchedulingService {
     if (!originalAttempt) {
       throw new BadRequestException('Attempt not found');
     }
-    await this.classAccess.assertAssignmentAccess(originalAttempt.assignmentId, true);
+    await this.classAccess.assertAssignmentAccess(
+      originalAttempt.assignmentId,
+      true,
+    );
 
     if (!originalAttempt.sourceSnapshotId && !originalAttempt.receivedWork) {
       throw new BadRequestException(
@@ -374,7 +395,8 @@ export class SchedulingService {
       applicationFileContent: sourceSnapshot ? undefined : '',
     });
 
-    const preparedWorkerData = await this.schedulingWorkerPreparationService.prepare({
+    const preparedWorkerData =
+      await this.schedulingWorkerPreparationService.prepare({
         assignment: originalAttempt.assignment,
         baseWorkerData: workerData,
         attemptId: newAttempt.id,
@@ -403,9 +425,11 @@ export class SchedulingService {
   async requestAiFeedback(attemptId: number): Promise<void> {
     const user = this.requestContextService.getUser();
 
-    const attempt = await this.validateAtemptUser(attemptId, user)
+    const attempt = await this.validateAtemptUser(attemptId, user);
 
-    await this.assignmentAlertService.assertCurrentUserNotSuspended(attempt.assignmentId);
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(
+      attempt.assignmentId,
+    );
     if (attempt.status !== AttemptStatus.COMPLETED) {
       throw new BadRequestException('Attempt is not completed');
     }
@@ -421,11 +445,14 @@ export class SchedulingService {
   async getAiFeedback(attemptId: number): Promise<string | null> {
     const user = this.requestContextService.getUser();
 
-    const attempt = await this.validateAtemptUser(attemptId, user)
+    const attempt = await this.validateAtemptUser(attemptId, user);
 
-    if(user.role !== UserRole.STUDENT && attempt) return attempt.refinedReport ?? null
+    if (user.role !== UserRole.STUDENT && attempt)
+      return attempt.refinedReport ?? null;
 
-    await this.assignmentAlertService.assertCurrentUserNotSuspended(attempt.assignmentId);
+    await this.assignmentAlertService.assertCurrentUserNotSuspended(
+      attempt.assignmentId,
+    );
     return this.attemptService.findRefinedReport(attemptId, user.userId);
   }
 
@@ -519,13 +546,17 @@ export class SchedulingService {
     }
   }
 
-  private async validateAtemptUser(attemptId: number, user: JwtPayload): Promise<Attempt> {
+  private async validateAtemptUser(
+    attemptId: number,
+    user: JwtPayload,
+  ): Promise<Attempt> {
     const attempt = await this.attemptService.findOne(attemptId);
 
     if (!attempt) throw new NotFoundException('Attempt not found');
 
     if (user.role === UserRole.STUDENT) {
-      if (attempt.userId !== user.userId) throw new NotFoundException('Attempt not found');
+      if (attempt.userId !== user.userId)
+        throw new NotFoundException('Attempt not found');
 
       await this.classAccess.assertAssignmentAccess(attempt.assignmentId);
     } else {
@@ -534,5 +565,4 @@ export class SchedulingService {
 
     return attempt;
   }
-
 }

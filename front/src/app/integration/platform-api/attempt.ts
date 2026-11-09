@@ -2,7 +2,7 @@ import {
   AdminAttempt,
   AdminSubmittedWork,
   AdminAttemptsListResponse,
-  AdminUserAttemptsResponse
+  AdminUserAttemptsResponse,
 } from "@/app/interface/platform-api/admin-attempt";
 import { axiosClientWithAuth } from "./client";
 

@@ -16,6 +16,13 @@ export interface User {
    userClasses: UserClass[];
 }
 
+export interface UserListItem {
+   id: number;
+   name: string;
+   email: string;
+   role: UserRole;
+}
+
 interface UserInput {
    name: string;
    email: string;

@@ -1,0 +1,211 @@
+{{- if .Values.diagnostics.enabled }}
+{{- $d := .Values.diagnostics }}
+{{- if not $d.candidateNodes }}{{ fail "diagnostics.candidateNodes requires an explicit node allowlist" }}{{- end }}
+{{- if not .Values.platformApi.metrics.enabled }}{{ fail "diagnostics requires platformApi.metrics.enabled" }}{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: eevee-observer-script
+data:
+  cluster-observer.mjs: |
+{{ .Files.Get "files/cluster-observer.mjs" | indent 4 }}
+  settings.json: |
+    {{ dict "namespace" .Release.Namespace "candidateNodes" $d.candidateNodes "endpoints" $d.endpoints "reportConfigMap" $d.reportConfigMap "ttlSeconds" $d.ttlSeconds "successesRequired" $d.successesRequired "maxNodeMemoryFraction" $d.maxNodeMemoryFraction "maxReports" $d.maxReports "apiMetricsPort" .Values.platformApi.metrics.port | toJson }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $d.reportConfigMap }}
+  # Data is maintained by the observer, not by Helm.
+---
+{{- if not $d.persistence.existingClaim }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: eevee-observer-reports
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: [ReadWriteOnce]
+  {{- with $d.persistence.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $d.persistence.size }}
+---
+{{- end }}
+{{- if $d.rbac.create }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $d.serviceAccountName }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: eevee-observer
+rules:
+  - apiGroups: [""]
+    resources: [pods, pods/log]
+    verbs: [get, list]
+  - apiGroups: [metrics.k8s.io]
+    resources: [pods]
+    verbs: [get, list]
+  - apiGroups: [""]
+    resources: [configmaps]
+    resourceNames: [{{ $d.reportConfigMap | quote }}]
+    verbs: [get, patch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: eevee-observer
+subjects:
+  - kind: ServiceAccount
+    name: {{ $d.serviceAccountName }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: eevee-observer
+---
+{{- end }}
+{{- if $d.rbac.createClusterRole }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Release.Namespace }}-eevee-observer
+rules:
+  - apiGroups: [""]
+    resources: [nodes]
+    verbs: [get, list]
+  - apiGroups: [metrics.k8s.io]
+    resources: [nodes]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Release.Namespace }}-eevee-observer
+subjects:
+  - kind: ServiceAccount
+    name: {{ $d.serviceAccountName }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ .Release.Namespace }}-eevee-observer
+---
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: eevee-observer
+spec:
+  schedule: {{ $d.schedule | quote }}
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 30
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      activeDeadlineSeconds: 50
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels: { app: eevee-observer }
+        spec:
+          serviceAccountName: {{ $d.serviceAccountName }}
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
+          containers:
+            - name: observer
+              image: {{ $d.image | quote }}
+              command: [node, /observer/cluster-observer.mjs]
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities: { drop: [ALL] }
+              env:
+                - name: EEVEE_METRICS_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.platformApi.metrics.secretName }}
+                      key: {{ .Values.platformApi.metrics.secretKey }}
+              resources:
+                {{- toYaml $d.resources | nindent 16 }}
+              volumeMounts:
+                - { name: script, mountPath: /observer, readOnly: true }
+                - { name: reports, mountPath: /reports }
+          volumes:
+            - name: script
+              configMap: { name: eevee-observer-script }
+            - name: reports
+              persistentVolumeClaim:
+                claimName: {{ default "eevee-observer-reports" $d.persistence.existingClaim }}
+---
+{{- if $d.canary.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: eevee-observer-canary
+spec:
+  selector:
+    matchLabels: { eevee-observer-canary: "true" }
+  template:
+    metadata:
+      labels: { eevee-observer-canary: "true" }
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchFields:
+                  - key: metadata.name
+                    operator: In
+                    values:
+                      {{- toYaml $d.candidateNodes | nindent 22 }}
+      containers:
+        - name: canary
+          image: {{ $d.canary.image | quote }}
+          command: [sh, -c, 'while true; do echo "EEVEE_CANARY $(date +%s)"; sleep 30; done']
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          resources:
+            requests: { cpu: 1m, memory: 2Mi }
+            limits: { cpu: 10m, memory: 8Mi }
+---
+{{- end }}
+{{- end }}
+{{- if .Values.platformApi.metrics.enabled }}
+# The metrics listener is not exposed by the public Service or gateway.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: platform-api-internal-metrics
+spec:
+  podSelector:
+    matchLabels: { app: platform-api }
+  policyTypes: [Ingress]
+  ingress:
+    # Keep existing application-port reachability; restrict only the new port.
+    - ports:
+        - port: {{ .Values.platformApi.containerPort }}
+    - from:
+        - podSelector:
+            matchLabels: { app: eevee-observer }
+      ports:
+        - port: {{ .Values.platformApi.metrics.port }}
+{{- end }}

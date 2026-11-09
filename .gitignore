@@ -1,4 +1,5 @@
 # Logs
+.eevee-state/
 logs
 *.log
 npm-debug.log*

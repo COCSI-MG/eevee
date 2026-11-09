@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { CreateTemplateDto } from './dto/create-template.dto';
 import { UpdateTemplateDto } from './dto/update-template.dto';
+import { TemplateListItemResponseDto } from './dto/response/template-list-item-response.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Template } from './entities/template.entity';
 import { Brackets, In, Repository } from 'typeorm';
@@ -20,7 +21,6 @@ import {
   buildPaginationParams,
 } from 'src/common/pagination/pagination';
 import { ClassAccessService } from 'src/auth/class-access.service';
-import { UserRole } from 'src/user/user-role';
 
 @Injectable()
 export class TemplateService {
@@ -86,11 +86,17 @@ export class TemplateService {
 
   async findAllPaginated(
     query: ListTemplatesQueryDto,
-  ): Promise<PaginatedResult<Template>> {
+  ): Promise<PaginatedResult<TemplateListItemResponseDto>> {
     const { page, pageSize, skip } = buildPaginationParams(query);
 
     const qb = this.templateRepository
       .createQueryBuilder('template')
+      .select([
+        'template.id',
+        'template.title',
+        'template.description',
+        'template.workerType'
+      ])
       .orderBy('template.id', 'DESC');
 
     const user = this.classAccess.user();
