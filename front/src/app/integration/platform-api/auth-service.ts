@@ -1,7 +1,7 @@
 'use client';
 
 import { AuthSession } from '@/app/interface/platform-api/auth';
-import { axiosClient } from './client';
+import { axiosClient } from './axios-instances';
 
 export class AuthService {
   static async me() {
