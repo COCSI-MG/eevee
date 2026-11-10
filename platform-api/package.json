@@ -27,6 +27,8 @@
     "seed:classroom:preview": "npm run build && node dist/scripts/seed-classroom.js --preview",
     "seed:classroom:check": "npm run build && node scripts/classroom/verify.mjs",
     "seed:teraorm-study": "ts-node scripts/seed-teraorm-ab-study.ts",
+    "seed:pandas-examples": "ts-node scripts/seed-pandas-examples.ts",
+    "seed:pandas-examples:prod": "node dist/scripts/seed-pandas-examples.js",
     "script:add-resource": "nest g resource",
     "script:generate-jwt-key": "node -e \"console.log(require('crypto').randomBytes(60).toString('base64'))\""
   },
