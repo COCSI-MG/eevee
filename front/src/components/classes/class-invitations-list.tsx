@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Copy, Link2, LoaderCircle } from "lucide-react";
-import type { ClassInvitation } from "@/app/interface/scheduler-api/class";
+import type { ClassInvitation } from "@/app/interface/platform-api/class";
 import { Button } from "@/components/ui/button";
 import {
   Table,
