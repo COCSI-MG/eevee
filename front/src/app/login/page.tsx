@@ -22,7 +22,7 @@ import { toast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { LoginService } from '../integration/platform-api/login-service';
 import { useAuthContext } from '@/hooks/use-auth-context';
-import { UserRole } from '@/app/interface/scheduler-api/user';
+import { UserRole } from '@/app/interface/platform-api/user';
 import {
   clearPendingClassInvitation,
   getPendingClassInvitation
