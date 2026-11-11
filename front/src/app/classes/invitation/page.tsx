@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Route } from "@/app/routes";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { ClassesService } from "@/app/integration/platform-api/classes";
+import { UserRole } from "@/app/interface/platform-api/user";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import Loader from "@/components/loader";
 import {

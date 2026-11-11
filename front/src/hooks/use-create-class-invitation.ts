@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
-import type { ClassInvitation } from "@/app/interface/scheduler-api/class";
+import { ClassesService } from "@/app/integration/platform-api/classes";
+import type { ClassInvitation } from "@/app/interface/platform-api/class";
 import { toast } from "@/hooks/use-toast";
 
 export const classInvitationsQueryKey = (classId: number) =>

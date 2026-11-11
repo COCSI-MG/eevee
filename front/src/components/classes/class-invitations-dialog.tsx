@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link2, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { ClassesService } from "@/app/integration/platform-api/classes";
 import { Route } from "@/app/routes";
 import {
   classInvitationsQueryKey,
