@@ -27,7 +27,7 @@ self.customTSWorkerFactory = (TypeScriptWorker) => class extends TypeScriptWorke
     for (const item of service.getSyntacticClassifications(fileName, { start: 0, length: source.text.length })) {
       const attribute = item.classificationType === ClassificationTypeEnum.JSX_ATTRIBUTE;
 
-      if (!attribute && !tagTypes.includes(item.classificationType)) continue;
+      if (!attribute && !tagTypes.has(item.classificationType)) continue;
 
       const { start, length } = item.textSpan;
 

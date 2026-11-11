@@ -2,8 +2,6 @@
 import { emmetJSX } from "emmet-monaco-es";
 import type { editor } from "monaco-editor";
 
-import { findWorkerEditorConfig } from "../worker-editor-config";
-
 type Monaco = typeof import("monaco-editor");
 type Editor = editor.IStandaloneCodeEditor;
 type Model = editor.ITextModel;
@@ -21,7 +19,7 @@ interface JsxHighlightSpan {
 }
 
 const configuredWorkers = new WeakSet<Monaco>();
-const editors = new Map<Editor, () => string | undefined>();
+const editors = new Set<Editor>();
 
 let disposeEmmet: (() => void) | undefined;
 let highlightProvider: import("monaco-editor").IDisposable | undefined;
@@ -29,7 +27,7 @@ let highlightProvider: import("monaco-editor").IDisposable | undefined;
 export function configureJsxWorker(monaco: Monaco) {
   if (configuredWorkers.has(monaco)) return;
 
-  const customWorkerPath = new URL("/monaco/jsx-worker.js?v=2", window.location.href).href;
+  const customWorkerPath = new URL("/monaco/jsx-worker.js", window.location.href).href;
 
   const { typescriptDefaults, javascriptDefaults } = monaco.languages.typescript;
 
@@ -44,10 +42,11 @@ export function configureJsxWorker(monaco: Monaco) {
 }
 
 function supportsJsx(instance: Editor): boolean {
-  const workerType = editors.get(instance)?.();
   const filePath = instance.getModel()?.uri.path ?? "";
 
-  return Boolean(findWorkerEditorConfig(workerType)?.webEditing && /\.[jt]sx$/i.test(filePath));
+  const regexVerifyTsxJsx = /\.[jt]sx$/i
+
+  return Boolean(editors.has(instance) && regexVerifyTsxJsx.test(filePath));
 }
 
 function canEditJsx(monaco: Monaco, instance: Editor): boolean {
@@ -282,12 +281,8 @@ function registerAutoClosingTags(monaco: Monaco, instance: Editor) {
   };
 }
 
-export function registerJsxEditing(
-  monaco: Monaco,
-  instance: Editor,
-  workerType: () => string | undefined
-) {
-  editors.set(instance, workerType);
+export function registerJsxEditing(monaco: Monaco, instance: Editor) {
+  editors.add(instance);
 
   highlightProvider ??= registerJsxHighlighting(monaco);
   disposeEmmet ??= registerJsxEmmet(monaco);

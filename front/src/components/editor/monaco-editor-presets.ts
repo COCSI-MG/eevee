@@ -1,3 +1,5 @@
+import { workspaceEditorOptions } from "@/lib/monaco/workspace/features";
+import type { WorkerType } from "@/app/interface/scheduler-api/worker";
 import type { editor } from "monaco-editor";
 
 import type {
@@ -68,29 +70,16 @@ const EDITOR_PRESET_OPTIONS: Record<
   },
 };
 
-const WEB_EDITING_OPTIONS: editor.IStandaloneEditorConstructionOptions = {
-  tabCompletion: "on",
-  autoIndent: "full",
-  insertSpaces: true,
-  autoClosingBrackets: "languageDefined",
-  autoClosingQuotes: "languageDefined",
-  autoSurround: "languageDefined",
-  acceptSuggestionOnEnter: "on",
-  suggestOnTriggerCharacters: true,
-  snippetSuggestions: "inline",
-  "semanticHighlighting.enabled": true
-};
-
 export function resolveMonacoEditorOptions(
   preset: MonacoEditorPreset,
   overrides: MonacoEditorOptionOverrides | undefined,
   readOnly: boolean,
-  webEditing = false,
+  workerType?: WorkerType | string
 ): editor.IStandaloneEditorConstructionOptions {
   return {
     ...BASE_EDITOR_OPTIONS,
     ...EDITOR_PRESET_OPTIONS[preset],
-    ...(preset === "workspace" && webEditing ? WEB_EDITING_OPTIONS : {}),
+    ...(preset === "workspace" ? workspaceEditorOptions(workerType) : {}),
     ...overrides,
     readOnly: preset === "read-only-preview" || readOnly,
   };
