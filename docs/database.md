@@ -82,16 +82,13 @@ Registra previews sem consumir tentativas, com estado, nome do Job, pontuação,
 
 `AssignmentAlertRule` define quais tipos de evento geram punição em cada atividade. `AssignmentUserAlert` mantém cada ocorrência com um UUID idempotente, detalhes e exclusão lógica. O bloqueio não é armazenado: ele é calculado comparando a quantidade de alertas ativos do aluno com `Assignment.suspensionAlertLimit`. Cada alerta pode ser arquivado individualmente; a ocorrência permanece na auditoria e o acesso é liberado quando a contagem ativa fica abaixo do limite.
 
-## Pesquisa e arquivos
+## Pesquisa
 
 `InterviewResponse` possui unicidade por usuário e atividade, pode referenciar uma tentativa e armazena escalas, respostas abertas e perguntas adicionais em JSONB.
-
-`FileEntry` descreve arquivo, caminho temporário, tamanho, MIME, estado e usuário/atividade. `SyncJob` representa operações de upload, download, exclusão e sincronização.
 
 ## Persistência fora do PostgreSQL
 
 - Arquivos do workspace: IndexedDB do navegador;
-- Upload selecionado: armazenamento local da Platform API;
 - Filas e eventos de execução: Redis;
 - Arquivos de cada execução: `emptyDir` efêmero no pod;
 - Logs consolidados: `Attempt.report` ou `SchedulingPreviewRun.report`.
