@@ -1,4 +1,4 @@
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import type { PreviewStrategy } from "../types";
 import { htmlPreviewStrategy } from "./html.strategy";
 import { reactPreviewStrategy } from "./react.strategy";
