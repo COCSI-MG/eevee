@@ -30,6 +30,8 @@ export type ImportCompletionPolicy = "script" | "web" | "none";
 export interface WorkerEditorConfig extends WorkerLanguageConfig {
   /** Enable browser-only Python parsing and lint for this worker. */
   pythonIntellisense?: boolean;
+  /** Enable JSX/TSX editing assistance in React and Next.js workspaces. */
+  webEditing?: boolean;
   /** Compiler option preset applied to TypeScript/JavaScript models. */
   compilerPreset: MonacoCompilerPreset | null;
   /** File categories exposed by the workspace import completion provider. */
@@ -66,6 +68,7 @@ const WORKER_EDITOR_CONFIG_REGISTRY: Record<WorkerType, WorkerEditorConfig> = {
     importCompletionPolicy: "script",
   },
   [WorkerType.NODE_NEXTJS_CYPRESS]: {
+    webEditing: true,
     editorLanguage: "typescript",
     fileExtension: ".tsx",
     defaultFileName: "page",
@@ -73,6 +76,7 @@ const WORKER_EDITOR_CONFIG_REGISTRY: Record<WorkerType, WorkerEditorConfig> = {
     importCompletionPolicy: "web",
   },
   [WorkerType.NODE_REACTJS_CYPRESS]: {
+    webEditing: true,
     editorLanguage: "typescript",
     fileExtension: ".tsx",
     defaultFileName: "App",

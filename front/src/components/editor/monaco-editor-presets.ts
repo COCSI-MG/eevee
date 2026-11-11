@@ -68,14 +68,29 @@ const EDITOR_PRESET_OPTIONS: Record<
   },
 };
 
+const WEB_EDITING_OPTIONS: editor.IStandaloneEditorConstructionOptions = {
+  tabCompletion: "on",
+  autoIndent: "full",
+  insertSpaces: true,
+  autoClosingBrackets: "languageDefined",
+  autoClosingQuotes: "languageDefined",
+  autoSurround: "languageDefined",
+  acceptSuggestionOnEnter: "on",
+  suggestOnTriggerCharacters: true,
+  snippetSuggestions: "inline",
+  "semanticHighlighting.enabled": true
+};
+
 export function resolveMonacoEditorOptions(
   preset: MonacoEditorPreset,
   overrides: MonacoEditorOptionOverrides | undefined,
   readOnly: boolean,
+  webEditing = false,
 ): editor.IStandaloneEditorConstructionOptions {
   return {
     ...BASE_EDITOR_OPTIONS,
     ...EDITOR_PRESET_OPTIONS[preset],
+    ...(preset === "workspace" && webEditing ? WEB_EDITING_OPTIONS : {}),
     ...overrides,
     readOnly: preset === "read-only-preview" || readOnly,
   };
