@@ -14,6 +14,7 @@ import QueryErrorState from "@/components/shared/query-error-state";
 import Pagination from "@/components/shared/pagination";
 import ClassActivitiesSelect from "@/components/classes/class-activities-select";
 import ClassPerformanceTable from "@/components/classes/class-performance-table";
+import ClassInvitationsDialog from "@/components/classes/class-invitations-dialog";
 
 const sameActivitySelection = (a?: number[], b?: number[]): boolean => {
   if (!a || !b) return a === b
@@ -164,6 +165,10 @@ function ClassInfosContent({ id }: { id: number }) {
       <PageHeader
         {...pageHeaderProps}
       />
+
+      <div className="flex justify-end">
+        <ClassInvitationsDialog classId={id} />
+      </div>
 
       {infos.data.deletedAt && (
         <p className="text-sm text-muted-foreground">Turma arquivada</p>

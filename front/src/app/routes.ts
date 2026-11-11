@@ -18,6 +18,7 @@ export enum Route {
   AdminAttempts = "/admin/attempts",
   AssignmentAlerts = "suspensions",
   Classes = "classes",
+  ClassInvitation = "/classes/invitation"
 }
 
 const DEFAULT_ROUTE_BY_ROLE: Record<UserRole, string> = {
