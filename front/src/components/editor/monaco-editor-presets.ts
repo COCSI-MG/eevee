@@ -1,5 +1,5 @@
 import { workspaceEditorOptions } from "@/lib/monaco/workspace/features";
-import type { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import type { editor } from "monaco-editor";
 
 import type {

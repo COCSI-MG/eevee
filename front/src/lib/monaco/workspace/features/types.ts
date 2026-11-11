@@ -1,4 +1,4 @@
-import type { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import type { FileNode } from "@/types/shared";
 import type { editor } from "monaco-editor";
 
