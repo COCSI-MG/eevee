@@ -10,9 +10,10 @@ microservices repo with the following components.
 
 - **`front/`** (Next.js 15) — student/teacher web UI.
 - **`platform-api/`** (NestJS) — public API: users, classes, assignments,
-  attempts, templates, realtime, GitHub file-saver sync, AI reports. Owns
-  `platform-api/src/scheduling` for execution requests and
-  `platform-api/src/worker` for platform-facing worker types.
+  attempts, templates, realtime,  GitHub file-saver sync, AI reports. Owns
+  `scheduling`, `worker`, and `kubernetes` submodules for the platform-facing
+  side of job orchestration (`platform-api/src/worker`,
+  `platform-api/src/kubernetes`, `platform-api/src/scheduling`).
 - **`assignment-runner/`** — the actual Kubernetes execution side. Has its own
   `src/worker/strategies/*` (one strategy class per worker type) and
   `src/kubernetes/kubernetes.service.ts` (Job/Pod lifecycle against the

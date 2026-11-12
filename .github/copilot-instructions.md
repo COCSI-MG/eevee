@@ -67,6 +67,7 @@ Key modules in `platform-api`:
 - **AuthModule** - JWT-based auth. See [jwt.strategy.ts](../platform-api/src/auth/strategies/jwt.strategy.ts) for token validation.
 - **FileSaverModule** - Syncs student files to GitHub via a BullMQ consumer (`file-saver-queue`)
 - **BullMQModule** - Async messaging over Redis (scheduling jobs, AI reports, file sync events)
+- **AuthModule** - JWT-based auth; see `jwt.strategy.ts` for token validation
 
 The runner's **WorkerModule** and **KubernetesModule** manage Job lifecycle in
 `assignment-runner`.
