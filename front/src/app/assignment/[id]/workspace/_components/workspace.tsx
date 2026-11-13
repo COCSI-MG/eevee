@@ -362,6 +362,7 @@ export default function Workspace({
                 className={cn("min-h-0 min-w-0 flex-col lg:flex", mobilePane === WorkspaceMobilePane.Preview ? "flex" : "hidden")}
               >
                 <FrontendPreview
+                  dependencies={assignment.dependencies}
                   tree={fileTreeData}
                   react={isReactPreview}
                   paused={Boolean(assignment.currentUserAlertStatus?.suspended)}

@@ -1,3 +1,4 @@
+import { mergeDependencies, shellArgument } from './dependencies';
 import { WorkerTestFile } from '../worker.interfaces';
 import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
 
@@ -30,7 +31,11 @@ export function buildNpmInstallCommand(
   dependencies: string[],
 ): string | undefined {
   if (!dependencies.length) return undefined;
-  return `npm install ${dependencies.join(' ')}`;
+  const installFlags = dependencies.filter((dependency) => dependency === '--save');
+
+  const packages = mergeDependencies(dependencies.filter((dependency) => dependency !== '--save'));
+
+  return `npm install ${[...packages.map(shellArgument), ...installFlags].join(' ')}`;
 }
 
 export function asShellCommand(commands: string[]): string[] {

@@ -66,6 +66,11 @@ export class CreateAssignmentDto {
   @IsNotBlank()
   description: string;
 
+  @ApiPropertyOptional({ type: String, default: '', example: 'axios@1.7.9, lodash' })
+  @IsOptional()
+  @IsString()
+  dependencies?: string;
+
   @ApiProperty()
   @IsNumber()
   maxAttempts: number;

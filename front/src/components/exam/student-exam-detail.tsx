@@ -23,6 +23,7 @@ function summaryToAssignment(
   examWindow: Pick<Exam, "startDate" | "dueDate">,
 ): Assignment {
   return {
+    dependencies: "",
     id: s.id,
     classId: s.classId,
     title: s.title,
