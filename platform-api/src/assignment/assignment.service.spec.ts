@@ -141,6 +141,48 @@ describe('AssignmentService', () => {
     ({ service } = await setup());
   });
 
+  it('persists normalized dependencies on creation', async () => {
+    const { service, assignmentRepository, classService } = await setup();
+
+    classService.findOne.mockResolvedValue({ id: 1 });
+
+    assignmentRepository.save.mockImplementation(async (value) => ({ id: 55, ...value }));
+
+    await service.create({
+      classId: 1,
+      title: 'Libraries',
+      description: 'Test',
+      maxAttempts: 1,
+      workerType: WorkerType.NODE_DEFAULT,
+      templates: [],
+      dependencies: 'axios@3, axios@2'
+    } as any);
+
+    expect(assignmentRepository.save).toHaveBeenCalledWith(expect.objectContaining({ dependencies: 'axios@3' }));
+  });
+
+  it('clears dependencies explicitly and preserves them when omitted', async () => {
+    const { service, assignmentRepository, classAccess } = await setup();
+    const titleUpdate = { title: 'Updated' };
+
+    classAccess.assertAssignmentAccess.mockResolvedValue({
+      id: 55,
+      classId: 1,
+      workerType: WorkerType.NODE_DEFAULT,
+      dependencies: 'axios'
+    } as any);
+
+    assignmentRepository.findOne.mockResolvedValue({ id: 55 });
+
+    await service.update(55, { dependencies: '' });
+
+    expect(assignmentRepository.update).toHaveBeenLastCalledWith(55, { dependencies: '' });
+
+    await service.update(55, titleUpdate);
+
+    expect(assignmentRepository.update).toHaveBeenLastCalledWith(55, titleUpdate);
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
