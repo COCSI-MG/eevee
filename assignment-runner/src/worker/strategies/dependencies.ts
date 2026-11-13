@@ -4,12 +4,9 @@ export function dependencyName(value: string): string {
   const packageName = /[a-z0-9][a-z0-9._-]*/;
   const versionOrTag = /[A-Za-z0-9.*^~<>=|+! _-]+/;
 
-  const pattern = new RegExp(
-    `^(
-        (?:${scope.source})?${packageName.source})` + `(?:@(${versionOrTag.source})
-      )?$
-    `
-  );
+  const regex = `^((?:${scope.source})?${packageName.source})(?:@(${versionOrTag.source}))?$`;
+
+  const pattern = new RegExp(regex);
 
   const match = pattern.exec(value.trim());
 
