@@ -53,6 +53,7 @@ export interface AnswerKey {
 }
 
 export interface Assignment {
+  dependencies: string;
   id: number;
   classId: number;
   title: string;
@@ -127,6 +128,7 @@ export interface AssignmentImportProject extends AssignmentImportSource {
 }
 
 export interface CreateAssignmentRequest {
+  dependencies?: string;
   classId: number;
   title: string;
   description: string;
@@ -153,6 +155,7 @@ export interface CreateAssignmentRequest {
 }
 
 export interface UpdateAssignmentRequest {
+  dependencies?: string;
   id: number;
   classId: number;
   title: string;

@@ -1,3 +1,5 @@
+import { WorkerType } from 'src/worker/enum/worker-type.enum';
+import { mergeDependencies, splitDependencies } from 'src/utils/dependencies';
 import {
   BadRequestException,
   ConflictException,
@@ -394,6 +396,14 @@ export class AssignmentService {
     );
   }
 
+  private normalizeDependencies(dependencies: string | undefined): string {
+    try {
+      return mergeDependencies(splitDependencies(dependencies)).join(", ");
+    } catch (error) {
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
   async create(
     createAssignmentDto: CreateAssignmentDto,
     manager?: EntityManager,
@@ -454,6 +464,7 @@ export class AssignmentService {
       classId: assignmentData.classId,
       title: assignmentData.title,
       description: assignmentData.description,
+      dependencies: this.normalizeDependencies(assignmentData.dependencies),
       maxAttempts: assignmentData.maxAttempts,
       startDate,
       dueDate,
@@ -956,6 +967,14 @@ export class AssignmentService {
       });
 
       assignment.boilerplateContent = resolvedBoilerplateContent;
+    }
+
+    if (updateAssignmentDto.dependencies !== undefined || updateAssignmentDto.workerType !== undefined) {
+
+      const d = updateAssignmentDto.dependencies ?? assignment.dependencies
+
+      dataToUpdate.dependencies = this.normalizeDependencies(d);
+
     }
 
     if (Object.keys(dataToUpdate).length > 0)

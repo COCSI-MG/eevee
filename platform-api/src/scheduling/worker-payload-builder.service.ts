@@ -1,3 +1,4 @@
+import { mergeDependencies } from 'src/utils/dependencies';
 import { Injectable } from '@nestjs/common';
 import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.utils';
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
@@ -69,7 +70,7 @@ export class WorkerPayloadBuilderService {
       ...baseWorkerData,
       testFilesContent: nonEmptyTestFilesContent,
       testFiles,
-      dependencies,
+      dependencies: mergeDependencies(dependencies),
       templateVariablesModuleContent:
         templateVariablesModuleContent ??
         baseWorkerData.templateVariablesModuleContent,

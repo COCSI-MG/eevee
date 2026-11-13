@@ -1,3 +1,4 @@
+import { dependencyName, mergeDependencies, splitDependencies } from "./dependencies";
 import type { SandboxSetup } from "@codesandbox/sandpack-client";
 import type { FileNode } from "@/types/shared";
 import { PREVIEW_CONTEXT_MENU_SCRIPT } from "@/constants/frontend-preview";
@@ -212,7 +213,8 @@ export function createPreviewSandbox(
   entry: PreviewEntry,
   source: Record<string, string>,
   react: boolean,
-  blockContextMenu = false
+  blockContextMenu = false,
+  activityDependencies = ""
 ): SandboxSetup {
   if (!Object.hasOwn(source, entry.path)) throw new Error(`Arquivo não encontrado: ${entry.path}`);
 
@@ -221,11 +223,23 @@ export function createPreviewSandbox(
 
   const main = prepareEntry(entry, files, blockContextMenu);
 
-  const dependencies = react ? PREVIEW_DEPENDENCIES : {};
+  const dependencies: Record<string, string> = {
+    ...(react ? PREVIEW_DEPENDENCIES : {})
+  };
+
+  for (const requirement of mergeDependencies(splitDependencies(activityDependencies))) {
+    const name = dependencyName(requirement);
+
+    dependencies[name] = requirement.slice(name.length + 1) || "latest";
+  }
 
   const devDependencies: SandboxSetup["devDependencies"] = react
     ? { "@babel/core": "7.21.8" }
     : {};
+
+  for (const name of Object.keys(dependencies)) {
+    delete devDependencies[name];
+  }
 
   files["/package.json"] = createPackageJson(
     main,

@@ -19,6 +19,7 @@ import { AssignmentAlertPolicyDialog } from "./assignment-alert-policy-dialog";
 import { ASSIGNMENT_FORM_TEXT } from "./constants";
 
 interface AssignmentConfigFormValues {
+  workerType: string;
   alertPolicy: AssignmentAlertPolicy;
 }
 
@@ -137,6 +138,26 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="dependenciesInput">
+              {ASSIGNMENT_FORM_TEXT.CONFIG.DEPENDENCIES_LABEL}{" "}
+              <Tooltip message={ASSIGNMENT_FORM_TEXT.CONFIG.DEPENDENCIES_TOOLTIP} />
+            </Label>
+
+            <Field
+              as="textarea"
+              id="dependenciesInput"
+              name="dependenciesInput"
+              className="w-full p-2 bg-primary/20 border border-border rounded-md text-foreground"
+            />
+
+            <ErrorMessage
+              name="dependenciesInput"
+              component="div"
+              className="text-destructive text-sm"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="maxAttempts" className="block text-sm font-medium">
               {ASSIGNMENT_FORM_TEXT.CONFIG.MAX_ATTEMPTS_LABEL}{" "}
               <Tooltip
@@ -161,7 +182,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="startDate" className="block text-sm font-medium">
-                Data de início
+                {ASSIGNMENT_FORM_TEXT.CONFIG.START_DATE_LABEL}
               </Label>
               <Field
                 id="startDate"
@@ -170,7 +191,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
                 className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
               />
               <p className="text-xs text-slate-400">
-                Opcional. A tarefa será exibida aos alunos a partir desta data.
+                {ASSIGNMENT_FORM_TEXT.CONFIG.START_DATE_HELP}
               </p>
               <ErrorMessage
                 name="startDate"
@@ -181,7 +202,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="dueDate" className="block text-sm font-medium">
-                Data de entrega
+                {ASSIGNMENT_FORM_TEXT.CONFIG.DUE_DATE_LABEL}
               </Label>
               <Field
                 id="dueDate"
@@ -190,7 +211,7 @@ export const AssignmentConfigForm: React.FC<AssignmentConfigFormProps> = ({
                 className="w-full p-2 bg-slate-700 border border-slate-600 rounded-md text-white"
               />
               <p className="text-xs text-slate-400">
-                Opcional. Novas entregas serão bloqueadas após esta data.
+                {ASSIGNMENT_FORM_TEXT.CONFIG.DUE_DATE_HELP}
               </p>
               <ErrorMessage
                 name="dueDate"
