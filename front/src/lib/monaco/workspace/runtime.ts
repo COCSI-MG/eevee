@@ -1,10 +1,10 @@
-import { WorkerType } from "@/app/interface/platform-api/worker";
 import { FileNode } from "@/types/shared";
 import { applyLanguageDefaults } from "../intellisense/compiler";
 import { applyTypePack, clearTypePacks } from "../intellisense/type-packs";
 import { resolveMonacoLanguage } from "../language";
 import { findWorkerEditorConfig } from "../worker-editor-config";
-import { applyPythonIntellisense, disposePythonIntellisense } from "../python/pyodide-client";
+import { createEditorFeatures, prepareWorkspaceEditor } from "./features";
+import type { WorkspaceRuntimeConfig } from "./features/types";
 import {
   getImportPathSuggestions,
   normalizeWorkspacePath,
@@ -15,12 +15,6 @@ type MonacoNamespace = typeof import("monaco-editor");
 type Disposable = import("monaco-editor").IDisposable;
 type TextModel = import("monaco-editor").editor.ITextModel;
 type Position = import("monaco-editor").Position;
-
-interface WorkspaceRuntimeConfig {
-  tree: FileNode;
-  activePath: string;
-  workerType?: WorkerType | string;
-}
 
 interface WorkspaceRegistration extends WorkspaceRuntimeConfig {
   monaco: MonacoNamespace;
@@ -117,18 +111,6 @@ function refreshRuntime(): void {
 
   syncWorkspaceModels(latest.monaco, latest.tree, activePaths);
 
-  // Run before the worker-type early return: files change within a workspace.
-  if (findWorkerEditorConfig(latest.workerType)?.pythonIntellisense) {
-    const paths = new Set(collectFilePaths(latest.tree).map(
-      (path) => latest.monaco.Uri.parse(workspaceModelPath(path)).toString(),
-    ));
-    applyPythonIntellisense(latest.monaco, latest.monaco.editor.getModels().filter(
-      (model) => paths.has(model.uri.toString()),
-    ));
-  } else {
-    disposePythonIntellisense();
-  }
-
   const nextWorkerType = latest.workerType?.toString();
   if (nextWorkerType === appliedWorkerType) return;
   appliedWorkerType = nextWorkerType;
@@ -144,23 +126,50 @@ function refreshRuntime(): void {
 
 export function registerWorkspaceRuntime(
   monaco: MonacoNamespace,
+  editorInstance: import("monaco-editor").editor.IStandaloneCodeEditor,
   initialConfig: WorkspaceRuntimeConfig,
 ) {
   const id = Symbol("workspace-editor");
 
+  let current = initialConfig;
+
+  const features = createEditorFeatures({
+    monaco,
+    editor: editorInstance,
+    getConfig: () => current,
+    getModels: () => {
+      const paths = new Set(
+        collectFilePaths(current.tree)
+        .map(path => {
+          const modelPath = workspaceModelPath(path)
+
+          return monaco.Uri.parse(modelPath).toString()
+        })
+      );
+
+      return monaco.editor.getModels().filter(model => paths.has(model.uri.toString()));
+    },
+  });
+  prepareWorkspaceEditor(monaco, current.workerType);
   registrations.set(id, { monaco, ...initialConfig });
 
   ensureCompletionProviders(monaco);
   refreshRuntime();
+  features.update();
 
   return {
     update(config: WorkspaceRuntimeConfig) {
       if (!registrations.has(id)) return;
+      current = config;
+      prepareWorkspaceEditor(monaco, current.workerType);
       registrations.delete(id);
       registrations.set(id, { monaco, ...config });
       refreshRuntime();
+      features.update();
     },
     dispose() {
+      if (!registrations.has(id)) return;
+      features.dispose();
       registrations.delete(id);
 
       if (registrations.size > 0) {
@@ -170,7 +179,6 @@ export function registerWorkspaceRuntime(
 
       completionDisposables.forEach((disposable) => disposable.dispose());
       completionDisposables = [];
-      disposePythonIntellisense();
       disposeWorkspaceModels(monaco);
       clearTypePacks(monaco);
       appliedWorkerType = undefined;

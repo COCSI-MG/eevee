@@ -159,7 +159,7 @@ export function useMonacoEditorLifecycle({
       contextMenuCleanupRef.current = () => contextMenuDisposable.dispose();
 
       if (workspaceTree) {
-        runtimeRef.current = registerWorkspaceRuntime(monaco, {
+        runtimeRef.current = registerWorkspaceRuntime(monaco, editorInstance, {
           tree: workspaceTree,
           activePath: path ?? "",
           workerType,

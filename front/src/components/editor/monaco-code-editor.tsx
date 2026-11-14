@@ -14,11 +14,14 @@ import {
   EEVEE_MONACO_THEME,
   registerEeveeMonacoTheme,
 } from "@/lib/monaco/theme";
+import { prepareWorkspaceEditor } from "@/lib/monaco/workspace/features";
 import { workspaceModelPath } from "@/lib/monaco/workspace/models";
 
 import type { MonacoCodeEditorProps } from "./monaco-code-editor.types";
 import { resolveMonacoEditorOptions } from "./monaco-editor-presets";
 import { useMonacoEditorLifecycle } from "./use-monaco-editor-lifecycle";
+
+import type { BeforeMount } from "@monaco-editor/react";
 
 export type {
   MonacoCodeEditorProps,
@@ -44,17 +47,18 @@ export function MonacoCodeEditor({
   readOnly = false,
   optionOverrides,
 }: MonacoCodeEditorProps) {
-  const effectivePath =
-    preset === "workspace" && path ? workspaceModelPath(path) : path;
+  const effectivePath = (preset === "workspace" && path) ? workspaceModelPath(path) : path;
   const effectiveLanguage = resolveMonacoLanguage({
     language,
     path,
     workerType,
   });
+
   const options = resolveMonacoEditorOptions(
     preset,
     optionOverrides,
     readOnly,
+    workerType
   );
   const handleMount = useMonacoEditorLifecycle({
     preset,
@@ -65,6 +69,12 @@ export function MonacoCodeEditor({
     actionGuardScope,
     onDidType,
   });
+
+  const handleBeforeMount: BeforeMount = (monaco) => {
+    registerEeveeMonacoTheme(monaco);
+
+    if (preset === "workspace") prepareWorkspaceEditor(monaco, workerType);
+  }
 
   return (
     <Editor
@@ -77,7 +87,7 @@ export function MonacoCodeEditor({
       keepCurrentModel={false}
       onChange={(nextValue) => onChange?.(nextValue ?? "")}
       onMount={handleMount}
-      beforeMount={registerEeveeMonacoTheme}
+      beforeMount={handleBeforeMount}
       className={className}
       options={options}
     />
