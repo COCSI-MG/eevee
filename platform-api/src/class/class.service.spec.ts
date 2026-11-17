@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ClassService } from './class.service';
 import { Class } from './entities/class.entity';
+import { ClassInvitation } from './entities/class-invitation.entity';
 import { UserClassService } from 'src/user-class/user-class.service';
 import { RequestContextService } from 'src/request-context/request-context.service';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
@@ -81,6 +82,14 @@ describe('ClassService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: userRepository
+        },
+        {
+          provide: getRepositoryToken(ClassInvitation),
+          useValue: {
+            createQueryBuilder: jest.fn(),
+            save: jest.fn(),
+            findOne: jest.fn(),
+          },
         },
         {
           provide: ClassAccessService,
