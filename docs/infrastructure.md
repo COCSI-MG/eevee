@@ -7,7 +7,7 @@
 - Redis `8.6.2`, na porta 6379, com volume `redis-data`;
 - PostgreSQL `16`, na porta externa 5433, com volume `pgdata`.
 
-Frontend, Platform API e Assignment Runner rodam como processos separados no desenvolvimento local. Os Kubernetes Jobs são criados no Minikube.
+Frontend, Platform API e Assignment Runner rodam como processos separados no desenvolvimento local. O Minikube executa os Kubernetes Jobs e a [File Storage API](local-development.md#iniciar-a-file-storage-api).
 
 ## Imagens da aplicação e dos workers
 
@@ -45,7 +45,7 @@ flowchart LR
     AR --> J[Kubernetes Jobs]
 ```
 
-O chart pode incluir PostgreSQL, Redis, gateway Nginx, Ingress e cert-manager. Há ainda recursos de proxy de saída e políticas de rede para execuções que exigem acesso controlado.
+O chart inclui a File Storage API e seu PVC. Veja o [guia de implantação do armazenamento](file-storage-rollout/SOURCE-STORAGE.md). O chart também pode incluir PostgreSQL, Redis, gateway Nginx, Ingress e cert-manager, além de proxy de saída e políticas de rede para as execuções.
 
-As imagens padrão usam `ghcr.io/cocsi-mg` e a tag `develop`. Secrets podem ser referenciados ou criados pelo chart, conforme os valores. O namespace padrão do Makefile é `eevee-cefetrj` e a release é `eevee`.
+As imagens padrão dos serviços usam `ghcr.io/cocsi-mg` e a tag `latest`. Secrets podem ser referenciados ou criados pelo chart, conforme os valores. O namespace padrão do Makefile é `eevee-cefetrj` e a release é `eevee`.
 

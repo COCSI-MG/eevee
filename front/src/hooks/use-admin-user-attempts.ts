@@ -1,7 +1,7 @@
 "use client";
 
-import { AttemptAdminService } from "@/app/integration/scheduler-api/attempt";
-import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
+import { AttemptAdminService } from "@/app/integration/platform-api/attempt";
+import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/platform-api/pagination";
 import { useQuery } from "@tanstack/react-query";
 
 interface UseAdminUserAttemptsParams {

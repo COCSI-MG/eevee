@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { ADMIN_ROUTES, TEACHER_ROUTES } from "@/app/admin/constants";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 export function AdminSidebar() {
   const pathname = usePathname();

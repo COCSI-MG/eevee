@@ -1,5 +1,5 @@
-import type { SchedulingPreviewRunStatus } from "@/app/interface/scheduler-api/scheduling";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import type { SchedulingPreviewRunStatus } from "@/app/interface/platform-api/scheduling";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 
 import type { WorkspacePreflightResult } from "./workspace-preflight.utils";
 
@@ -46,7 +46,6 @@ export const ASSIGNMENT_README_PATH = "src/README.md";
 export const ASSIGNMENT_README_FILE_NAME = "README.md";
 export const DEFAULT_ASSIGNMENT_TITLE = "Assignment";
 export const DEFAULT_ASSIGNMENT_DESCRIPTION = "No description provided.";
-export const REACT_ASSIGNMENT_APP_PATH = "src/App.tsx";
 export const FORMAT_ASSIGNMENT_README_CONTENT = (title: string,description: string): string => `# ${title}\n\n${description}\n`;
 
 export const WORKSPACE_ITEM_TYPE = {

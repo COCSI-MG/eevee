@@ -8,13 +8,13 @@ Os Workers depois da mudança para o novo sistema de execução, precisam de um 
 
 Os workers devem ser iniciados de forma singular, cada worker pode ter sua particularidade, o bootstrap só é responsável por criar os arquivos, em um init container onde um volume é compartilhado entre eles. 
 
-Quem é responsável por iniciar a aplicação e rodar os testes, é o próprio worker, a partir de um arquivo de trigger, como no [exemplo do trigger do node](./node/trigger.ts). O trigger é o ponto de entrada do worker, onde a aplicação é iniciada e os testes são executados. 
+O worker inicia a aplicação e roda os testes pelo seu trigger. Veja o [trigger do Node.js padrão](./node/node-default/trigger.ts).
 
-O volume compartilhado, possui um mount em `/app/src` e `/app/tests`, onde os arquivos de source code e testes são criados, a partir da estrutura enviada pelo cliente, e o worker tem acesso a esses arquivos para iniciar a aplicação e rodar os testes.
+O bootstrap escreve os arquivos de código e teste sob `/app/src` e `/app/test` no volume compartilhado. O worker usa esses arquivos para iniciar a aplicação e rodar os testes.
 
 ### Worker Bootstrap 
 
-A estrutura enviada pelo cliente contém outras propriedades que são utilizados carregar os arquivos que foram enviados para o worker, com o objeto `files`, que contém uma estrutura de arquivos que foram criados pelos Alunos e enviado pelo worker na estrutura:
+Para execuções do workspace, o [bootstrap](./worker-bootstrap/source-snapshot.ts) busca o snapshot na File Storage API e verifica os arquivos antes de escrevê-los no volume do Job. O bootstrap também aceita o mapa `files` nos payloads que ainda carregam código inline:
 
 ```json
 {
@@ -37,12 +37,7 @@ Posteriormente é feito o merge entre os arquivos enviados pelo cliente e a estr
 
 ### Utilizando banco de dados
 
-Atualmente, existe apenas um worker com Node.js + PostgreSQL, é preciso carregar a imagem do Postgres para o minikube. O Assignment Runner espera uma imagem do Postgres com a tag `postgres:16`, então é necessário criar uma tag local com essa referência:
-
-```bash
-docker pull postgres:16
-minikube image load postgres:16
-```
+Os workers Node.js e NestJS com banco usam o [Dockerfile dos workers PostgreSQL](./node/postgresql/Dockerfile). Veja os comandos de build e os testes no [guia PostgreSQL](./node/postgresql/README.md).
 
 ## Imagens Disponíveis
 
@@ -50,68 +45,27 @@ Atualmente, as imagens disponíveis suportam motores de execução baseados em N
 
 - [Worker Bootstrap](./worker-bootstrap/Dockerfile) - Imagem base para o processo de bootstrap dos workers. Esta imagem é responsável por preparar o ambiente de execução, criar os arquivos de source code e testes, e garantir que o worker tenha acesso a esses arquivos para iniciar a aplicação e rodar os testes.
 
-- [node](./node/Dockerfile) - Imagem base para execução de workers utilizando Node.js. Esta imagem pode ser personalizada para incluir bibliotecas ou ferramentas adicionais conforme necessário.
+- [Node.js padrão](./node/node-default/Dockerfile) - Imagem para execução de workers utilizando Node.js.
 
 - [JavaScript Default](./javascript-default/Dockerfile) - Imagem Node.js exclusiva para aplicações e testes JavaScript ES Modules, sem toolchain TypeScript.
 
-- [React.Js + Cypress](./react-cypress/Dockerfile) - Imagem especializada para execução de testes end-to-end utilizando Cypress em aplicações React.js. Esta imagem inclui todas as dependências necessárias para rodar testes Cypress de forma eficiente.
+- [React.js + Cypress](./node/reactjs-cypress/Dockerfile) - Imagem para testes de aplicações React.js com Cypress.
 
-- [GRPC Node.js](./grpc-node/Dockerfile) - Imagem otimizada para execução de serviços gRPC utilizando Node.js. Esta imagem inclui as bibliotecas e ferramentas necessárias para desenvolver e executar serviços gRPC.
+- [gRPC Node.js](./node/grpc/Dockerfile) - Imagem para serviços gRPC em Node.js.
 
-- [NestJs](./nest.js/Dockerfile) - Imagem configurada para executar aplicações desenvolvidas com o framework NestJs. Esta imagem inclui todas as dependências necessárias para rodar aplicações NestJs de forma eficiente.
+- [NestJS](./node/nest.js/Dockerfile) - Imagem para aplicações NestJS.
 
-- [Next.Js](./next.js/Dockerfile) - Imagem especializada para execução de aplicações Next.js. Esta imagem inclui todas as dependências necessárias para rodar aplicações Next.js de forma eficiente.
+- [Next.js + Cypress](./node/next.js-cypress/Dockerfile) - Imagem para testes de aplicações Next.js com Cypress.
 
 - [Python + pytest](./python-default/Dockerfile) - Imagem para execução de exercícios em Python, rodando os testes com pytest. O trigger emite um resumo compatível com o Jest consumido pelo Assignment Runner.
 
 ## Como Utilizar
 
-Existe um Makefile na raiz deste diretório, com alguns comandos úteis para construir e gerenciar as imagens Docker.
-
-Execute o comando `make help` para ver a lista completa de comandos disponíveis:
-
-```bash
-make help
-```
-
-### Construindo a imagem do bootstrap do worker
+O [Makefile deste diretório](./Makefile) constrói as imagens e as carrega no
+Minikube. A partir da raiz do repositório, liste os comandos ou reconstrua o
+bootstrap e o worker React.js + Cypress:
 
 ```bash
-make build-bootstrap
-```
-
-```bash
-make load-bootstrap
-```
-
-### Exemplo Construindo uma Imagem React.Js + Cypress
-
-Build da imagem do worker bootstrap:
-
-```bash
-make build-bootstrap
-```
-
-Build da imagem base Cypress:
-
-```bash
-make build-cypress-base
-```
-
-Build da imagem React.Js + Cypress:
-
-```bash
-make build-react-cypress
-```
-
-Carregar a imagem para o Docker Deamon/ Minikube:
-
-```bash
-make load-react-cypress
-```
-
-Reconstruir a imagem após alterações no Dockerfile:
-
-```bash
-make rebuild-react-cypress
+make -C images help
+make -C images rebuild-bootstrap rebuild-react
 ```

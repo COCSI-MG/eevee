@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { AssignmentService } from "@/app/integration/scheduler-api/assignment";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
-import { AuthSession } from "@/app/interface/scheduler-api/auth";
+import { AssignmentService } from "@/app/integration/platform-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
+import { AuthSession } from "@/app/interface/platform-api/auth";
 import ConfirmationAlertDialog from "@/components/shared/confirmation-alert-dialog";
 import { Button } from "@/components/ui/button";
 import {

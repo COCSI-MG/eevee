@@ -4,20 +4,21 @@ export const EXECUTION_REQUEST_QUEUE = 'execution-requests';
 
 export type ExecutionLifecycleStatus = 'running' | 'completed' | 'failed';
 
-/** Immutable source bundles stored by file-storage-api. */
 export interface ExecutionSourceSnapshot {
   scope: string;
   id: string;
-  kind: 'preview' | 'submission' | 'answer-key' | 'template';
+  kind: 'preview' | 'submission' | 'answer-key';
 }
 
 /** Immutable private files attached to a template, stored by file-storage-api. */
-export type ExecutionTemplateSnapshot = ExecutionSourceSnapshot & {
+export interface ExecutionTemplateSnapshot {
+  scope: string;
+  id: string;
   kind: 'template';
-};
-
+}
 export interface ExecutionWorkerPayload {
   executionMode?: 'graded' | 'adhoc';
+  sourceSnapshot?: ExecutionSourceSnapshot;
   applicationFileContent?: string;
   files?: Record<string, string> | null;
   testFilesContent?: string[];

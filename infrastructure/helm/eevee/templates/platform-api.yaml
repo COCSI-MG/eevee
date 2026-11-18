@@ -10,7 +10,8 @@ spec:
   selector:
     app: platform-api
   ports:
-    - port: {{ .Values.platformApi.containerPort }}
+    - name: api
+      port: {{ .Values.platformApi.containerPort }}
       targetPort: {{ .Values.platformApi.containerPort }}
 ---
 apiVersion: apps/v1
@@ -42,6 +43,15 @@ spec:
               containerPort: {{ .Values.platformApi.metrics.port }}
             {{- end }}
           env:
+            - name: EEVEE_STORAGE_URL
+              value: "http://source-storage:3020"
+            - name: EEVEE_STORAGE_PUBLIC_URL
+              value: "/storage"
+            - name: EEVEE_STORAGE_SIGNING_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default .Values.secrets.name .Values.sourceStorage.secretName }}
+                  key: {{ .Values.sourceStorage.secretKey }}
             {{- if .Values.platformApi.metrics.enabled }}
             - name: EEVEE_METRICS_PORT
               value: {{ .Values.platformApi.metrics.port | quote }}
@@ -67,6 +77,13 @@ spec:
                   key: JWT_SECRET
           resources:
             {{- toYaml .Values.platformApi.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /v1/
+              port: {{ .Values.platformApi.containerPort }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
       {{- include "eevee.imagePullSecrets" . | nindent 6 }}
       {{- include "eevee.nodeSelector" . | nindent 6 }}
 {{- end }}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { useSaveFileTree } from "@/hooks/use-filestash";
 import { toast } from "@/hooks/use-toast";
 import { FileNode, SelectedItem } from "@/types/shared";

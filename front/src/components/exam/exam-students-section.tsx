@@ -1,7 +1,7 @@
 "use client";
 
-import { PaginatedResponse } from "@/app/interface/scheduler-api/pagination";
-import { ExamStudentGrades } from "@/app/interface/scheduler-api/exam-student-grades";
+import { PaginatedResponse } from "@/app/interface/platform-api/pagination";
+import { ExamStudentGrades } from "@/app/interface/platform-api/exam-student-grades";
 import ListSearch from "@/components/shared/list-search";
 import Pagination from "@/components/shared/pagination";
 import ExamStudentsTable from "@/components/exam/exam-students-table";

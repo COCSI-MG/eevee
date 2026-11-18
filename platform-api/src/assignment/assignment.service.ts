@@ -32,6 +32,7 @@ import { TemplateParam } from 'src/template/entities/template-param.entity';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { Attempt } from 'src/attempt/entities/attempt.entity';
+import { readAttemptSource } from 'src/file-storage/source-storage';
 import { AttemptStatus } from 'src/attempt/enums/attempt-status.enum';
 import { AssignmentUserAlert } from 'src/assignment-alert/entities/assignment-user-alert.entity';
 import { ListAssignmentsQueryDto } from './dto/list-assignments.query.dto';
@@ -1049,7 +1050,7 @@ export class AssignmentService {
       .innerJoin(
         'source.assignmentAttempts',
         'attempt',
-        'attempt.userId = :userId AND attempt.receivedWork IS NOT NULL',
+        'attempt.userId = :userId AND (attempt.receivedWork IS NOT NULL OR attempt.sourceSnapshotId IS NOT NULL)',
         { userId: user.userId },
       )
       .select('source.id', 'id')
@@ -1109,22 +1110,22 @@ export class AssignmentService {
 
     const user = this.requestContextService.getUser();
     const attempt = await this.attemptRepository.findOne({
-      where: {
-        assignmentId: sourceAssignmentId,
-        userId: user.userId,
-        receivedWork: Not(IsNull()),
-      },
-      order: { attempt: 'DESC' },
-    });
+      where: [
+        { assignmentId: sourceAssignmentId, userId: user.userId, receivedWork: Not(IsNull()) },
+        { assignmentId: sourceAssignmentId, userId: user.userId, sourceSnapshotId: Not(IsNull()) },
+      ],
+      order: { attempt: 'DESC' }
+    })
 
-    if (!attempt?.receivedWork)
-      throw new NotFoundException('Submitted project not found');
+    if (!attempt) throw new NotFoundException('Submitted project not found');
+    const files = await readAttemptSource(attempt);
+    if (!files) throw new NotFoundException('Submitted project not found');
 
     return {
       id: source.id,
       title: source.title,
       submittedAt: attempt.createdAt,
-      files: attempt.receivedWork,
+      files,
     };
   }
 

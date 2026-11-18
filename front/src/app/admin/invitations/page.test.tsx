@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Page from './page';
-import { Invitations } from '@/app/integration/scheduler-api/invitations';
-jest.mock('@/app/integration/scheduler-api/classes',()=>({ClassesService:{listOptions:jest.fn().mockResolvedValue([{id:12,name:'Banco de Dados II'}])}}));
-jest.mock('@/app/integration/scheduler-api/invitations',()=>({
-  ...jest.requireActual('@/app/integration/scheduler-api/invitations'),
+import { Invitations } from '@/app/integration/platform-api/invitations';
+jest.mock('@/app/integration/platform-api/classes',()=>({ClassesService:{listOptions:jest.fn().mockResolvedValue([{id:12,name:'Banco de Dados II'}])}}));
+jest.mock('@/app/integration/platform-api/invitations',()=>({
+  ...jest.requireActual('@/app/integration/platform-api/invitations'),
   Invitations:{list:jest.fn().mockResolvedValue({data:[],meta:{total:0,totalPages:0}}),create:jest.fn(),resend:jest.fn(),revoke:jest.fn()},
 }));
 it('requires recipient review and explicit send, retaining a result per recipient',async()=>{

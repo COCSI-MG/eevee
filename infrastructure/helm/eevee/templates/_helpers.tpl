@@ -35,6 +35,23 @@ server {
   listen {{ .Values.entrypointGateway.containerPort }};
   server_name _;
 
+  location ~ ^/storage/v1/[^/]+/snapshots/[^/]+/files$ {
+    return 404;
+  }
+  location /storage/ {
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=5s ipv6=off;
+    set $storage_upstream ${NGINX_STORAGE_HOST}:3020;
+    client_max_body_size {{ max 2097152 .Values.sourceStorage.limits.maxFileBytes .Values.sourceStorage.httpLimits.workspaceBodyBytes .Values.sourceStorage.httpLimits.snapshotBodyBytes }};
+    rewrite ^/storage/(.*)$ /$1 break;
+    proxy_pass http://$storage_upstream;
+    proxy_http_version 1.1;
+    proxy_request_buffering off;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+
   location /api/v1/ {
     proxy_pass http://platform-api-service:{{ .Values.platformApi.containerPort }}/v1/;
     proxy_http_version 1.1;

@@ -52,11 +52,11 @@ spec:
               containerPort: 3020
           env:
             - name: STORAGE_ROOT
-              value: /var/lib/eevee/source
+              value: "/var/lib/eevee/source"
             - name: STORAGE_PORT
               value: "3020"
             - name: STORAGE_HOST
-              value: 0.0.0.0
+              value: "0.0.0.0"
             - name: STORAGE_MAX_FILE_BYTES
               value: {{ .Values.sourceStorage.limits.maxFileBytes | quote }}
             - name: STORAGE_MAX_PROJECT_BYTES
@@ -80,10 +80,10 @@ spec:
           resources:
             {{- toYaml .Values.sourceStorage.resources | nindent 12 }}
           volumeMounts:
-            - name: persistent-storage
+            - name: student-source
               mountPath: /var/lib/eevee
       volumes:
-        - name: persistent-storage
+        - name: student-source
           persistentVolumeClaim:
             claimName: {{ default .Values.sourceStorage.pvcName .Values.sourceStorage.existingClaim | quote }}
       {{- include "eevee.imagePullSecrets" . | nindent 6 }}

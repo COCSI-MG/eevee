@@ -1,4 +1,4 @@
-import { UserRole } from "./interface/scheduler-api/user";
+import { UserRole } from "./interface/platform-api/user";
 
 export enum Route {
   Assignment = "assignment",
@@ -18,6 +18,7 @@ export enum Route {
   AdminAttempts = "/admin/attempts",
   AssignmentAlerts = "suspensions",
   Classes = "classes",
+  ClassInvitation = "/classes/invitation"
 }
 
 const DEFAULT_ROUTE_BY_ROLE: Record<UserRole, string> = {

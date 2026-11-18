@@ -1,4 +1,4 @@
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { getWorkerTypePackDir } from "../worker-editor-config";
 
 type MonacoNamespace = typeof import("monaco-editor");

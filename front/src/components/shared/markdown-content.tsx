@@ -65,7 +65,7 @@ const components: Components = {
     "border border-border bg-muted px-3 py-2 align-top font-semibold"
   ),
   td: styled(
-    "td", 
+    "td",
     "border border-border px-3 py-2 align-top"
   ),
   blockquote: styled(

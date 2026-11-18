@@ -1,4 +1,4 @@
-import type { AdminAttemptDetail } from "@/app/interface/scheduler-api/admin-attempt";
+import type { AdminAttemptDetail } from "@/app/interface/platform-api/admin-attempt";
 
 interface AdminAttemptDetailsProps {
   attempt: AdminAttemptDetail;

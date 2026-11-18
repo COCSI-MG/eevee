@@ -114,6 +114,32 @@ platformApi:
     limits:
       memory: 1Gi
 
+# Student source storage has its own image and requires a signing key.
+sourceStorage:
+  image:
+    repository: ghcr.io/cocsi-mg/eevee-file-storage-api
+    tag: latest
+    pullPolicy: Always
+  pvcName: eevee-student-source
+  existingClaim: ""
+  keepPVCOnUninstall: true
+  storage: 20Gi
+  storageClass: null # null = cluster default; "" = no storage class
+  accessMode: ReadWriteOnce
+  secretName: eevee-source-storage
+  secretKey: EEVEE_STORAGE_SIGNING_SECRET
+  limits:
+    maxFileBytes: 1048576
+    maxProjectBytes: 5242880
+  httpLimits:
+    workspaceBodyBytes: 65536
+    snapshotBodyBytes: 1024
+  resources:
+    requests:
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
 # -----------------------------------------------------------------------------
 # Persistent template/source storage (the storage API is cluster-local).
 # -----------------------------------------------------------------------------

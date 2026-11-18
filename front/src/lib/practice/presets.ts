@@ -1,4 +1,4 @@
-import { PracticeConfig } from "@/app/interface/scheduler-api/learning-activity";
+import { PracticeConfig } from "@/app/interface/platform-api/learning-activity";
 export function sqlPractice(): PracticeConfig {
   return {
     lab: "sql",

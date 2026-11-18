@@ -1,4 +1,4 @@
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { FileNode } from "@/types/shared";
 import { applyLanguageDefaults } from "../intellisense/compiler";
 import { applyTypePack, clearTypePacks } from "../intellisense/type-packs";

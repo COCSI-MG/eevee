@@ -1,7 +1,11 @@
 import { WorkerTestFile } from '../worker.interfaces';
-import type { ExecutionTemplateSnapshot } from '@eevee/execution-contracts';
+import type {
+  ExecutionSourceSnapshot,
+  ExecutionTemplateSnapshot,
+} from '@eevee/execution-contracts';
 
 export class CreateWorkerDto {
+  sourceSnapshot?: ExecutionSourceSnapshot;
   executionMode?: 'graded' | 'adhoc';
   testFilesContent?: string[];
   testFiles?: WorkerTestFile[];

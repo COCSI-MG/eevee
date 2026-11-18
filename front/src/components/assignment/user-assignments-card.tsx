@@ -1,12 +1,12 @@
 "use client";
 
-import { AssignmentService } from '@/app/integration/scheduler-api/assignment';
+import { AssignmentService } from '@/app/integration/platform-api/assignment';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthContext } from '@/hooks/use-auth-context';
 import AssignmentsCard from './assignments-card';
 import Loader from '../loader';
-import { Assignment } from '@/app/interface/scheduler-api/assignment';
-import { PROCESSING_ATTEMPT_STATUSES } from '@/app/interface/scheduler-api/assignment-attempt';
+import { Assignment } from '@/app/interface/platform-api/assignment';
+import { PROCESSING_ATTEMPT_STATUSES } from '@/app/interface/platform-api/assignment-attempt';
 
 const hasAssignmentsProcessingAttempt = (assignments?: Assignment[]) =>
   Boolean(

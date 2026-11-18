@@ -11,7 +11,7 @@ import {
 import {
   AssignmentAlertType,
   type AssignmentAlertDetails,
-} from "@/app/interface/scheduler-api/assignment-alert";
+} from "@/app/interface/platform-api/assignment-alert";
 
 const DEVTOOLS_SHORTCUT_REASON = "devtools_shortcut";
 

@@ -24,6 +24,7 @@ import { NodeTeraormJestStrategy } from './strategies/node-teraorm-jest.strategy
 import { PythonDefaultStrategy } from './strategies/python-default.strategy';
 import { WorkerExecutionStrategy } from './strategies/worker-execution-strategy';
 import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
+import { workerSourceAccess } from './source-snapshot';
 import { workerTemplateSnapshotAccess } from './template-snapshot';
 
 @Injectable()
@@ -111,6 +112,9 @@ export class WorkerService {
     createWorkerData: CreateWorkerDto,
   ): Promise<WorkerResponse> {
     const strategy = this.getStrategy(workerType);
+    const snapshot = createWorkerData.sourceSnapshot;
+    if (snapshot && (createWorkerData.files != null || createWorkerData.applicationFileContent != null))
+      throw new Error('Worker payload cannot contain inline and snapshot source');
 
     const { imageName, srcPath, testPath } = strategy.workerConfig;
 
@@ -121,6 +125,7 @@ export class WorkerService {
 
     const definitionWithPaths = {
       ...workerPayload,
+      ...(snapshot ? { sourceSnapshot: workerSourceAccess(snapshot) } : {}),
       ...(createWorkerData.templateSnapshots?.length
         ? {
             templateSnapshots: createWorkerData.templateSnapshots.map(
@@ -156,7 +161,6 @@ export class WorkerService {
     }
 
     this.logger.debug(`Prepared job options for worker ${jobName}`);
-
     const jobCommand = strategy.buildExecutionJobCommand(createWorkerData);
 
     const createJobFunction = () =>

@@ -4,7 +4,7 @@ import { FileText, GraduationCap, Users } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { DashboardService } from "@/app/integration/scheduler-api/dashboard";
+import { DashboardService } from "@/app/integration/platform-api/dashboard";
 import Link from "next/link";
 import QueryErrorState from "@/components/shared/query-error-state";
 

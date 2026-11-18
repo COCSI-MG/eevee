@@ -1,6 +1,6 @@
 'use client';
 
-import { UsersService } from "@/app/integration/scheduler-api/user"
+import { UsersService } from "@/app/integration/platform-api/user"
 import { useQuery } from "@tanstack/react-query"
 
 const useUsers = () => {

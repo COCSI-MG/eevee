@@ -46,18 +46,12 @@ does not need permission to manage Roles or RoleBindings. No existing stuck
 Jobs are removed by deployment.
 
 The runner needs `create/get/delete` on ConfigMaps and `get/list/delete` on
-Pods in addition to its existing Job and log permissions. If these are missing,
-an authorized administrator can apply
-`infrastructure/rbac/postgresql-worker-lifecycle.yaml`. Check that the manifest
-subject matches the runner Deployment service account (currently `ns-admin`)
-before applying it. Do not run this bootstrap step with the restricted CI identity.
-
-```sh
-kubectl get deployment assignment-runner-deployment -n eevee-cefetrj \
-  -o jsonpath='{.spec.template.spec.serviceAccountName}'
-# Run using an administrator context authorized to manage namespace RBAC:
-kubectl apply -f infrastructure/rbac/postgresql-worker-lifecycle.yaml
-```
+Pods in addition to its existing Job and log permissions. The [Assignment
+Runner chart template](../../../infrastructure/helm/eevee/templates/assignment-runner.yaml)
+defines these rules for installations that set `assignmentRunner.rbac.create`.
+With the default external RBAC, an authorized namespace administrator must
+grant them to the account configured in `serviceAccount.name` (`ns-admin` by
+default) before the rollout.
 
 For a Helm installation, publish first and use `latest` for both workers:
 

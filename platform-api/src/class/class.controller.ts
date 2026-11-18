@@ -8,6 +8,7 @@ import {
   UseGuards,
   Patch,
   Query,
+  ParseIntPipe
 } from '@nestjs/common';
 import { ClassService } from './class.service';
 import { CreateOrReplaceClassDto } from './dto/request/create-or-replace-class.dto';
@@ -19,11 +20,34 @@ import { instanceToPlain } from 'class-transformer';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { UserRole } from 'src/user/user-role';
+import { CreateClassInvitationDto } from './dto/request/create-class-invitation.dto';
+import { AcceptClassInvitationDto } from './dto/request/accept-class-invitation.dto';
 
 @Controller('class')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ClassController {
   constructor(private readonly classService: ClassService) { }
+
+  @Get(':id/invitations')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  listActiveInvitations(@Param('id', ParseIntPipe) id: number) {
+    return this.classService.listActiveInvitations(id);
+  }
+
+  @Post(':id/invitations')
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  createInvitation(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateClassInvitationDto
+  ) {
+    return this.classService.createInvitation(id, dto);
+  }
+
+  @Post('invitations/accept')
+  @Roles(UserRole.STUDENT)
+  acceptInvitation(@Body() dto: AcceptClassInvitationDto) {
+    return this.classService.acceptInvitation(dto.token);
+  }
 
   @Post()
   @Roles(UserRole.ADMIN, UserRole.TEACHER)

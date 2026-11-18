@@ -1,15 +1,16 @@
 import { loadWorkerDefinition } from "./worker-definition.js";
 import { createFilesAndDirectoriesFromJson } from "./file-handler.js";
 import { mergeTemplateSnapshotFiles, readTemplateSnapshot } from "./template-snapshot.js";
+import { readSourceSnapshot } from "./source-snapshot.js";
 
 async function main() {
   console.log("Starting worker from definition...");
   const definition = await loadWorkerDefinition();
 
-  await createFilesAndDirectoriesFromJson(
-    definition.files ?? {},
-    definition.srcPath
-  );
+  const files = definition.sourceSnapshot
+    ? await readSourceSnapshot(definition.sourceSnapshot)
+    : definition.files ?? {};
+  await createFilesAndDirectoriesFromJson(files, definition.srcPath);
 
   await createFilesAndDirectoriesFromJson(
     definition.testFiles ?? {},

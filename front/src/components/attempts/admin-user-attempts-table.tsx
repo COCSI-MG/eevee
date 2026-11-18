@@ -1,7 +1,7 @@
 "use client";
 
-import type { AdminAttemptDetail } from "@/app/interface/scheduler-api/admin-attempt";
-import { AdminAttemptDetails } from "@/components/attempts/admin-attempt-details";
+import type { AdminAttemptDetail } from "@/app/interface/platform-api/admin-attempt";
+import { AdminAttemptExpandedRow } from "@/components/attempts/admin-attempt-expanded-row";
 import {
   formatAdminAttemptScore,
   getAdminAttemptStatusBadge,
@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/table";
 import { formatDateTime } from "@/utils/date";
 import { Play, RefreshCcw } from "lucide-react";
-import { Fragment } from "react";
 import Link from "next/link";
+import { Fragment } from "react";
 
 interface AdminUserAttemptsTableProps {
   attempts: AdminAttemptDetail[];
@@ -91,26 +91,26 @@ export function AdminUserAttemptsTable({
                     {formatDateTime(attempt.createdAt)}
                   </TableCell>
                   <TableCell>
-                    <div className="flex justify-end">
-                      <div className="flex gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="border-border bg-background text-foreground hover:bg-card"
-                          aria-expanded={isExpanded}
-                          onClick={() => onToggleAttempt(attempt.id)}
-                        >
-                          {isExpanded ? "Ver menos" : "Ver mais"}
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="border-border bg-background text-foreground hover:bg-card"
+                        aria-expanded={isExpanded}
+                        onClick={() => onToggleAttempt(attempt.id)}
+                      >
+                        {isExpanded ? "Ver menos" : "Ver mais"}
+                      </Button>
+                      {attempt.hasSubmittedWork && (
+                        <Button asChild variant="outline" size="sm">
+                          <Link
+                            href={`/assignment/${attempt.assignmentId}/workspace/users/${attempt.userId}?attemptId=${attempt.id}`}
+                          >
+                            Ver código
+                          </Link>
                         </Button>
-                        {attempt.receivedWork && (
-                          <Button asChild type="button" variant="outline" size="sm">
-                            <Link href={`/assignment/${attempt.assignmentId}/workspace/users/${attempt.userId}?attemptId=${attempt.id}`}>
-                              Ver código
-                            </Link>
-                          </Button>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -137,7 +137,7 @@ export function AdminUserAttemptsTable({
                 {isExpanded && (
                   <TableRow className="bg-background/70">
                     <TableCell colSpan={7}>
-                      <AdminAttemptDetails attempt={attempt} />
+                      <AdminAttemptExpandedRow attemptId={attempt.id} />
                     </TableCell>
                   </TableRow>
                 )}

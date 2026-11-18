@@ -2,13 +2,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { ClassesService } from '@/app/integration/scheduler-api/classes';
+import { ClassesService } from '@/app/integration/platform-api/classes';
 import {
   Invitation,
   Invitations,
   invitationError,
   parseInvitees,
-} from '@/app/integration/scheduler-api/invitations';
+} from '@/app/integration/platform-api/invitations';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
