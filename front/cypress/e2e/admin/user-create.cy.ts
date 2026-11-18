@@ -1,7 +1,7 @@
+import { profiles } from "../../helpers/profiles";
 import type { TestUser } from "../../helpers/types";
 
 describe("User creation", () => {
-  let user: TestUser;
   let createdId: number | undefined;
 
   beforeEach(() => {
@@ -19,86 +19,64 @@ describe("User creation", () => {
     }
   });
 
-  it("creates a student user", () => {
-    cy.buildUser().then((built) => {
-      user = built;
-      cy.log("Fill in name, email and password");
-      cy.get("#name").type(user.name);
-      cy.get("#email").type(user.email);
-      cy.get("#password").type(user.password);
+  const fillForm = (user: TestUser, password: string) => {
+    cy.log("Fill in name, email and password and choose the role");
+    cy.get("#name").type(user.name);
+    cy.get("#email").type(user.email);
+    if (password) {
+      cy.get("#password").type(password);
+    }
+    cy.get("#role").select(user.role);
+  };
 
-      cy.log("Submit the form");
-      cy.contains("button", "Criar Usuário").click();
-      cy.wait("@createUserRequest").then(({ response }) => {
-        createdId = response?.body.id;
+  const submit = () => {
+    cy.log("Submit the form");
+    cy.contains("button", "Criar Usuário").click();
+  };
+
+  const shouldNotCreate = (message: string) => {
+    cy.log("Check the validation error and that no request was sent");
+    cy.contains(message).should("be.visible");
+    cy.location("pathname").should("eq", "/admin/users/new");
+    cy.get("@createUserRequest.all").should("have.length", 0);
+  };
+
+  profiles.forEach(({ role, label }) => {
+    describe(`with the ${label} role`, () => {
+      it("creates the user", () => {
+        cy.buildUser(role).then((user) => {
+          fillForm(user, user.password);
+          submit();
+          cy.wait("@createUserRequest").then(({ response }) => {
+            createdId = response?.body.id;
+          });
+
+          cy.log("Check the success toast and redirect to the users list");
+          cy.contains("Usuário criado").should("be.visible");
+          cy.location("pathname").should("eq", "/admin/users");
+
+          cy.log(`Check the user is listed as ${label}`);
+          cy.filterUsers(user.email);
+          cy.userRow(user.email).should("contain.text", user.name);
+          cy.userRow(user.email).should("contain.text", label);
+        });
       });
 
-      cy.log("Check the success toast and redirect to the users list");
-      cy.contains("Usuário criado").should("be.visible");
-      cy.location("pathname").should("eq", "/admin/users");
-
-      cy.log("Check the user is listed as a student");
-      cy.filterUsers(user.email);
-      cy.userRow(user.email).should("contain.text", user.name);
-      cy.userRow(user.email).should("contain.text", "Aluno");
-    });
-  });
-
-  it("creates an admin user", () => {
-    cy.buildUser("admin").then((built) => {
-      user = built;
-      cy.log("Fill in name, email and password and choose the admin role");
-      cy.get("#name").type(user.name);
-      cy.get("#email").type(user.email);
-      cy.get("#password").type(user.password);
-      cy.get("#role").select("admin");
-
-      cy.log("Submit the form");
-      cy.contains("button", "Criar Usuário").click();
-      cy.wait("@createUserRequest").then(({ response }) => {
-        createdId = response?.body.id;
+      it("does not create the user without a password", () => {
+        cy.buildUser(role).then((user) => {
+          fillForm(user, "");
+          submit();
+          shouldNotCreate("Senha é obrigatória");
+        });
       });
 
-      cy.log("Check the success toast and redirect to the users list");
-      cy.contains("Usuário criado").should("be.visible");
-      cy.location("pathname").should("eq", "/admin/users");
-
-      cy.log("Check the user is listed as an admin");
-      cy.filterUsers(user.email);
-      cy.userRow(user.email).should("contain.text", "Administrador");
-    });
-  });
-
-  it("does not create a student user without a password", () => {
-    cy.buildUser().then((built) => {
-      cy.log("Fill in name and email, leaving the password empty");
-      cy.get("#name").type(built.name);
-      cy.get("#email").type(built.email);
-
-      cy.log("Submit the form");
-      cy.contains("button", "Criar Usuário").click();
-
-      cy.log("Check the required password error and that no request was sent");
-      cy.contains("Senha é obrigatória").should("be.visible");
-      cy.location("pathname").should("eq", "/admin/users/new");
-      cy.get("@createUserRequest.all").should("have.length", 0);
-    });
-  });
-
-  it("does not create an admin user without a password", () => {
-    cy.buildUser("admin").then((built) => {
-      cy.log("Fill in name and email with the admin role, leaving the password empty");
-      cy.get("#name").type(built.name);
-      cy.get("#email").type(built.email);
-      cy.get("#role").select("admin");
-
-      cy.log("Submit the form");
-      cy.contains("button", "Criar Usuário").click();
-
-      cy.log("Check the required password error and that no request was sent");
-      cy.contains("Senha é obrigatória").should("be.visible");
-      cy.location("pathname").should("eq", "/admin/users/new");
-      cy.get("@createUserRequest.all").should("have.length", 0);
+      it("does not create the user with a password shorter than 8 characters", () => {
+        cy.buildUser(role).then((user) => {
+          fillForm(user, "1234567");
+          submit();
+          shouldNotCreate("A senha deve ter pelo menos 8 caracteres");
+        });
+      });
     });
   });
 });

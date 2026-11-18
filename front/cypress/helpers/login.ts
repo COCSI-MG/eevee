@@ -17,14 +17,31 @@ Cypress.Commands.add("login", (role: Role = "admin") => {
   );
 });
 
+const requestLogin = (
+  email: string,
+  password: string,
+  retries = 1,
+): Cypress.Chainable<Cypress.Response<unknown>> =>
+  cy
+    .request({
+      method: "POST",
+      url: `${apiUrl()}/auth/login`,
+      body: { email, password },
+      failOnStatusCode: false,
+    })
+    .then((response) => {
+      if (response.status !== 429 || retries === 0) {
+        return cy.wrap(response, { log: false });
+      }
+      const seconds = Number(response.headers["retry-after"]) || 60;
+      cy.log(`Login rate limit reached, waiting ${seconds}s`);
+      cy.wait((seconds + 1) * 1000);
+      return requestLogin(email, password, retries - 1);
+    });
+
 Cypress.Commands.add("loginWith", (email: string, password: string) => {
   Cypress.log({ name: "loginWith", message: `Logging in as ${email} via API` });
-  return cy.request({
-    method: "POST",
-    url: `${apiUrl()}/auth/login`,
-    body: { email, password },
-    failOnStatusCode: false,
-  });
+  return requestLogin(email, password);
 });
 
 export {};

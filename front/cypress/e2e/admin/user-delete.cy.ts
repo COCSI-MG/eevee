@@ -22,7 +22,7 @@ describe("User deactivation", () => {
   });
 
   it("deactivates a user after confirming the dialog", () => {
-    const { email } = user!;
+    const { email, password } = user!;
     cy.filterUsers(email);
 
     cy.log("Open the row menu and choose deactivate");
@@ -42,5 +42,8 @@ describe("User deactivation", () => {
       .then(() => {
         user = undefined;
       });
+
+    cy.log("Check the deactivated user can no longer log in");
+    cy.loginWith(email, password).its("status").should("eq", 401);
   });
 });
