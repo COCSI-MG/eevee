@@ -25,6 +25,13 @@ export interface Template {
   dependencies: string[];
 }
 
+export interface TemplateResource {
+  id: number;
+  fileName: string;
+  digest?: string;
+  size?: number;
+}
+
 export type PaginatedTemplate = Pick<
   Template,
   "id" |

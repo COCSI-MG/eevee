@@ -34,3 +34,21 @@ const worker = ts.transpileModule(await readFile(join(source, "pyodide-worker.ts
 }).outputText;
 await writeFile(join(destination, "worker.js"), worker);
 console.log(`Prepared self-hosted Python tools in public/pyodide/${version}`);
+
+// Semantic Python packages are version-pinned and served from our own origin.
+const lock = JSON.parse(await readFile(join(runtime, "pyodide-lock.json"), "utf8"));
+const packages = ["jedi", "parso"].map(name => ({ file: lock.packages[name].file_name, sha: lock.packages[name].sha256, url: `https://cdn.jsdelivr.net/pyodide/v${version}/full/${lock.packages[name].file_name}` }));
+packages.push({ file: "pandas_stubs-3.1.0.261029-py3-none-any.whl", sha: "70f631f2d0781c4500b1cd5f84cab7d7279a3d114674d69655536a4a99a3a67f", url: "https://files.pythonhosted.org/packages/c0/2c/ecbc04b2a8d05d737351a54398f843223cb66edf42ec5c0fcc6198f17d3a/pandas_stubs-3.1.0.261029-py3-none-any.whl" });
+for (const pkg of packages) {
+  let data = await readFile(join(destination, pkg.file)).catch(() => null);
+  const matches = value => value && createHash("sha256").update(value).digest("hex") === pkg.sha;
+  if (!matches(data)) {
+    const response = await fetch(pkg.url, { signal: AbortSignal.timeout(60000) });
+    if (!response.ok) throw new Error(`Python asset ${pkg.file}: HTTP ${response.status}`);
+    data = Buffer.from(await response.arrayBuffer());
+    if (!matches(data)) throw new Error(`Checksum mismatch: ${pkg.file}`);
+    await writeFile(join(destination, pkg.file), data);
+  }
+}
+await copyFile(join(source, "semantic.py"), join(destination, "semantic.py"));
+await writeFile(join(destination, "semantic-worker.js"), ts.transpileModule(await readFile(join(source, "semantic-worker.ts"), "utf8"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText);

@@ -33,11 +33,13 @@ config:
   DB_DATABASE: eevee_db
   REDIS_HOST: redis-service
   REDIS_PORT: "6379"
+  REDIS_DB: "0"
   CORS_ALLOWED_ORIGINS: ""
   GMAIL_USER: "eevee.cefet@gmail.com"
   AUTH_COOKIE_DOMAIN: ""
   FRONT_URL: "https://eevee.testbeds.rnp.br"
   FRONT_ROUTE_RESET_PASSWORD: "/reset-password"
+  EEVEE_STORAGE_URL: "http://source-storage:3020"
   AUTH_SESSION_TTL_SECONDS: "900"
   AUTH_REFRESH_TTL_SECONDS: "1209600"
   AUTH_ROTATION_GRACE_SECONDS: "15"
@@ -57,6 +59,7 @@ secrets:
     JWT_SECRET: ""
     GROQ_API_KEY: ""
     GMAIL_APP_PASSWORD: ""
+    EEVEE_STORAGE_SIGNING_SECRET: ""
 
 # -----------------------------------------------------------------------------
 # Postgres
@@ -112,6 +115,34 @@ platformApi:
       memory: 1Gi
 
 # -----------------------------------------------------------------------------
+# Persistent template/source storage (the storage API is cluster-local).
+# -----------------------------------------------------------------------------
+sourceStorage:
+  image:
+    repository: ghcr.io/cocsi-mg/eevee-file-storage-api
+    tag: latest
+    pullPolicy: Always
+  existingClaim: ""
+  pvcName: eevee-source-storage
+  keepPVCOnUninstall: true
+  storage: 20Gi
+  storageClass: null
+  accessMode: ReadWriteOnce
+  secretName: ""
+  secretKey: EEVEE_STORAGE_SIGNING_SECRET
+  limits:
+    maxFileBytes: 4194304
+    maxProjectBytes: 8388608
+  httpLimits:
+    workspaceBodyBytes: 65536
+    snapshotBodyBytes: 1024
+  resources:
+    requests:
+      memory: 64Mi
+    limits:
+      memory: 256Mi
+
+# -----------------------------------------------------------------------------
 # Assignment Runner (BullMQ consumer)
 # -----------------------------------------------------------------------------
 assignmentRunner:
@@ -121,6 +152,8 @@ assignmentRunner:
     tag: latest
     pullPolicy: Always
   env: "production"
+  jobImagePullPolicy: Always
+  workerStorageUrl: "http://source-storage:3020"
   replicas: 1
   nodeEligibility:
     enabled: false

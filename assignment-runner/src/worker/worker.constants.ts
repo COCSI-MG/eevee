@@ -1,9 +1,16 @@
 import { WorkerType } from './enum/worker-type.enum';
 
+export function normalizeWorkerImageReference(image: string): string {
+  const reference = image.trim();
+  const lastSlash = reference.lastIndexOf('/');
+  const lastColon = reference.lastIndexOf(':');
+  // Keep explicit tags and content-addressed images. Only untagged names use
+  // the legacy latest default (a registry port appears before the last slash).
+  return lastColon > lastSlash ? reference : `${reference}:latest`;
+}
+
 function getImageFromEnv(envName: string, fallback: string): string {
-  // Worker images always follow latest, including legacy environment overrides.
-  const image = (process.env[envName]?.trim() || fallback).split('@')[0];
-  return `${image.replace(/:[^/:]+$/, '')}:latest`;
+  return normalizeWorkerImageReference(process.env[envName]?.trim() || fallback);
 }
 
 export const WORKER_JOB_PREFIX: Record<WorkerType, string> = {

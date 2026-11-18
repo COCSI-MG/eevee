@@ -1,19 +1,32 @@
 import { loadWorkerDefinition } from "./worker-definition.js";
 import { createFilesAndDirectoriesFromJson } from "./file-handler.js";
+import { mergeTemplateSnapshotFiles, readTemplateSnapshot } from "./template-snapshot.js";
 
 async function main() {
   console.log("Starting worker from definition...");
   const definition = await loadWorkerDefinition();
 
   await createFilesAndDirectoriesFromJson(
-    definition.files,
+    definition.files ?? {},
     definition.srcPath
   );
 
   await createFilesAndDirectoriesFromJson(
-    definition.testFiles, 
+    definition.testFiles ?? {},
     definition.testPath
   );
+
+  const templateFiles: Record<string, Buffer> = Object.create(null);
+  for (const snapshot of definition.templateSnapshots ?? []) {
+    const files = await readTemplateSnapshot(snapshot);
+    mergeTemplateSnapshotFiles(
+      templateFiles,
+      files,
+      definition.testFiles ?? {},
+      definition.testPath,
+    );
+  }
+  await createFilesAndDirectoriesFromJson(templateFiles, definition.testPath);
 }
 
 main()

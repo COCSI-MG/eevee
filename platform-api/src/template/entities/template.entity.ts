@@ -2,6 +2,7 @@ import { AssignmentTemplate } from 'src/assignment/entities/assignment-template.
 import { TemplateParam } from './template-param.entity';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { Class } from 'src/class/entities/class.entity';
+import { TemplateResource } from './template-resource.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -50,4 +51,7 @@ export class Template {
     { eager: true },
   )
   templateParams: TemplateParam[];
+
+  @OneToMany(() => TemplateResource, (resource) => resource.template)
+  resources?: TemplateResource[];
 }

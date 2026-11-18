@@ -1,0 +1,21 @@
+{{- if not .Values.sourceStorage.existingClaim }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.sourceStorage.pvcName | quote }}
+  labels:
+    {{- include "eevee.labels" . | nindent 4 }}
+  {{- if .Values.sourceStorage.keepPVCOnUninstall }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.sourceStorage.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.sourceStorage.storage | quote }}
+  {{- if ne .Values.sourceStorage.storageClass nil }}
+  storageClassName: {{ .Values.sourceStorage.storageClass | quote }}
+  {{- end }}
+{{- end }}

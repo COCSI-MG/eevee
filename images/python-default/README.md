@@ -9,8 +9,8 @@ Worker image for running Python assignments with pytest.
 - `trigger.py` runs pytest with `/app/src` on `PYTHONPATH`.
 - Test output includes the summary consumed by Assignment Runner.
 - JUnit results are persisted at `/app/test-results.xml`.
-- The papelaria datasets (`pedidos.csv`, `itens.csv` and `produtos.csv`) used
-  by the pandas assignments (PD01-PD08) are available under `/app/data`.
+- Database-backed Python assignments use the separate Python + PostgreSQL worker;
+  their task-level SQL seed is applied to a fresh database for every execution.
 
 ## Build and load
 

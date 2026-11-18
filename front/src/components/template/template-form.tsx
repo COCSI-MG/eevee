@@ -103,17 +103,26 @@ export default function TemplateForm() {
     Record<string, TemplateParamType>
   >({});
   const [dependenciesInput, setDependenciesInput] = useState("");
+  const [resourceFiles, setResourceFiles] = useState<File[]>([]);
   const [testDialogOpen, setTestDialogOpen] = useState(false);
   const codeExpandable = useExpandable();
   const descriptionExpandable = useExpandable();
 
   const { mutate: upsertTemplate, status: mutationStatus } = useMutation({
     mutationKey: ["upsertTemplate", id],
-    mutationFn: (data: UpsertTemplateRequest) => {
+    mutationFn: async (data: UpsertTemplateRequest) => {
+      let template;
       if (data?.id) {
-        return TemplatesService.update(data.id.toString(), data);
+        template = await TemplatesService.update(data.id.toString(), data);
+      } else {
+        template = await TemplatesService.create(data);
       }
-      return TemplatesService.create(data);
+      // Every uploaded file advances the immutable workspace snapshot. Keep
+      // these writes ordered so a multi-file selection cannot race its CAS.
+      for (const file of resourceFiles) {
+        await TemplatesService.uploadResource(template.id, file);
+      }
+      return template;
     },
     onSuccess: () => {
       toast({
@@ -528,6 +537,24 @@ export default function TemplateForm() {
                         {formik.errors.dependencies}
                       </div>
                     )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="template-resources" className="text-foreground">
+                      Arquivos privados do template
+                    </Label>
+                    <Input
+                      id="template-resources"
+                      type="file"
+                      multiple
+                      onChange={(event) =>
+                        setResourceFiles(Array.from(event.currentTarget.files ?? []))
+                      }
+                      className="bg-primary/20 border-border text-foreground"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Os arquivos ficam no armazenamento do cluster e são disponibilizados somente para os workers deste template.
+                    </p>
                   </div>
 
                   <div className="flex gap-2 pt-4">

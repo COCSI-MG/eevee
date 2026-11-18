@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
-import { parse } from 'dotenv';
 import { DataSource } from 'typeorm';
 import { register } from 'tsconfig-paths';
 import { migrationConnection } from './scripts/migration-config';
@@ -11,7 +10,26 @@ const packageRoot = extension === 'ts' ? __dirname : resolve(__dirname, '..');
 const envPath = join(packageRoot, '.env');
 let environment: Record<string, string>;
 try {
-  environment = parse(readFileSync(envPath));
+  environment = Object.fromEntries(
+    readFileSync(envPath, 'utf8')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith('#'))
+      .map((line) => {
+        const separator = line.indexOf('=');
+        if (separator < 1) return null;
+        const key = line.slice(0, separator).trim();
+        let value = line.slice(separator + 1).trim();
+        if (
+          (value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'"))
+        ) {
+          value = value.slice(1, -1);
+        }
+        return [key, value];
+      })
+      .filter((entry): entry is [string, string] => entry !== null),
+  );
 } catch {
   throw new Error(`Cannot read migration configuration: ${envPath}`);
 }

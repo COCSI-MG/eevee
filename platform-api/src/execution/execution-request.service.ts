@@ -16,6 +16,7 @@ export class ExecutionRequestService implements OnModuleDestroy {
   ) {
     this.events = new QueueEvents(EXECUTION_REQUEST_QUEUE, {
       connection: this.queue.opts.connection,
+      prefix: this.queue.opts.prefix,
     });
   }
 

@@ -2,6 +2,7 @@ import {
   CreateTemplateRequest,
   PaginatedTemplate,
   Template,
+  TemplateResource,
   TestTemplateRequest,
   TestTemplateResponse,
 } from "@/app/interface/scheduler-api/template";
@@ -43,6 +44,24 @@ export class TemplatesService {
     static async update(id: number | string, data: CreateTemplateRequest) {
         const response = await axiosClientWithAuth.patch(`/template/${id}`, data);
         return <Template>response.data;
+    }
+
+    static async uploadResource(templateId: number, file: File) {
+        const body = new FormData();
+        body.append("file", file);
+        const response = await axiosClientWithAuth.post<TemplateResource>(
+            `/template-resource/${templateId}`,
+            body,
+            { headers: { "Content-Type": "multipart/form-data" } },
+        );
+        return response.data;
+    }
+
+    static async listResources(templateId: number) {
+        const response = await axiosClientWithAuth.get<TemplateResource[]>(
+            `/template-resource/template/${templateId}`,
+        );
+        return response.data;
     }
 
     static async listPaginated(params: ListPaginatedTemplatesParams) {

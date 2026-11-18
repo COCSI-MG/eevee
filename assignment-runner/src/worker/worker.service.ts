@@ -24,6 +24,7 @@ import { NodeTeraormJestStrategy } from './strategies/node-teraorm-jest.strategy
 import { PythonDefaultStrategy } from './strategies/python-default.strategy';
 import { WorkerExecutionStrategy } from './strategies/worker-execution-strategy';
 import { buildSharedEmptyDirMounts } from './utils/shared-empty-dir.utils';
+import { workerTemplateSnapshotAccess } from './template-snapshot';
 
 @Injectable()
 export class WorkerService {
@@ -120,6 +121,13 @@ export class WorkerService {
 
     const definitionWithPaths = {
       ...workerPayload,
+      ...(createWorkerData.templateSnapshots?.length
+        ? {
+            templateSnapshots: createWorkerData.templateSnapshots.map(
+              workerTemplateSnapshotAccess,
+            ),
+          }
+        : {}),
       srcPath: workerPayload.srcPath || srcPath,
       testPath: workerPayload.testPath || testPath,
     };
@@ -129,9 +137,7 @@ export class WorkerService {
       definitionWithPaths.testPath,
     );
 
-    this.logger.debug(
-      `Creating worker with jobName: ${jobName} and definition: ${JSON.stringify(definitionWithPaths)}`,
-    );
+    this.logger.debug(`Creating worker ${jobName} for ${workerType}`);
 
     const serializedDefinition = JSON.stringify(definitionWithPaths);
     const encodedDefinition =
@@ -149,9 +155,7 @@ export class WorkerService {
       jobOptions = this.buildDefaultJobOptions(sharedMounts, encodedDefinition);
     }
 
-    this.logger.debug(
-      `Job options for worker ${jobName}: ${JSON.stringify(jobOptions)}`,
-    );
+    this.logger.debug(`Prepared job options for worker ${jobName}`);
 
     const jobCommand = strategy.buildExecutionJobCommand(createWorkerData);
 

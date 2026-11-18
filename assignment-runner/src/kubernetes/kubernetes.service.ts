@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Client1_13, config } from "kubernetes-client";
 import {
   DEFAULT_NAMESPACE,
+  JOB_HOST_ALIASES,
   JOB_IMAGE_PULL_POLICY,
   JOB_IMAGE_PULL_SECRETS,
   JOB_NODE_SELECTOR,
@@ -243,6 +244,21 @@ export class KubernetesService {
     throw new Error(`Unable to fetch logs for pod ${podName}`);
   }
 
+  private getLogContainerName(pod: any, jobName: string): string {
+    const mainContainer = pod?.status?.containerStatuses?.find(
+      (container: any) => container.name === jobName,
+    );
+    if (mainContainer?.state?.terminated || mainContainer?.state?.running) {
+      return jobName;
+    }
+
+    const failedInitContainer = [...(pod?.status?.initContainerStatuses ?? [])]
+      .reverse()
+      .find((container: any) => container.state?.terminated?.exitCode !== 0);
+
+    return failedInitContainer?.name ?? jobName;
+  }
+
   async createJob(
     jobName: string,
     imageName: string,
@@ -360,6 +376,9 @@ export class KubernetesService {
                   })),
                 }
               : {}),
+            ...(JOB_HOST_ALIASES.length
+              ? { hostAliases: JOB_HOST_ALIASES }
+              : {}),
             containers: [
               {
                 name: jobName,
@@ -465,7 +484,10 @@ export class KubernetesService {
 
       // Get the name of the first pod
       const podName = pod.metadata.name;
-      const jobLogs = await this.getJobLogsWithRetry(podName, jobName);
+      const jobLogs = await this.getJobLogsWithRetry(
+        podName,
+        this.getLogContainerName(pod, jobName),
+      );
 
       this.logger.debug(
         `Job ${jobName} finished with status ${status}. Log tail:\n${tailLines(jobLogs)}`,

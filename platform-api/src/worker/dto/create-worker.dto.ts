@@ -1,4 +1,5 @@
 import { WorkerTestFile } from '../worker.interfaces';
+import type { ExecutionTemplateSnapshot } from '@eevee/execution-contracts';
 
 export class CreateWorkerDto {
   executionMode?: 'graded' | 'adhoc';
@@ -9,4 +10,5 @@ export class CreateWorkerDto {
   files?: Record<string, string> | null;
   dependencies?: string[];
   initSqlScript?: string;
+  templateSnapshots?: ExecutionTemplateSnapshot[];
 }

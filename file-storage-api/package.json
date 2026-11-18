@@ -1,0 +1,17 @@
+{
+  "name": "eevee-file-storage-api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc -p ../packages/execution-contracts/tsconfig.json && npm run build:service",
+    "build:service": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "test": "npm run build && node --test *.test.cjs"
+  },
+  "devDependencies": {
+    "@eevee/execution-contracts": "file:../packages/execution-contracts",
+    "@types/node": "22.15.17",
+    "typescript": "5.8.3"
+  }
+}
