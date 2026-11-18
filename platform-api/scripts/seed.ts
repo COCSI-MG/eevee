@@ -15,9 +15,13 @@ export class DatabaseSeeder {
     const teacherHashPassword = HashUtils.hashPassword('teacher123');
 
     await this.dataSource.query(
+      // O unique de email é parcial (IDX_user_email_active, WHERE "deletedAt" IS
+      // NULL), então o ON CONFLICT precisa repetir o mesmo predicado para o
+      // Postgres inferir o índice.
       `INSERT INTO "user" ("email", "passwordHash", "role", "name")
        VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)
-       ON CONFLICT ("email") DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash"`,
+       ON CONFLICT ("email") WHERE "deletedAt" IS NULL
+       DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash"`,
       [
         'admin@example.com',
         adminHashPassword,
