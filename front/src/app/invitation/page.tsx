@@ -5,7 +5,7 @@ import {
   InvitationDetails,
   Invitations,
   invitationError,
-} from "@/app/integration/scheduler-api/invitations";
+} from "@/app/integration/platform-api/invitations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 

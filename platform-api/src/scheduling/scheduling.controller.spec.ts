@@ -1,5 +1,7 @@
 import { SchedulingController } from './scheduling.controller';
 import { SchedulingService } from './scheduling.service';
+import { ROLES_KEY } from 'src/auth/roles.decorator';
+import { UserRole } from 'src/user/user-role';
 import {
   THROTTLER_LIMIT,
   THROTTLER_TTL,
@@ -64,6 +66,16 @@ describe('SchedulingController', () => {
       applicationFileContent: '',
       files: {},
     });
+  });
+
+  it('limits answer-key runs to staff and selects the answer-key snapshot kind', () => {
+    expect(Reflect.getMetadata(ROLES_KEY, SchedulingController.prototype.runAnswerKey)).toEqual([
+      UserRole.ADMIN,
+      UserRole.TEACHER,
+    ]);
+    const dto = { assignmentId: 7, sourceSnapshotId: 'a'.repeat(64) } as Parameters<SchedulingController['runAnswerKey']>[0];
+    controller.runAnswerKey(dto);
+    expect(schedulingService.createAndWait).toHaveBeenCalledWith(dto, 'answer-key');
   });
 
   it('routes preview creation to createPreviewRun', async () => {

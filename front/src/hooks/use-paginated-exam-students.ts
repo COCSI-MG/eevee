@@ -1,11 +1,11 @@
 "use client";
 
-import { ExamService } from "@/app/integration/scheduler-api/exam";
+import { ExamService } from "@/app/integration/platform-api/exam";
 import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
-} from "@/app/interface/scheduler-api/pagination";
-import { ExamStudentGrades } from "@/app/interface/scheduler-api/exam-student-grades";
+} from "@/app/interface/platform-api/pagination";
+import { ExamStudentGrades } from "@/app/interface/platform-api/exam-student-grades";
 import { useQuery } from "@tanstack/react-query";
 
 interface UsePaginatedExamStudentsParams {

@@ -62,10 +62,9 @@ export const WORKER_IMAGE_NAMES: Record<WorkerType, string> = {
   ),
 };
 
-export const WORKER_BOOTSTRAP_IMAGE_NAME = getImageFromEnv(
-  'WORKER_BOOTSTRAP_IMAGE',
-  'docker.io/library/eevee-worker-bootstrap:latest',
-);
+export const WORKER_BOOTSTRAP_IMAGE_NAME =
+  process.env.WORKER_BOOTSTRAP_IMAGE?.trim() ||
+  'docker.io/library/eevee-worker-bootstrap:latest';
 
 // CHARS USED TO IDENTIFY WORKER OUTPUT RESPONSES
 export enum WORKER_IDENTIFYING_CHARS {

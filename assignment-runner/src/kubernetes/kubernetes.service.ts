@@ -462,6 +462,12 @@ export class KubernetesService {
       if (!pod?.metadata?.name) {
         throw new Error(`No pod found for job ${jobName}.`);
       }
+      if (status === K8S_JOB_STATUS.FAILED && pod.status?.initContainerStatuses?.some(
+        (container) => container.name === 'eevee-worker-bootstrap' &&
+          container.state?.terminated?.exitCode > 0,
+      )) {
+        throw new Error('Worker bootstrap failed before grading');
+      }
 
       // Get the name of the first pod
       const podName = pod.metadata.name;

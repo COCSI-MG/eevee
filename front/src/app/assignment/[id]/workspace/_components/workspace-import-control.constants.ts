@@ -3,8 +3,7 @@ import type { ConfirmationAlertDialogMessage } from "@/components/shared/confirm
 export const WORKSPACE_IMPORT_TEXT = {
   missingSourceError: "Selecione uma atividade para importar.",
   successToastTitle: "Projeto importado",
-  successToastDescription:
-    "Confira o workspace e clique em Salvar antes de continuar.",
+  successToastDescription: "Confira o workspace para verificar a importação",
   errorToastTitle: "Falha ao importar projeto",
   errorToastFallbackDescription:
     "Não foi possível importar o projeto selecionado.",

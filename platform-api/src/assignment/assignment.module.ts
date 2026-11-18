@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AssignmentService } from './assignment.service';
 import { AssignmentController } from './assignment.controller';
+import { AssignmentStorageController } from './assignment-storage.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Assignment } from './entities/assignment.entity';
 import { AssignmentTemplate } from './entities/assignment-template.entity';
@@ -16,7 +17,7 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Module({
-  controllers: [AssignmentController],
+  controllers: [AssignmentController, AssignmentStorageController],
   imports: [
     TypeOrmModule.forFeature([Assignment]),
     TypeOrmModule.forFeature([AssignmentTemplate]),

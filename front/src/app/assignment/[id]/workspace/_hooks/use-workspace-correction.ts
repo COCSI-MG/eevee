@@ -1,9 +1,9 @@
 "use client";
 
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
-import { SchedulingService } from "@/app/integration/scheduler-api/scheduling";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { SchedulingService } from "@/app/integration/platform-api/scheduling";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { Route } from "@/app/routes";
 import {
   buildSchedulingPayloadFromFileTree,
@@ -18,7 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import React from "react";
-import { AuthSession } from "@/app/interface/scheduler-api/auth";
+import { AuthSession } from "@/app/interface/platform-api/auth";
 
 interface UseWorkspaceCorrectionParams {
   assignment?: Assignment;

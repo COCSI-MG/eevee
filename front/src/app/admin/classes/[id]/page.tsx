@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
-import { Class, UpsertClass } from "@/app/interface/scheduler-api/class";
+import { ClassesService } from "@/app/integration/platform-api/classes";
+import { Class, UpsertClass } from "@/app/interface/platform-api/class";
 import { Textarea } from "@/components/ui/textarea";
 import UsersCard from "@/components/classes/users-card";
 import { useFormik } from "formik";
@@ -29,8 +29,8 @@ import * as Yup from "yup";
 import QueryErrorState from "@/components/shared/query-error-state";
 import { LearningActivityList } from "@/components/learning/activity-list";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { UserRole } from "@/app/interface/scheduler-api/user";
-import { UsersService } from "@/app/integration/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
+import { UsersService } from "@/app/integration/platform-api/user";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const classUpsertSchema = Yup.object().shape({

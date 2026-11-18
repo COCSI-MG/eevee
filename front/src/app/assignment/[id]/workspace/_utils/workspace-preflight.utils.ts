@@ -1,5 +1,5 @@
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import { SchedulingFiles } from "@/app/interface/scheduler-api/scheduling";
+import { WorkerType } from "@/app/interface/platform-api/worker";
+import { SchedulingFiles } from "@/app/interface/platform-api/scheduling";
 import {
   DEFAULT_WORKSPACE_PREFLIGHT_RESPONSE,
   ESM_MAIN_EXPORT_PATTERNS,

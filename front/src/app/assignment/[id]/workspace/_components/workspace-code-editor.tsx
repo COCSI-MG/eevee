@@ -1,6 +1,8 @@
 "use client";
 
 import { MonacoCodeEditor } from "@/components/editor/monaco-code-editor";
+import { EditorPanelHeader } from "@/components/editor/editor-panel-header";
+import { FileCode2 } from "lucide-react";
 import {
   EDITOR_ACTION_GUARD_MODE,
   type EditorActionGuardMode,
@@ -31,26 +33,26 @@ export default function WorkspaceCodeEditor({
 
   if (file === null || file.name.trim() === "") {
     return (
-      <div className="flex items-center justify-center h-full min-h-0 text-muted-foreground">
-        Selecione um arquivo para começar a editar.
+      <div className="flex h-full min-h-0 flex-col bg-editor-bg">
+        <EditorPanelHeader>
+          <FileCode2 aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+          <span className="text-xs font-medium">Editor</span>
+        </EditorPanelHeader>
+        <div className="flex min-h-0 flex-1 items-center justify-center p-6 text-center text-sm text-muted-foreground">
+          Selecione um arquivo para começar a editar.
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="bg-editor-header border-b border-border">
-        <div className="flex">
-          <div className="flex items-center px-4 py-2 bg-editor-bg border-r border-border">
-            <span className="text-sm">{file.name}</span>
-            <span className="ml-2 text-xs text-muted-foreground">
-              ({file.language || "plaintext"})
-            </span>
-          </div>
-        </div>
-      </div>
+    <div className="flex h-full min-h-0 min-w-0 flex-col bg-editor-bg">
+      <EditorPanelHeader>
+        <FileCode2 aria-hidden="true" className="h-4 w-4 shrink-0 text-primary" />
+        <span title={file.path} className="min-w-0 truncate font-mono text-xs font-medium">{file.name}</span>
+      </EditorPanelHeader>
 
-      <div className="flex-1">
+      <div className="min-h-0 min-w-0 flex-1">
         <MonacoCodeEditor
           preset="workspace"
           actionGuardMode={actionGuardMode}

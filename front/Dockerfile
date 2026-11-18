@@ -59,7 +59,7 @@ RUN addgroup -S nodejs && \
 
 COPY front/package*.json ./
 
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev && rm -rf node_modules/@codesandbox/sandpack-client/sandpack
 
 COPY --from=builder --chown=eevee:nodejs /usr/app/.next ./.next
 COPY --from=builder --chown=eevee:nodejs /usr/app/public ./public

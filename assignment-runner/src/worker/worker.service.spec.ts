@@ -22,4 +22,22 @@ describe('WorkerService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
+
+  it('preserves the configured bootstrap tag for protocol-compatible jobs', () => {
+    const previous = process.env.WORKER_BOOTSTRAP_IMAGE;
+    process.env.WORKER_BOOTSTRAP_IMAGE = 'registry:5000/worker-bootstrap:snapshot-v1';
+    try {
+      jest.isolateModules(() => {
+        const constants = jest.requireActual<typeof import('./worker.constants')>(
+          './worker.constants',
+        );
+        expect(constants.WORKER_BOOTSTRAP_IMAGE_NAME).toBe(
+          'registry:5000/worker-bootstrap:snapshot-v1',
+        );
+      });
+    } finally {
+      if (previous === undefined) delete process.env.WORKER_BOOTSTRAP_IMAGE;
+      else process.env.WORKER_BOOTSTRAP_IMAGE = previous;
+    }
+  });
 });

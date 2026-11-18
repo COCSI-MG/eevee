@@ -1,6 +1,6 @@
 "use client";
 
-import { ExamStudentGrades } from "@/app/interface/scheduler-api/exam-student-grades";
+import { ExamStudentGrades } from "@/app/interface/platform-api/exam-student-grades";
 import { AdminAttemptExpandedRow } from "@/components/attempts/admin-attempt-expanded-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import {
   AssignmentAlertPolicy,
   AssignmentAlertType,
-} from "@/app/interface/scheduler-api/assignment-alert";
+} from "@/app/interface/platform-api/assignment-alert";
 
 const ALERT_RULE_LABELS: Record<AssignmentAlertType, string> = {
   [AssignmentAlertType.WindowFocusLoss]: "Sair da tela da atividade",

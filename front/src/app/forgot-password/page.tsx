@@ -6,7 +6,7 @@ import * as Yup from 'yup';
 import Link from 'next/link';
 import { Code, Mail } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { AuthService } from '../integration/scheduler-api/auth-service';
+import { AuthService } from '../integration/platform-api/auth-service';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

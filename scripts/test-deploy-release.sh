@@ -11,6 +11,8 @@ export ASSIGNMENT_RUNNER_IMAGE=${ASSIGNMENT_RUNNER_IMAGE:-cocsi-mg/eevee-assignm
 # Initialize fixture inputs so the caller's environment cannot change test cases.
 export CHART=infrastructure/helm/eevee NAMESPACE=eevee-cefetrj RELEASE=eevee
 export DEPLOY_TEST_FAIL_KUBECTL=0 DEPLOY_TEST_EMPTY_CLUSTER=0
+export DEPLOY_TEST_LEGACY_WRITER=1
+export DEPLOY_TEST_LEGACY_PODS=
 export DEPLOY_TEST_FRONT_IMAGE=registry/front:old-front
 
 # Exercise production argument precedence without a cluster or registry.
@@ -18,6 +20,9 @@ kubectl() {
   [[ ${DEPLOY_TEST_FAIL_KUBECTL} == 0 ]] || return 1
   [[ ${DEPLOY_TEST_EMPTY_CLUSTER} == 0 ]] || return 0
   case "$*" in
+    *'get pods'*) printf '%s' "${DEPLOY_TEST_LEGACY_PODS}" ;;
+    *'get deployment source-storage'*) printf '%s' 'registry/storage:old-storage' ;;
+    *".name=='source-storage'"*) printf '%s' "${DEPLOY_TEST_LEGACY_WRITER}" ;;
     *platform-api-deployment*) printf '%s' 'registry:5000/api:old-api' ;;
     *assignment-runner-deployment*) printf '%s' 'registry/runner:old-runner' ;;
     *eevee-front-deployment*) printf '%s' "${DEPLOY_TEST_FRONT_IMAGE}" ;;
@@ -33,9 +38,20 @@ grep -qx 'infrastructure/helm/eevee/values.yaml' <<< "$output"
 grep -qx 'platformApi.image.repository=registry:5000/api' <<< "$output"
 grep -qx 'assignmentRunner.image.tag=old-runner' <<< "$output"
 grep -qx 'front.image.tag=old-front' <<< "$output"
+grep -qx 'sourceStorage.image.repository=registry/storage' <<< "$output"
+grep -qx 'sourceStorage.image.tag=old-storage' <<< "$output"
 [[ $(grep 'platformApi.image.tag=' <<< "$output" | tail -1) == 'platformApi.image.tag=new-api' ]]
 ! grep -q -- '--reuse-values\|--reset-then-reuse-values' <<< "$output"
 
+output=$(bash scripts/deploy-release.sh --set-string sourceStorage.image.tag=new-storage)
+grep -qx 'platformApi.image.tag=old-api' <<< "$output"
+[[ $(grep 'sourceStorage.image.tag=' <<< "$output" | tail -1) == 'sourceStorage.image.tag=new-storage' ]]
+if DEPLOY_TEST_LEGACY_WRITER=1source-storage bash scripts/deploy-release.sh >/dev/null 2>&1; then
+  echo 'Storage handoff must reject an active legacy writer' >&2; exit 1
+fi
+if DEPLOY_TEST_LEGACY_WRITER=0source-storage DEPLOY_TEST_LEGACY_PODS=source-storage bash scripts/deploy-release.sh >/dev/null 2>&1; then
+  echo 'Storage handoff must wait for terminating legacy pods' >&2; exit 1
+fi
 output=$(DEPLOY_TEST_EMPTY_CLUSTER=1 bash scripts/deploy-release.sh)
 grep -qx -- '--install' <<< "$output"
 ! grep -q 'image.tag=' <<< "$output"

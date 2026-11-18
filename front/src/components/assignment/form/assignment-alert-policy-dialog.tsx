@@ -1,7 +1,7 @@
 "use client";
 
-import { AssignmentAlertType } from "@/app/interface/scheduler-api/assignment-alert";
-import type { AssignmentAlertPolicy } from "@/app/interface/scheduler-api/assignment-alert";
+import { AssignmentAlertType } from "@/app/interface/platform-api/assignment-alert";
+import type { AssignmentAlertPolicy } from "@/app/interface/platform-api/assignment-alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

@@ -1,5 +1,9 @@
 # EEVEE Helm chart
 
+Source storage is part of the production release. Follow the
+[rollout guide](../../../docs/file-storage-rollout/SOURCE-STORAGE.md) for the signing Secret, compatible images,
+and database migration required on the first upgrade.
+
 ## Cluster diagnostics and worker node preference
 
 The optional observer replaces the GitHub health cron. It samples pod CPU/memory,
@@ -81,43 +85,43 @@ single release:
 | Redis             | Deployment + Service                              |
 | Platform API      | Deployment + Service                              |
 | Assignment Runner | Deployment + RBAC (ServiceAccount/Role)           |
+| File Storage API  | Deployment + Service + PVC                        |
 | Frontend          | Deployment + Service                              |
 | Entrypoint        | Nginx gateway + NodePort Service                  |
 | Ingress (nginx)   | Ingress with optional TLS                         |
 | cert-manager      | Namespace-scoped `Issuer` (optional)              |
 | Config / Secret   | `eevee-config` ConfigMap + `eevee-secrets` Secret |
 
-This replaces the previous raw manifests under `k8s/` and the Kustomize
-`overlays/prod` overlay.
-
 ## Operator workflow (shared cluster, namespace-scoped)
 
 ### CI configuration and image ownership
 
-Before any deployment workflow builds or publishes application/worker images,
-`validate-deployment.yaml` runs all three applications' unit tests and compilation,
-checks the Helm chart and deployment script, and validates the jumpbox checkout,
-required secrets, resource permissions, and a server-connected Helm dry run.
-PostgreSQL worker publication also depends on this gate and its existing lifecycle
-smoke tests. These checks do not guarantee application behavior under production
-load or replace database migration planning.
+The frontend, Platform API, Assignment Runner, and infrastructure workflows use
+[validate-deployment.yaml](../../../.github/workflows/validate-deployment.yaml).
+It runs the three application test suites and builds, checks the chart and
+deployment script, and validates the jumpbox with a server-connected Helm dry run.
+PostgreSQL worker publication also depends on this gate and its lifecycle
+smoke tests.
 
 Set **repository variable** `DEPLOY_WORKDIR=/home/eevee-cefetrj/eevee` (not an
 Actions secret). The workflow fails with an explicit message if it is missing.
 Rerunning an old Actions run uses its original commit; start a new run on updated
 `main` to execute newly merged workflow fixes.
 
-All four deployment workflows use `scripts/deploy-release.sh`. Each upgrade
+The frontend, Platform API, Assignment Runner, and infrastructure workflows
+use [scripts/deploy-release.sh](../../../scripts/deploy-release.sh). Each upgrade
 resets Helm values and explicitly loads this chart's committed `values.yaml`.
 Memory limits, Node options, and other configuration therefore come from Git;
 old release values cannot silently override a configuration change. Move any
 intentional production overrides into the committed values before deploying.
 
-The script reads the three live application Deployments and preserves their
-image repositories and tags, including images previously changed with kubectl.
+The script preserves the image repositories and tags of the four live service
+Deployments, including images changed with kubectl.
 The service workflow then overrides its own image with the newly built commit
-SHA. Infrastructure-only changes preserve all three application images. Missing
-Deployments use chart defaults on first install; failed Kubernetes reads abort.
+SHA. The [File Storage API workflow](../../../.github/workflows/deploy-file-storage-api.yaml)
+updates the storage image directly. Infrastructure-only changes preserve all
+four images. Missing Deployments use chart defaults on first install. Failed
+Kubernetes reads abort the upgrade.
 Digest image references currently fail explicitly because the chart expects tags.
 
 Chart changes trigger the infrastructure workflow automatically. All deployment
@@ -171,14 +175,17 @@ The secret name (`eevee-secrets`) must match `secrets.name` in values.
 
 ### 3. Install / upgrade the release
 
+Publish the updated worker bootstrap before the app rollout. See the
+[source storage rollout guide](../../../docs/file-storage-rollout/SOURCE-STORAGE.md) for deployment order.
+
 ```bash
-helm upgrade --install $RELEASE $CHART -n $NAMESPACE
+helm upgrade --install "$RELEASE" "$CHART" -n "$NAMESPACE"
 ```
 
-Or via Makefile from the repo root:
+Or use the Makefile from the repository root.
 
 ```bash
-make helm-install
+make install
 ```
 
 Verify:
@@ -195,6 +202,7 @@ public entrypoint. It routes:
 
 - `/` to `eevee-front-service`
 - `/api/v1/*` to `platform-api-service`
+- `/storage/*` to `source-storage`
 
 For local access without a public VM, use only frontend port-forward:
 
@@ -246,10 +254,9 @@ it to `{}` to schedule freely.
 
 ## Overriding worker images
 
-Assignment Runner reads worker image names from environment variables,
-so new image tags don't require a code change - just bump
-`workerImages.*` in values and `helm upgrade`. Defaults point to the
-COCSI-MG GHCR packages:
+The chart passes the worker images under `workerImages.*` to Assignment
+Runner. The grading pod's init container uses the full reference in
+`workerImages.bootstrap`. The defaults point to the COCSI-MG GHCR packages.
 
 ```yaml
 workerImages:

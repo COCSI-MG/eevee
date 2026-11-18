@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
+import { ClassesService } from "@/app/integration/platform-api/classes";
 import { toast } from "@/hooks/use-toast";
 import { AxiosError } from "axios";
 import { usePaginatedClasses } from "@/hooks/use-paginated-classes";
@@ -15,8 +15,8 @@ import ListSearch from "@/components/shared/list-search";
 import Pagination from "@/components/shared/pagination";
 import { useMemo, useState } from "react";
 import { useAuthContext } from "@/hooks/use-auth-context";
-import { UserRole } from "@/app/interface/scheduler-api/user";
-import { ClassStatusFilter } from "@/app/interface/scheduler-api/class";
+import { UserRole } from "@/app/interface/platform-api/user";
+import { ClassStatusFilter } from "@/app/interface/platform-api/class";
 import {
   Select,
   SelectContent,

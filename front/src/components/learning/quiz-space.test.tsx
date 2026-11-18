@@ -4,9 +4,9 @@ import { QuizSpace } from "./quiz-space";
 import {
   LearningActivity,
   LearningActivityKind,
-} from "@/app/interface/scheduler-api/learning-activity";
-import { LearningActivities } from "@/app/integration/scheduler-api/learning-activity";
-jest.mock("@/app/integration/scheduler-api/learning-activity", () => ({
+} from "@/app/interface/platform-api/learning-activity";
+import { LearningActivities } from "@/app/integration/platform-api/learning-activity";
+jest.mock("@/app/integration/platform-api/learning-activity", () => ({
   LearningActivities: { attempts: jest.fn(), submit: jest.fn() },
   learningError: () => "Não foi possível enviar.",
 }));

@@ -29,9 +29,12 @@ O workspace reúne:
 - **Explorador:** Lista os arquivos e pastas da solução;
 - **Editor:** Abre o arquivo selecionado e identifica a linguagem pela extensão;
 - **Duas páginas:** Permite visualizar e editar dois arquivos lado a lado;
+- **Visualização:** Abre a página desenvolvida pelo aluno nas atividades de front-end;
 - **Cabeçalho:** Concentra as ações de limpar, executar, enviar e salvar.
 
 O botão **Ver Pergunta** abre o enunciado completo em uma janela, mesmo quando o painel de pergunta está recolhido.
+
+Em telas pequenas, o botão **Arquivos** abre e recolhe o explorador. Ao selecionar um arquivo, o explorador se fecha para liberar espaço para o código.
 
 ## Organizar os arquivos
 
@@ -47,6 +50,32 @@ O workspace aceita até 50 arquivos e cinco níveis de profundidade. Preserve os
 
 !!! danger "Limpar restaura o código inicial"
     **Limpar** substitui todo o conteúdo atual pelo boilerplate (código fornecido inicialmente) definido pelo professor . A interface pede confirmação porque essa operação descarta as alterações do workspace.
+
+## Visualizar a página
+
+Clique em **Visualização** para abrir o resultado ao lado do editor. Em telas pequenas, use as abas **Código** e **Resultado**. Se houver mais de uma página, escolha a entrada no seletor da prévia.
+
+A barra de endereço mostra o caminho aberto na aplicação. Digite uma rota, como `/login` ou `/produtos?categoria=livros#lista`, e pressione **Enter** para navegar. Os botões **Voltar** e **Avançar** percorrem o histórico da prévia. O endereço acompanha os links da aplicação, sem alterar a página do workspace. Pressione **Esc** para descartar uma edição no campo.
+
+Use o seletor de tamanho abaixo da barra de endereço para testar a página em diferentes resoluções:
+
+- **Automático:** ocupa o espaço disponível no painel e é o modo inicial;
+- **Celular:** 390 × 844 pixels;
+- **Tablet:** 768 × 1024 pixels;
+- **Desktop:** 1440 × 900 pixels;
+- **Personalizado:** informe largura e altura em pixels, com números inteiros maiores que zero, e clique em **Aplicar**.
+
+Quando a resolução ultrapassa o espaço do painel, a prévia aparece reduzida para caber inteira. As dimensões escolhidas continuam valendo para o layout e as media queries. A indicação ao lado do seletor mostra a resolução e a escala de exibição. Trocar o tamanho mantém a página aberta e seu estado. Ao reabrir a visualização, o modo volta para **Automático**.
+
+Nas atividades React.js + Cypress, a opção **Aplicação React** usa `src/main.tsx` como entrada. Também aceita `main.jsx`, `main.ts` e `main.js` nessa pasta. Você pode importar componentes locais, arquivos JSON, CSS e SVG. React e ReactDOM já estão disponíveis.
+
+Para uma página HTML, selecione o arquivo `.html` ou `.htm`. Os caminhos de scripts e folhas de estilo são resolvidos a partir da pasta desse arquivo. Bibliotecas npm adicionais não são configuradas pelo `package.json` do workspace nesta versão.
+
+A prévia usa Sandpack e precisa de conexão com os serviços do CodeSandbox para carregar o ambiente e as dependências. Se o carregamento falhar, verifique a conexão e clique em **Tentar novamente**.
+
+A prévia atualiza após uma pausa de meio segundo na edição e mantém o último resultado visível durante a atualização. O Sandpack aplica as alterações automaticamente e pode preservar o estado dos componentes React. O botão **Atualizar prévia** reinicia a página na rota atual, contadores e outros estados da interface voltam ao valor inicial. Erros aparecem acima da página e podem ser corrigidos no editor.
+
+A visualização roda no navegador e não consome tentativas. Para executar os testes Cypress, use o fluxo de execução da atividade. Interagir com a prévia faz parte do workspace, sair da janela continua sujeito às regras de alerta.
 
 ## Entender onde o trabalho fica salvo
 

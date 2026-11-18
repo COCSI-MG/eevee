@@ -1,9 +1,9 @@
 "use client";
 
 import { ADMIN_ATTEMPTS_TEXT } from "@/app/admin/attempts/constants";
-import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
-import { AttemptAdminService } from "@/app/integration/scheduler-api/attempt";
-import type { AdminUserAttemptSummary } from "@/app/interface/scheduler-api/admin-attempt";
+import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/platform-api/pagination";
+import { AttemptAdminService } from "@/app/integration/platform-api/attempt";
+import type { AdminUserAttemptSummary } from "@/app/interface/platform-api/admin-attempt";
 import { AdminUserAttemptsTable } from "@/components/attempts/admin-user-attempts-table";
 import Pagination from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";

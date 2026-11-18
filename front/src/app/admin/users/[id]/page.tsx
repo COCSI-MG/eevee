@@ -7,7 +7,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 import {
   Card,
@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { UsersService } from "@/app/integration/scheduler-api/user";
+import { UsersService } from "@/app/integration/platform-api/user";
 import {
   CreateUserRequest,
   UpdateUserRequest,
-} from "@/app/interface/scheduler-api/user";
+} from "@/app/interface/platform-api/user";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import QueryErrorState from "@/components/shared/query-error-state";

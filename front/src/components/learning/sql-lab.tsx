@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PracticeTask } from "@/app/interface/scheduler-api/learning-activity";
+import { PracticeTask } from "@/app/interface/platform-api/learning-activity";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 

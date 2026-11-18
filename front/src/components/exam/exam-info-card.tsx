@@ -1,6 +1,6 @@
 "use client";
 
-import { Exam } from "@/app/interface/scheduler-api/exam";
+import { Exam } from "@/app/interface/platform-api/exam";
 import {
   Card,
   CardContent,

@@ -15,9 +15,7 @@ import { RequestContextModule } from './request-context/request-context.module';
 import { ClsModule } from 'nestjs-cls';
 import { RequestContextMiddleware } from './request-context/request-context.middleware';
 import { TemplateModule } from './template/template.module';
-import { FileSaverModule } from './file-saver/file-saver.module';
 import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
-import { GithubModule } from './github/github.module';
 import { AssignmentAlertModule } from './assignment-alert/assignment-alert.module';
 import { DatabaseModule } from './database/database.module';
 import { CookieParserMiddleware } from './auth/auth-cookie.middleware';
@@ -69,8 +67,6 @@ import { ClassAccessModule } from './auth/class-access.module';
     PassportModule,
     AuthModule,
     TemplateModule,
-    FileSaverModule,
-    GithubModule,
     AssignmentAlertModule,
     InterviewResponseModule,
     MailModule,

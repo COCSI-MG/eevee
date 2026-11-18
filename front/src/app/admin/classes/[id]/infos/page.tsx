@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { ClassesService } from "@/app/integration/scheduler-api/classes";
-import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/scheduler-api/pagination";
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { ClassesService } from "@/app/integration/platform-api/classes";
+import { ADMIN_LIST_PAGE_SIZE } from "@/app/interface/platform-api/pagination";
+import { UserRole } from "@/app/interface/platform-api/user";
 import { useAuthContext } from "@/hooks/use-auth-context";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/loader";
@@ -14,6 +14,7 @@ import QueryErrorState from "@/components/shared/query-error-state";
 import Pagination from "@/components/shared/pagination";
 import ClassActivitiesSelect from "@/components/classes/class-activities-select";
 import ClassPerformanceTable from "@/components/classes/class-performance-table";
+import ClassInvitationsDialog from "@/components/classes/class-invitations-dialog";
 
 const sameActivitySelection = (a?: number[], b?: number[]): boolean => {
   if (!a || !b) return a === b
@@ -164,6 +165,10 @@ function ClassInfosContent({ id }: { id: number }) {
       <PageHeader
         {...pageHeaderProps}
       />
+
+      <div className="flex justify-end">
+        <ClassInvitationsDialog classId={id} />
+      </div>
 
       {infos.data.deletedAt && (
         <p className="text-sm text-muted-foreground">Turma arquivada</p>

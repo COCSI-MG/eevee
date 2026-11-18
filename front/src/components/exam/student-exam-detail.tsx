@@ -14,9 +14,9 @@ import AssignmentsCard from "@/components/assignment/assignments-card";
 import {
   Assignment,
   WorkerDefinition,
-} from "@/app/interface/scheduler-api/assignment";
-import { AssignmentSummary, Exam } from "@/app/interface/scheduler-api/exam";
-import { Class } from "@/app/interface/scheduler-api/class";
+} from "@/app/interface/platform-api/assignment";
+import { AssignmentSummary, Exam } from "@/app/interface/platform-api/exam";
+import { Class } from "@/app/interface/platform-api/class";
 
 function summaryToAssignment(
   s: AssignmentSummary,
