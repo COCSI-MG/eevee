@@ -42,7 +42,7 @@ export async function readCefetRoster(path: string): Promise<RosterCourse[]> {
 
 if (require.main === module) {
   const path = process.argv[2];
-  if (!path) throw new Error('Usage: ts-node scripts/cefet-roster.ts <roster.txt>');
+  if (!path) throw new Error('Usage: ts-node scripts/seeds/cefet/cefet-roster.ts <roster.txt>');
   readCefetRoster(path).then((courses) => {
     console.log(JSON.stringify(courses.map((course) => ({
       course: course.name,

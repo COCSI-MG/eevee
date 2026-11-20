@@ -10,6 +10,12 @@ export interface ExecutionSourceSnapshot {
   kind: 'preview' | 'submission' | 'answer-key';
 }
 
+/** Immutable private files attached to a template, stored by file-storage-api. */
+export interface ExecutionTemplateSnapshot {
+  scope: string;
+  id: string;
+  kind: 'template';
+}
 export interface ExecutionWorkerPayload {
   executionMode?: 'graded' | 'adhoc';
   sourceSnapshot?: ExecutionSourceSnapshot;
@@ -23,6 +29,7 @@ export interface ExecutionWorkerPayload {
   }>;
   dependencies?: string[];
   initSqlScript?: string;
+  templateSnapshots?: ExecutionTemplateSnapshot[];
   templateVariablesModuleContent?: string;
 }
 

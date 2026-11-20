@@ -39,7 +39,7 @@ Entradas importantes:
 
 - `src/main.ts`: servidor HTTP e realtime;
 - `data-source.ts`: CLI de migrations;
-- `scripts/seed.ts`: dados locais de demonstração.
+- `scripts/seeds/`: seeds organizados por assunto; `scripts/seeds/demo/seed.ts` contém dados locais de demonstração.
 
 ## `assignment-runner/`
 

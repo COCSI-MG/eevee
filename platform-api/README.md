@@ -94,7 +94,7 @@ $ npm run test:cov
 For the professor's classes, guided labs and native questionnaires, use
 `make seed-classroom-preview` and `make seed-classroom` from the repository root.
 These commands create draft content and do not create accounts or enroll students.
-See [classroom seed documentation](scripts/classroom/README.md) for content,
+See [classroom seed documentation](scripts/seeds/classroom/README.md) for content,
 source corrections, validation and rerun behavior.
 
 Just use this in development environment to populate the database with initial data.

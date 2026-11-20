@@ -2,6 +2,7 @@ import {
   CreateTemplateRequest,
   PaginatedTemplate,
   Template,
+  TemplateResource,
   TestTemplateRequest,
   TestTemplateResponse,
 } from "@/app/interface/platform-api/template";
@@ -43,6 +44,47 @@ export class TemplatesService {
     static async update(id: number | string, data: CreateTemplateRequest) {
         const response = await axiosClientWithAuth.patch(`/template/${id}`, data);
         return <Template>response.data;
+    }
+
+    static async uploadResource(templateId: number, file: File) {
+        const body = new FormData();
+        body.append("file", file);
+        const response = await axiosClientWithAuth.post<TemplateResource>(
+            `/template-resource/${templateId}`,
+            body,
+            { headers: { "Content-Type": "multipart/form-data" } },
+        );
+        return response.data;
+    }
+
+    static async saveWithResources(
+        data: CreateTemplateRequest,
+        files: File[],
+        onCreated: (id: number) => void,
+    ) {
+        let template: Template;
+        if (data.id) {
+            template = await this.update(data.id, data);
+        } else {
+            template = await this.create(data);
+            onCreated(template.id);
+        }
+        // Upload in order: each file advances the template snapshot.
+        for (const file of files) {
+            try {
+                await this.uploadResource(template.id, file);
+            } catch {
+                throw new Error(`O template foi salvo, mas não foi possível enviar ${file.name}. Tente salvar novamente.`);
+            }
+        }
+        return template;
+    }
+
+    static async listResources(templateId: number) {
+        const response = await axiosClientWithAuth.get<TemplateResource[]>(
+            `/template-resource/template/${templateId}`,
+        );
+        return response.data;
     }
 
     static async listPaginated(params: ListPaginatedTemplatesParams) {

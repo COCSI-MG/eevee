@@ -1,9 +1,9 @@
 import * as dotenv from 'dotenv';
 import { join } from 'path';
 import { DataSource } from 'typeorm';
-import { WorkerType } from '../src/worker/enum/worker-type.enum';
+import { WorkerType } from '../../../src/worker/enum/worker-type.enum';
 
-dotenv.config({ path: join(__dirname, '../.env') });
+dotenv.config({ path: join(__dirname, '../../../.env') });
 
 type StudyTemplate = {
   title: string;

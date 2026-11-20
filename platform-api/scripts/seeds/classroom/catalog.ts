@@ -1,5 +1,5 @@
-import { LearningActivityKind } from '../../src/learning-activity/enums/learning-activity-kind.enum';
-import type { LearningActivityDto } from '../../src/learning-activity/dto/learning-activity.dto';
+import { LearningActivityKind } from '../../../src/learning-activity/enums/learning-activity-kind.enum';
+import type { LearningActivityDto } from '../../../src/learning-activity/dto/learning-activity.dto';
 import { architecturePractice, sqlPractice } from './practice';
 import { quizzes } from './quizzes';
 

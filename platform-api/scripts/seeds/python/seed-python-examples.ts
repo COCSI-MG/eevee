@@ -1,10 +1,13 @@
-import { UserRole } from '../src/user/user-role';
+import { UserRole } from '../../../src/user/user-role';
 import * as dotenv from 'dotenv';
-import { join } from 'path';
+import { promises as fs } from 'node:fs';
+import { join, resolve, sep } from 'node:path';
+import { createHash } from 'node:crypto';
 import { DataSource, QueryRunner } from 'typeorm';
-import { WorkerType } from '../src/worker/enum/worker-type.enum';
+import { WorkerType } from '../../../src/worker/enum/worker-type.enum';
+import { storeTemplateFile } from '../../../src/file-storage/template-storage';
 
-dotenv.config({ path: join(__dirname, '../.env') });
+dotenv.config({ path: join(__dirname, '../../../.env') });
 
 export type PythonExample = {
   code: string;
@@ -15,6 +18,8 @@ export type PythonExample = {
   templateTitle: string;
   templateDescription: string;
   testContent: string;
+  workerType?: WorkerType;
+  templateResources?: Array<{ fileName: string; sourcePath: string }>;
 };
 
 const DEFAULT_CLASS_NAME = 'Introdução à Programação com Python';
@@ -380,17 +385,23 @@ async function hasColumn(
 
 async function assertPythonWorkerSchema(
   queryRunner: QueryRunner,
+  workerTypes: WorkerType[],
 ): Promise<void> {
   const requiredColumns: Array<[string, string]> = [
     ['class', 'name'],
+    ['class', 'teacherId'],
     ['template', 'title'],
     ['template', 'content'],
     ['template', 'workerType'],
     ['template', 'dependencies'],
+    ['template', 'classId'],
     ['assignment', 'classId'],
     ['assignment', 'title'],
     ['assignment', 'workerType'],
     ['assignment', 'boilerplateContent'],
+    ['template_resource', 'snapshotId'],
+    ['template_resource', 'digest'],
+    ['template_resource', 'size'],
     ['assignment_template', 'assignmentId'],
     ['assignment_template', 'templateId'],
     ['user_class', 'userId'],
@@ -415,20 +426,24 @@ async function assertPythonWorkerSchema(
      FROM pg_type t
      JOIN pg_enum e ON e.enumtypid = t.oid
      WHERE t.typname IN ('assignment_workertype_enum', 'template_workertype_enum')
-       AND e.enumlabel = $1`,
-    [WorkerType.PYTHON_DEFAULT],
+       AND e.enumlabel = ANY($1)`,
+    [workerTypes],
   );
 
-  const enumTypes = new Set(
-    enumRows.map((row: { typeName: string }) => row.typeName),
-  );
-  if (
-    !enumTypes.has('assignment_workertype_enum') ||
-    !enumTypes.has('template_workertype_enum')
-  ) {
-    throw new Error(
-      'python_default is missing from the assignment/template worker enums. Apply the Python worker migration before running this seed.',
+  for (const workerType of workerTypes) {
+    const enumTypes = new Set(
+      enumRows
+        .filter((row: { value: string }) => row.value === workerType)
+        .map((row: { typeName: string }) => row.typeName),
     );
+    if (
+      !enumTypes.has('assignment_workertype_enum') ||
+      !enumTypes.has('template_workertype_enum')
+    ) {
+      throw new Error(
+        `${workerType} is missing from the assignment/template worker enums. Apply the Python PostgreSQL worker migration before running this seed.`,
+      );
+    }
   }
 }
 
@@ -483,6 +498,7 @@ async function ensureClass(
   queryRunner: QueryRunner,
   className: string,
   classDescription: string,
+  teacherId: number,
 ): Promise<number> {
   const existing = await queryRunner.query(
     `SELECT "id" FROM "class" WHERE "name" = $1 ORDER BY "id"`,
@@ -494,26 +510,44 @@ async function ensureClass(
   }
 
   const hasDescription = await hasColumn(queryRunner, 'class', 'description');
+  const hasTeacherId = await hasColumn(queryRunner, 'class', 'teacherId');
   if (existing.length === 1) {
     const classId = Number(existing[0].id);
+    const setParts: string[] = [];
+    const values: unknown[] = [];
     if (hasDescription) {
+      setParts.push(`"description" = $${values.length + 1}`);
+      values.push(classDescription);
+    }
+    if (hasTeacherId) {
+      setParts.push(`"teacherId" = $${values.length + 1}`);
+      values.push(teacherId);
+    }
+    if (setParts.length) {
+      values.push(classId);
       await queryRunner.query(
-        `UPDATE "class" SET "description" = $1 WHERE "id" = $2`,
-        [classDescription, classId],
+        `UPDATE "class" SET ${setParts.join(', ')} WHERE "id" = $${values.length}`,
+        values,
       );
     }
     return classId;
   }
 
-  const inserted = hasDescription
-    ? await queryRunner.query(
-        `INSERT INTO "class" ("name", "description") VALUES ($1, $2) RETURNING "id"`,
-        [className, classDescription],
-      )
-    : await queryRunner.query(
-        `INSERT INTO "class" ("name") VALUES ($1) RETURNING "id"`,
-        [className],
-      );
+  const columns = ['"name"'];
+  const values: unknown[] = [className];
+  if (hasDescription) {
+    columns.push('"description"');
+    values.push(classDescription);
+  }
+  if (hasTeacherId) {
+    columns.push('"teacherId"');
+    values.push(teacherId);
+  }
+  const placeholders = values.map((_value, index) => `$${index + 1}`).join(', ');
+  const inserted = await queryRunner.query(
+    `INSERT INTO "class" (${columns.join(', ')}) VALUES (${placeholders}) RETURNING "id"`,
+    values,
+  );
 
   return Number(inserted[0].id);
 }
@@ -536,10 +570,13 @@ async function enrollUsers(
 async function ensureTemplate(
   queryRunner: QueryRunner,
   example: PythonExample,
+  classId: number,
 ): Promise<number> {
   const existing = await queryRunner.query(
-    `SELECT "id" FROM "template" WHERE "title" = $1 ORDER BY "id"`,
-    [example.templateTitle],
+    `SELECT "id" FROM "template"
+     WHERE "title" = $1 AND "classId" = $2
+     ORDER BY "id"`,
+    [example.templateTitle, classId],
   );
 
   if (existing.length > 1) {
@@ -562,30 +599,80 @@ async function ensureTemplate(
         example.templateDescription,
         '',
         example.testContent,
-        WorkerType.PYTHON_DEFAULT,
+        example.workerType ?? WorkerType.PYTHON_DEFAULT,
         [],
         templateId,
       ],
     );
+    await ensureTemplateResources(queryRunner, templateId, example.templateResources);
     return templateId;
   }
 
   const inserted = await queryRunner.query(
     `INSERT INTO "template"
-       ("title", "description", "filePath", "content", "workerType", "dependencies")
-     VALUES ($1, $2, $3, $4, $5, $6)
+      ("title", "description", "filePath", "content", "workerType", "dependencies", "classId")
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING "id"`,
     [
       example.templateTitle,
       example.templateDescription,
       '',
       example.testContent,
-      WorkerType.PYTHON_DEFAULT,
+      example.workerType ?? WorkerType.PYTHON_DEFAULT,
       [],
+      classId,
     ],
   );
 
-  return Number(inserted[0].id);
+  const templateId = Number(inserted[0].id);
+  await ensureTemplateResources(queryRunner, templateId, example.templateResources);
+  return templateId;
+}
+
+async function ensureTemplateResources(
+  queryRunner: QueryRunner,
+  templateId: number,
+  resources?: PythonExample['templateResources'],
+): Promise<void> {
+  if (!resources?.length) return;
+  const seedDataRoot = resolve(__dirname, 'data');
+
+  for (const resource of resources) {
+    const fileName = resource.fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    if (!fileName || fileName === '.' || fileName === '..') {
+      throw new Error(`Invalid template resource name: ${resource.fileName}`);
+    }
+    const source = resolve(seedDataRoot, resource.sourcePath);
+    if (!source.startsWith(`${seedDataRoot}${sep}`)) {
+      throw new Error(`Invalid template seed source: ${resource.sourcePath}`);
+    }
+    const bytes = await fs.readFile(source);
+    const existing = await queryRunner.query(
+      `SELECT "snapshotId", "digest", "size" FROM "template_resource"
+       WHERE "templateId" = $1 AND "fileName" = $2`,
+      [templateId, fileName],
+    );
+    const digest = createHash('sha256').update(bytes).digest('hex');
+    if (
+      existing[0]?.snapshotId &&
+      existing[0]?.digest === digest &&
+      Number(existing[0]?.size) === bytes.length
+    ) {
+      continue;
+    }
+    const snapshot = await storeTemplateFile(templateId, fileName, bytes);
+    for (const [storedFileName, reference] of Object.entries(snapshot.files)) {
+      await queryRunner.query(
+        `INSERT INTO "template_resource" ("templateId", "fileName", "snapshotId", "digest", "size")
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT ("templateId", "fileName")
+         DO UPDATE SET "snapshotId" = EXCLUDED."snapshotId",
+                       "digest" = EXCLUDED."digest",
+                       "size" = EXCLUDED."size"`,
+        [templateId, storedFileName, snapshot.id, reference.digest, reference.size],
+      );
+    }
+  }
 }
 
 async function ensureAssignment(options: {
@@ -627,7 +714,7 @@ async function ensureAssignment(options: {
     const params: unknown[] = [
       example.description,
       example.maxAttempts,
-      WorkerType.PYTHON_DEFAULT,
+      example.workerType ?? WorkerType.PYTHON_DEFAULT,
       example.boilerplateContent,
     ];
 
@@ -655,7 +742,7 @@ async function ensureAssignment(options: {
       example.title,
       example.description,
       example.maxAttempts,
-      WorkerType.PYTHON_DEFAULT,
+      example.workerType ?? WorkerType.PYTHON_DEFAULT,
       example.boilerplateContent,
     ];
 
@@ -730,7 +817,10 @@ export async function run({
   await queryRunner.connect();
 
   try {
-    await assertPythonWorkerSchema(queryRunner);
+    await assertPythonWorkerSchema(
+      queryRunner,
+      [...new Set(examples.map((example) => example.workerType ?? WorkerType.PYTHON_DEFAULT))],
+    );
     const teacherId = await findTeacher(queryRunner, teacherEmail);
     const studentIds = await findStudents(queryRunner, studentEmails);
 
@@ -749,11 +839,12 @@ export async function run({
         queryRunner,
         className,
         classDescription,
+        teacherId,
       );
       await enrollUsers(queryRunner, classId, [teacherId, ...studentIds]);
 
       for (const example of examples) {
-        const templateId = await ensureTemplate(queryRunner, example);
+        const templateId = await ensureTemplate(queryRunner, example, classId);
         await ensureAssignment({
           queryRunner,
           example,

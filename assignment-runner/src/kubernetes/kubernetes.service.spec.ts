@@ -214,6 +214,24 @@ describe('KubernetesService', () => {
     },
   );
 
+  it('reads logs from the failed init container instead of a later waiting container', async () => {
+    jest.useFakeTimers();
+    jest.spyOn(service, 'createJob').mockResolvedValue({});
+    jest.spyOn(service, 'getJob').mockResolvedValue({ body: { status: { failed: 1 } } });
+    jest.spyOn(service, 'getJobPods').mockResolvedValue([{
+      metadata: { name: 'pod' },
+      status: { initContainerStatuses: [
+        { name: 'bootstrap', state: { terminated: { exitCode: 1 } } },
+        { name: 'later-init', state: { waiting: { reason: 'PodInitializing' } } },
+      ] },
+    }]);
+    const logs = jest.spyOn(service, 'getJobLogs').mockResolvedValue('bootstrap error');
+    const result = service.createAndWaitForJobCompletion('worker', 'image', []);
+    await jest.advanceTimersByTimeAsync(2000);
+    expect((await result).message).toBe('bootstrap error');
+    expect(logs).toHaveBeenCalledWith('pod', 'bootstrap');
+  });
+
   it('deletes pods using the stable job-name label instead of pod name guessing', async () => {
     const deletePod = jest.fn().mockResolvedValue({});
     const getPods = jest.fn().mockResolvedValue({

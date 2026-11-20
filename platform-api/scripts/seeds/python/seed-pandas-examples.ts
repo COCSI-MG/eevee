@@ -1,4 +1,5 @@
 import { PythonExample, run } from './seed-python-examples';
+import { WorkerType } from '../../../src/worker/enum/worker-type.enum';
 
 const PANDAS_EXAMPLES: PythonExample[] = [
   {
@@ -59,10 +60,11 @@ def main(df):
     templateDescription:
       'Testes do exercício PD01 - Resumo estatístico dos pedidos.',
     testContent: `import pandas as pd
+from eevee_resources import resource_path
 
 from app import main
 
-DADOS = "/app/data/pedidos.csv"
+DADOS = resource_path("pedidos.csv")
 
 
 def resultado():
@@ -162,10 +164,11 @@ def main(df):
     templateDescription:
       'Testes do exercício PD02 - Análise das formas de pagamento.',
     testContent: `import pandas as pd
+from eevee_resources import resource_path
 
 from app import main
 
-DADOS = "/app/data/pedidos.csv"
+DADOS = resource_path("pedidos.csv")
 
 
 def resultado():
@@ -281,10 +284,11 @@ def main(df):
     templateDescription:
       'Testes do exercício PD03 - Qualidade dos dados dos pedidos.',
     testContent: `import pandas as pd
+from eevee_resources import resource_path
 
 from app import main
 
-DADOS = "/app/data/pedidos.csv"
+DADOS = resource_path("pedidos.csv")
 
 
 def resultado():
@@ -388,10 +392,11 @@ def main(df):
     templateDescription:
       'Testes do exercício PD04 - Resumo das vendas dos itens.',
     testContent: `import pandas as pd
+from eevee_resources import resource_path
 
 from app import main
 
-DADOS = "/app/data/itens.csv"
+DADOS = resource_path("itens.csv")
 
 
 def resultado():
@@ -501,10 +506,11 @@ def main(df):
     templateDescription:
       'Testes do exercício PD05 - Produtos mais e menos vendidos.',
     testContent: `import pandas as pd
+from eevee_resources import resource_path
 
 from app import main
 
-DADOS = "/app/data/itens.csv"
+DADOS = resource_path("itens.csv")
 
 
 def resultado():
@@ -605,10 +611,11 @@ def main(df):
     templateDescription:
       'Testes do exercício PD06 - Análise de preços do cadastro.',
     testContent: `import pandas as pd
+from eevee_resources import resource_path
 
 from app import main
 
-DADOS = "/app/data/produtos.csv"
+DADOS = resource_path("produtos.csv")
 
 
 def resultado():
@@ -711,10 +718,11 @@ def main(df):
     templateDescription:
       'Testes do exercício PD07 - Margem de lucro dos produtos.',
     testContent: `import pandas as pd
+from eevee_resources import resource_path
 
 from app import main
 
-DADOS = "/app/data/produtos.csv"
+DADOS = resource_path("produtos.csv")
 
 
 def resultado():
@@ -813,10 +821,11 @@ def main(df):
     templateTitle: 'PD08 - Testes de situação do estoque',
     templateDescription: 'Testes do exercício PD08 - Situação do estoque.',
     testContent: `import pandas as pd
+from eevee_resources import resource_path
 
 from app import main
 
-DADOS = "/app/data/produtos.csv"
+DADOS = resource_path("produtos.csv")
 
 
 def resultado():
@@ -863,9 +872,37 @@ def test_tabela_pequena():
   },
 ];
 
+const DATA_FILE_BY_EXERCISE: Record<string, string> = {
+  PD01: 'pedidos.csv',
+  PD02: 'pedidos.csv',
+  PD03: 'pedidos.csv',
+  PD04: 'itens.csv',
+  PD05: 'itens.csv',
+  PD06: 'produtos.csv',
+  PD07: 'produtos.csv',
+  PD08: 'produtos.csv',
+};
+
+const PANDAS_DATABASE_EXAMPLES = PANDAS_EXAMPLES.map((example) => {
+  const fileName = DATA_FILE_BY_EXERCISE[example.code];
+  return {
+    ...example,
+    description: example.description.replace(
+      'tabela real da papelaria, com',
+      'tabela privada deste template, com',
+    ),
+    boilerplateContent: example.boilerplateContent.replace(
+      'def main(df):',
+      'import pandas as pd\n\n\ndef main(df: pd.DataFrame) -> dict:',
+    ),
+    workerType: WorkerType.PYTHON_DEFAULT,
+    templateResources: [{ fileName, sourcePath: `pandas/${fileName}` }],
+  };
+});
+
 if (require.main === module) {
   run({
-    examples: PANDAS_EXAMPLES,
+    examples: PANDAS_DATABASE_EXAMPLES,
     defaultClassName: 'Ciência de Dados',
     defaultClassDescription:
       'Exercícios de análise de dados com Python e pandas, corrigidos pelo worker Python + pytest do EEVEE.',
