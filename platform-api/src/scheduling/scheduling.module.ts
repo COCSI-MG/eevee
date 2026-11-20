@@ -16,6 +16,7 @@ import { AiReportJobConsumer } from './ai-report-job.processor';
 import { AssignmentAlertModule } from 'src/assignment-alert/assignment-alert.module';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { TemplateModule } from 'src/template/template.module';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { RolesGuard } from 'src/auth/guards/roles.guard';
     TypeOrmModule.forFeature([SchedulingPreviewRun]),
     AiReportModule,
     ExecutionModule,
-    AssignmentAlertModule
+    AssignmentAlertModule,
+    TemplateModule,
   ],
   controllers: [SchedulingController],
   providers: [

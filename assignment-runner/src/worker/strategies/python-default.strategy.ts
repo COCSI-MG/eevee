@@ -42,8 +42,13 @@ export class PythonDefaultStrategy extends BootstrapInitContainerStrategy {
     createWorkerData: CreateWorkerDto,
     dependencies: string[],
   ): WorkerJobPayload {
+    const files = { ...(createWorkerData.files ?? {}) };
+    if (createWorkerData.applicationFileContent !== undefined) {
+      files['app.py'] = createWorkerData.applicationFileContent;
+    }
+
     return buildWorkerPayload({
-      files: createWorkerData.files,
+      files: Object.keys(files).length ? files : null,
       testFilesContent: createWorkerData.testFilesContent,
       testFiles: createWorkerData.testFiles,
       dependencies,

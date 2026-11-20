@@ -6,6 +6,14 @@ export type SourceSnapshot = {
   token: string;
 };
 
+export type TemplateSnapshot = {
+  scope: string;
+  id: string;
+  kind: 'template';
+  url: string;
+  token: string;
+};
+
 export type WorkerDefinition = {
   testPath: string;
   srcPath: string;
@@ -13,4 +21,5 @@ export type WorkerDefinition = {
   sourceSnapshot?: SourceSnapshot;
   testFiles: Record<string, string> | null;
   dependencies: string[];
+  templateSnapshots?: TemplateSnapshot[];
 };

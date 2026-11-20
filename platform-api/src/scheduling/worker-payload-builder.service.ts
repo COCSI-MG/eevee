@@ -3,8 +3,9 @@ import { normalizeTemplateImportPaths } from 'src/utils/template-import-path.uti
 import { CreateWorkerDto } from 'src/worker/dto/create-worker.dto';
 import { WorkerType } from 'src/worker/enum/worker-type.enum';
 import { WorkerTestFile } from 'src/worker/worker.interfaces';
+import { TemplateResourceService } from 'src/template/template-resource.service';
 
-const WORKER_PATHS: Record<WorkerType,{ srcPath: string; testPath: string }> = {
+export const WORKER_PATHS: Record<WorkerType,{ srcPath: string; testPath: string }> = {
   [WorkerType.NODE_DEFAULT]: { srcPath: '/app/src', testPath: '/app/test' },
   [WorkerType.JAVASCRIPT_DEFAULT]: { srcPath: '/app/src', testPath: '/app/test' },
   [WorkerType.NODE_GRPCJS]: { srcPath: '/app/src', testPath: '/app/test' },
@@ -19,6 +20,8 @@ const WORKER_PATHS: Record<WorkerType,{ srcPath: string; testPath: string }> = {
 
 @Injectable()
 export class WorkerPayloadBuilderService {
+  constructor(private readonly templateResources: TemplateResourceService) {}
+
   async build(
     workerType: WorkerType,
     assignmentTemplates: any[],
@@ -31,6 +34,9 @@ export class WorkerPayloadBuilderService {
 
     const dependencies = [...(baseWorkerData.dependencies ?? [])];
     const testFiles: WorkerTestFile[] = [];
+    const templateSnapshots = [] as NonNullable<
+      CreateWorkerDto['templateSnapshots']
+    >;
 
     const testFilesContent = await Promise.all(
       assignmentTemplates.map(async (templateRelation) => {
@@ -40,6 +46,9 @@ export class WorkerPayloadBuilderService {
           dependencies.push(...templateDependencies);
 
         const content = templateRelation.template.content ?? '';
+        templateSnapshots.push(
+          ...(await this.templateResources.workerSnapshots(templateRelation.template.id)),
+        );
 
         const normalizedContent = normalizeTemplateImportPaths({
           content,
@@ -70,6 +79,7 @@ export class WorkerPayloadBuilderService {
       testFilesContent: nonEmptyTestFilesContent,
       testFiles,
       dependencies,
+      templateSnapshots,
       templateVariablesModuleContent:
         templateVariablesModuleContent ??
         baseWorkerData.templateVariablesModuleContent,

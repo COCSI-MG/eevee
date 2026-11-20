@@ -78,6 +78,25 @@ test("immutable submissions and previews survive edits, deletions and stale CAS"
   assert.throws(() => store.snapshot(scope, 1, "submission"), error(409));
   assert.equal(store.workspace(scope).revision, 2);
 });
+test("template snapshots retain the original fixture after a later upload", (t) => {
+  const { store } = fixture(t);
+  const templateScope = "eevee-template-t42";
+  const firstBytes = Buffer.from("id,total\n1,42\n");
+  const first = { digest: hash(firstBytes), size: firstBytes.length };
+  store.putBlob(templateScope, first.digest, firstBytes);
+  store.saveWorkspace(templateScope, 0, { "pedidos.csv": first });
+  const snapshot = store.snapshot(templateScope, 1, "template");
+
+  const secondBytes = Buffer.from("id,total\n2,99\n");
+  const second = { digest: hash(secondBytes), size: secondBytes.length };
+  store.putBlob(templateScope, second.digest, secondBytes);
+  store.saveWorkspace(templateScope, 1, { "pedidos.csv": second });
+  const loaded = store.getSnapshot(templateScope, snapshot.id);
+  assert.equal(loaded.kind, "template");
+  assert.deepEqual(loaded.files["pedidos.csv"], first);
+  assert.deepEqual(store.getBlob(templateScope, loaded.files["pedidos.csv"].digest), firstBytes);
+  assert.throws(() => store.snapshot(templateScope, 2, "preview"), error(400));
+});
 test("project byte/file count limits are enforced", (t) => {
   const { store } = fixture(t);
   const bytes = Buffer.alloc(DEFAULT_STORAGE_LIMITS.maxFileBytes);

@@ -40,6 +40,7 @@ type ParamValueState = Record<string, string>;
 interface TemplateTestDialogProps {
   open: boolean;
   classId: number;
+  templateId?: number;
   onOpenChange: (open: boolean) => void;
   workerType: WorkerType;
   templateContent: string;
@@ -57,6 +58,7 @@ function computeScore(passes: number, failures: number): number {
 export function TemplateTestDialog({
   open,
   classId,
+  templateId,
   onOpenChange,
   workerType,
   templateContent,
@@ -97,6 +99,7 @@ export function TemplateTestDialog({
     reset();
     mutate({
       classId,
+      templateId,
       workerType,
       templateContent,
       applicationFileContent,

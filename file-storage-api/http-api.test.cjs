@@ -135,6 +135,39 @@ test("authorizes each scope, preserves revision checks and restricts worker bund
   assert.equal(localEdits["main.ts"], "unsynced offline edit");
 });
 
+test("uploads and reads a template snapshot with a snapshot-bound worker grant", async (t) => {
+  const { request } = await fixture(t);
+  const templateScope = "eevee-template-t42";
+  const writeGrant = issueGrant(secret, templateScope);
+  const bytes = Buffer.from("id,total\n1,42\n");
+  const digest = hash(bytes);
+  assert.equal((await request(`/${templateScope}/blobs/${digest}`, {
+    method: "PUT", body: bytes,
+  }, writeGrant)).status, 200);
+  assert.equal((await request(`/${templateScope}/workspace`, {
+    method: "PUT", headers: { "If-Match": "0" },
+    body: JSON.stringify({ files: { "pedidos.csv": { digest, size: bytes.length } } }),
+  }, writeGrant)).status, 200);
+  const created = await request(`/${templateScope}/snapshots`, {
+    method: "POST", body: JSON.stringify({ revision: 1, kind: "template" }),
+  }, writeGrant);
+  assert.equal(created.status, 201);
+  const snapshot = await created.json();
+  const encoded = Buffer.from(JSON.stringify({
+    aud: "eevee-file-storage-v1", scope: templateScope, snapshotId: snapshot.id,
+    permissions: ["read"], exp: Math.floor(Date.now() / 1000) + 60,
+  })).toString("base64url");
+  const workerGrant = `${encoded}.${createHmac("sha256", secret).update(encoded).digest("base64url")}`;
+  const bundlePath = `/${templateScope}/snapshots/${snapshot.id}/files`;
+  const response = await request(bundlePath, {}, workerGrant);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    manifest: snapshot, files: { "pedidos.csv": bytes.toString("base64") },
+  });
+  assert.equal((await request(bundlePath, {}, "")).status, 403);
+  assert.equal((await request(`/${templateScope}/workspace`, {}, workerGrant)).status, 403);
+});
+
 test("serves readiness, preflight, and blob headers", async (t) => {
   const { origin, request, store } = await fixture(t);
   const health = await fetch(`${origin}/health`);

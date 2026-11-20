@@ -4,6 +4,16 @@ Source storage is part of the production release. Follow the
 [rollout guide](../../../docs/file-storage-rollout/SOURCE-STORAGE.md) for the signing Secret, compatible images,
 and database migration required on the first upgrade.
 
+File and project byte limits are configured under `sourceStorage.limits`.
+The chart passes them to storage and the platform API, and passes the project
+limit to the assignment runner. These limits apply to both student source
+files and template resources.
+
+Known limitation: the runner currently passes the project limit to bootstrap
+only for strategies extending `BootstrapInitContainerStrategy`. Other workers
+use the bootstrap's 8 MiB default, so raising the project limit above 8 MiB
+can make their template snapshots fail even when storage accepts them.
+
 ## Cluster diagnostics and worker node preference
 
 The optional observer replaces the GitHub health cron. It samples pod CPU/memory,

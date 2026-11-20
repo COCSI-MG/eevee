@@ -1,10 +1,10 @@
 import { DataSource } from 'typeorm';
-import { HashUtils } from '../src/utils/hash.utils';
+import { HashUtils } from '../../../src/utils/hash.utils';
 import * as dotenv from 'dotenv';
 import { join } from 'path';
-import { UserRole } from '../src/user/user-role';
+import { UserRole } from '../../../src/user/user-role';
 
-dotenv.config({ path: join(__dirname, '..', '.env') });
+dotenv.config({ path: join(__dirname, '../../..', '.env') });
 
 export class DatabaseSeeder {
   constructor(private dataSource: DataSource) {}
@@ -17,7 +17,8 @@ export class DatabaseSeeder {
     await this.dataSource.query(
       `INSERT INTO "user" ("email", "passwordHash", "role", "name")
        VALUES ($1, $2, $3, $4), ($5, $6, $7, $8), ($9, $10, $11, $12)
-       ON CONFLICT ("email") DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash"`,
+       ON CONFLICT ("email") WHERE "deletedAt" IS NULL
+       DO UPDATE SET "passwordHash" = EXCLUDED."passwordHash"`,
       [
         'admin@example.com',
         adminHashPassword,

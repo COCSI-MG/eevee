@@ -1,26 +1,26 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { PGlite } from '../../../front/node_modules/@electric-sql/pglite/dist/index.js';
+import { PGlite } from '../../../../front/node_modules/@electric-sql/pglite/dist/index.js';
 const require = createRequire(import.meta.url);
 require('reflect-metadata');
 const { plainToInstance } = require('class-transformer');
 const { validateSync } = require('class-validator');
 const {
   LearningActivityDto,
-} = require('../../dist/src/learning-activity/dto/learning-activity.dto.js');
+} = require('../../../dist/src/learning-activity/dto/learning-activity.dto.js');
 const {
   validateActivity,
   gradeQuiz,
-} = require('../../dist/src/learning-activity/learning-activity.policy.js');
+} = require('../../../dist/src/learning-activity/learning-activity.policy.js');
 const {
   classroomCatalog,
   activitiesFor,
-} = require('../../dist/scripts/classroom/catalog.js');
+} = require('../../../dist/scripts/seeds/classroom/catalog.js');
 const {
   sqlPractice,
   sqlReferences,
   architecturePractice,
-} = require('../../dist/scripts/classroom/practice.js');
+} = require('../../../dist/scripts/seeds/classroom/practice.js');
 assert.equal(classroomCatalog.length, 6);
 assert.equal(new Set(classroomCatalog.map((c) => c.name)).size, 6);
 for (const topic of ['sql', 'architecture']) {

@@ -20,8 +20,9 @@ export interface StorageLimits {
 }
 
 export const DEFAULT_STORAGE_LIMITS: Readonly<StorageLimits> = {
-  maxFileBytes: 1024 * 1024,
-  maxProjectBytes: 5 * 1024 * 1024,
+  // Private Pandas fixtures share this bounded service with regular sources.
+  maxFileBytes: 4 * 1024 * 1024,
+  maxProjectBytes: 8 * 1024 * 1024,
 };
 const MAX_FILES = 100;
 
@@ -51,7 +52,8 @@ export function validateFilePath(value: string): void {
   }
 }
 
-function validSnapshotKind(scope: string, kind: unknown): kind is SnapshotKind {
+export function validSnapshotKind(scope: string, kind: unknown): kind is SnapshotKind {
+  if (/^eevee-template-t[1-9]\d*$/.test(scope)) return kind === "template";
   return scope.endsWith("-answer-key")
     ? kind === "answer-key"
     : kind === "preview" || kind === "submission";

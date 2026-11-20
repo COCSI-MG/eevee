@@ -1,6 +1,6 @@
-import type { PracticeConfigDto } from '../../src/learning-activity/dto/practice-config.dto';
-import type { PracticeTaskDto } from '../../src/learning-activity/dto/practice-task.dto';
-import { PracticeLab } from '../../src/learning-activity/enums/practice-lab.enum';
+import type { PracticeConfigDto } from '../../../src/learning-activity/dto/practice-config.dto';
+import type { PracticeTaskDto } from '../../../src/learning-activity/dto/practice-task.dto';
+import { PracticeLab } from '../../../src/learning-activity/enums/practice-lab.enum';
 
 // These reference solutions are used only by seed validation, never sent to students.
 export const sqlReferences: Record<string, string> = {};
