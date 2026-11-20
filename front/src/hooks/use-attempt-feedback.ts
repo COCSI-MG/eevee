@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { AttemptAdminService } from '@/app/integration/scheduler-api/attempt';
-import { AssignmentAttempt } from '@/app/interface/scheduler-api/assignment-attempt';
+import { AttemptAdminService } from '@/app/integration/platform-api/attempt';
+import { AssignmentAttempt } from '@/app/interface/platform-api/assignment-attempt';
 
 const FEEDBACK_TIMEOUT_MS = 60_000;
 

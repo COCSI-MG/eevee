@@ -1,7 +1,7 @@
 import { registerWorkspaceRuntime } from "./runtime";
 import { applyPythonIntellisense, disposePythonIntellisense } from "../python/pyodide-client";
 import { applyLanguageDefaults } from "../intellisense/compiler";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import type { FileNode } from "@/types/shared";
 
 jest.mock("../python/pyodide-client", () => ({ applyPythonIntellisense: jest.fn(), disposePythonIntellisense: jest.fn() }));

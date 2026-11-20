@@ -16,15 +16,15 @@ It keeps the same runtime contract as the default node worker:
 
 ## Build and load
 
+From the repository root, use the worker Makefile.
+
 ```bash
-cd images
-make build-node-teraorm
-make load-node-teraorm
+make -C images rebuild-node-teraorm
 ```
 
 Or manual build:
 
 ```bash
-docker build -t worker-node-teraorm-img:latest -f ./node-teraorm/Dockerfile ./node-teraorm
+docker build -t worker-node-teraorm-img:latest images/node/node-teraorm
 minikube image load worker-node-teraorm-img:latest
 ```

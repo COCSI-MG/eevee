@@ -1,5 +1,5 @@
 "use client";
-import { UserListItem, UserRole } from "@/app/interface/scheduler-api/user";
+import { UserListItem, UserRole } from "@/app/interface/platform-api/user";
 
 import {
   Table,

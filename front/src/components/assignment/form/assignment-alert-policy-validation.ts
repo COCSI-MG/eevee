@@ -1,4 +1,4 @@
-import { CONFIGURABLE_ASSIGNMENT_ALERT_TYPES } from "@/app/interface/scheduler-api/assignment-alert";
+import { CONFIGURABLE_ASSIGNMENT_ALERT_TYPES } from "@/app/interface/platform-api/assignment-alert";
 import * as Yup from "yup";
 
 export const assignmentAlertPolicyValidationSchema = Yup.object({

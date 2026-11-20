@@ -1,8 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { useSchedulingRealtimeEvent } from "./use-scheduling-realtime";
-import { getSchedulingSocket } from "@/app/integration/scheduler-api/realtime";
+import { getSchedulingSocket } from "@/app/integration/platform-api/realtime";
 
-jest.mock("@/app/integration/scheduler-api/realtime", () => ({
+jest.mock("@/app/integration/platform-api/realtime", () => ({
   getSchedulingSocket: jest.fn(),
 }));
 

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Exam, ExamView } from "@/app/interface/scheduler-api/exam";
+import { Exam, ExamView } from "@/app/interface/platform-api/exam";
 
 interface ExamDetailsHeaderProps {
   exam: Exam;

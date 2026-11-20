@@ -1,13 +1,15 @@
 "use client";
 
-import { UserRole } from "@/app/interface/scheduler-api/user";
+import { UserRole } from "@/app/interface/platform-api/user";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { AuthService } from "../integration/scheduler-api/auth-service";
-import { renewSession } from "../integration/scheduler-api/client";
-import { AuthSession } from "../interface/scheduler-api/auth";
+import { AuthService } from "../integration/platform-api/auth-service";
+import { renewSession } from "../integration/platform-api/client";
+import { AuthSession } from "../interface/platform-api/auth";
 import { getDefaultRouteForRole } from "../routes";
+import { Route } from "../routes";
+import { setPendingClassInvitation } from "@/utils/pending-class-invitation";
 
 const AUTH_ROUTES = new Set(["/login", "/register"]);
 const RENEWAL_RATIO = 0.8;
@@ -114,6 +116,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!user && (isProtectedRoute(pathname) || pathname.startsWith("/admin"))) {
+      if (pathname === Route.ClassInvitation) {
+        const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
+
+        if (token) setPendingClassInvitation(token);
+      }
       router.replace("/login");
       return;
     }

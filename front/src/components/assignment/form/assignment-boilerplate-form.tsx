@@ -1,6 +1,6 @@
 import { WorkerExibitionMap } from "@/app/admin/assignments/constants";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
-import { Assignment } from "@/app/interface/scheduler-api/assignment";
+import { WorkerType } from "@/app/interface/platform-api/worker";
+import { Assignment } from "@/app/interface/platform-api/assignment";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorMessage } from "formik";
 import { FileText } from "lucide-react";

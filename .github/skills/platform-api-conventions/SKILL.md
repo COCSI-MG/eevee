@@ -7,7 +7,7 @@ description: "NestJS module/DTO/entity/migration conventions in platform-api. Us
 
 `platform-api/src/` is organized by feature module: `assignment/`, `attempt/`,
 `class/`, `template/`, `user/`, `worker/`, `scheduling/`, `kubernetes/`,
-`bullmq/`, `auth/`, `file-saver/`, `ai-report/`, etc. Each feature module
+`bullmq/`, `auth/`, `ai-report/`, etc. Each feature module
 follows the same internal layout:
 
 - `entities/` — TypeORM entities (DB schema).
@@ -20,7 +20,7 @@ follows the same internal layout:
 
 Cross-cutting: `ClsModule` propagates request context (e.g. user id) across
 services via middleware. `BullMQModule` carries async messaging (scheduling
-jobs, AI report generation, file-saver events) over Redis — platform-domain
+jobs, AI report generation) over Redis — platform-domain
 consumers live in `platform-api`, Kubernetes-execution consumers live in
 `assignment-runner`.
 

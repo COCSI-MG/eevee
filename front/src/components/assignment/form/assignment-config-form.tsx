@@ -1,7 +1,7 @@
 import { WorkerExibitionMap } from "@/app/admin/assignments/constants";
-import type { AssignmentAlertPolicy } from "@/app/interface/scheduler-api/assignment-alert";
-import { Class } from "@/app/interface/scheduler-api/class";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import type { AssignmentAlertPolicy } from "@/app/interface/platform-api/assignment-alert";
+import { Class } from "@/app/interface/platform-api/class";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import { FormikToggle } from "@/components/shared/formik-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

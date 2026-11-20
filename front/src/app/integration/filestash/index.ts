@@ -5,31 +5,86 @@ import { FileNode } from "@/types/shared";
 let db: FileStash<FileStashSchema>;
 let stashReadyPromise: Promise<void> | null = null;
 
-const assignmentWriteQueues = new Map<string, Promise<void>>();
-
-const enqueueAssignmentWrite = async (
-  key: string,
-  operation: () => Promise<void>,
-): Promise<void> => {
-  const lastOperation = assignmentWriteQueues.get(key) ?? Promise.resolve();
-
-  const nextOperation = lastOperation.catch(() => undefined).then(operation);
-
-  assignmentWriteQueues.set(
-    key,
-    nextOperation.finally(() => {
-      if (assignmentWriteQueues.get(key) === nextOperation) {
-        assignmentWriteQueues.delete(key);
-      }
-    }),
-  );
-
-  await nextOperation;
+export type LocalWorkspaceSnapshot = {
+  fileTree: FileNode | null;
+  revision: number;
+  generation: string | null;
 };
+export type LocalWorkspaceReplacement = {
+  applied: boolean;
+  snapshot: LocalWorkspaceSnapshot;
+};
+
+const snapshotOf = (
+  value: FileStashValue | undefined,
+): LocalWorkspaceSnapshot => {
+  const revision = value?.revision ?? 0;
+  if (!Number.isSafeInteger(revision) || revision < 0)
+    throw new Error("Invalid local workspace revision");
+  const generation = value?.generation ?? null;
+  if (generation !== null && (typeof generation !== "string" || !generation))
+    throw new Error("Invalid local workspace generation");
+  return { fileTree: value?.fileTree ?? null, revision, generation };
+};
+const copyTree = (tree: FileNode): FileNode => JSON.parse(JSON.stringify(tree));
+
+/** Callback must be synchronous: the read, comparison and write share one native
+ * readwrite transaction. IndexedDB serializes this store across tabs/connections.
+ * Resolve only on commit, never merely on the put request's success. */
+async function updateAssignmentAtomically<TResult>(
+  key: string,
+  update: (current: FileStashValue | undefined) => {
+    value?: FileStashValue;
+    remove?: boolean;
+    result: TResult;
+  },
+): Promise<TResult> {
+  await ensureStashReady();
+  const connection = await db.open();
+  return new Promise<TResult>((resolve, reject) => {
+    const transaction = connection.transaction(["assignments"], "readwrite", {
+      durability: "strict",
+    });
+    const store = transaction.objectStore("assignments");
+    let result: TResult;
+    let failure: unknown;
+    transaction.oncomplete = () => resolve(result);
+    transaction.onabort = () =>
+      reject(
+        failure ??
+          transaction.error ??
+          new Error("Local workspace transaction aborted"),
+      );
+    transaction.onerror = () => {
+      failure ??= transaction.error;
+    };
+    const request = store.get(key);
+    request.onsuccess = () => {
+      try {
+        const change = update(request.result as FileStashValue | undefined);
+        result = change.result;
+        if (change.value) store.put(change.value);
+        else if (change.remove) store.delete(key);
+      } catch (error) {
+        failure = error;
+        transaction.abort();
+      }
+    };
+  });
+}
+
+function nextRevision(current: FileStashValue | undefined) {
+  const revision = snapshotOf(current).revision + 1;
+  if (!Number.isSafeInteger(revision))
+    throw new Error("Local workspace revision limit reached");
+  return revision;
+}
 
 export async function initStash() {
   if (typeof window === "undefined") {
-    throw new Error("FileStash can only be initialized in a browser environment");
+    throw new Error(
+      "FileStash can only be initialized in a browser environment",
+    );
   }
 
   if (!db) {
@@ -61,32 +116,83 @@ export const saveFileTree = async (
   userId: number,
   fileTree: FileNode,
 ): Promise<void> => {
-  await ensureStashReady();
-
+  const frozenTree = copyTree(fileTree);
   const key = getAssignmentKey(assignmentId, userId);
-
-  await enqueueAssignmentWrite(key, async () => {
-    const data: FileStashValue = {
+  await updateAssignmentAtomically(key, (current) => ({
+    value: {
       id: key,
       assignmentId,
       userId,
-      fileTree,
+      fileTree: frozenTree,
+      revision: nextRevision(current),
+      generation: current?.generation ?? crypto.randomUUID(),
       updatedAt: new Date().toISOString(),
-    };
+    },
+    result: undefined,
+  }));
+};
 
-    await db.upsert("assignments", data);
-  });
+export const getFileTreeSnapshot = async (
+  assignmentId: number,
+  userId: number,
+): Promise<LocalWorkspaceSnapshot> => {
+  await ensureStashReady();
+  return snapshotOf(
+    await db.get("assignments", getAssignmentKey(assignmentId, userId)),
+  );
 };
 
 export const getFileTree = async (
   assignmentId: number,
   userId: number,
-): Promise<FileNode | null> => {
-  await ensureStashReady();
+): Promise<FileNode | null> =>
+  (await getFileTreeSnapshot(assignmentId, userId)).fileTree;
 
+/** A stale confirmation cannot overwrite a save from another tab. A snapshot
+ * compares both revision and tree to cover legacy entries without a revision. */
+export const compareAndReplaceFileTree = async (
+  assignmentId: number,
+  userId: number,
+  expected: LocalWorkspaceSnapshot,
+  replacement: FileNode,
+  isCurrent: () => boolean = () => true,
+): Promise<LocalWorkspaceReplacement> => {
+  const expectedRevision = expected.revision;
+  const expectedGeneration = expected.generation ?? null;
+  const expectedTree = JSON.stringify(expected.fileTree);
+  const frozenTree = copyTree(replacement);
   const key = getAssignmentKey(assignmentId, userId);
-  const data = await db.get("assignments", key);
-  return data?.fileTree || null;
+  return updateAssignmentAtomically<LocalWorkspaceReplacement>(
+    key,
+    (current) => {
+      const snapshot = snapshotOf(current);
+      if (
+        !isCurrent() ||
+        snapshot.revision !== expectedRevision ||
+        snapshot.generation !== expectedGeneration ||
+        JSON.stringify(snapshot.fileTree) !== expectedTree
+      ) {
+        return { result: { applied: false, snapshot } };
+      }
+      const revision = nextRevision(current);
+      const generation = current?.generation ?? crypto.randomUUID();
+      return {
+        value: {
+          id: key,
+          assignmentId,
+          userId,
+          fileTree: frozenTree,
+          revision,
+          generation,
+          updatedAt: new Date().toISOString(),
+        },
+        result: {
+          applied: true,
+          snapshot: { fileTree: frozenTree, revision, generation },
+        },
+      };
+    },
+  );
 };
 
 export const updateFileContent = async (
@@ -95,55 +201,30 @@ export const updateFileContent = async (
   filePath: string,
   content: string,
 ): Promise<void> => {
-  await ensureStashReady();
-
   const key = getAssignmentKey(assignmentId, userId);
-
-  await enqueueAssignmentWrite(key, async () => {
-    const currentEntry = await db.get("assignments", key);
-    const fileTree = currentEntry?.fileTree;
-
-    if (!fileTree) {
+  await updateAssignmentAtomically(key, (current) => {
+    if (!current?.fileTree)
       throw new Error(
         "File tree not found. Initialize it first with saveFileTree()",
       );
-    }
-
     const updateNode = (node: FileNode): boolean => {
       if (node.path === filePath && node.isFile) {
         node.content = content;
         node.updatedAt = new Date().toISOString();
         return true;
       }
-
-      if (node.children) {
-        for (const child of node.children) {
-          const updated = updateNode(child);
-          if (updated) {
-            return true;
-          }
-        }
-      }
-
-      return false;
+      return node.children?.some(updateNode) ?? false;
     };
-
-    const updated = updateNode(fileTree);
-
-    if (!updated) {
-      console.warn(`File not found in tree: ${filePath}`);
-      return;
-    }
-
-    const updatedEntry: FileStashValue = {
-      id: key,
-      assignmentId,
-      userId,
-      fileTree,
-      updatedAt: new Date().toISOString(),
+    if (!updateNode(current.fileTree)) return { result: undefined };
+    return {
+      value: {
+        ...current,
+        revision: nextRevision(current),
+        generation: current?.generation ?? crypto.randomUUID(),
+        updatedAt: new Date().toISOString(),
+      },
+      result: undefined,
     };
-
-    await db.upsert("assignments", updatedEntry);
   });
 };
 
@@ -177,10 +258,10 @@ export const getFileContent = async (
 };
 
 export async function deleteAssignment(assignmentId: number, userId: number) {
-  await ensureStashReady();
-
-  const key = getAssignmentKey(assignmentId, userId);
-  await db.delete("assignments", key);
+  await updateAssignmentAtomically(
+    getAssignmentKey(assignmentId, userId),
+    () => ({ remove: true, result: undefined }),
+  );
 }
 
 export function closeStash() {

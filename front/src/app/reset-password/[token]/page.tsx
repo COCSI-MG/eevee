@@ -6,7 +6,7 @@ import { Form, Formik } from 'formik';
 import * as Yup from 'yup';
 import { Code, Eye, EyeOff } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { AuthService } from '@/app/integration/scheduler-api/auth-service';
+import { AuthService } from '@/app/integration/platform-api/auth-service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

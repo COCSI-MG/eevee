@@ -1,11 +1,11 @@
 "use client";
 
-import { ExamService } from "@/app/integration/scheduler-api/exam";
+import { ExamService } from "@/app/integration/platform-api/exam";
 import {
   ADMIN_LIST_PAGE_SIZE,
   PaginatedResponse,
-} from "@/app/interface/scheduler-api/pagination";
-import { Exam } from "@/app/interface/scheduler-api/exam";
+} from "@/app/interface/platform-api/pagination";
+import { Exam } from "@/app/interface/platform-api/exam";
 import { useQuery } from "@tanstack/react-query";
 import { SortDirection } from "@/types/pagination";
 

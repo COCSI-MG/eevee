@@ -34,14 +34,42 @@ spec:
       containers:
         - name: eevee-entrypoint-gateway
           image: {{ .Values.entrypointGateway.image | quote }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |
+              # The runtime resolver queries the full Service name.
+              storage_host=$(awk -v prefix='{{ .Release.Namespace }}.svc.' '
+                $1 == "search" {
+                  for (i = 2; i <= NF; i++) {
+                    if (index($i, prefix) == 1) {
+                      print "source-storage." $i
+                      exit
+                    }
+                  }
+                }
+              ' /etc/resolv.conf)
+              export NGINX_STORAGE_HOST="${storage_host:-source-storage}"
+              exec /docker-entrypoint.sh nginx -g 'daemon off;'
+          env:
+            - name: NGINX_ENTRYPOINT_LOCAL_RESOLVERS
+              value: "1"
+            - name: NGINX_ENVSUBST_FILTER
+              value: "^(NGINX_LOCAL_RESOLVERS|NGINX_STORAGE_HOST)$"
           ports:
             - containerPort: {{ .Values.entrypointGateway.containerPort }}
           resources:
             {{- toYaml .Values.entrypointGateway.resources | nindent 12 }}
           volumeMounts:
             - name: nginx-conf
-              mountPath: /etc/nginx/conf.d/default.conf
+              mountPath: /etc/nginx/templates/default.conf.template
               subPath: default.conf
+          readinessProbe:
+            httpGet:
+              path: /api/v1/
+              port: {{ .Values.entrypointGateway.containerPort }}
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 3
       volumes:
         - name: nginx-conf
           configMap:

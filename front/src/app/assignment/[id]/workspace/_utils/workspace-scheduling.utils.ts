@@ -1,13 +1,13 @@
 "use client";
 
-import { AssignmentAttempt } from "@/app/interface/scheduler-api/assignment-attempt";
-import { WorkerType } from "@/app/interface/scheduler-api/worker";
+import { AssignmentAttempt } from "@/app/interface/platform-api/assignment-attempt";
+import { WorkerType } from "@/app/interface/platform-api/worker";
 import {
   Scheduling,
   SchedulingPreviewRun,
   SchedulingPreviewRunStatus,
   SchedulingResponse,
-} from "@/app/interface/scheduler-api/scheduling";
+} from "@/app/interface/platform-api/scheduling";
 import { FileNode } from "@/types/shared";
 
 import {

@@ -1,155 +1,41 @@
 # EEVEE - Educational Exercices and Video-based E-learning Environment
 
-## _Steps To Reproduce_
+## Desenvolvimento local
 
-1. Construa a infraestrutura do projeto, com detalhamento disponível em [infrastructure](./infrastructure/README.md).
+Siga o [guia de ambiente local](./docs/local-development.md) para configurar o
+PostgreSQL, o Redis, o Minikube e os serviços. Execute os comandos a partir da
+raiz do repositório.
 
-2. Construa as imagens dos workers e entenda sobre a execução dos workers, seguindo os passos detalhados em [images](./images/README.md).
+### Componentes
 
-3. Instale os pacotes NPM para os arquivos a seguir:
+| Componente | Função | Comando local |
+| --- | --- | --- |
+| [Frontend](./front/README.md) | Interface Next.js | `make up-front` |
+| [Platform API](./platform-api/README.md) | API da plataforma | `make up-platform-api` |
+| [Assignment Runner](./assignment-runner/) | Orquestração de avaliações no Kubernetes | `make up-assignment-runner` |
+| [File Storage API](./file-storage-api/README.md) | Sincronização de arquivos e snapshots de execução no PVC | `make up-file-storage-api` |
 
-### 1. `front` (Next.js frontend)
+### Imagens dos workers
 
-```bash
-cd front/
-npm install
-npm run dev
-```
+Com o Minikube ativo, execute `make prepare-workers` para construir e carregar
+as imagens de desenvolvimento. O [guia de imagens](./images/README.md) lista os
+Dockerfiles e os comandos para cada executor. Para os workers com banco de
+dados integrado, consulte o [guia dos workers PostgreSQL](./images/node/postgresql/README.md).
 
-### 2. `platform-api` (Platform API)
+## Implantação
 
-Lembre-se de definir uma secret JWT no .env
-
-Pode copiar um arquivo `.env.example` dentro de `platform-api` e trocar os valores
-
-```bash
-cd platform-api/
-npm install
-npm run start:dev
-```
-
-#### 2.1 Code Evaluator Engine
-
-O avaliador é uma aplicação NestJS que consome comandos do Redis + BullMQ, executa os jobs Kubernetes e publica os resultados para a Platform API.
-
-Lembre-se de preencher os valores de REDIS_HOST e REDIS_PORT no `.env` do avaliador. Se estiver usando o Docker, o host do Redis será localhost e a porta fixa será 6379.
-
-```bash
-cd code-evaluator-engine/ && npm run start:dev
-```
-
-## _Testando a infraestrutura_
-
-É necessário primeiro executar o build de todas as imagens que serão usadas.
-
-### Utilizando Make
-
-O [Makefile](./images/Makefile) tem a opção de rodar um build all, que irá construir todas as imagens necessárias para o projeto. Para isso, basta rodar o comando:
-
-```bash
-make build-all
-```
-
-### Banco de Dados
-
-Alguns Workers a nível de aplicação necessitam de um banco de dados para teste. Atualmente o [Node + PostgreSQL](./scheduler-api/src/worker/strategies/node-default-postgresql-jest.strategy.ts) espera uma versão 16 do PostgreSQL, precisamos carregar a imagem do PostgreSQL 16 no minikube para que o worker consiga rodar os testes.
-
-```
-docker pull postgres:16
-minikube image load postgres:16
-```
-
-### Node Default Worker
-
-```
-cd node-worker-images\node
-docker build . -t worker-node-default-img:latest
-```
-
-Agora é necessário incluir a imagem no minikube
-
-```
-minikube image load worker-node-default-img:latest
-```
-
-### Node TeraORM Worker (AB study)
-
-Worker dedicado para os exercicios comparativos SDK nativo vs TeraORM.
-
-```
-cd node-worker-images\node-teraorm
-docker build . -t worker-node-teraorm-img:latest
-```
-
-Agora e necessario incluir a imagem no minikube
-
-```
-minikube image load worker-node-teraorm-img:latest
-```
-
-### Node NestJS Worker
-
-```
-cd node-worker-images\nest.js
-docker build . -t worker-node-nestjs-img:latest
-```
-
-Agora é necessário incluir a imagem no minikube
-
-```
-minikube image load worker-node-nestjs-img:latest
-```
-
-### Node GRPC Worker
-
-```
-cd node-worker-images\grpc
-docker build . -t worker-node-grpcjs-img:latest
-```
-
-Agora é necessário incluir a imagem no minikube
-
-```
-minikube image load worker-node-grpcjs-img:latest
-```
-
-### Node Next.js + Cypress Worker
-
-```
-cd node-worker-images\next.js-cypress
-docker build . -t worker-node-nextjs-cypress-img:latest
-```
-
-Agora é necessário incluir a imagem no minikube
-
-```
-minikube image load worker-node-nextjs-cypress-img:latest
-```
-
-### Python + Pytest Worker
-
-```
-cd node-worker-images\python-default
-docker build . -t worker-python-default-img:latest
-```
-
-Agora é necessário incluir a imagem no minikube
-
-```
-minikube image load worker-python-default-img:latest
-```
+O [guia de infraestrutura](./infrastructure/README.md) reúne os caminhos para o
+chart de produção, a implantação da File Storage API e o backup do volume.
 
 ## Modulo de exercicios TeraORM AB
 
-Foi adicionado um seed de modulo com um conjunto de exercicios pareados (A = SDK nativo, B = TeraORM), para validacao de prototipo em ambiente controlado.
+O seed cria um conjunto de exercícios pareados (A = SDK nativo, B = TeraORM) para o estudo comparativo.
 
-No `scheduler-api`:
+Na raiz do repositório:
 
 ```bash
-cd scheduler-api/
-npm install
-npm run seed
-npm run seed:teraorm-study
+make seed
+npm --prefix platform-api run seed:teraorm-study
 ```
 
 Esse seed cria:

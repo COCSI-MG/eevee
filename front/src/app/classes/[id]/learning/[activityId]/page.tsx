@@ -5,8 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import {
   LearningActivities,
   learningError,
-} from "@/app/integration/scheduler-api/learning-activity";
-import { LearningActivityKind } from "@/app/interface/scheduler-api/learning-activity";
+} from "@/app/integration/platform-api/learning-activity";
+import { LearningActivityKind } from "@/app/interface/platform-api/learning-activity";
 import { PracticeSpace } from "@/components/learning/practice-space";
 import { QuizSpace } from "@/components/learning/quiz-space";
 export default function LearningPage() {

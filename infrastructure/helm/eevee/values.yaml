@@ -33,6 +33,7 @@ config:
   DB_DATABASE: eevee_db
   REDIS_HOST: redis-service
   REDIS_PORT: "6379"
+  REDIS_DB: "0"
   CORS_ALLOWED_ORIGINS: ""
   GMAIL_USER: "eevee.cefet@gmail.com"
   AUTH_COOKIE_DOMAIN: ""
@@ -110,6 +111,32 @@ platformApi:
       memory: 256Mi
     limits:
       memory: 1Gi
+
+# Student source storage has its own image and requires a signing key.
+sourceStorage:
+  image:
+    repository: ghcr.io/cocsi-mg/eevee-file-storage-api
+    tag: latest
+    pullPolicy: Always
+  pvcName: eevee-student-source
+  existingClaim: ""
+  keepPVCOnUninstall: true
+  storage: 20Gi
+  storageClass: null # null = cluster default; "" = no storage class
+  accessMode: ReadWriteOnce
+  secretName: eevee-source-storage
+  secretKey: EEVEE_STORAGE_SIGNING_SECRET
+  limits:
+    maxFileBytes: 1048576
+    maxProjectBytes: 5242880
+  httpLimits:
+    workspaceBodyBytes: 65536
+    snapshotBodyBytes: 1024
+  resources:
+    requests:
+      memory: 64Mi
+    limits:
+      memory: 256Mi
 
 # -----------------------------------------------------------------------------
 # Assignment Runner (BullMQ consumer)

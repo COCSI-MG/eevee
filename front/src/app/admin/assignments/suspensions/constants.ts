@@ -1,4 +1,4 @@
-import { AssignmentAlertType } from "@/app/interface/scheduler-api/assignment-alert";
+import { AssignmentAlertType } from "@/app/interface/platform-api/assignment-alert";
 
 export const HISTORY_STATUS = {
   ACTIVE: "active",
