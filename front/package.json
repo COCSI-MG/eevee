@@ -43,6 +43,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "cobe": "^0.6.4",
+    "emmet-monaco-es": "5.7.0",
     "fflate": "^0.8.3",
     "formik": "^2.4.6",
     "lucide-react": "^0.485.0",
