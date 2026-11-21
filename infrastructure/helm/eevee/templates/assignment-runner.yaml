@@ -71,6 +71,8 @@ spec:
           env:
             - name: EEVEE_WORKER_STORAGE_URL
               value: "http://source-storage:3020"
+            - name: STORAGE_MAX_PROJECT_BYTES
+              value: {{ .Values.sourceStorage.limits.maxProjectBytes | quote }}
             - name: EEVEE_STORAGE_SIGNING_SECRET
               valueFrom:
                 secretKeyRef:

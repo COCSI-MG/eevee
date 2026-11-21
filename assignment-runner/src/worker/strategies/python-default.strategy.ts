@@ -1,3 +1,4 @@
+import { mergeDependencies, shellArgument } from './dependencies';
 import { WorkerJobPayload } from 'src/worker/worker-job-payload.type';
 import { CreateWorkerDto } from '../dto/create-worker.dto';
 import { WorkerType } from '../enum/worker-type.enum';
@@ -32,18 +33,41 @@ export class PythonDefaultStrategy extends BootstrapInitContainerStrategy {
 
   processLogResult = parsePytestLogResult;
 
-  buildExecutionJobCommand(_createWorkerData: CreateWorkerDto): string[] {
-    return _createWorkerData.executionMode === 'adhoc'
-      ? ['python', '-u', '/app/src/app.py']
-      : ['python', '-u', '/app/trigger.py'];
+  buildExecutionJobCommand(data: CreateWorkerDto): string[] {
+    const commands: string[] = [];
+
+    const install = this.installCommand(data.dependencies ?? []);
+
+    if (install) commands.push(install);
+
+    commands.push(this.executionCommand(data.executionMode));
+
+    return asShellCommand(commands);
+  }
+
+  private installCommand(dependencies: string[]): string | undefined {
+    const requirements = mergeDependencies(dependencies);
+
+    return requirements.length ? `python -m pip install ${requirements.map(shellArgument).join(' ')}` : undefined;
+  }
+
+  private executionCommand(executionMode: CreateWorkerDto['executionMode']): string {
+    return executionMode === 'adhoc'
+      ? 'python -u /app/src/app.py'
+      : 'python -u /app/trigger.py';
   }
 
   buildWorkerPayload(
     createWorkerData: CreateWorkerDto,
     dependencies: string[],
   ): WorkerJobPayload {
+    const files = { ...(createWorkerData.files ?? {}) };
+    if (createWorkerData.applicationFileContent !== undefined) {
+      files['app.py'] = createWorkerData.applicationFileContent;
+    }
+
     return buildWorkerPayload({
-      files: createWorkerData.files,
+      files: Object.keys(files).length ? files : null,
       testFilesContent: createWorkerData.testFilesContent,
       testFiles: createWorkerData.testFiles,
       dependencies,
@@ -55,7 +79,7 @@ export class PythonDefaultStrategy extends BootstrapInitContainerStrategy {
 
   buildJobCommand(
     createWorkerData: CreateWorkerDto,
-    _dependencies: string[],
+    dependencies: string[]
   ): string[] {
     const commands: string[] = [];
 
@@ -80,11 +104,11 @@ export class PythonDefaultStrategy extends BootstrapInitContainerStrategy {
       );
     });
 
-    commands.push(
-      createWorkerData.executionMode === 'adhoc'
-        ? 'python -u /app/src/app.py'
-        : 'python -u /app/trigger.py',
-    );
+    const install = this.installCommand(dependencies);
+
+    if (install) commands.push(install);
+
+    commands.push(this.executionCommand(createWorkerData.executionMode));
 
     return asShellCommand(commands);
   }

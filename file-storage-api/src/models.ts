@@ -1,4 +1,7 @@
-import type { ExecutionSourceSnapshot } from "@eevee/execution-contracts";
+import type {
+  ExecutionSourceSnapshot,
+  ExecutionTemplateSnapshot,
+} from "@eevee/execution-contracts";
 
 export interface FileReference {
   digest: string;
@@ -14,9 +17,10 @@ export interface WorkspaceManifest {
   files: FileManifest;
 }
 
-export type SnapshotManifest = WorkspaceManifest & ExecutionSourceSnapshot;
+export type SnapshotManifest = WorkspaceManifest &
+  (ExecutionSourceSnapshot | ExecutionTemplateSnapshot);
 
-export type SnapshotKind = ExecutionSourceSnapshot["kind"];
+export type SnapshotKind = SnapshotManifest["kind"];
 
 export const DIGEST_PATTERN = /^[a-f0-9]{64}$/;
 export const SCOPE_PATTERN = /^[a-z0-9-]{1,100}$/;

@@ -4,4 +4,11 @@ export type WorkerJobPayload = {
   srcPath: string;
   testPath: string;
   dependencies: string[];
+  templateSnapshots?: Array<{
+    scope: string;
+    id: string;
+    kind: 'template';
+    url: string;
+    token: string;
+  }>;
 };

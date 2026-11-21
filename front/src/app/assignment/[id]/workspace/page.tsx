@@ -10,7 +10,6 @@ import { WorkspaceRunPreviewDialog } from "@/app/assignment/[id]/workspace/_comp
 import { WorkspaceSuspension } from "@/app/assignment/[id]/workspace/_components/workspace-suspension";
 import { useWorkspaceCorrection } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-correction";
 import { useWorkspacePreview } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-preview";
-import { useWorkspaceSaveFile } from "@/app/assignment/[id]/workspace/_hooks/use-workspace-save-file";
 import { Route } from "@/app/routes";
 import { useFetchAssignment } from "@/hooks/use-assignments";
 import { useAuthContext } from "@/hooks/use-auth-context";
@@ -145,11 +144,6 @@ export default function Page() {
     workerType: assignmentData?.workerType,
   });
 
-  const { isSaving, saveFileInServer } = useWorkspaceSaveFile({
-    assignmentId: assignmentData?.id,
-    userId,
-  });
-
   const handleAcceptAgreement = () => {
     acceptSecurityAgreement();
   };
@@ -228,11 +222,9 @@ export default function Page() {
           <WorkspaceHeaderActions
             onRunClick={() => runPreview()}
             onSubmitClick={() => submitAssignment()}
-            onSaveClick={() => saveFileInServer()}
             onClearClick={handleClearWorkspace}
             isRunningSync={previewLoading}
             isSubmittingCorrection={isCorrectionInProgress}
-            isSaving={isSaving}
             isClearing={isResettingWorkspace || isRefreshingAssignmentForClear}
             canClear={Boolean(resetWorkspaceAction)}
             isSubmissionClosed={isSubmissionClosed}

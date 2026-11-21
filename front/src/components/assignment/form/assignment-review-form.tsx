@@ -13,7 +13,7 @@ import { formatDateTime } from "@/utils/date";
 import { ASSIGNMENT_FORM_TEXT } from "./constants";
 
 interface AssignmentFormReviewProps {
-  values: Partial<Assignment>;
+  values: Partial<Assignment> & { dependenciesInput?: string };
   classes: { id: number; name: string }[];
   selectedTemplates: SelectedTemplate[] | null;
   weightError: string | null;
@@ -33,6 +33,13 @@ const AssigmentReview = ({
         {ASSIGNMENT_FORM_TEXT.REVIEW.CONFIG_TITLE}
       </h4>
       <div className="bg-primary/10 p-4 rounded-lg space-y-3">
+        <div>
+          <p className="text-xs text-muted-foreground">{ASSIGNMENT_FORM_TEXT.REVIEW.DEPENDENCIES}</p>
+
+          <p className="whitespace-pre-line">
+            {values.dependenciesInput || values.dependencies || ASSIGNMENT_FORM_TEXT.REVIEW.NONE}
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
@@ -73,28 +80,31 @@ const AssigmentReview = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wide">
-              Data de início
+              {ASSIGNMENT_FORM_TEXT.REVIEW.START_DATE}
             </p>
             <p className="text-white">{formatDateTime(values.startDate)}</p>
           </div>
           <div>
             <p className="text-xs text-slate-400 uppercase tracking-wide">
-              Data de entrega
+              {ASSIGNMENT_FORM_TEXT.REVIEW.DUE_DATE}
             </p>
             <p className="text-white">{formatDateTime(values.dueDate)}</p>
           </div>
         </div>
         <div className="rounded-md border border-border p-3">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">
-            Política de alertas
+            {ASSIGNMENT_FORM_TEXT.REVIEW.ALERT_POLICY}
           </p>
           <p className="text-sm text-foreground">
-            Bloqueio com {values.alertPolicy?.suspensionAlertLimit ?? 5} alertas
-            ativos · limite de digitação de{" "} {values.alertPolicy?.typingCharactersPerSecondLimit ?? 20} caracteres/s
+            {ASSIGNMENT_FORM_TEXT.REVIEW.ALERT_SUMMARY(
+              values.alertPolicy?.suspensionAlertLimit ?? 5,
+              values.alertPolicy?.typingCharactersPerSecondLimit ?? 20
+            )}
           </p>
           <p className="text-xs text-muted-foreground">
-            {values.alertPolicy?.punitiveTypes?.length ?? 0} tipo(s) punitivo(s)
-            selecionado(s)
+            {ASSIGNMENT_FORM_TEXT.REVIEW.PUNITIVE_TYPES(
+              values.alertPolicy?.punitiveTypes?.length ?? 0
+            )}
           </p>
         </div>
       </div>

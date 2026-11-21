@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { fail, StorageError } from "./errors";
 import { verifyGrant } from "./grants";
-import { isRecord } from "./models";
+import { isRecord, type FileReference } from "./models";
 import type { Store } from "./store";
 
 export interface HttpBodyLimits {
@@ -158,7 +158,9 @@ function readSnapshotManifest({ response, store, scope, id }: StorageRequest): v
 function readSnapshotFiles({ response, store, scope, id }: StorageRequest): void {
   const manifest = store.getSnapshot(scope, id, { verifyBlobs: false });
   const files: Record<string, string> = Object.create(null);
-  for (const [name, reference] of Object.entries(manifest.files)) {
+  for (const [name, reference] of Object.entries(manifest.files) as Array<
+    [string, FileReference]
+  >) {
     const bytes = store.getBlob(scope, reference.digest);
     if (bytes.length !== reference.size) fail(422, "File size mismatch");
     files[name] = bytes.toString("base64");

@@ -1,5 +1,6 @@
 import { loadWorkerDefinition } from "./worker-definition.js";
 import { createFilesAndDirectoriesFromJson } from "./file-handler.js";
+import { mergeTemplateSnapshotFiles, readTemplateSnapshot } from "./template-snapshot.js";
 import { readSourceSnapshot } from "./source-snapshot.js";
 
 async function main() {
@@ -15,6 +16,18 @@ async function main() {
     definition.testFiles ?? {},
     definition.testPath
   );
+
+  const templateFiles: Record<string, Buffer> = Object.create(null);
+  for (const snapshot of definition.templateSnapshots ?? []) {
+    const files = await readTemplateSnapshot(snapshot);
+    mergeTemplateSnapshotFiles(
+      templateFiles,
+      files,
+      definition.testFiles ?? {},
+      definition.testPath,
+    );
+  }
+  await createFilesAndDirectoriesFromJson(templateFiles, definition.testPath);
 }
 
 main()

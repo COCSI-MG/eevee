@@ -10,27 +10,57 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const runtime = dirname(require.resolve("pyodide/package.json"));
 const { version } = JSON.parse(await readFile(join(runtime, "package.json"), "utf8"));
 const destination = join(root, "public", "pyodide", version);
+const assetLockPath = join(root, "python-assets.lock.json");
+const assetLock = JSON.parse(await readFile(assetLockPath, "utf8"));
+if (assetLock.pyodideVersion !== version) {
+  throw new Error(`Python asset lock requires Pyodide ${assetLock.pyodideVersion}; installed ${version}`);
+}
+const pyodideLock = JSON.parse(await readFile(join(runtime, "pyodide-lock.json"), "utf8"));
+for (const name of ["jedi", "parso"]) {
+  const entry = pyodideLock.packages[name];
+  const pinned = assetLock.packages[name];
+  if (!entry || !pinned || entry.file_name !== pinned.file || entry.sha256 !== pinned.sha256) {
+    throw new Error(`Python asset lock disagrees with Pyodide about ${name}`);
+  }
+}
 await mkdir(destination, { recursive: true });
 for (const file of ["pyodide.mjs", "pyodide.asm.mjs", "pyodide.asm.wasm", "python_stdlib.zip", "pyodide-lock.json"]) {
   await copyFile(join(runtime, file), join(destination, file));
 }
 
-// Build-time download only. Browsers never contact PyPI or a runtime CDN.
-const wheel = "pyflakes-3.4.0-py2.py3-none-any.whl";
-const digest = "f742a7dbd0d9cb9ea41e9a24a918996e8170c799fa528688d40dd582c8265f4f";
-const valid = (bytes) => createHash("sha256").update(bytes).digest("hex") === digest;
-let bytes = await readFile(join(destination, wheel)).catch(() => null);
-if (!bytes || !valid(bytes)) {
-  const response = await fetch(`https://files.pythonhosted.org/packages/c2/2f/81d580a0fb83baeb066698975cb14a618bdbed7720678566f1b046a95fe8/${wheel}`, { signal: AbortSignal.timeout(60000) });
-  if (!response.ok) throw new Error(`Pyflakes download failed: ${response.status}`);
+// The build fetches and verifies all wheels; browsers use only local copies.
+async function ensurePackage(name, { file, sha256, url }) {
+  if (!file || file.includes('/') || file.includes('\\') || !/^[a-f0-9]{64}$/.test(sha256) || !url.startsWith('https://')) {
+    throw new Error(`Invalid locked Python asset: ${name}`);
+  }
+  const path = join(destination, file);
+  const matches = (bytes) => bytes && createHash("sha256").update(bytes).digest("hex") === sha256;
+  let bytes = await readFile(path).catch(() => null);
+  if (matches(bytes)) return;
+  const response = await fetch(url, { signal: AbortSignal.timeout(60000) });
+  if (!response.ok) throw new Error(`Python asset ${name}: HTTP ${response.status}`);
   bytes = Buffer.from(await response.arrayBuffer());
-  if (!valid(bytes)) throw new Error("Pyflakes checksum mismatch");
-  await writeFile(join(destination, wheel), bytes);
+  if (!matches(bytes)) throw new Error(`Checksum mismatch: ${file}`);
+  await writeFile(path, bytes);
 }
+for (const name of ["pyflakes", "jedi", "parso", "pandas-stubs"]) {
+  if (!assetLock.packages[name]) throw new Error(`Missing locked Python asset: ${name}`);
+  await ensurePackage(name, assetLock.packages[name]);
+}
+// Workers consume local filenames from the same project-owned lock.
+await copyFile(assetLockPath, join(destination, "python-assets.lock.json"));
 const source = join(root, "src/lib/monaco/python");
 await copyFile(join(source, "checker.py"), join(destination, "checker.py"));
 const worker = ts.transpileModule(await readFile(join(source, "pyodide-worker.ts"), "utf8"), {
   compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 },
 }).outputText;
 await writeFile(join(destination, "worker.js"), worker);
+await copyFile(join(source, "semantic.py"), join(destination, "semantic.py"));
+// Workers are standalone browser modules, so transpile them to ES modules
+// separately from the Next.js application bundle, like the lint worker above.
+const semanticWorker = ts.transpileModule(
+  await readFile(join(source, "semantic-worker.ts"), "utf8"),
+  { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } },
+).outputText;
+await writeFile(join(destination, "semantic-worker.js"), semanticWorker);
 console.log(`Prepared self-hosted Python tools in public/pyodide/${version}`);

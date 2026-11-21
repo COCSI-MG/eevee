@@ -1,0 +1,25 @@
+{
+  "pyodideVersion": "314.0.7",
+  "packages": {
+    "jedi": {
+      "file": "jedi-0.19.2-py2.py3-none-any.whl",
+      "sha256": "14346bd3f7aabb699b9e1223afdfae706f9a391212659d2cbf74c66c715095b4",
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/jedi-0.19.2-py2.py3-none-any.whl"
+    },
+    "parso": {
+      "file": "parso-0.8.6-py2.py3-none-any.whl",
+      "sha256": "6a4e296bc54f0e3489ce61ff9f30e9538dc382bdae10fa6413b34000883385d8",
+      "url": "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/parso-0.8.6-py2.py3-none-any.whl"
+    },
+    "pyflakes": {
+      "file": "pyflakes-3.4.0-py2.py3-none-any.whl",
+      "sha256": "f742a7dbd0d9cb9ea41e9a24a918996e8170c799fa528688d40dd582c8265f4f",
+      "url": "https://files.pythonhosted.org/packages/c2/2f/81d580a0fb83baeb066698975cb14a618bdbed7720678566f1b046a95fe8/pyflakes-3.4.0-py2.py3-none-any.whl"
+    },
+    "pandas-stubs": {
+      "file": "pandas_stubs-3.1.0.261029-py3-none-any.whl",
+      "sha256": "70f631f2d0781c4500b1cd5f84cab7d7279a3d114674d69655536a4a99a3a67f",
+      "url": "https://files.pythonhosted.org/packages/c0/2c/ecbc04b2a8d05d737351a54398f843223cb66edf42ec5c0fcc6198f17d3a/pandas_stubs-3.1.0.261029-py3-none-any.whl"
+    }
+  }
+}

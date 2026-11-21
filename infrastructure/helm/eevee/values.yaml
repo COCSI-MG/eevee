@@ -127,8 +127,8 @@ sourceStorage:
   secretName: eevee-source-storage
   secretKey: EEVEE_STORAGE_SIGNING_SECRET
   limits:
-    maxFileBytes: 1048576
-    maxProjectBytes: 5242880
+    maxFileBytes: 4194304
+    maxProjectBytes: 8388608
   httpLimits:
     workspaceBodyBytes: 65536
     snapshotBodyBytes: 1024
@@ -148,6 +148,7 @@ assignmentRunner:
     tag: latest
     pullPolicy: Always
   env: "production"
+  jobImagePullPolicy: Always
   replicas: 1
   nodeEligibility:
     enabled: false

@@ -20,9 +20,6 @@ import {
         name: 'ai-report-queue',
       },
       {
-        name: 'file-saver-queue',
-      },
-      {
         name: 'session-cleanup-queue',
       },
       {
