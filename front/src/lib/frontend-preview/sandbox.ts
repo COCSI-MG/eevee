@@ -1,3 +1,4 @@
+import { dependencyName, mergeDependencies, splitDependencies } from "./dependencies";
 import type { SandboxSetup } from "@codesandbox/sandpack-client";
 import type { FileNode } from "@/types/shared";
 import { PREVIEW_CONTEXT_MENU_SCRIPT } from "@/constants/frontend-preview";
@@ -93,7 +94,8 @@ export function createPreviewSandbox(
   entry: PreviewEntry,
   source: Record<string, string>,
   strategy: PreviewStrategy,
-  blockContextMenu = false
+  blockContextMenu = false,
+  activityDependencies = ""
 ): SandboxSetup {
   if (!Object.hasOwn(source, entry.path)) throw new Error(`Arquivo não encontrado: ${entry.path}`);
 
@@ -101,8 +103,18 @@ export function createPreviewSandbox(
   if (blockContextMenu) blockHtmlContextMenu(files);
 
   const { main, template } = strategy.prepareEntry(entry, files, blockContextMenu);
-  const dependencies = { ...strategy.dependencies };
+  const activityPackages: Record<string, string> = {};
+  for (const requirement of mergeDependencies(splitDependencies(activityDependencies))) {
+    const name = dependencyName(requirement);
+    activityPackages[name] = requirement.slice(name.length + 1) || "latest";
+  }
+
+  const dependencies = { ...strategy.dependencies, ...activityPackages };
   const devDependencies = { ...strategy.devDependencies };
+
+  for (const name of Object.keys(dependencies)) {
+    delete devDependencies[name];
+  }
 
   files["/package.json"] = createPackageJson(
     main,

@@ -21,6 +21,7 @@ import { PreviewViewportControls, PreviewViewportStage, usePreviewViewport } fro
 import { useFrontendPreview } from "./use-frontend-preview";
 
 interface FrontendPreviewProps {
+  dependencies?: string;
   tree: FileNode;
   strategy: PreviewStrategy;
   paused?: boolean;
@@ -125,7 +126,7 @@ function SandpackFrame({ setup, startRoute, onRetry, viewport } : SandpackFrameP
           ref={frameRef}
           title="Página do aluno"
           data-eevee-frontend-preview="true"
-          sandbox="allow-scripts allow-same-origin"
+          sandbox="allow-scripts allow-forms allow-same-origin"
           referrerPolicy="no-referrer"
           tabIndex={covered ? -1 : 0}
           aria-hidden={covered}
@@ -140,6 +141,7 @@ function SandpackFrame({ setup, startRoute, onRetry, viewport } : SandpackFrameP
 export function FrontendPreview({
   tree,
   strategy,
+  dependencies,
   paused = false,
   onClose,
   blockContextMenu = false
@@ -169,7 +171,7 @@ export function FrontendPreview({
 
     try {
       return {
-        setup: createPreviewSandbox(entry, files, strategy, blockContextMenu)
+        setup: createPreviewSandbox(entry, files, strategy, blockContextMenu, dependencies)
       };
     } catch (error) {
       return {
@@ -177,7 +179,7 @@ export function FrontendPreview({
       };
     }
 
-  }, [entry, files, strategy, paused, blockContextMenu]);
+  }, [entry, files, strategy, paused, blockContextMenu, dependencies]);
 
   const inactiveStatus = paused
   ? PreviewStatus.Paused

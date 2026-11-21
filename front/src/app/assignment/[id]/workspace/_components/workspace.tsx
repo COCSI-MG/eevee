@@ -364,6 +364,7 @@ export default function Workspace({
                 className={cn("min-h-0 min-w-0 flex-col lg:flex", mobilePane === WorkspaceMobilePane.Preview ? "flex" : "hidden")}
               >
                 <FrontendPreview
+                  dependencies={assignment.dependencies}
                   tree={fileTreeData}
                   strategy={workerPreviewStrategy}
                   paused={Boolean(assignment.currentUserAlertStatus?.suspended)}

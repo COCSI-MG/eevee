@@ -92,6 +92,9 @@ export class Assignment {
   @Column()
   description: string;
 
+  @Column('text', { default: '' })
+  dependencies: string;
+
   @Column()
   maxAttempts: number;
 

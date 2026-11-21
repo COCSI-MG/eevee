@@ -1,4 +1,5 @@
 "use client";
+import { mergeDependencies, splitDependencies } from "@/lib/frontend-preview/dependencies";
 
 import { AssignmentFormProps } from "../../../app/admin/assignments/interface";
 import { Formik, Form } from "formik";
@@ -35,6 +36,13 @@ import { AssignmentAlertType } from "@/app/interface/platform-api/assignment-ale
 import { assignmentAlertPolicyValidationSchema } from "./assignment-alert-policy-validation";
 
 const validationSchema = Yup.object({
+  dependenciesInput: Yup.string().test("dependencies", "Informe bibliotecas válidas, separadas por vírgula.", function (value) {
+    try {
+      mergeDependencies(splitDependencies(value));
+
+      return true;
+    } catch { return false; }
+  }),
   title: Yup.string().required(ASSIGNMENT_FORM_TEXT.VALIDATION.TITLE_REQUIRED),
   description: Yup.string().required(ASSIGNMENT_FORM_TEXT.VALIDATION.DESCRIPTION_REQUIRED),
   maxAttempts: Yup.number()
@@ -138,6 +146,7 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   } = useClasses();
 
   const initialValues = {
+    dependenciesInput: existingAssignment?.dependencies ?? "",
     title: existingAssignment?.title ?? "",
     description: existingAssignment?.description ?? "",
     maxAttempts: existingAssignment?.maxAttempts ?? 1,
@@ -160,9 +169,11 @@ export const AssignmentForm: React.FC<AssignmentFormProps> = ({
   };
 
   const handleSubmit = (values: typeof initialValues) => {
+    const { dependenciesInput, ...assignmentValues } = values;
     return upsertAssignment({
       newAssignment: {
-        ...values,
+        ...assignmentValues,
+        dependencies: dependenciesInput,
         boilerplateContent: values.boilerplate,
         classId: Number(values.classId),
         startDate: values.startDate

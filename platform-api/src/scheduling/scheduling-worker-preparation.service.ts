@@ -1,3 +1,4 @@
+import { mergeDependencies, splitDependencies } from 'src/utils/dependencies';
 import { Injectable } from '@nestjs/common';
 import {
   buildTemplateVariablesModule,
@@ -42,11 +43,15 @@ export class SchedulingWorkerPreparationService {
       throw new NoTemplatesForAssignmentError(assignment.id);
     }
 
+    const splitDependence = splitDependencies(assignment.dependencies);
+    const dependencies = mergeDependencies(splitDependence, baseWorkerData.dependencies);
+
     const workerData = await this.workerPayloadBuilderService.build(
       assignment.workerType,
       assignment.assignmentTemplates,
       {
         ...baseWorkerData,
+        dependencies,
         initSqlScript: assignment.initSqlScript ?? baseWorkerData.initSqlScript,
       },
       buildTemplateVariablesModule(
