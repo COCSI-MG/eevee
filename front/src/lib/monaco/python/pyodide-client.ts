@@ -1,3 +1,4 @@
+import { applyPythonSemantic, disposePythonSemantic } from "./semantic-client";
 import { toast } from "@/hooks/use-toast";
 import { buildPythonMarkers, PYTHON_MARKER_OWNER } from "./markers";
 import type { WorkerResponse } from "./protocol";
@@ -129,10 +130,12 @@ export function applyPythonIntellisense(monaco: Monaco, models: Model[]) {
     }), model.onWillDispose(() => unwatch(model)));
     if (!failed) queued.add(model);
   }
+  applyPythonSemantic(monaco, Array.from(desired));
   if (desired.size) { ensureWorker(); drain(); }
 }
 
 export function disposePythonIntellisense() {
+  disposePythonSemantic();
   stopWorker();
   for (const model of watched.keys()) unwatch(model);
   queued.clear();

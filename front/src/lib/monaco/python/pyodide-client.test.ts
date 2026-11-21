@@ -1,3 +1,4 @@
+jest.mock("./semantic-client", () => ({ applyPythonSemantic: jest.fn(), disposePythonSemantic: jest.fn() }));
 import { applyPythonIntellisense, disposePythonIntellisense } from "./pyodide-client";
 import { toast } from "@/hooks/use-toast";
 

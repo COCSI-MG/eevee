@@ -1,13 +1,13 @@
-import { UserRole } from '../src/user/user-role';
+import { UserRole } from '../../../src/user/user-role';
 import * as dotenv from 'dotenv';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { DataSource, QueryRunner } from 'typeorm';
 import { PublicClientApplication } from '@azure/msal-node';
-import { HashUtils } from '../src/utils/hash.utils';
+import { HashUtils } from '../../../src/utils/hash.utils';
 import { readCefetRoster, RosterCourse } from './cefet-roster';
 
-dotenv.config({ path: join(__dirname, '../.env') });
+dotenv.config({ path: join(__dirname, '../../../.env') });
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 const SCOPES = ['User.ReadBasic.All'];
 const fold = (value: string) => value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toLocaleUpperCase('pt-BR');
@@ -66,7 +66,7 @@ async function enroll(query: QueryRunner, match: { course: string; user: GraphUs
 
 async function main() {
   const rosterPath = process.argv[2];
-  if (!rosterPath) throw new Error('Usage: ts-node scripts/seed-cefet-microsoft.ts <roster.txt> [--dry-run]');
+  if (!rosterPath) throw new Error('Usage: ts-node scripts/seeds/cefet/seed-cefet-microsoft.ts <roster.txt> [--dry-run]');
   const tenantId = process.env.MICROSOFT_TENANT_ID;
   const clientId = process.env.MICROSOFT_CLIENT_ID;
   if (!tenantId || !clientId) throw new Error('Set MICROSOFT_TENANT_ID and MICROSOFT_CLIENT_ID for the CEFET tenant application.');

@@ -63,6 +63,9 @@ export abstract class BootstrapInitContainerStrategy
               name: WORKER_DEFINITION_B64_ENV_NAME,
               value: encodedDefinition,
             },
+            ...(process.env.STORAGE_MAX_PROJECT_BYTES
+              ? [{ name: 'STORAGE_MAX_PROJECT_BYTES', value: process.env.STORAGE_MAX_PROJECT_BYTES }]
+              : []),
           ],
         },
       ],

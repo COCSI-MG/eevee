@@ -1,5 +1,8 @@
 import { WorkerTestFile } from '../worker.interfaces';
-import type { ExecutionSourceSnapshot } from '@eevee/execution-contracts';
+import type {
+  ExecutionSourceSnapshot,
+  ExecutionTemplateSnapshot,
+} from '@eevee/execution-contracts';
 
 export class CreateWorkerDto {
   sourceSnapshot?: ExecutionSourceSnapshot;
@@ -11,4 +14,5 @@ export class CreateWorkerDto {
   files?: Record<string, string> | null;
   dependencies?: string[];
   initSqlScript?: string;
+  templateSnapshots?: ExecutionTemplateSnapshot[];
 }

@@ -15,7 +15,7 @@ import { WorkerType } from 'src/worker/enum/worker-type.enum';
 
 export class TestTemplateParamDefDto {
   @IsString()
-  name: string;
+  name!: string;
 
   @IsOptional()
   @IsEnum(TemplateParamType)
@@ -23,29 +23,39 @@ export class TestTemplateParamDefDto {
 }
 
 export class TestTemplateDto {
+  @ApiProperty({
+    required: false,
+    description: 'Template saved with resources to use in the preview.',
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  templateId?: number;
+
   @ApiProperty({ description: 'Turma proprietária do template em teste.' })
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  classId: number;
+  classId!: number;
 
   @ApiProperty({ enum: WorkerType })
   @IsEnum(WorkerType)
-  workerType: WorkerType;
+  workerType!: WorkerType;
 
   @ApiProperty({
     description:
       'Conteúdo do template (código de teste, equivale ao validation0.test.ts no pod).',
   })
   @IsString()
-  templateContent: string;
+  templateContent!: string;
 
   @ApiProperty({
     description:
       'Conteúdo do código de aplicação (equivale ao app.ts executado pelo pod).',
   })
   @IsString()
-  applicationFileContent: string;
+  applicationFileContent!: string;
 
   @ApiProperty({
     required: false,

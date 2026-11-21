@@ -103,17 +103,20 @@ export default function TemplateForm() {
     Record<string, TemplateParamType>
   >({});
   const [dependenciesInput, setDependenciesInput] = useState("");
+  const [resourceFiles, setResourceFiles] = useState<File[]>([]);
+  const [createdTemplateId, setCreatedTemplateId] = useState<number>();
   const [testDialogOpen, setTestDialogOpen] = useState(false);
   const codeExpandable = useExpandable();
   const descriptionExpandable = useExpandable();
 
   const { mutate: upsertTemplate, status: mutationStatus } = useMutation({
     mutationKey: ["upsertTemplate", id],
-    mutationFn: (data: UpsertTemplateRequest) => {
-      if (data?.id) {
-        return TemplatesService.update(data.id.toString(), data);
-      }
-      return TemplatesService.create(data);
+    mutationFn: async (data: UpsertTemplateRequest) => {
+      return TemplatesService.saveWithResources(
+        { ...data, id: data.id ?? createdTemplateId },
+        resourceFiles,
+        setCreatedTemplateId,
+      );
     },
     onSuccess: () => {
       toast({
@@ -122,12 +125,13 @@ export default function TemplateForm() {
       });
       back();
     },
-    onError: (err: AxiosError) => {
-      const res = err.response?.data as { message: string };
+    onError: (err: Error) => {
+      const axiosError = err as AxiosError;
+      const res = axiosError.response?.data as { message: string } | undefined;
       toast({
         title: TEMPLATE_FORM_TOAST_MESSAGES.saveErrorTitle,
         description:
-          res?.message ||
+          res?.message || err.message ||
           TEMPLATE_FORM_TOAST_MESSAGES.saveErrorFallbackDescription,
         variant: "destructive",
         duration: 5000,
@@ -530,6 +534,24 @@ export default function TemplateForm() {
                     )}
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="template-resources" className="text-foreground">
+                      Arquivos privados do template
+                    </Label>
+                    <Input
+                      id="template-resources"
+                      type="file"
+                      multiple
+                      onChange={(event) =>
+                        setResourceFiles(Array.from(event.currentTarget.files ?? []))
+                      }
+                      className="bg-primary/20 border-border text-foreground"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Os arquivos ficam no armazenamento do cluster e são disponibilizados somente para os workers deste template.
+                    </p>
+                  </div>
+
                   <div className="flex gap-2 pt-4">
                     <Button
                       type="button"
@@ -548,7 +570,17 @@ export default function TemplateForm() {
                       type="button"
                       variant="outline"
                       className="border-border text-foreground hover:bg-primary/20"
-                      onClick={() => setTestDialogOpen(true)}
+                      onClick={() => {
+                        if (resourceFiles.length) {
+                          toast({
+                            title: "Salve os arquivos antes de testar",
+                            description: "O teste usa os arquivos já salvos no template.",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        setTestDialogOpen(true);
+                      }}
                       title="Testar o conteúdo do template contra uma aplicação de exemplo em um pod efêmero. Nada é persistido."
                     >
                       <FlaskConical className="w-4 h-4 mr-2" />
@@ -613,6 +645,7 @@ export default function TemplateForm() {
         open={testDialogOpen}
         onOpenChange={setTestDialogOpen}
         classId={Number(formik.values.classId)}
+        templateId={formik.values.id ?? createdTemplateId}
         workerType={formik.values.workerType as WorkerType}
         templateContent={formik.values.content}
         paramNames={formik.values.params}

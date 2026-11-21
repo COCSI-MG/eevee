@@ -26,7 +26,8 @@ async function boot(): Promise<PyodideInterface> {
 
 async function loadLint(python: PyodideInterface): Promise<void> {
   try {
-    const wheel = await get("pyflakes-3.4.0-py2.py3-none-any.whl");
+    const lock = await (await get("python-assets.lock.json")).json();
+    const wheel = await get(lock.packages.pyflakes.file);
     python.unpackArchive(await wheel.arrayBuffer(), "zip", { extractDir: "/home/pyodide" });
     python.runPython("from pyflakes.checker import Checker");
     scope.postMessage({ type: "lint-ready" });

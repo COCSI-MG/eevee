@@ -28,8 +28,9 @@ RUN npm ci --omit=dev
 
 COPY --from=builder --chown=eevee:nodejs /usr/app/packages/execution-contracts/dist ../packages/execution-contracts/dist
 COPY --from=builder --chown=eevee:nodejs /usr/app/platform-api/dist ./dist
+COPY --from=builder --chown=eevee:nodejs /usr/app/platform-api/scripts/seeds/python/data ./dist/scripts/seeds/python/data
 
-RUN mkdir -p uploads && chown eevee:nodejs uploads
+RUN mkdir -p uploads && chown -R eevee:nodejs uploads
 
 USER eevee
 
