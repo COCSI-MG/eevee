@@ -138,12 +138,12 @@ export default function AssignmentsCard({ data }: AssignmentsCardProps) {
             )}
           >
             <CardHeader>
-              <CardTitle className="flex items-start justify-between gap-2 text-foreground">
-                <span className="min-w-0 flex-1 break-words">
+              <CardTitle className="flex flex-wrap items-start justify-between gap-2 text-foreground">
+                <span className="min-w-[10rem] flex-1 break-words">
                   {assignment.title}
                 </span>
 
-                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+                <div className="flex min-w-0 flex-wrap items-center justify-end gap-1">
                   {assignment.score != null && (
                     <Badge
                       className={cn(
