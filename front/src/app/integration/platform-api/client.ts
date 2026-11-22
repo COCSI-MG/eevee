@@ -1,25 +1,16 @@
 "use client";
 
 import { AuthSession } from "@/app/interface/platform-api/auth";
+import { AuthService } from "./auth-service";
+import { axiosClient, axiosClientWithAuth } from "./axios-instances";
 import { refreshSchedulingSocketSession } from "./realtime";
 import { Route } from "@/app/routes";
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-export const axiosClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true,
-});
-
-export const axiosClientWithAuth = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: true,
-});
+// Reexportado para que os importadores sigam usando "./client": é o import
+// deste módulo que registra o interceptor de renovação abaixo, e mover as
+// instâncias de lugar sem isso deixaria a sessão cair sem renovar.
+export { axiosClient, axiosClientWithAuth } from "./axios-instances";
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   sessionRenewed?: boolean;
@@ -58,8 +49,7 @@ async function requestRenewal(): Promise<AuthSession | null> {
     // 409 significa que outra aba renovou primeiro. Os cookies novos já estão
     // no navegador, falta só descobrir o prazo do token que chegou.
     try {
-      const { data } = await axiosClient.get<AuthSession>("/auth/me");
-      return data;
+      return await AuthService.me();
     } catch {
       return null;
     }
